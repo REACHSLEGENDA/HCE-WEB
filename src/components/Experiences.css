@@ -1,0 +1,205 @@
+.experiences-redesign-section {
+  padding: 10rem 0;
+  background-color: #f8fafc;
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-dots-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  background-size: 30px 30px;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+.section-header-modern {
+  text-align: center;
+  margin-bottom: 6rem;
+  position: relative;
+  z-index: 2;
+}
+
+.premium-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1.5rem;
+}
+
+.title-3d {
+  font-size: 3.5rem;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+}
+
+.subtitle-modern {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.experiences-grid-premium {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.exp-premium-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.exp-premium-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px -12px rgba(10, 25, 47, 0.15);
+  border-color: var(--cyan-bright);
+}
+
+.card-glass-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(0, 210, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.exp-premium-card:hover .card-glass-glow {
+  opacity: 1;
+}
+
+.exp-img-container {
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+}
+
+.exp-main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s ease;
+}
+
+.exp-premium-card:hover .exp-main-img {
+  transform: scale(1.05);
+}
+
+.img-overlay-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  background: linear-gradient(to top, rgba(10, 25, 47, 0.6), transparent);
+}
+
+.status-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  z-index: 5;
+  color: white;
+}
+
+.badge-danger { background: #ff4757; }
+.badge-info { background: #2f3542; }
+.badge-warning { background: var(--accent); color: var(--primary); }
+
+.card-floating-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  z-index: 6;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.exp-premium-card:hover .card-floating-icon {
+  transform: scale(1.1);
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.exp-content-body {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.exp-title-premium {
+  font-size: 1.25rem;
+  color: var(--primary);
+  margin-bottom: 0.8rem;
+  font-weight: 800;
+}
+
+.exp-desc-premium {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  flex: 1;
+}
+
+.exp-link-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: gap 0.3s ease;
+}
+
+.exp-link-action:hover {
+  gap: 15px;
+  color: var(--secondary);
+}
+
+@media (max-width: 768px) {
+  .title-3d { font-size: 2.5rem; }
+  .experiences-grid-premium { gap: 1.5rem; }
+}

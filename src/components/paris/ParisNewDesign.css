@@ -1,0 +1,677 @@
+.paris-redesign {
+  --primary: #0A1A2F;
+  --secondary: #1E3A5F;
+  --accent: #E3B03F;
+  --gradient: linear-gradient(90deg, #E3B03F 0%, #68C28D 50%, #2EB5B5 100%);
+  --text-light: #F8FAFC;
+  --text-dark: #1E293B;
+  --text-muted: #64748B;
+  --bg-light: #FFFFFF;
+  --bg-muted: #F8FAFC;
+  --glass: rgba(255, 255, 255, 0.1);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.6;
+  text-align: left;
+}
+
+.paris-redesign h1, .paris-redesign h2, .paris-redesign h3, .paris-redesign h4, 
+.paris-redesign .h1-style, .paris-redesign .h2-style, .paris-redesign .h3-style, .paris-redesign .h4-style, .paris-redesign .section-title, .paris-redesign .faculty-name {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    display: block;
+}
+
+.paris-redesign .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.paris-redesign .section-padding {
+    padding: 6rem 0;
+}
+
+/* --- Buttons --- */
+.paris-redesign .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: var(--transition);
+    cursor: pointer;
+    gap: 0.5rem;
+    border: none;
+}
+
+.paris-redesign .btn-primary {
+    background-color: #2979FF;
+    color: white;
+}
+
+.paris-redesign .btn-primary:hover {
+    background-color: #0056b3;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(41, 121, 255, 0.4);
+}
+
+.paris-redesign .btn-outline {
+    border: 2px solid #2979FF;
+    color: #2979FF;
+    background: transparent;
+}
+
+.paris-redesign .btn-outline:hover {
+    background: #2979FF;
+    color: white;
+}
+
+/* --- Hero --- */
+.paris-redesign .hero {
+    position: relative;
+    height: 100vh;
+    min-height: 850px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start !important;
+    overflow: hidden;
+    background-color: var(--primary);
+    padding: 250px 2rem 0 1rem !important;
+}
+
+.paris-redesign .hero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(to right, rgba(10, 26, 47, 0.95) 0%, rgba(10, 26, 47, 0.4) 50%, transparent 100%),
+        url('https://raw.githubusercontent.com/REACHSLEGENDA/Imagenes/refs/heads/main/Generated%20Image%20April%2015%2C%202026%20-%201_42AM.jpg');
+    background-size: cover;
+    background-position: center right;
+    z-index: 1;
+}
+
+.paris-redesign .hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start !important;
+    text-align: left !important;
+    color: var(--text-light);
+    max-width: 800px;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+
+.paris-redesign .hero-tagline {
+    display: inline-block;
+    background: rgba(227, 176, 63, 0.2);
+    color: var(--accent);
+    padding: 0.8rem 2.2rem;
+    border-radius: 50px;
+    font-weight: 800;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(227, 176, 63, 0.3);
+    backdrop-filter: blur(15px);
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 2px;
+    font-size: 1rem;
+    text-transform: uppercase;
+    animation: fadeInUp 1s ease-out;
+}
+
+.paris-redesign .h1-style {
+    font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+    margin-bottom: 1.2rem;
+    line-height: 1.05;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    color: #ffffff;
+    text-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    font-family: 'Montserrat', sans-serif !important;
+    animation: fadeInUp 1s ease-out 0.2s both;
+    text-align: left !important;
+    margin-left: 0 !important;
+}
+
+.paris-redesign .h1-style .gradient-text {
+    font-weight: 900;
+    display: inline-block;
+    letter-spacing: -2px;
+}
+
+.paris-redesign .hero-sub {
+    font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+    font-weight: 400;
+    margin-bottom: 2.5rem;
+    line-height: 1.4;
+    max-width: 550px;
+    color: rgba(255, 255, 255, 0.7);
+    animation: fadeInUp 1s ease-out 0.4s both;
+    text-align: left !important;
+    margin-left: 0 !important;
+}
+
+/* --- Countdown --- */
+.paris-redesign .countdown {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    animation: fadeInUp 1s ease-out 0.6s both;
+}
+
+.paris-redesign .count-item {
+    text-align: center;
+}
+
+.paris-redesign .count-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    font-family: 'Outfit', sans-serif;
+}
+
+.paris-redesign .count-label {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.7;
+}
+
+/* --- Animations --- */
+.paris-redesign .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease-out;
+}
+
+.paris-redesign .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Section 1: Welcome --- */
+.paris-redesign .welcome-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.paris-redesign .section-title {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    color: var(--primary);
+    line-height: 1.2;
+}
+
+.paris-redesign .gradient-text {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+}
+
+.paris-redesign .welcome-text p {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    color: var(--text-muted);
+}
+
+/* --- Tag Carousel --- */
+.paris-redesign .carousel-container {
+    width: 100%;
+    overflow: hidden;
+    background: var(--bg-muted);
+    padding: 3rem 0;
+    position: relative;
+    margin: 4rem 0;
+}
+
+.paris-redesign .carousel-track {
+    display: flex;
+    width: max-content;
+    animation: scroll 40s linear infinite;
+    gap: 2rem;
+}
+
+.paris-redesign .tag {
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.05);
+    white-space: nowrap;
+}
+
+@keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.paris-redesign .carousel-container::before,
+.paris-redesign .carousel-container::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 15rem;
+    height: 100%;
+    z-index: 2;
+}
+
+.paris-redesign .carousel-container::before {
+    left: 0;
+    background: linear-gradient(to right, var(--bg-muted) 0%, transparent 100%);
+}
+
+.paris-redesign .carousel-container::after {
+    right: 0;
+    background: linear-gradient(to left, var(--bg-muted) 0%, transparent 100%);
+}
+
+/* --- Methodology Redesign --- */
+.paris-redesign .methodology {
+    background-color: #050E1A;
+    background-image: 
+        radial-gradient(circle at 20% 30%, rgba(227, 176, 63, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(46, 181, 181, 0.05) 0%, transparent 50%),
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    color: var(--text-light);
+    position: relative;
+    overflow: hidden;
+}
+
+.paris-redesign .methodology::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+}
+
+.paris-redesign .method-content {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 5rem;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.paris-redesign .method-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 3rem;
+    border-radius: 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.paris-redesign .method-image img {
+    width: 100%;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    transition: var(--transition);
+}
+
+.paris-redesign .method-image:hover img {
+    transform: scale(1.02);
+}
+
+.paris-redesign .method-list { list-style: none; padding: 0;}
+.paris-redesign .method-list li { margin-bottom: 1.5rem; font-size: 1.2rem; opacity: 0.9; display: flex; align-items: center; gap: 15px;}
+.paris-redesign .method-list svg { color: var(--accent); width: 28px; height: 28px; }
+
+/* --- Faculty Grid --- */
+.paris-redesign .faculty-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin: 4rem 0;
+}
+
+@media (min-width: 1024px) {
+    .paris-redesign .faculty-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.paris-redesign .faculty-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    height: 100%;
+}
+
+.paris-redesign .faculty-card:hover {
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.15);
+    border-color: var(--accent);
+}
+
+.paris-redesign .faculty-img-container {
+    width: 100%;
+    height: 380px;
+    overflow: hidden;
+    position: relative;
+}
+
+.paris-redesign .faculty-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    transition: transform 0.6s ease;
+}
+
+.paris-redesign .faculty-card:hover .faculty-img {
+    transform: scale(1.1);
+}
+
+.paris-redesign .faculty-info {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.paris-redesign .faculty-role-tag {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.paris-redesign .faculty-name {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: var(--primary);
+}
+
+.paris-redesign .faculty-bio {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s ease;
+    position: absolute;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255,255,255,0.95);
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.paris-redesign .faculty-card:hover .faculty-bio {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* --- Experience Lead Section --- */
+.paris-redesign .experience-lead {
+    background: linear-gradient(135deg, #0A1A2F 0%, #050E1A 100%);
+    padding: 8rem 0;
+    color: white;
+    overflow: hidden;
+    position: relative;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.paris-redesign .experience-lead .container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.paris-redesign .experience-lead-text {
+    flex: 1.2;
+    min-width: 350px;
+}
+
+.paris-redesign .experience-lead-img {
+    flex: 1;
+    min-width: 350px;
+}
+
+.paris-redesign .experience-lead::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; width: 300px; height: 300px;
+    background: var(--gradient);
+    filter: blur(150px);
+    opacity: 0.1;
+}
+
+.paris-redesign .experience-lead-text h4 {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.paris-redesign .experience-lead-text h2 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+    margin-bottom: 2rem;
+    font-family: 'Outfit';
+}
+
+.paris-redesign .experience-lead-img img {
+    width: 100%;
+    border-radius: 30px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 1024px) {
+    .paris-redesign .experience-lead .container {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+}
+
+/* --- Special Sections --- */
+.paris-redesign .hospital-outreach-full {
+    background: white; border-top: 1px solid #eee; margin-top: 6rem;
+}
+
+.paris-redesign .video-experience-redesign {
+    padding: 10rem 0;
+    background: white;
+    overflow: hidden;
+}
+
+.paris-redesign .video-flex-container {
+    display: flex;
+    align-items: center;
+    gap: 8rem;
+    flex-wrap: wrap;
+}
+
+.paris-redesign .video-mockup-side {
+    flex: 1;
+    min-width: 320px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    padding: 2rem;
+}
+
+.paris-redesign .phone-frame {
+    width: 350px;
+    height: 700px;
+    background: #111;
+    border-radius: 50px;
+    padding: 12px;
+    border: 8px solid #222;
+    box-shadow: 0 50px 100px -20px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 2;
+}
+
+.paris-redesign .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 25px;
+    background: #111;
+    border-radius: 20px;
+    z-index: 3;
+}
+
+.paris-redesign .phone-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 35px;
+    overflow: hidden;
+    background: black;
+    position: relative;
+}
+
+.paris-redesign .phone-screen video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.paris-redesign .phone-button {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 4px;
+    background: #333;
+    border-radius: 10px;
+}
+
+.paris-redesign .floating-badge {
+    position: absolute;
+    background: white;
+    padding: 1.2rem 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    font-weight: 800;
+    font-family: 'Outfit';
+    color: var(--primary);
+    z-index: 3;
+    animation: floating 3s ease-in-out infinite;
+}
+
+.paris-redesign .badge-top {
+    top: 15%;
+    left: -10%;
+}
+
+.paris-redesign .badge-bottom {
+    bottom: 15%;
+    right: -5%;
+    animation-delay: 1.5s;
+}
+
+@keyframes floating {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+.paris-redesign .video-text-side {
+    flex: 1.2;
+    min-width: 400px;
+}
+
+.paris-redesign .final-cta-minimalist {
+    background: white; padding: 10rem 5%; color: var(--primary); text-align: center;
+}
+
+.paris-redesign .certification-prestige {
+    background: #050E1A; padding: 6rem 0; color: white;
+}
+
+/* --- Responsive Styles --- */
+@media (max-width: 1024px) {
+    .paris-redesign .container { padding: 0 5%; }
+    .paris-redesign .section-title { font-size: 2.5rem; }
+    .paris-redesign .h1-style { font-size: 3rem; }
+    .paris-redesign .welcome-grid, .paris-redesign .method-content { grid-template-columns: 1fr; gap: 3rem; }
+    .paris-redesign .experience-lead .container { gap: 3rem; }
+    .paris-redesign .faculty-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+}
+
+@media (max-width: 768px) {
+    .paris-redesign .h1-style { font-size: 2.5rem; text-align: left; }
+    .paris-redesign .hero-sub { font-size: 1.25rem; text-align: left; }
+    .paris-redesign .hero { justify-content: flex-start; text-align: left; padding: 2rem; }
+    .paris-redesign .hero-content { margin-inline: 0; }
+    
+    .paris-redesign .section-padding { padding: 4rem 0; }
+    .paris-redesign .section-title { font-size: 2rem; }
+    
+    .paris-redesign .experience-lead { padding: 5rem 0; }
+    .paris-redesign .experience-lead-text, .paris-redesign .experience-lead-img { flex: 1; min-width: 100%; text-align: center; }
+    .paris-redesign .experience-lead-text .h2-style { font-size: 2rem; }
+    
+    .paris-redesign .hospital-outreach-full > div { flex-direction: column; }
+    .paris-redesign .hospital-outreach-full > div > div { flex: 1; min-width: 100% !important; padding: 3rem 5% !important; text-align: center; }
+    .paris-redesign .hospital-outreach-full .h2-style { font-size: 2rem; }
+    
+    .paris-redesign .video-experience-redesign { padding: 5rem 0; }
+    .paris-redesign .video-flex-container { gap: 4rem; justify-content: center; }
+    .paris-redesign .phone-frame { width: 280px; height: 560px; }
+    .paris-redesign .badge-top { left: 0; }
+    .paris-redesign .badge-bottom { right: 0; }
+    .paris-redesign .video-text-side { text-align: center; min-width: 100%; }
+    .paris-redesign .video-text-side .h2-style { font-size: 2.5rem; }
+
+    .paris-redesign .final-cta-minimalist .h2-style { font-size: 2.2rem; }
+    .paris-redesign .final-cta-minimalist { padding: 5rem 5%; }
+    
+    .paris-redesign .certification-prestige .h2-style { font-size: 1.8rem; text-align: center; }
+    .paris-redesign .certification-prestige > div > div { flex-direction: column; gap: 2rem; text-align: center; }
+    .paris-redesign .certification-prestige p { text-align: center; }
+
+    .paris-redesign .carousel-container { margin: 2rem 0; padding: 2rem 0; }
+}
+
+@media (max-width: 480px) {
+    .paris-redesign .h1-style { font-size: 2.2rem; }
+    .paris-redesign .section-title { font-size: 1.8rem; }
+    .paris-redesign .btn { width: 100%; }
+}

@@ -1,0 +1,206 @@
+.paris-professors {
+  background-color: #020810;
+  padding: 100px 5%;
+  font-family: 'Inter', sans-serif;
+  color: white;
+  position: relative;
+}
+
+.prof-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease;
+}
+
+.prof-container.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.prof-header {
+  margin-bottom: 60px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.elite-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(251, 197, 49, 0.15);
+  border: 1px solid rgba(251, 197, 49, 0.3);
+  color: #fbc531;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+
+.section-title-light {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.section-subtitle-light {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+/* Grid */
+.prof-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 30px;
+  margin-bottom: 60px;
+}
+
+.prof-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.prof-card:hover {
+  transform: translateY(-10px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(0, 210, 255, 0.3);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+.prof-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  overflow: hidden;
+}
+
+.prof-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s ease;
+}
+
+.prof-card:hover .prof-image {
+  transform: scale(1.08);
+}
+
+.prof-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(2,8,16,0.9) 0%, transparent 60%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.prof-card:hover .prof-overlay {
+  opacity: 1;
+}
+
+.prof-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.highlight-tag {
+  background: rgba(0, 210, 255, 0.2);
+  backdrop-filter: blur(5px);
+  color: #00d2ff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+
+.prof-info {
+  padding: 25px;
+}
+
+.prof-info h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 8px;
+}
+
+.prof-role {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  color: #00d2ff;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prof-info p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+}
+
+.prof-cta {
+  margin-top: 40px;
+}
+
+.btn-paris-gold {
+  display: inline-block;
+  background: linear-gradient(135deg, #fbc531 0%, #f1c40f 100%);
+  color: #020810;
+  text-decoration: none;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 16px 40px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(251, 197, 49, 0.2);
+}
+
+.btn-paris-gold:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(251, 197, 49, 0.4);
+}
+
+@media (max-width: 768px) {
+  .paris-professors {
+    padding: 60px 5%;
+  }
+
+  .section-title-light {
+    font-size: 2.2rem;
+  }
+}

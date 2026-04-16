@@ -1,0 +1,253 @@
+.faculty-master-section {
+  padding: 10rem 0;
+  background-color: #f8fafc;
+  position: relative;
+  overflow: hidden;
+}
+
+.faculty-bg-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.f-circle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+}
+
+.f-c1 {
+  width: 400px;
+  height: 400px;
+  background: rgba(0, 210, 255, 0.15);
+  top: -100px;
+  right: -100px;
+}
+
+.f-c2 {
+  width: 300px;
+  height: 300px;
+  background: rgba(30, 55, 184, 0.1);
+  bottom: -50px;
+  left: -50px;
+}
+
+.faculty-header-block {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.faculty-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.faculty-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+}
+
+.faculty-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.faculty-grid-modern {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.expert-profile-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid #f1f5f9;
+}
+
+.expert-image-area {
+  position: relative;
+  height: 380px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.expert-image-area img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 1s ease;
+  filter: grayscale(20%);
+}
+
+.expert-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(10, 25, 47, 0.8) 0%, transparent 40%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.expert-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.e-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  width: fit-content;
+}
+
+.expert-meta {
+  padding: 1.5rem;
+  background: white;
+  transition: transform 0.4s ease;
+}
+
+.expert-role-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #00d2ff;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+}
+
+.expert-full-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.expert-bio-peak {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  height: 0;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  opacity: 0;
+}
+
+.expert-h-line {
+  width: 40px;
+  height: 3px;
+  background: #00d2ff;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* Hover States */
+.expert-profile-card:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+  border-color: #00d2ff;
+}
+
+.expert-profile-card:hover .expert-image-area img {
+  transform: scale(1.1);
+  filter: grayscale(0%);
+}
+
+.expert-profile-card:hover .expert-overlay {
+  opacity: 1;
+}
+
+.expert-profile-card:hover .expert-bio-peak {
+  height: 65px;
+  opacity: 1;
+}
+
+.expert-profile-card:hover .expert-h-line {
+  width: 100%;
+}
+
+.faculty-bottom-call {
+  margin-top: 5rem;
+  background: white;
+  padding: 2.5rem;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.03);
+  border: 1px solid #f1f5f9;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.f-call-icon {
+  width: 60px;
+  height: 60px;
+  background: #00d2ff;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.faculty-bottom-call p {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 1100px) {
+  .faculty-grid-modern { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+}
+
+@media (max-width: 768px) {
+  .faculty-title { font-size: 2.5rem; }
+  .faculty-grid-modern { grid-template-columns: 1fr; }
+  .expert-image-area { height: 350px; }
+  .faculty-bottom-call { flex-direction: column; text-align: center; }
+}

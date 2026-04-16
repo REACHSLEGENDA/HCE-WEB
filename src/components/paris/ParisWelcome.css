@@ -1,0 +1,167 @@
+.paris-welcome {
+  background-color: #ffffff;
+  padding: 100px 5% 50px 5%;
+  font-family: 'Inter', sans-serif;
+}
+
+.welcome-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease;
+}
+
+.welcome-container.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.welcome-intro {
+  max-width: 850px;
+  margin: 0 auto 80px auto;
+}
+
+.welcome-label {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 15px;
+}
+
+.welcome-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 30px;
+  text-transform: uppercase;
+}
+
+.text-navy {
+  color: #0a192f;
+}
+
+.text-gold {
+  color: #fbc531;
+}
+
+.welcome-divider {
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #0072ff, #00d2ff);
+  margin: 0 auto 30px auto;
+  border-radius: 2px;
+}
+
+.welcome-content {
+  color: #475569;
+}
+
+.lead-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.audience-text {
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+/* Nursing Promo Box */
+.nursing-promo-box {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.promo-text-side {
+  flex: 1;
+  padding: 50px;
+}
+
+.promo-text-side h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0a192f;
+  margin-bottom: 20px;
+}
+
+.promo-text-side p {
+  color: #475569;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.btn-promo {
+  display: inline-block;
+  background: #0072ff;
+  color: white;
+  text-decoration: none;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  padding: 14px 30px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(0, 114, 255, 0.2);
+}
+
+.btn-promo:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(0, 114, 255, 0.4);
+  background: #005bb5;
+}
+
+.promo-img-side {
+  flex: 1;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.promo-img-side img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.nursing-promo-box:hover .promo-img-side img {
+  transform: scale(1.05);
+}
+
+@media (max-width: 900px) {
+  .nursing-promo-box {
+    flex-direction: column;
+  }
+  .promo-text-side {
+    padding: 40px 30px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-title {
+    font-size: 2rem;
+  }
+  .paris-welcome {
+    padding: 60px 5%;
+  }
+}

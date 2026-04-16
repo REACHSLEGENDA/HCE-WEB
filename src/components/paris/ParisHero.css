@@ -1,0 +1,226 @@
+.paris-hero {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 10%;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  padding-top: 80px;
+}
+
+.paris-hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.paris-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.paris-hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(2,8,16,0.95) 0%, rgba(2,8,16,0.8) 40%, rgba(2,8,16,0.4) 100%);
+}
+
+.paris-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+  color: white;
+  animation: fadeUp 1s ease forwards;
+}
+
+.paris-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 210, 255, 0.15);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  color: #00d2ff;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 30px;
+}
+
+.paris-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 4.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 25px;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #00d2ff 0%, #1e37b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.paris-subtitle {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 40px;
+  font-weight: 300;
+  max-width: 600px;
+}
+
+.paris-cta-group {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 60px;
+}
+
+.btn-paris-primary {
+  background: linear-gradient(135deg, #0072ff 0%, #00d2ff 100%);
+  color: white;
+  text-decoration: none;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 16px 36px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 210, 255, 0.3);
+}
+
+.btn-paris-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px rgba(0, 210, 255, 0.5);
+  filter: brightness(1.1);
+}
+
+/* Countdown */
+.paris-countdown-box {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 25px 35px;
+  display: inline-block;
+}
+
+.countdown-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fbc531;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+  letter-spacing: 1px;
+}
+
+.countdown-timer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.time-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.time-val {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+  color: white;
+}
+
+.time-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 5px;
+}
+
+.time-sep {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.5rem;
+  color: rgba(255, 255, 255, 0.2);
+  margin-top: -15px;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .paris-title {
+    font-size: 3.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .paris-hero {
+    padding: 120px 5% 60px 5%;
+    align-items: flex-start;
+  }
+  
+  .paris-hero-overlay {
+    background: linear-gradient(180deg, rgba(2,8,16,0.7) 0%, rgba(2,8,16,0.95) 100%);
+  }
+
+  .paris-title {
+    font-size: 2.8rem;
+    margin-top: 20px;
+  }
+
+  .btn-paris-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .paris-cta-group {
+    flex-direction: column;
+  }
+
+  .paris-countdown-box {
+    width: 100%;
+  }
+  
+  .time-val {
+    font-size: 2rem;
+  }
+}
