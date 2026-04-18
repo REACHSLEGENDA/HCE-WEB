@@ -72,11 +72,11 @@ const Testimonials = () => {
       <div className="hce-container">
         <div ref={ref} className={`testimonials-header reveal ${inView ? 'active' : ''}`}>
           <div className="testi-tag">
-            <MessageSquare size={16} /> VOCES DE ÉXITO
+            <MessageSquare size={16} /> Voces de éxito
           </div>
-          <h2 className="testi-headline">Impacto en la <span>Práctica Clínica</span></h2>
+          <h2 className="testi-headline">Impacto en la <span>práctica clínica</span></h2>
           <p className="testi-subheadline">
-            Miles de profesionales ya han transformado su carrera con nuestra metodología.
+            Historias reales de profesionales que han fortalecido su práctica con nuestra metodología.
           </p>
         </div>
       </div>

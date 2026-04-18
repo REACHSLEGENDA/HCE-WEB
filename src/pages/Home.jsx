@@ -7,6 +7,7 @@ import Campus from '../components/Campus';
 import Impact from '../components/Impact';
 import Instructors from '../components/Instructors';
 import Testimonials from '../components/Testimonials';
+import Partners from '../components/Partners';
 import Footer from '../components/Footer';
 
 const Home = () => {
@@ -20,6 +21,7 @@ const Home = () => {
       <Impact />
       <Testimonials />
       <Webinars />
+      <Partners />
       <Footer />
     </>
   );

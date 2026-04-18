@@ -3,7 +3,7 @@ import { useInView } from 'react-intersection-observer';
 import { Star, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, Heart } from 'lucide-react';
 import './Experiences.css';
 
-const ExperienceCard = ({ title, description, link, img, badge, badgeClass, delay, icon: Icon }) => {
+const ExperienceCard = ({ title, description, link, img, imgClass, badge, badgeClass, delay, icon: Icon }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   
   return (
@@ -11,7 +11,7 @@ const ExperienceCard = ({ title, description, link, img, badge, badgeClass, dela
       <div className="card-glass-glow"></div>
       <div className="exp-img-container">
         {badge && <div className={`status-badge ${badgeClass}`}>{badge}</div>}
-        <img src={img} alt={title} className="exp-main-img" />
+        <img src={img} alt={title} className={`exp-main-img ${imgClass || ''}`} />
         <div className="img-overlay-gradient"></div>
         {Icon && <div className="card-floating-icon"><Icon size={24} /></div>}
       </div>
@@ -20,7 +20,7 @@ const ExperienceCard = ({ title, description, link, img, badge, badgeClass, dela
         <h3 className="exp-title-premium">{title}</h3>
         <p className="exp-desc-premium">{description}</p>
         <div className="exp-footer-premium">
-            <a href={link} target="_blank" rel="noreferrer" className="exp-link-action">
+            <a href={link} className="exp-link-action">
                 <span>Explorar Programa</span>
                 <ArrowRight size={18} />
             </a>
@@ -51,9 +51,9 @@ const Experiences = () => {
           <ExperienceCard 
             delay={0.1}
             icon={Heart}
-            title="Insuficiencia Cardiaca Avanzada"
+            title="Manejo de avanzada en insuficiencia cardiaca"
             description="Domina los criterios de selección para asistencia ventricular y trasplante con simulación HARVI de alta precisión."
-            link="https://healthcareexp.com/insuficiencia-cardiaca/"
+            link="/insuficiencia-cardiaca"
             img="https://healthcareexp.com/wp-content/uploads/2026/03/Generated-Image-March-03-2026-11_28PM.png"
             badge="SOLD OUT"
             badgeClass="badge-danger"
@@ -63,17 +63,18 @@ const Experiences = () => {
             icon={ShieldCheck}
             title="ECMO Nursing Care Course"
             description="El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo."
-            link="https://healthcareexp.com/ecmo-nursing-care-course/"
+            link="/ecmo-nursing-care"
             img="https://healthcareexp.com/wp-content/uploads/2025/06/ecmo-nursing-dm.png"
+            imgClass="zoom-nursing"
             badge="Próximamente"
             badgeClass="badge-info"
           />
           <ExperienceCard 
             delay={0.3}
             icon={Globe}
-            title="Paris Int. Diploma in ECMO"
+            title="Paris International Diploma in ECMO"
             description="Certificación internacional directa desde el centro de referencia más grande del mundo en París, Francia."
-            link="https://healthcareexp.com/diploma-ecmo/"
+            link="/paris-diploma-ecmo"
             img="https://healthcareexp.com/wp-content/uploads/2026/03/WhatsApp-Image-2026-03-04-at-12.06.38-AM.jpeg"
           />
           <ExperienceCard 
@@ -81,7 +82,7 @@ const Experiences = () => {
             icon={Zap}
             title="ECMO SIM: Realidad Clínica"
             description="Interactúa con nuestra plataforma de simulación patentada. Mejora tu toma de decisiones en entornos de alta complejidad."
-            link="https://healthcareexp.com/ecmosim/"
+            link="/simulador-ecmo-sim"
             img="https://healthcareexp.com/wp-content/uploads/2025/10/ecmosim.png"
             badge="SIMULADOR"
             badgeClass="badge-warning"

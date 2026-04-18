@@ -214,7 +214,13 @@ const ParisNewDesign = () => {
                                 <div className="phone-button"></div>
                             </div>
                             <div className="floating-badge badge-top">Simulación 3D</div>
-                            <div className="floating-badge badge-bottom">ECMO SIM</div>
+                            <div className="floating-badge badge-bottom">
+                                <img 
+                                    src="https://healthcareexp.com/wp-content/uploads/2026/03/Picsart_26-03-03_21-37-18-446.png" 
+                                    alt="ECMO SIM Logo" 
+                                    className="logo-colored"
+                                />
+                            </div>
                         </div>
                         <div className="video-text-side reveal">
                             <div className="h2-style" style={{ color: 'var(--primary)', fontSize: '3.5rem', lineHeight: '1', marginBottom: '2rem', fontWeight: 900 }}>

@@ -62,11 +62,11 @@ const Impact = () => {
       <div className="hce-container">
         <div ref={ref} className={`impact-header reveal ${inView ? 'active' : ''}`}>
           <div className="impact-tag">
-            <BarChart3 size={16} /> METRICAS DE ÉXITO
+            <BarChart3 size={16} /> Métricas de éxito
           </div>
-          <h2 className="impact-main-title">Impacto <span className="cyan-highlight">Académico</span> Global</h2>
+          <h2 className="impact-main-title">Impacto <span className="cyan-highlight">académico</span> global</h2>
           <p className="impact-main-subtitle">
-            Consolidamos nuestra posición como líderes en educación clínica avanzada a través de resultados tangibles y una comunidad en constante crecimiento.
+            Lideramos la educación clínica avanzada con resultados medibles y una comunidad en expansión.
           </p>
         </div>
 
@@ -75,8 +75,8 @@ const Impact = () => {
             icon={<Users size={32} />}
             target={1500}
             plus
-            title="Alumnos Impactados"
-            desc="Profesionales que han completado nuestros programas de <strong>entrenamiento intensivo</strong>."
+            title="Profesionales formados"
+            desc="Egresados de nuestros programas de <strong>entrenamiento intensivo</strong>."
             delay={0.1}
             triggerAnim={inView}
           />
@@ -84,23 +84,23 @@ const Impact = () => {
             icon={<Globe size={32} />}
             target={10000}
             plus
-            title="Alcance Global"
-            desc="Especialistas de todo el mundo conectados a través de nuestra <strong>red educativa</strong>."
+            title="Alcance global"
+            desc="Especialistas conectados a través de nuestra <strong>red educativa</strong>."
             delay={0.2}
             triggerAnim={inView}
           />
           <ImpactCard 
             icon={<GraduationCap size={32} />}
             target={100}
-            title="Súper Docentes"
-            desc="Referentes de los <strong>centros ECMO más importantes</strong> de Europa, EEUU y LATAM."
+            title="Docentes internacionales"
+            desc="Expertos de <strong>centros ECMO líderes</strong> en Europa, EE. UU. y LATAM."
             delay={0.3}
             triggerAnim={inView}
           />
           <ImpactCard 
             icon={<Laptop2 size={32} />}
             target={50}
-            title="Clases Magistrales"
+            title="Clases magistrales"
             desc="Contenido premium disponible 24/7 en nuestra <strong>Biblioteca Científica</strong>."
             delay={0.4}
             triggerAnim={inView}

@@ -15,20 +15,18 @@ const Hero = () => {
       <div className="hce-container hero-inner">
         <div className={`hero-content reveal ${active ? 'active' : ''}`}>
           <div className="badge-tag">
-            <Sparkles size={16} /> EXPERIENCIA CLÍNICA VANGUARDISTA.
+            <Sparkles size={16} /> Experiencia clínica de vanguardia
           </div>
           <h1>
-            La Nueva Era en<br />
-            <span className="text-gradient">Educación Clínica.</span>
+            La nueva era de la<br />
+            <span className="text-gradient">educación clínica</span>
           </h1>
           <p>
-            Domina el soporte extracorpóreo y terapias críticas mediante aprendizaje inmersivo, simulación
-            avanzada y entrenamiento de élite especialmente diseñado para equipos multidisciplinarios de
-            salud.
+            Domina el soporte extracorpóreo y las terapias críticas mediante aprendizaje inmersivo, simulación avanzada y entrenamiento de alto desempeño, diseñado para equipos multidisciplinarios de salud.
           </p>
 
           <div className="hero-actions">
-            <a href="https://healthcareexp.com/ecmosim/" target="_blank" rel="noreferrer" className="btn btn-primary hero-btn-shadow">
+            <a href="/simulador-ecmo-sim" className="btn btn-primary hero-btn-shadow">
               Nuestro Simulador <Gamepad2 />
             </a>
             <a href="https://campus.healthcareexp.com/plus/login" target="_blank" rel="noreferrer" className="btn btn-outline">

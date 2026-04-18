@@ -7,6 +7,7 @@ import Nursing from './pages/Nursing';
 import EcmoSim from './pages/EcmoSim';
 import InsuficienciaCardiaca from './pages/InsuficienciaCardiaca';
 import Instructores from './pages/Instructores';
+import Retroalimentacion from './pages/Retroalimentacion';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -24,12 +25,13 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/paris" element={<ParisDiploma />} />
-        <Route path="/somos" element={<AboutUs />} />
-        <Route path="/nursing" element={<Nursing />} />
-        <Route path="/sim" element={<EcmoSim />} />
+        <Route path="/paris-diploma-ecmo" element={<ParisDiploma />} />
+        <Route path="/quienes-somos" element={<AboutUs />} />
+        <Route path="/ecmo-nursing-care" element={<Nursing />} />
+        <Route path="/simulador-ecmo-sim" element={<EcmoSim />} />
         <Route path="/insuficiencia-cardiaca" element={<InsuficienciaCardiaca />} />
         <Route path="/instructores" element={<Instructores />} />
+        <Route path="/retroalimentacion" element={<Retroalimentacion />} />
       </Routes>
     </Router>
   );

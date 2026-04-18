@@ -359,10 +359,10 @@ const AboutUs = () => {
             </p>
             
             <div className="au-cta-actions">
-              <a href="/paris" className="au-btn au-btn-cta">
+              <a href="/paris-diploma-ecmo" className="au-btn au-btn-cta">
                 Ver Diplomado ECMO
               </a>
-              <a href="/sim" className="au-btn au-btn-dark">
+              <a href="/simulador-ecmo-sim" className="au-btn au-btn-dark">
                 Simulador Clínico
               </a>
             </div>

@@ -2,7 +2,7 @@
   --primary: #0A1A2F;
   --secondary: #1E3A5F;
   --accent: #E3B03F;
-  --gradient: linear-gradient(90deg, #E3B03F 0%, #68C28D 50%, #2EB5B5 100%);
+  --gradient: linear-gradient(135deg, #0047FF 0%, #FF0000 100%);
   --text-light: #F8FAFC;
   --text-dark: #1E293B;
   --text-muted: #64748B;
@@ -52,25 +52,27 @@
 }
 
 .paris-redesign .btn-primary {
-    background-color: #2979FF;
+    background: linear-gradient(135deg, #0047FF 0%, #FF0000 100%);
     color: white;
+    border: none;
 }
 
 .paris-redesign .btn-primary:hover {
-    background-color: #0056b3;
+    filter: brightness(1.1);
     transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(41, 121, 255, 0.4);
+    box-shadow: 0 10px 20px rgba(0, 71, 255, 0.3);
 }
 
 .paris-redesign .btn-outline {
-    border: 2px solid #2979FF;
-    color: #2979FF;
+    border: 2px solid #0047FF;
+    color: #0047FF;
     background: transparent;
 }
 
 .paris-redesign .btn-outline:hover {
-    background: #2979FF;
+    background: linear-gradient(135deg, #0047FF 0%, #FF0000 100%);
     color: white;
+    border-color: transparent;
 }
 
 /* --- Hero --- */
@@ -602,9 +604,32 @@
 }
 
 .paris-redesign .badge-bottom {
-    bottom: 15%;
-    right: -5%;
+    bottom: 12%;
+    right: -8%;
     animation-delay: 1.5s;
+    padding: 0.4rem 1.2rem; /* Cuadro más chico */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 180px;
+    height: 70px; /* Alto fijo para controlar el recorte */
+    background: linear-gradient(135deg, #0047FF 0%, #FF0000 100%);
+    border: none;
+    overflow: hidden; /* Para recortar lo que sobre del logo */
+}
+
+.paris-redesign .logo-colored {
+    height: 110px; /* Logo mucho más grande */
+    width: auto;
+    filter: brightness(0) invert(1);
+    display: block;
+    transition: var(--transition);
+    object-fit: contain;
+    margin-top: -5px; /* Ajuste fino para centrar tras el recorte */
+}
+
+.paris-redesign .logo-colored:hover {
+    transform: scale(1.1);
 }
 
 @keyframes floating {

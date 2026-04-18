@@ -13,27 +13,27 @@ const Campus = () => {
         
         <div ref={ref} className={`campus-info-block reveal ${inView ? 'active' : ''}`}>
           <div className="tech-badge">
-            <Cpu size={14} /> AI-POWERED PLATFORM
+            <Cpu size={14} /> Plataforma impulsada por IA
           </div>
           <h2 className="campus-title-main">
-            Tu Clínica <span className="blue-gradient-text">Evoluciona</span>
+            Tu clínica <span className="blue-gradient-text">evoluciona</span>
           </h2>
           <p className="campus-description">
-            Bienvenido al ecosistema digital más avanzado de la región. Una plataforma inteligente diseñada para potenciar el razonamiento clínico mediante simulación virtual y aprendizaje adaptativo.
+            Accede al ecosistema digital más avanzado de la región: una plataforma inteligente que potencia el razonamiento clínico mediante simulación virtual y aprendizaje adaptativo.
           </p>
           
           <div className="campus-features-list">
             <div className="c-feature-item">
               <div className="cf-icon"><Zap size={18} /></div>
-              <span>Acceso Inmediato 24/7</span>
+              <span>Acceso 24/7</span>
             </div>
             <div className="c-feature-item">
               <div className="cf-icon"><Globe size={18} /></div>
-              <span>Comunidad Internacional</span>
+              <span>Comunidad internacional</span>
             </div>
             <div className="c-feature-item">
               <div className="cf-icon"><Layout size={18} /></div>
-              <span>Recursos Exclusivos</span>
+              <span>Recursos exclusivos</span>
             </div>
           </div>
 

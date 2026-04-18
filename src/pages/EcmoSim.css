@@ -9,11 +9,11 @@
 }
 
 .sim-neon-text {
-  color: #66fcf1;
-  text-shadow: 0 0 10px rgba(102, 252, 241, 0.5), 0 0 20px rgba(102, 252, 241, 0.3);
+  color: #FBC531;
+  text-shadow: 0 0 10px rgba(251, 197, 49, 0.4), 0 0 20px rgba(251, 197, 49, 0.2);
 }
 
-.text-cyan { color: #66fcf1; }
+.text-neon { color: #FBC531; }
 .text-red { color: #ff003c; }
 .mt-4 { margin-top: 1rem; }
 .mt-12 { margin-top: 3rem; }
@@ -22,14 +22,14 @@
 .sim-h3-sub {
   font-family: 'Orbitron', sans-serif;
   font-size: 1.5rem;
-  color: #66fcf1;
+  color: #FBC531;
   letter-spacing: 2px;
 }
 
 /* Gaming Buttons */
 .btn-gaming {
-  background: linear-gradient(45deg, #ff003c, #c0002d);
-  color: white;
+  background: linear-gradient(45deg, #FBC531, #f1c40f);
+  color: #0b0c10;
   border: none;
   padding: 1.2rem 2.5rem;
   font-size: 1.1rem;
@@ -47,30 +47,30 @@
 
 .btn-gaming:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 30px rgba(255, 0, 60, 0.7);
-  background: linear-gradient(45deg, #ff1a50, #d40032);
+  box-shadow: 0 0 30px rgba(251, 197, 49, 0.6);
+  background: linear-gradient(45deg, #FFF176, #FBC531);
 }
 
 .btn-gaming.shadow-glow {
-  box-shadow: 0 0 20px rgba(255, 0, 60, 0.5);
+  box-shadow: 0 0 20px rgba(251, 197, 49, 0.4);
 }
 
 .btn-gaming.mega {
   font-size: 1.4rem;
   padding: 1.8rem 4rem;
-  background: linear-gradient(45deg, #66fcf1, #45a29e);
+  background: linear-gradient(45deg, #FBC531, #FFEE58);
   color: #0b0c10;
-  box-shadow: 0 0 20px rgba(102, 252, 241, 0.4);
+  box-shadow: 0 0 20px rgba(251, 197, 49, 0.3);
 }
 .btn-gaming.mega:hover {
-  background: linear-gradient(45deg, #7afff4, #4db3ae);
-  box-shadow: 0 0 40px rgba(102, 252, 241, 0.7);
+  background: linear-gradient(45deg, #FFEE58, #FBC531);
+  box-shadow: 0 0 40px rgba(251, 197, 49, 0.6);
 }
 
 .btn-gaming-sm {
   background: transparent;
-  color: #66fcf1;
-  border: 2px solid #66fcf1;
+  color: #FBC531;
+  border: 2px solid #FBC531;
   padding: 0.8rem 1.5rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -79,8 +79,8 @@
   transition: all 0.3s;
 }
 .btn-gaming-sm:hover {
-  background: rgba(102, 252, 241, 0.1);
-  box-shadow: inset 0 0 10px rgba(102, 252, 241, 0.5);
+  background: rgba(251, 197, 49, 0.1);
+  box-shadow: inset 0 0 10px rgba(251, 197, 49, 0.4);
 }
 
 .btn-gaming-outline {
@@ -97,9 +97,9 @@
   border-radius: 4px;
 }
 .btn-gaming-outline:hover {
-  border-color: #66fcf1;
-  color: #66fcf1;
-  box-shadow: 0 0 15px rgba(102, 252, 241, 0.2);
+  border-color: #FBC531;
+  color: #FBC531;
+  box-shadow: 0 0 15px rgba(251, 197, 49, 0.2);
 }
 
 /* Base Headings */
@@ -124,7 +124,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #0b0c10 0%, rgba(11, 12, 16, 0.8) 50%, transparent 100%);
+  background: linear-gradient(90deg, #0b0c10 0%, rgba(11, 12, 16, 0.9) 50%, transparent 100%);
   z-index: 1;
 }
 
@@ -138,10 +138,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(102, 252, 241, 0.1);
-  color: #66fcf1;
-  padding: 0.5rem 1rem;
-  border: 1px solid rgba(102, 252, 241, 0.3);
+  background: rgba(251, 197, 49, 0.1);
+  color: #FBC531;
+  border: 1px solid rgba(251, 197, 49, 0.3);
   font-weight: 700;
   font-size: 0.85rem;
   letter-spacing: 2px;
@@ -177,7 +176,7 @@
 .sim-features {
   padding: 8rem 0;
   background: #0b0c10;
-  border-top: 1px solid rgba(102, 252, 241, 0.1);
+  border-top: 1px solid rgba(251, 197, 49, 0.1);
 }
 
 .sim-section-header {
@@ -223,13 +222,13 @@
 .sim-f-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(45deg, rgba(102, 252, 241, 0.2), transparent);
+  background: linear-gradient(45deg, rgba(251, 197, 49, 0.2), transparent);
   mix-blend-mode: overlay;
 }
 
 .sim-icon-wrapper {
-  background: rgba(102, 252, 241, 0.1);
-  color: #66fcf1;
+  background: rgba(204, 255, 0, 0.1);
+  color: #ccff00;
   width: 60px;
   height: 60px;
   display: flex;
@@ -237,7 +236,7 @@
   justify-content: center;
   border-radius: 12px;
   margin-bottom: 1.5rem;
-  border: 1px solid rgba(102, 252, 241, 0.2);
+  border: 1px solid rgba(251, 197, 49, 0.2);
 }
 
 .sim-f-content h3 {
@@ -266,8 +265,8 @@
   background: #000;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 0 50px rgba(102, 252, 241, 0.15);
-  border: 1px solid rgba(102, 252, 241, 0.2);
+  box-shadow: 0 0 50px rgba(204, 255, 0, 0.15);
+  border: 1px solid rgba(251, 197, 49, 0.2);
   position: relative;
 }
 
@@ -295,14 +294,14 @@
   background: #000;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid rgba(102, 252, 241, 0.2);
+  border: 1px solid rgba(251, 197, 49, 0.2);
   transition: all 0.3s ease;
 }
 
 .sim-short-item:hover {
   transform: translateY(-8px);
-  border-color: #66fcf1;
-  box-shadow: 0 10px 20px rgba(102, 252, 241, 0.1);
+  border-color: #FBC531;
+  box-shadow: 0 10px 20px rgba(251, 197, 49, 0.1);
 }
 
 .sim-short-item iframe {
@@ -320,7 +319,7 @@
 .sim-modes {
   padding: 8rem 0;
   background: #0b0c10;
-  background-image: radial-gradient(circle at center, rgba(102, 252, 241, 0.03) 0%, transparent 70%);
+  background-image: radial-gradient(circle at center, rgba(251, 197, 49, 0.03) 0%, transparent 70%);
 }
 
 .sim-modes-wrapper {
@@ -340,7 +339,7 @@
 
 .sim-mode-card:hover {
   transform: translateY(-10px);
-  border-color: rgba(102, 252, 241, 0.3);
+  border-color: rgba(251, 197, 49, 0.3);
   box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 }
 
@@ -409,8 +408,8 @@
 }
 
 .sim-icon-glow {
-  color: #66fcf1;
-  filter: drop-shadow(0 0 10px rgba(102, 252, 241, 0.5));
+  color: #FBC531;
+  filter: drop-shadow(0 0 10px rgba(251, 197, 49, 0.4));
 }
 
 .sim-stats {
@@ -432,7 +431,7 @@
 }
 
 .sim-stat-label {
-  color: #66fcf1;
+  color: #ccff00;
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.85rem;
@@ -443,7 +442,7 @@
   width: 100%;
   max-width: 500px;
   animation: float 6s ease-in-out infinite;
-  filter: drop-shadow(0 20px 30px rgba(102, 252, 241, 0.15));
+  filter: drop-shadow(0 20px 30px rgba(251, 197, 49, 0.15));
 }
 
 @keyframes float {
@@ -487,7 +486,7 @@
 
 .sim-final-box h3 {
   font-size: 1.8rem;
-  color: #66fcf1;
+  color: #ccff00;
   margin-bottom: 1.5rem;
 }
 

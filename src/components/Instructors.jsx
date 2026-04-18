@@ -39,11 +39,11 @@ const Instructors = () => {
       <div className="hce-container">
         <div ref={ref} className={`faculty-header-block reveal ${inView ? 'active' : ''}`}>
           <div className="faculty-tag">
-            <GraduationCap size={16} /> FACULTAD DE ÉLITE
+            <GraduationCap size={16} /> Facultad de élite
           </div>
-          <h2 className="faculty-title">Referentes <span className="text-gradient">Mundiales</span></h2>
+          <h2 className="faculty-title">Referentes <span className="text-gradient">mundiales</span></h2>
           <p className="faculty-subtitle">
-            Aprende directamente de los líderes que están definiendo el futuro de la medicina crítica a nivel global.
+            Aprende de los líderes que están definiendo el futuro de la medicina crítica a nivel global.
           </p>
         </div>
 
@@ -81,7 +81,7 @@ const Instructors = () => {
         <div className={`faculty-bottom-call reveal ${inView ? 'active' : ''}`} style={{ transitionDelay: '0.5s' }}>
           <div className="f-call-icon"><Users size={24} /></div>
           <p>
-            Nuestro claustro docente representa el estándar de oro en educación ECMO, combinando décadas de experiencia clínica en los centros de referencia más grandes del mundo.
+            Nuestros docentes son un estándar de excelencia en educación ECMO: combinan décadas de experiencia clínica en centros de referencia de Europa, Estados Unidos y Latinoamérica.
           </p>
         </div>
       </div>
