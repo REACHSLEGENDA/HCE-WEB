@@ -18,49 +18,85 @@ export const handler = async (event) => {
   const AUDIENCE_ID = process.env.MAILCHIMP_AUDIENCE_ID;
   const SERVER      = process.env.MAILCHIMP_SERVER;
   const auth        = Buffer.from(`anystring:${API_KEY}`).toString('base64');
-  const url         = `https://${SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}/members`;
+  const headers     = { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' };
+  const baseUrl     = `https://${SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}`;
 
+  // Tags
+  const tags = [
+    'Retroalimentacion Taller',
+    interesFuturo === 'si' ? 'Interesado Programas' : null,
+    preferenciaContacto ? `Contacto: ${preferenciaContacto}` : null,
+  ].filter(Boolean);
+
+  // Note con todo el feedback
+  const note = [
+    `📋 TALLER: ${taller}`,
+    `📍 LUGAR: ${lugar}`,
+    `🌎 ESTADO/PAÍS: ${estado}, ${pais}`,
+    `💼 CARGO: ${cargo}`,
+    `🎓 MODALIDAD: ${modalidad}`,
+    ``,
+    `⭐ SATISFACCIÓN: ${satisfaccion}`,
+    `💡 UTILIDAD: ${utilidad}`,
+    `📦 ORGANIZACIÓN: ${organizacion}`,
+    ``,
+    `✅ LO MÁS VALIOSO: ${valoroso}`,
+    `🔧 MEJORAS: ${mejoras}`,
+    comentarios ? `💬 COMENTARIOS: ${comentarios}` : null,
+    ``,
+    `📚 ÁREAS DE INTERÉS: ${Array.isArray(areasInteres) ? areasInteres.join(', ') : ''}`,
+  ].filter((l) => l !== null).join('\n');
+
+  // Payload usando solo los merge fields que existen en Mailchimp
   const payload = {
     email_address: email,
     status: 'subscribed',
     merge_fields: {
-      FNAME: nombres,    LNAME: apellidos,
-      TALLER: taller,    LUGAR: lugar,
-      ESTADO: estado,    PAIS: pais,
-      GRADO: grado,      ESPEC: especialidad,
-      INST: institucion, CARGO: cargo,
-      TELEFONO: telefono, MODALIDAD: modalidad,
-      SATISFAC: satisfaccion, UTILIDAD: utilidad,
-      ORGANIZ: organizacion,  VALOROSO: valoroso,
-      MEJORAS: mejoras,  COMMENTS: comentarios || '',
-      CONTACTO: preferenciaContacto,
-      AREAS: Array.isArray(areasInteres) ? areasInteres.join(', ') : '',
+      FNAME:   nombres,
+      LNAME:   apellidos,
+      PHONE:   telefono,
+      MMERGE5: grado,
+      MMERGE6: especialidad,
+      MMERGE7: institucion,
     },
-    tags: ['Retroalimentacion Taller', interesFuturo === 'si' ? 'Interesado Programas' : ''].filter(Boolean),
+    tags,
   };
 
-  const response = await fetch(url, {
+  // 1. Crear o actualizar contacto
+  const hash = createHash('md5').update(email.toLowerCase()).digest('hex');
+
+  let response = await fetch(`${baseUrl}/members`, {
     method: 'POST',
-    headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(payload),
   });
 
-  if (response.ok) {
-    return { statusCode: 200, body: JSON.stringify({ ok: true }) };
+  if (!response.ok) {
+    const data = await response.json();
+    if (data.title === 'Member Exists') {
+      // Actualizar contacto existente
+      response = await fetch(`${baseUrl}/members/${hash}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ merge_fields: payload.merge_fields, tags }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        console.error('PATCH error:', err);
+        return { statusCode: 500, body: JSON.stringify({ error: err.detail }) };
+      }
+    } else {
+      console.error('POST error:', data);
+      return { statusCode: 500, body: JSON.stringify({ error: data.detail }) };
+    }
   }
 
-  const data = await response.json();
+  // 2. Agregar nota con el feedback completo
+  await fetch(`${baseUrl}/members/${hash}/notes`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ note }),
+  });
 
-  if (data.title === 'Member Exists') {
-    const hash = createHash('md5').update(email.toLowerCase()).digest('hex');
-    await fetch(`${url}/${hash}`, {
-      method: 'PATCH',
-      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ merge_fields: payload.merge_fields }),
-    });
-    return { statusCode: 200, body: JSON.stringify({ ok: true }) };
-  }
-
-  console.error('Mailchimp error:', data);
-  return { statusCode: 500, body: JSON.stringify({ error: data.detail }) };
+  return { statusCode: 200, body: JSON.stringify({ ok: true }) };
 };
