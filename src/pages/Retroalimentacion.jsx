@@ -43,17 +43,22 @@ const Retroalimentacion = () => {
     e.preventDefault();
     setStatus('loading');
     try {
-      const res = await fetch('/.netlify/functions/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) {
-        setStatus('success');
-        setForm(initialState);
-      } else {
-        setStatus('error');
-      }
+      await Promise.all([
+        // Mailchimp via Netlify function
+        fetch('/.netlify/functions/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        }),
+        // Formspree → email a academia@healthcareexp.com (sin redirección)
+        fetch('https://formspree.io/f/xnjlvzdq', {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        }),
+      ]);
+      setStatus('success');
+      setForm(initialState);
     } catch {
       setStatus('error');
     }
