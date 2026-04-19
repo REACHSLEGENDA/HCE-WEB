@@ -590,6 +590,20 @@ function TestZone() {
     setTestLoading(true);
     setTestError('');
     try {
+      const extrasLabel = [...testExtras]
+        .map((id) => TEST_EXTRAS.find((e) => e.id === id)?.label || id)
+        .join(', ') || 'Ninguno';
+
+      localStorage.setItem('hce_pago', JSON.stringify({
+        email:       'test@hce.com',
+        perfil:      'test',
+        perfilLabel: '[PRUEBA] Inscripción de testeo',
+        extras:      [...testExtras],
+        extrasLabel,
+        moneda:      'mxn',
+        total_mxn:   total,
+      }));
+
       const res = await fetch('/.netlify/functions/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
