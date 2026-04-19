@@ -171,7 +171,7 @@ export default function Inscripciones() {
       {/* HERO */}
       <div className="ins-hero">
         <div className="ins-hero-inner hce-container">
-          <span className="ins-hero-badge">Programas 2025</span>
+          <span className="ins-hero-badge">Programas 2026</span>
           <h1 className="ins-hero-title">Inscripciones</h1>
           <p className="ins-hero-sub">
             Selecciona tu perfil y personaliza tu inscripción al programa de formación clínica más completo de Latinoamérica.
@@ -403,7 +403,102 @@ export default function Inscripciones() {
         </aside>
       </div>
 
+      {/* ── ZONA DE PRUEBAS ── */}
+      <TestZone />
+
       <Footer />
+    </div>
+  );
+}
+
+function TestZone() {
+  const [testExtras, setTestExtras] = useState(new Set());
+  const [testLoading, setTestLoading] = useState(false);
+  const [testError, setTestError] = useState('');
+
+  const TEST_EXTRAS = [
+    { id: 'test_extra_a', label: 'Extra de prueba A', price: 5 },
+    { id: 'test_extra_b', label: 'Extra de prueba B', price: 5 },
+  ];
+
+  const toggleTest = (id) =>
+    setTestExtras((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const base = 10;
+  const extrasTotal = [...testExtras].reduce((s, id) => {
+    const ex = TEST_EXTRAS.find((e) => e.id === id);
+    return s + (ex?.price ?? 0);
+  }, 0);
+  const total = base + extrasTotal;
+
+  const handleTestPay = async () => {
+    setTestLoading(true);
+    setTestError('');
+    try {
+      const res = await fetch('/.netlify/functions/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ perfil: 'test', extras: [...testExtras], moneda: 'mxn', email: 'test@hce.com' }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else throw new Error(data.error || 'Error');
+    } catch (err) {
+      setTestError(err.message);
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
+  return (
+    <div className="test-zone hce-container">
+      <div className="test-zone-inner">
+        <div className="test-zone-header">
+          <span className="test-zone-badge">⚙ TESTEO</span>
+          <p className="test-zone-sub">Zona de pruebas — no visible en producción final</p>
+        </div>
+
+        <div className="test-zone-body">
+          <div className="test-zone-info">
+            <p className="test-zone-label">Producto</p>
+            <p className="test-zone-val">Inscripción de prueba · <strong>$10 MXN</strong></p>
+          </div>
+
+          <div className="test-zone-extras">
+            {TEST_EXTRAS.map((ex) => (
+              <label key={ex.id} className={`test-extra ${testExtras.has(ex.id) ? 'test-extra--on' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={testExtras.has(ex.id)}
+                  onChange={() => toggleTest(ex.id)}
+                  style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+                />
+                <span className="test-extra-box">{testExtras.has(ex.id) ? '✓' : ''}</span>
+                {ex.label} · +${ex.price} MXN
+              </label>
+            ))}
+          </div>
+
+          <div className="test-zone-total">
+            Total: <strong>${total} MXN</strong>
+          </div>
+
+          {testError && <p className="test-zone-error">{testError}</p>}
+
+          <button
+            type="button"
+            className="test-zone-btn"
+            onClick={handleTestPay}
+            disabled={testLoading}
+          >
+            {testLoading ? 'Redirigiendo...' : 'Probar pago ($' + total + ' MXN)'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
