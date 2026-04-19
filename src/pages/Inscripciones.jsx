@@ -212,11 +212,6 @@ export default function Inscripciones() {
                   </div>
                   <h3 className="ins-card-title">Médicos Especialistas</h3>
                   <p className="ins-card-desc">Para médicos con especialidad clínica activa. Acceso completo al programa avanzado.</p>
-                  <div className="ins-card-price">
-                    <span className="ins-card-price-label">Precio base</span>
-                    <strong>{fmt(39000, 'mxn')}</strong>
-                    {moneda === 'usd' && <small>≈ {fmt(Math.ceil(39000 / USD_RATE), 'usd')}</small>}
-                  </div>
                 </div>
               </button>
 
@@ -236,11 +231,6 @@ export default function Inscripciones() {
                   </div>
                   <h3 className="ins-card-title">Residentes, Enfermeros y Otros</h3>
                   <p className="ins-card-desc">Médicos residentes, enfermeros, terapeutas respiratorios y otros profesionales de salud.</p>
-                  <div className="ins-card-price">
-                    <span className="ins-card-price-label">Precio base</span>
-                    <strong>{fmt(37000, 'mxn')}</strong>
-                    {moneda === 'usd' && <small>≈ {fmt(Math.ceil(37000 / USD_RATE), 'usd')}</small>}
-                  </div>
                 </div>
               </button>
             </div>
