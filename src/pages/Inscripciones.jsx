@@ -199,8 +199,9 @@ export default function Inscripciones() {
               {/* Card 1 — Especialista */}
               <button
                 type="button"
-                className={`ins-card ${cardSel === 'especialista' ? 'ins-card--active' : ''}`}
-                onClick={() => selectCard('especialista')}
+                className={`ins-card ${cardSel === 'especialista' ? 'ins-card--active' : ''} ${cardSel === 'otros' ? 'ins-card--locked' : ''}`}
+                onClick={() => cardSel !== 'otros' && selectCard('especialista')}
+                disabled={cardSel === 'otros'}
               >
                 <div className="ins-card-visual ins-card-visual--blue">
                   <Stethoscope size={40} strokeWidth={1.5} />
@@ -218,8 +219,9 @@ export default function Inscripciones() {
               {/* Card 2 — Otros */}
               <button
                 type="button"
-                className={`ins-card ${cardSel === 'otros' ? 'ins-card--active' : ''}`}
-                onClick={() => selectCard('otros')}
+                className={`ins-card ${cardSel === 'otros' ? 'ins-card--active' : ''} ${cardSel === 'especialista' ? 'ins-card--locked' : ''}`}
+                onClick={() => cardSel !== 'especialista' && selectCard('otros')}
+                disabled={cardSel === 'especialista'}
               >
                 <div className="ins-card-visual ins-card-visual--cyan">
                   <Heart size={40} strokeWidth={1.5} />
