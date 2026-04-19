@@ -8,6 +8,7 @@ import EcmoSim from './pages/EcmoSim';
 import InsuficienciaCardiaca from './pages/InsuficienciaCardiaca';
 import Instructores from './pages/Instructores';
 import Retroalimentacion from './pages/Retroalimentacion';
+import Inscripciones from './pages/Inscripciones';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -32,6 +33,7 @@ function App() {
         <Route path="/insuficiencia-cardiaca" element={<InsuficienciaCardiaca />} />
         <Route path="/instructores" element={<Instructores />} />
         <Route path="/retroalimentacion" element={<Retroalimentacion />} />
+        <Route path="/inscripciones" element={<Inscripciones />} />
       </Routes>
     </Router>
   );
