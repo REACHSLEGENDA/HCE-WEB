@@ -92,17 +92,6 @@ export default function Inscripciones() {
     setLoading(true);
     setApiError('');
     try {
-      // Guardar datos del pago para el formulario de registro post-pago
-      localStorage.setItem('hce_pago', JSON.stringify({
-        email:   email.trim(),
-        perfil,
-        perfilLabel: PROFILES[perfil].label,
-        extras:  [...extras],
-        extrasLabel: [...extras].map((id) => EXTRA_CATALOG[id].label).join(', ') || 'Ninguno',
-        moneda,
-        total_mxn: totalMXN,
-      }));
-
       const res = await fetch('/.netlify/functions/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -396,23 +385,20 @@ export default function Inscripciones() {
 }
 
 function RegistrationForm() {
-  const [stored, setStored] = useState({});
+  // Leer datos directamente del parámetro ?d= que Stripe preserva en la URL de retorno
+  const stored = (() => {
+    try {
+      const d = new URLSearchParams(window.location.search).get('d');
+      if (!d) return {};
+      return JSON.parse(atob(d.replace(/-/g, '+').replace(/_/g, '/')));
+    } catch { return {}; }
+  })();
+
   const [form, setForm] = useState({
-    nombres: '', apellidos: '', email: '', telefono: '',
+    nombres: '', apellidos: '', email: stored.email || '', telefono: '',
     pais: '', estado: '', grado: '', especialidad: '', institucion: '', cargo: '',
   });
   const [status, setStatus] = useState('idle');
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('hce_pago');
-      if (raw) {
-        const data = JSON.parse(raw);
-        setStored(data);
-        setForm((f) => ({ ...f, email: data.email || '' }));
-      }
-    } catch { /* ignore */ }
-  }, []);
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -590,20 +576,6 @@ function TestZone() {
     setTestLoading(true);
     setTestError('');
     try {
-      const extrasLabel = [...testExtras]
-        .map((id) => TEST_EXTRAS.find((e) => e.id === id)?.label || id)
-        .join(', ') || 'Ninguno';
-
-      localStorage.setItem('hce_pago', JSON.stringify({
-        email:       'test@hce.com',
-        perfil:      'test',
-        perfilLabel: '[PRUEBA] Inscripción de testeo',
-        extras:      [...testExtras],
-        extrasLabel,
-        moneda:      'mxn',
-        total_mxn:   total,
-      }));
-
       const res = await fetch('/.netlify/functions/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

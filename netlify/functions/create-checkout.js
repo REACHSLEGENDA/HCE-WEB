@@ -130,13 +130,23 @@ export const handler = async (event) => {
       (event.headers.referer ? event.headers.referer.split('/').slice(0, 3).join('/') : null) ||
       'https://hce-web.netlify.app';
 
+    // Codificar datos del pago en la URL de éxito para no depender de localStorage
+    const totalMXN = PRICES_MXN[perfil] + validExtras.reduce((s, e) => s + PRICES_MXN[e], 0);
+    const payData = Buffer.from(JSON.stringify({
+      email,
+      perfilLabel: PROFILE_LABELS[perfil],
+      extrasLabel: validExtras.map((e) => EXTRA_LABELS[e]).join(', ') || 'Ninguno',
+      moneda: currency,
+      total_mxn: totalMXN,
+    })).toString('base64url');
+
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     const sessionOptions = {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${origin}/inscripciones?status=success`,
+      success_url: `${origin}/inscripciones?status=success&d=${payData}`,
       cancel_url:  `${origin}/inscripciones?status=cancel`,
       locale: 'es',
       metadata: {
