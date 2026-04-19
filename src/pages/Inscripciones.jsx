@@ -92,32 +92,23 @@ export default function Inscripciones() {
     setLoading(true);
     setApiError('');
     try {
-      const payload = { perfil, extras: [...extras], moneda, email: email.trim() };
-
-      const formspreeBody = {
-        email:     email.trim(),
-        perfil:    PROFILES[perfil].label,
-        extras:    [...extras].map((id) => EXTRA_CATALOG[id].label).join(', ') || 'Ninguno',
-        moneda:    moneda.toUpperCase(),
+      // Guardar datos del pago para el formulario de registro post-pago
+      localStorage.setItem('hce_pago', JSON.stringify({
+        email:   email.trim(),
+        perfil,
+        perfilLabel: PROFILES[perfil].label,
+        extras:  [...extras],
+        extrasLabel: [...extras].map((id) => EXTRA_CATALOG[id].label).join(', ') || 'Ninguno',
+        moneda,
         total_mxn: totalMXN,
-        tag:       'ECMOParis2026',
-      };
+      }));
 
-      const [, checkoutRes] = await Promise.all([
-        fetch('https://formspree.io/f/mnjlvbpw', {
-          method: 'POST',
-          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-          body: JSON.stringify(formspreeBody),
-        }).catch(() => {}),
-
-        fetch('/.netlify/functions/create-checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }),
-      ]);
-
-      const data = await checkoutRes.json();
+      const res = await fetch('/.netlify/functions/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ perfil, extras: [...extras], moneda, email: email.trim() }),
+      });
+      const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -134,14 +125,7 @@ export default function Inscripciones() {
     return (
       <div className="ins-page">
         <Navbar />
-        <div className="ins-result-wrap">
-          <div className="ins-result-card">
-            <CheckCircle2 size={60} className="ins-result-icon ins-result-icon--ok" />
-            <h2>¡Inscripción completada!</h2>
-            <p>Tu pago fue procesado con éxito. En las próximas horas recibirás un correo de confirmación con todos los detalles.</p>
-            <a href="/" className="ins-btn ins-btn--primary">Volver al inicio</a>
-          </div>
-        </div>
+        <RegistrationForm />
         <Footer />
       </div>
     );
@@ -407,6 +391,173 @@ export default function Inscripciones() {
       <TestZone />
 
       <Footer />
+    </div>
+  );
+}
+
+function RegistrationForm() {
+  const stored = (() => {
+    try { return JSON.parse(localStorage.getItem('hce_pago') || '{}'); } catch { return {}; }
+  })();
+
+  const [form, setForm] = useState({
+    nombres:      '',
+    apellidos:    '',
+    email:        stored.email || '',
+    telefono:     '',
+    pais:         '',
+    estado:       '',
+    grado:        '',
+    especialidad: '',
+    institucion:  '',
+    cargo:        '',
+  });
+  const [status, setStatus] = useState('idle'); // idle | loading | done | error
+
+  const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    try {
+      const payload = {
+        ...form,
+        perfil:      stored.perfilLabel || '',
+        extras:      stored.extrasLabel || '',
+        moneda:      stored.moneda || '',
+        total_mxn:   stored.total_mxn || '',
+        tag:         'ECMOParis2026',
+      };
+
+      await Promise.all([
+        // Formspree — notificación por email
+        fetch('https://formspree.io/f/mnjlvbpw', {
+          method: 'POST',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }).catch(() => {}),
+
+        // Mailchimp — alta del contacto + tag + flujo de bienvenida
+        fetch('/.netlify/functions/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }),
+      ]);
+
+      localStorage.removeItem('hce_pago');
+      setStatus('done');
+    } catch {
+      setStatus('error');
+    }
+  };
+
+  if (status === 'done') {
+    return (
+      <div className="ins-result-wrap">
+        <div className="ins-result-card">
+          <CheckCircle2 size={60} className="ins-result-icon ins-result-icon--ok" />
+          <h2>¡Registro completado!</h2>
+          <p>Tu inscripción está confirmada. En breve recibirás un correo de bienvenida con todos los detalles del programa.</p>
+          <a href="/" className="ins-btn ins-btn--primary">Volver al inicio</a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="reg-wrap hce-container">
+      {/* Banner pago exitoso */}
+      <div className="reg-paid-banner">
+        <CheckCircle2 size={20} />
+        <span>¡Pago procesado con éxito! Completa tu registro para confirmar tu lugar.</span>
+      </div>
+
+      <div className="reg-layout">
+        {/* Resumen del pago */}
+        <aside className="reg-summary-card">
+          <h3 className="reg-summary-title">Resumen de tu inscripción</h3>
+          <div className="reg-summary-row"><span>Perfil</span><strong>{stored.perfilLabel || '—'}</strong></div>
+          <div className="reg-summary-row"><span>Extras</span><strong>{stored.extrasLabel || 'Ninguno'}</strong></div>
+          <div className="reg-summary-row"><span>Moneda</span><strong>{(stored.moneda || 'mxn').toUpperCase()}</strong></div>
+          <div className="reg-summary-row reg-summary-row--total">
+            <span>Total pagado</span>
+            <strong>${(stored.total_mxn || 0).toLocaleString('es-MX')} MXN</strong>
+          </div>
+        </aside>
+
+        {/* Formulario */}
+        <form className="reg-form" onSubmit={handleSubmit}>
+          <h2 className="reg-form-title">Completa tu registro</h2>
+          <p className="reg-form-sub">Necesitamos tus datos para enviarte el acceso y materiales del programa.</p>
+
+          <div className="reg-grid">
+            <div className="reg-field">
+              <label>Nombre(s) *</label>
+              <input type="text" value={form.nombres} onChange={set('nombres')} required />
+            </div>
+            <div className="reg-field">
+              <label>Apellido(s) *</label>
+              <input type="text" value={form.apellidos} onChange={set('apellidos')} required />
+            </div>
+            <div className="reg-field">
+              <label>Correo electrónico *</label>
+              <input type="email" value={form.email} onChange={set('email')} required />
+            </div>
+            <div className="reg-field">
+              <label>Teléfono * <span className="reg-hint">(con código de país)</span></label>
+              <input type="tel" value={form.telefono} onChange={set('telefono')} required />
+            </div>
+            <div className="reg-field">
+              <label>País *</label>
+              <input type="text" value={form.pais} onChange={set('pais')} required />
+            </div>
+            <div className="reg-field">
+              <label>Estado / Ciudad *</label>
+              <input type="text" value={form.estado} onChange={set('estado')} required />
+            </div>
+            <div className="reg-field">
+              <label>Grado académico / Profesión *</label>
+              <select value={form.grado} onChange={set('grado')} required>
+                <option value="">Selecciona...</option>
+                <option>Médico Especialista</option>
+                <option>Médico Residente</option>
+                <option>Enfermero/a</option>
+                <option>Terapeuta Respiratorio</option>
+                <option>Fisioterapeuta</option>
+                <option>Estudiante</option>
+                <option>Otro</option>
+              </select>
+            </div>
+            <div className="reg-field">
+              <label>Especialidad * <span className="reg-hint">(escribe "no aplica" si no tienes)</span></label>
+              <input type="text" value={form.especialidad} onChange={set('especialidad')} required />
+            </div>
+            <div className="reg-field">
+              <label>Institución / Hospital *</label>
+              <input type="text" value={form.institucion} onChange={set('institucion')} required />
+            </div>
+            <div className="reg-field">
+              <label>Cargo / Puesto *</label>
+              <input type="text" value={form.cargo} onChange={set('cargo')} required />
+            </div>
+          </div>
+
+          {status === 'error' && (
+            <p className="ins-error">Ocurrió un error al enviar. Intenta de nuevo.</p>
+          )}
+
+          <button
+            type="submit"
+            className="ins-btn ins-btn--primary reg-submit"
+            disabled={status === 'loading'}
+          >
+            {status === 'loading'
+              ? <><Loader2 size={18} className="ins-spin" /> Enviando...</>
+              : 'Concluir registro'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
