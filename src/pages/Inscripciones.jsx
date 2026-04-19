@@ -396,23 +396,23 @@ export default function Inscripciones() {
 }
 
 function RegistrationForm() {
-  const stored = (() => {
-    try { return JSON.parse(localStorage.getItem('hce_pago') || '{}'); } catch { return {}; }
-  })();
-
+  const [stored, setStored] = useState({});
   const [form, setForm] = useState({
-    nombres:      '',
-    apellidos:    '',
-    email:        stored.email || '',
-    telefono:     '',
-    pais:         '',
-    estado:       '',
-    grado:        '',
-    especialidad: '',
-    institucion:  '',
-    cargo:        '',
+    nombres: '', apellidos: '', email: '', telefono: '',
+    pais: '', estado: '', grado: '', especialidad: '', institucion: '', cargo: '',
   });
-  const [status, setStatus] = useState('idle'); // idle | loading | done | error
+  const [status, setStatus] = useState('idle');
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('hce_pago');
+      if (raw) {
+        const data = JSON.parse(raw);
+        setStored(data);
+        setForm((f) => ({ ...f, email: data.email || '' }));
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
