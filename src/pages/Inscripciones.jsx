@@ -5,16 +5,17 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './Inscripciones.css';
 
-const USD_RATE = 17;
+const USD_RATE = 17.5;
 
 const EXTRA_CATALOG = {
   ecmo_sim: {
-    label: 'ECMO SIM',
+    label: 'Simulador ECMO SIM',
+    subhint: 'Suscripción por 4 meses',
     desc: 'Taller de simulación avanzada en ECMO con maniquí de alta fidelidad',
     price: 3500,
   },
   ecmo_nursing: {
-    label: 'ECMO NURSING',
+    label: 'ECMO Nursing Care virtual',
     desc: 'Módulo especializado de ECMO para cuidados de enfermería intensiva',
     price: 3500,
   },
@@ -128,8 +129,8 @@ export default function Inscripciones() {
           <div className="ins-result-card">
             <div className="ins-result-icon ins-result-icon--cancel">✕</div>
             <h2>Pago cancelado</h2>
-            <p>No se realizó ningún cargo. Puedes intentarlo nuevamente cuando lo desees.</p>
-            <a href="/inscripciones" className="ins-btn ins-btn--primary">Intentar de nuevo</a>
+            <p>No se realizó ningún cargo.</p>
+            <a href="/inscripciones-diploma-paris-ecmo" className="ins-btn ins-btn--primary">Intentar de nuevo</a>
           </div>
         </div>
         <Footer />
@@ -164,7 +165,6 @@ export default function Inscripciones() {
               <span className="ins-step-num">1</span>
               <div>
                 <h2 className="ins-step-title">Selecciona tu perfil</h2>
-                <p className="ins-step-sub">Cada perfil tiene precio y contenido específico.</p>
               </div>
             </div>
 
@@ -185,7 +185,6 @@ export default function Inscripciones() {
                     {cardSel === 'especialista' && <CheckCircle2 size={20} className="ins-card-check" />}
                   </div>
                   <h3 className="ins-card-title">Médicos Especialistas</h3>
-                  <p className="ins-card-desc">Para médicos con especialidad clínica activa. Acceso completo al programa avanzado.</p>
                 </div>
               </button>
 
@@ -205,7 +204,6 @@ export default function Inscripciones() {
                     {cardSel === 'otros' && <CheckCircle2 size={20} className="ins-card-check" />}
                   </div>
                   <h3 className="ins-card-title">Residentes, Enfermeros y Otros</h3>
-                  <p className="ins-card-desc">Médicos residentes, enfermeros, terapeutas respiratorios y otros profesionales de salud.</p>
                 </div>
               </button>
             </div>
@@ -218,7 +216,6 @@ export default function Inscripciones() {
                 <span className="ins-step-num">2</span>
                 <div>
                   <h2 className="ins-step-title">¿Cuál es tu rol?</h2>
-                  <p className="ins-step-sub">Esto determina los módulos adicionales disponibles para ti.</p>
                 </div>
               </div>
               <div className="ins-role-grid">
@@ -235,7 +232,6 @@ export default function Inscripciones() {
                     <Shield size={18} />
                     <div>
                       <span className="ins-role-label">{r.label}</span>
-                      <span className="ins-role-desc">{r.desc}</span>
                     </div>
                     {subRole === r.id && <CheckCircle2 size={18} className="ins-role-check" />}
                   </button>
@@ -250,8 +246,8 @@ export default function Inscripciones() {
               <div className="ins-step-header">
                 <span className="ins-step-num">{cardSel === 'otros' ? '3' : '2'}</span>
                 <div>
-                  <h2 className="ins-step-title">Módulos adicionales</h2>
-                  <p className="ins-step-sub">Agrega módulos opcionales a tu inscripción.</p>
+                  <h2 className="ins-step-title">Potencia tu formación</h2>
+                  <p className="ins-step-sub" style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Añade un curso con un precio especial por tiempo limitado</p>
                 </div>
               </div>
               <div className="ins-extras">
@@ -271,7 +267,7 @@ export default function Inscripciones() {
                     </div>
                     <div className="ins-extra-info">
                       <span className="ins-extra-label">{ex.label}</span>
-                      <span className="ins-extra-desc">{ex.desc}</span>
+                      {ex.subhint && <span style={{ fontSize: '0.75rem', opacity: 0.7, display: 'block', marginTop: '2px' }}>{ex.subhint}</span>}
                     </div>
                     <div className="ins-extra-price">
                       +{fmt(ex.price, 'mxn')}
@@ -318,9 +314,12 @@ export default function Inscripciones() {
                     const ex = EXTRA_CATALOG[id];
                     const price = moneda === 'usd' ? Math.ceil(ex.price / USD_RATE) : ex.price;
                     return (
-                      <div key={id} className="ins-summary-line ins-summary-line--extra">
-                        <span>+ {ex.label}</span>
-                        <span>{fmt(price, cur)}</span>
+                      <div key={id} className="ins-summary-line ins-summary-line--extra" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                          <span>+ {ex.label}</span>
+                          <span>{fmt(price, cur)}</span>
+                        </div>
+                        {ex.subhint && <small style={{ fontSize: '0.7rem', opacity: 0.6, marginTop: '-2px' }}>{ex.subhint}</small>}
                       </div>
                     );
                   })}
@@ -332,7 +331,7 @@ export default function Inscripciones() {
 
             {perfil && (
               <div className="ins-summary-total">
-                <span>Total</span>
+                <span>Inversión total</span>
                 <strong>{fmt(displayTotal, cur)}</strong>
               </div>
             )}
@@ -364,8 +363,8 @@ export default function Inscripciones() {
               onClick={handlePay}
             >
               {loading
-                ? <><Loader2 size={18} className="ins-spin" /> Redirigiendo a pago...</>
-                : <><span>Pagar inscripción</span><ChevronRight size={18} /></>
+                ? <><Loader2 size={18} className="ins-spin" /> Procesando inversión...</>
+                : <><span>Invertir en inscripción</span><ChevronRight size={18} /></>
               }
             </button>
 
@@ -375,9 +374,6 @@ export default function Inscripciones() {
           </div>
         </aside>
       </div>
-
-      {/* ── ZONA DE PRUEBAS ── */}
-      <TestZone />
 
       <Footer />
     </div>
@@ -462,12 +458,12 @@ function RegistrationForm() {
       <div className="reg-layout">
         {/* Resumen del pago */}
         <aside className="reg-summary-card">
-          <h3 className="reg-summary-title">Resumen de tu inscripción</h3>
+          <h3 className="reg-summary-title">Resumen de tu inversión</h3>
           <div className="reg-summary-row"><span>Perfil</span><strong>{stored.perfilLabel || '—'}</strong></div>
           <div className="reg-summary-row"><span>Extras</span><strong>{stored.extrasLabel || 'Ninguno'}</strong></div>
           <div className="reg-summary-row"><span>Moneda</span><strong>{(stored.moneda || 'mxn').toUpperCase()}</strong></div>
           <div className="reg-summary-row reg-summary-row--total">
-            <span>Total pagado</span>
+            <span>Inversión realizada</span>
             <strong>${(stored.total_mxn || 0).toLocaleString('es-MX')} MXN</strong>
           </div>
         </aside>
@@ -548,94 +544,3 @@ function RegistrationForm() {
   );
 }
 
-function TestZone() {
-  const [testExtras, setTestExtras] = useState(new Set());
-  const [testLoading, setTestLoading] = useState(false);
-  const [testError, setTestError] = useState('');
-
-  const TEST_EXTRAS = [
-    { id: 'test_extra_a', label: 'Extra de prueba A', price: 5 },
-    { id: 'test_extra_b', label: 'Extra de prueba B', price: 5 },
-  ];
-
-  const toggleTest = (id) =>
-    setTestExtras((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-
-  const base = 10;
-  const extrasTotal = [...testExtras].reduce((s, id) => {
-    const ex = TEST_EXTRAS.find((e) => e.id === id);
-    return s + (ex?.price ?? 0);
-  }, 0);
-  const total = base + extrasTotal;
-
-  const handleTestPay = async () => {
-    setTestLoading(true);
-    setTestError('');
-    try {
-      const res = await fetch('/.netlify/functions/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ perfil: 'test', extras: [...testExtras], moneda: 'mxn', email: 'test@hce.com' }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else throw new Error(data.error || 'Error');
-    } catch (err) {
-      setTestError(err.message);
-    } finally {
-      setTestLoading(false);
-    }
-  };
-
-  return (
-    <div className="test-zone hce-container">
-      <div className="test-zone-inner">
-        <div className="test-zone-header">
-          <span className="test-zone-badge">⚙ TESTEO</span>
-          <p className="test-zone-sub">Zona de pruebas — no visible en producción final</p>
-        </div>
-
-        <div className="test-zone-body">
-          <div className="test-zone-info">
-            <p className="test-zone-label">Producto</p>
-            <p className="test-zone-val">Inscripción de prueba · <strong>$10 MXN</strong></p>
-          </div>
-
-          <div className="test-zone-extras">
-            {TEST_EXTRAS.map((ex) => (
-              <label key={ex.id} className={`test-extra ${testExtras.has(ex.id) ? 'test-extra--on' : ''}`}>
-                <input
-                  type="checkbox"
-                  checked={testExtras.has(ex.id)}
-                  onChange={() => toggleTest(ex.id)}
-                  style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
-                />
-                <span className="test-extra-box">{testExtras.has(ex.id) ? '✓' : ''}</span>
-                {ex.label} · +${ex.price} MXN
-              </label>
-            ))}
-          </div>
-
-          <div className="test-zone-total">
-            Total: <strong>${total} MXN</strong>
-          </div>
-
-          {testError && <p className="test-zone-error">{testError}</p>}
-
-          <button
-            type="button"
-            className="test-zone-btn"
-            onClick={handleTestPay}
-            disabled={testLoading}
-          >
-            {testLoading ? 'Redirigiendo...' : 'Probar pago ($' + total + ' MXN)'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}

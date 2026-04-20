@@ -33,7 +33,7 @@ function App() {
         <Route path="/insuficiencia-cardiaca" element={<InsuficienciaCardiaca />} />
         <Route path="/instructores" element={<Instructores />} />
         <Route path="/retroalimentacion" element={<Retroalimentacion />} />
-        <Route path="/inscripciones" element={<Inscripciones />} />
+        <Route path="/inscripciones-diploma-paris-ecmo" element={<Inscripciones />} />
       </Routes>
     </Router>
   );

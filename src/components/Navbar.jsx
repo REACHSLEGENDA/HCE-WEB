@@ -73,7 +73,7 @@ const Navbar = () => {
           <div className="menu-section">
             <h3>Experiencias</h3>
             <ul className="menu-list">
-              <li><Link to="/insuficiencia-cardiaca" onClick={() => toggleNav(false)}><Heart size={18} /> Insuficiencia Cardiaca</Link></li>
+              {/* <li><Link to="/insuficiencia-cardiaca" onClick={() => toggleNav(false)}><Heart size={18} /> Insuficiencia Cardiaca</Link></li> */}
               <li><Link to="/ecmo-nursing-care" onClick={() => toggleNav(false)}><Activity size={18} /> ECMO Nursing Care</Link></li>
               <li><Link to="/paris-diploma-ecmo" onClick={() => toggleNav(false)}><Award size={18} /> Paris Diploma ECMO</Link></li>
             </ul>
@@ -88,49 +88,20 @@ const Navbar = () => {
           </div>
 
           {/* Webinars */}
-          <div className="menu-section">
+          {/* <div className="menu-section">
             <h3>Webinars</h3>
             <ul className="menu-list">
               <li><a href="#" onClick={() => toggleNav(false)}><PlayCircle size={18} /> Biblioteca Científica</a></li>
             </ul>
-          </div>
+          </div> */}
 
           {/* Galerías */}
-          <div className="menu-section">
+          {/* <div className="menu-section">
             <h3>Galerías</h3>
             <ul className="menu-list">
-              <li>
-                <a href="#" onClick={() => toggleNav(false)}>
-                  <Hospital size={18} /> ECMO Nursing: Teórica Guayaquil Agosto 2025
-                </a>
-              </li>
-              <li>
-                <a href="#" onClick={() => toggleNav(false)}>
-                  <Hospital size={18} /> ECMO Nursing: Práctica Guayaquil Agosto 2025
-                </a>
-              </li>
-              <li>
-                <a href="#" onClick={() => toggleNav(false)}>
-                  <Hospital size={18} /> Paris Diploma: INER CDMX Marzo 2025
-                </a>
-              </li>
-              <li>
-                <a href="#" onClick={() => toggleNav(false)}>
-                  <Hospital size={18} /> Paris Simulation: INER CDMX Marzo 2025
-                </a>
-              </li>
-              <li>
-                <a href="#" onClick={() => toggleNav(false)}>
-                  <Hospital size={18} /> Paris Diploma: INC CDMX Septiembre 2024
-                </a>
-              </li>
-              <li>
-                <a href="#" onClick={() => toggleNav(false)}>
-                  <Hospital size={18} /> Paris Simulation: CEACCS CDMX Septiembre 2024
-                </a>
-              </li>
+              ... items ...
             </ul>
-          </div>
+          </div> */}
 
         </div>
       </nav>

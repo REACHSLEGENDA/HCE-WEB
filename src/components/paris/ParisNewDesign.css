@@ -164,32 +164,63 @@
     margin-left: 0 !important;
 }
 
-/* --- Countdown --- */
-.paris-redesign .countdown {
+/* --- Hero Countdown --- */
+.paris-redesign .hero-countdown {
+    margin-top: 3.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.5rem 2.5rem;
+    border-radius: 24px;
+    display: inline-block;
+}
+
+.paris-redesign .countdown-label {
     display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-bottom: 3rem;
-    animation: fadeInUp 1s ease-out 0.6s both;
-}
-
-.paris-redesign .count-item {
-    text-align: center;
-}
-
-.paris-redesign .count-value {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--accent);
-    display: block;
+    align-items: center;
+    gap: 10px;
     font-family: 'Outfit', sans-serif;
-}
-
-.paris-redesign .count-label {
-    font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 2px;
-    opacity: 0.7;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 1.2rem;
+}
+
+.paris-redesign .countdown-timer {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.paris-redesign .time-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.paris-redesign .time-value {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #ffffff;
+    font-family: 'Outfit', sans-serif;
+    line-height: 1;
+}
+
+.paris-redesign .time-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-top: 0.5rem;
+    font-weight: 700;
+}
+
+.paris-redesign .time-sep {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.2);
+    margin-top: -15px;
 }
 
 /* --- Animations --- */
@@ -505,6 +536,204 @@
         grid-template-columns: 1fr;
         text-align: center;
     }
+}
+
+/* --- Syllabus Tabs --- */
+.paris-redesign .syl-section {
+    background: #ffffff;
+}
+
+.paris-redesign .syl-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.paris-redesign .syl-header .section-title {
+    color: #0a1628;
+}
+
+.paris-redesign .syl-sub {
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    color: #64748b;
+}
+
+/* Tab bar */
+.paris-redesign .syl-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.paris-redesign .syl-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f1f5f9;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 100px;
+    padding: 0.55rem 1.2rem;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.paris-redesign .syl-tab:hover {
+    background: #e8eef8;
+    color: #0047FF;
+    border-color: #b8c8f0;
+}
+
+.paris-redesign .syl-tab--active {
+    background: linear-gradient(135deg, #0047FF, #c00) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+.paris-redesign .syl-tab-count {
+    background: rgba(0,0,0,0.1);
+    border-radius: 100px;
+    padding: 0.05rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.paris-redesign .syl-tab--active .syl-tab-count {
+    background: rgba(255,255,255,0.25);
+}
+
+/* Panel — altura fija con scroll interno */
+.paris-redesign .syl-panel-wrap {
+    height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.paris-redesign .syl-panel-wrap::-webkit-scrollbar {
+    width: 4px;
+}
+
+.paris-redesign .syl-panel-wrap::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.paris-redesign .syl-panel-wrap::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.paris-redesign .syl-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    animation: syl-fade 0.25s ease;
+}
+
+@keyframes syl-fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.paris-redesign .syl-card {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.paris-redesign .syl-card:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    box-shadow: 0 2px 12px rgba(0,71,255,0.08);
+}
+
+.paris-redesign .syl-card-num {
+    font-size: 0.7rem;
+    font-weight: 900;
+    font-family: 'Montserrat', sans-serif;
+    background: linear-gradient(135deg, #0047FF, #c00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    flex-shrink: 0;
+    margin-top: 2px;
+    min-width: 20px;
+}
+
+.paris-redesign .syl-card-body { flex: 1; }
+
+.paris-redesign .syl-card-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 0.3rem;
+    line-height: 1.3;
+}
+
+.paris-redesign .syl-card-desc {
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.paris-redesign .syl-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    background: #0a1628;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    flex-wrap: wrap;
+}
+
+.paris-redesign .syl-cta-text {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.paris-redesign .syl-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #0047FF, #c00);
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    font-family: 'Montserrat', sans-serif;
+    padding: 0.75rem 2rem;
+    border-radius: 100px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 0.2s, transform 0.2s;
+    flex-shrink: 0;
+}
+
+.paris-redesign .syl-cta-btn:hover {
+    opacity: 0.88;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .paris-redesign .syl-tabs  { gap: 0.4rem; }
+    .paris-redesign .syl-tab   { font-size: 0.8rem; padding: 0.45rem 0.9rem; }
+    .paris-redesign .syl-panel { grid-template-columns: 1fr; }
+    .paris-redesign .syl-panel-wrap { height: 480px; }
+    .paris-redesign .syl-cta   { flex-direction: column; text-align: center; }
 }
 
 /* --- Special Sections --- */

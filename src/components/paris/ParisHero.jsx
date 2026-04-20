@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import { ChevronRight, Calendar, Award } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './ParisHero.css';
 
 const ParisHero = () => {
@@ -55,9 +55,9 @@ const ParisHero = () => {
         </p>
 
         <div className="paris-cta-group">
-          <a href="https://healthcareexp.com/inscripciones-ecmo/" className="btn-paris-primary">
+          <Link to="/inscripciones-diploma-paris-ecmo" className="btn-paris-primary">
             Inscríbete Ahora <ChevronRight size={18} />
-          </a>
+          </Link>
         </div>
 
         <div className="paris-countdown-box">

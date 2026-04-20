@@ -1,6 +1,5 @@
-import React from 'react';
-import { useInView } from 'react-intersection-observer';
 import { Target, Users, BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './ParisWelcome.css';
 
 const ParisWelcome = () => {
@@ -40,9 +39,9 @@ const ParisWelcome = () => {
             <p>
               Contamos con una promoción exclusiva para nuestros alumnos de enfermería matriculados en el Diploma Internacional de Paris en ECMO. ¡Aprovecha este beneficio diseñado para impulsar tu carrera!
             </p>
-            <a href="https://healthcareexp.com/inscripciones-ecmo/" className="btn-promo">
+            <Link to="/inscripciones-diploma-paris-ecmo" className="btn-promo">
               Aplicar a la Promoción
-            </a>
+            </Link>
           </div>
           <div className="promo-img-side">
             <img 

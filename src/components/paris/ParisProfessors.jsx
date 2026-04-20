@@ -1,6 +1,5 @@
-import React from 'react';
-import { useInView } from 'react-intersection-observer';
 import { Award, BookOpen, Building2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './ParisProfessors.css';
 
 const professors = [
@@ -76,9 +75,9 @@ const ParisProfessors = () => {
         </div>
 
         <div className="prof-cta text-center">
-          <a href="https://healthcareexp.com/inscripciones-ecmo/" className="btn-paris-gold">
+          <Link to="/inscripciones-diploma-paris-ecmo" className="btn-paris-gold">
             Reserva tu Lugar con Nosotros
-          </a>
+          </Link>
         </div>
 
       </div>
