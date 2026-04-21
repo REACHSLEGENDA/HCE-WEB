@@ -1,9 +1,9 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Users, GraduationCap, MapPin, Award } from 'lucide-react';
+import { Users, GraduationCap, MapPin, Building2 } from 'lucide-react';
 import './Instructors.css';
 
-const InstructorCard = ({ src, role, name, country, delay }) => {
+const InstructorCard = ({ src, role, name, country, hospital, delay }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   return (
@@ -12,8 +12,8 @@ const InstructorCard = ({ src, role, name, country, delay }) => {
         <img src={src} alt={name} />
         <div className="expert-overlay">
           <div className="expert-stats">
-            <div className="e-stat"><Award size={14} /> <span>Senior Expert</span></div>
             <div className="e-stat"><MapPin size={14} /> <span>{country || 'Francia'}</span></div>
+            {hospital && <div className="e-stat"><Building2 size={14} /> <span>{hospital}</span></div>}
           </div>
         </div>
       </div>
@@ -53,14 +53,16 @@ const Instructors = () => {
             src="/assets/componentes/Alain-Combes.jpg" 
             role="Director del Programa" 
             name="Prof. Alain Combes" 
-            country="Francia - Pitié Salpêtrière"
+            country="Francia"
+            hospital="Hosp. Pitié-Salpêtrière"
           />
           <InstructorCard 
             delay={0.2} 
             src="/assets/componentes/Alain-Combes.png" 
             role="Presidente Científico" 
             name="Prof. Matthieu Schmidt" 
-            country="Francia - Pitié Salpêtrière"
+            country="Francia"
+            hospital="Hosp. Pitié-Salpêtrière"
           />
           <InstructorCard 
             delay={0.3} 
@@ -68,6 +70,7 @@ const Instructors = () => {
             role="CEO Pratico Santé" 
             name="Enf. Hugo Guillou" 
             country="Francia"
+            hospital="Pratico Santé"
           />
           <InstructorCard 
             delay={0.4} 
@@ -75,6 +78,7 @@ const Instructors = () => {
             role="Presidente Pratico Santé" 
             name="Enf. Emric Besnard" 
             country="Francia"
+            hospital="Pratico Santé"
           />
         </div>
 

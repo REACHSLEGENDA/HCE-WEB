@@ -30,7 +30,7 @@ const AnimatedCounter = ({ target, duration = 2000, trigger }) => {
     return () => clearInterval(timer);
   }, [target, duration, trigger]);
 
-  return <span>{count}</span>;
+  return <span>{count >= 1000 ? (count / 1000).toString() + 'k' : count}</span>;
 };
 
 const ImpactCard = ({ icon, target, plus, title, desc, delay, triggerAnim }) => {

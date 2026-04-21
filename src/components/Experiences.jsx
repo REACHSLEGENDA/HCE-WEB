@@ -7,7 +7,7 @@ const ExperienceCard = ({ title, description, link, img, imgClass, badge, badgeC
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   
   return (
-    <div ref={ref} className={`exp-premium-card reveal ${inView ? 'active' : ''}`} style={{ transitionDelay: `${delay}s` }}>
+    <a href={link} ref={ref} className={`exp-premium-card reveal ${inView ? 'active' : ''} ${badge === 'PRÓXIMAMENTE' ? 'disabled-card' : ''}`} style={{ transitionDelay: `${delay}s`, pointerEvents: badge === 'PRÓXIMAMENTE' ? 'none' : 'auto' }}>
       <div className="card-glass-glow"></div>
       <div className="exp-img-container">
         {badge && <div className={`status-badge ${badgeClass}`}>{badge}</div>}
@@ -20,13 +20,13 @@ const ExperienceCard = ({ title, description, link, img, imgClass, badge, badgeC
         <h3 className="exp-title-premium">{title}</h3>
         <p className="exp-desc-premium">{description}</p>
         <div className="exp-footer-premium">
-            <a href={link} className="exp-link-action">
-                <span>Explorar Programa</span>
+            <span className="exp-link-action">
+                <span>Ver programa</span>
                 <ArrowRight size={18} />
-            </a>
+            </span>
         </div>
       </div>
-    </div>
+    </a>
   );
 };
 
@@ -55,8 +55,8 @@ const Experiences = () => {
             description="Domina los criterios de selección para asistencia ventricular y trasplante con simulación HARVI de alta precisión."
             link="/insuficiencia-cardiaca"
             img="/assets/componentes/Generated-Image-March-03-2026-11_28PM.png"
-            badge="SOLD OUT"
-            badgeClass="badge-danger"
+            badge="PRÓXIMAMENTE"
+            badgeClass="badge-info"
           />
           <ExperienceCard 
             delay={0.2}

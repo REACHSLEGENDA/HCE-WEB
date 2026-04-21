@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Users, Heart, Activity, Award, Gamepad2, PlayCircle, Hospital } from 'lucide-react';
+import { X, Users, Heart, Activity, Award, Gamepad2, PlayCircle, Hospital, Home as HomeIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
 
@@ -33,7 +33,6 @@ const Navbar = () => {
   return (
     <>
       <header className={`hce-header ${scrolled ? 'scrolled' : ''}`}>
-        {/* 1. Menú a la izquierda */}
         <div 
           className={`menu-toggle ${navOpen ? 'active' : ''}`} 
           id="menuToggle"
@@ -60,11 +59,16 @@ const Navbar = () => {
 
         <div className="nav-grid">
           
-          {/* Logo dentro del menú */}
+          {/* Home Link dentro del menú */}
           <div className="nav-logo-overlay">
-            <Link to="/" onClick={() => toggleNav(false)}>
+            <Link to="/" onClick={() => toggleNav(false)} className="nav-logo-link">
               <img src="/assets/componentes/ghghg-scaled.png" alt="HCE Logo" />
             </Link>
+            <div className="nav-home-wrapper">
+               <Link to="/" onClick={() => toggleNav(false)} className="nav-home-item">
+                  <HomeIcon size={20} /> Inicio
+               </Link>
+            </div>
           </div>
 
           {/* Nosotros */}

@@ -38,14 +38,14 @@
 
 .n-hero-badge {
   display: inline-block;
-  background: rgba(0, 210, 255, 0.1);
-  border: 1px solid rgba(0, 210, 255, 0.3);
+  background: rgba(227, 24, 55, 0.1);
+  border: 1px solid rgba(227, 24, 55, 0.3);
   padding: 8px 16px;
   border-radius: 50px;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 2px;
-  color: #00d2ff;
+  color: #e31837;
   margin-bottom: 2rem;
 }
 
@@ -55,6 +55,14 @@
   line-height: 1.1;
   margin-bottom: 1.5rem;
   letter-spacing: -1.5px;
+}
+
+.n-hero-title-main {
+  color: #ffffff;
+}
+
+.n-hero-title-sub {
+  color: #e31837; /* Rojo de la cruz del logo */
 }
 
 .n-hero-subtitle {
@@ -93,6 +101,16 @@
 .n-btn-cyan:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(0, 210, 255, 0.4);
+}
+
+.n-btn-brand {
+  background: #e31837;
+  color: #ffffff !important;
+}
+
+.n-btn-brand:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(227, 24, 55, 0.4);
 }
 
 .n-btn-outline {
@@ -156,8 +174,8 @@
 
 .n-train-card.featured {
   background: white;
-  border: 2px solid #00d2ff;
-  box-shadow: 0 20px 40px rgba(0, 210, 255, 0.08);
+  border: 2px solid #e31837;
+  box-shadow: 0 20px 40px rgba(227, 24, 55, 0.08);
   transform: translateY(-5px);
   z-index: 2;
 }
@@ -165,12 +183,12 @@
 .n-icon-box {
   width: 52px;
   height: 52px;
-  background: rgba(0, 210, 255, 0.08);
+  background: rgba(227, 24, 55, 0.08);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2979ff;
+  color: #e31837;
   margin-bottom: 1.5rem;
 }
 
@@ -204,8 +222,8 @@
 }
 
 .n-card-cta {
-  background: #00d2ff;
-  color: #0a192f;
+  background: #e31837;
+  color: white;
   border: none;
   padding: 12px 20px;
   border-radius: 12px;
@@ -226,7 +244,7 @@
 
 .n-card-cta:hover {
   transform: translateX(5px);
-  box-shadow: 0 5px 15px rgba(0, 210, 255, 0.2);
+  box-shadow: 0 5px 15px rgba(227, 24, 55, 0.3);
 }
 
 .n-training-footer.sales {
@@ -238,9 +256,9 @@
   padding: 3rem;
   background: white;
   border-radius: 24px;
-  border: 4px solid #00d2ff;
+  border: 4px solid #e31837;
   margin-bottom: 5rem;
-  box-shadow: 0 20px 40px rgba(0, 210, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(227, 24, 55, 0.1);
   text-align: center;
 }
 
@@ -252,8 +270,8 @@
 }
 
 .n-sales-btn {
-  background: #00d2ff;
-  color: #0a192f;
+  background: #e31837;
+  color: white;
   border: none;
   padding: 18px 32px;
   border-radius: 16px;
@@ -261,12 +279,12 @@
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 10px 20px rgba(0, 210, 255, 0.2);
+  box-shadow: 0 10px 20px rgba(227, 24, 55, 0.2);
 }
 
 .n-sales-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 15px 30px rgba(0, 210, 255, 0.3);
+  box-shadow: 0 15px 30px rgba(227, 24, 55, 0.3);
 }
 
 /* Outcomes Section */
@@ -290,7 +308,7 @@
   display: block;
   font-size: 0.8rem;
   font-weight: 800;
-  color: #00d2ff;
+  color: #e31837;
   letter-spacing: 5px;
   margin-bottom: 1rem;
 }
@@ -316,7 +334,7 @@
 .n-outcome-card:hover {
   transform: translateY(-10px);
   background: rgba(255, 255, 255, 0.08);
-  border-color: #00d2ff;
+  border-color: #e31837;
 }
 
 .n-o-num {
@@ -332,14 +350,14 @@
 .n-o-icon {
   width: 70px;
   height: 70px;
-  background: #00d2ff;
+  background: #e31837;
   border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #0a192f;
+  color: white;
   margin-bottom: 2.5rem;
-  box-shadow: 0 10px 25px rgba(0, 210, 255, 0.3);
+  box-shadow: 0 10px 25px rgba(227, 24, 55, 0.3);
 }
 
 .n-outcome-card h3 {
@@ -409,14 +427,14 @@
   height: 130px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(0, 210, 255, 0.2);
+  border: 1px solid rgba(227, 24, 55, 0.2);
   padding: 5px;
   transition: all 0.3s ease;
 }
 
 .n-faculty-card:hover .n-faculty-img {
-  border-color: #00d2ff;
-  box-shadow: 0 10px 25px rgba(0, 210, 255, 0.2);
+  border-color: #e31837;
+  box-shadow: 0 10px 25px rgba(227, 24, 55, 0.2);
 }
 
 .n-verified {
@@ -458,10 +476,10 @@
   justify-content: center;
   width: 28px;
   height: 20px;
-  background: rgba(0, 210, 255, 0.05);
+  background: rgba(227, 24, 55, 0.05);
   margin: 0.5rem auto 1rem;
   border-radius: 4px;
-  border: 1px dashed rgba(0, 210, 255, 0.4);
+  border: 1px dashed rgba(227, 24, 55, 0.4);
 }
 
 .n-role {
@@ -538,7 +556,7 @@
   display: inline-block;
   font-size: 0.65rem;
   font-weight: 900;
-  color: #00d2ff;
+  color: #e31837;
   margin-bottom: 0.8rem;
   letter-spacing: 1px;
 }
@@ -566,13 +584,13 @@
 
 .presencial-expert-card:hover {
   transform: translateY(-10px);
-  border-color: #00d2ff;
-  box-shadow: 0 25px 50px rgba(0, 210, 255, 0.1);
+  border-color: #e31837;
+  box-shadow: 0 25px 50px rgba(227, 24, 55, 0.1);
 }
 
 .presencial-expert-card:hover .presencial-main-img {
   transform: scale(1.05);
-  border-color: #00d2ff;
+  border-color: #e31837;
 }
 
 .n-section-cta {
@@ -610,7 +628,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at center, rgba(0, 210, 255, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(227, 24, 55, 0.15) 0%, transparent 70%);
   z-index: 1;
 }
 
@@ -623,7 +641,7 @@
   display: inline-block;
   font-size: 0.8rem;
   font-weight: 800;
-  color: #00d2ff;
+  color: #e31837;
   letter-spacing: 3px;
   margin-bottom: 2rem;
 }
@@ -656,8 +674,8 @@
 }
 
 .btn-buy-final {
-  background: linear-gradient(135deg, #00d2ff 0%, #00a8ff 100%);
-  color: #0a192f;
+  background: linear-gradient(135deg, #e31837 0%, #c8102e 100%);
+  color: white;
   padding: 1.25rem 3rem;
   border-radius: 16px;
   font-weight: 800;
@@ -668,12 +686,12 @@
   align-items: center;
   gap: 12px;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 10px 30px rgba(0, 210, 255, 0.3), inset 0 0 15px rgba(255,255,255,0.3);
+  box-shadow: 0 10px 30px rgba(227, 24, 55, 0.3), inset 0 0 15px rgba(255,255,255,0.3);
 }
 
 .btn-buy-final:hover {
   transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(0, 210, 255, 0.5), inset 0 0 20px rgba(255,255,255,0.4);
+  box-shadow: 0 20px 40px rgba(227, 24, 55, 0.5), inset 0 0 20px rgba(255,255,255,0.4);
 }
 
 .btn-info-final {
@@ -690,10 +708,10 @@
 }
 
 .btn-info-final:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: #00d2ff;
-  color: #00d2ff;
-  box-shadow: 0 0 30px rgba(0, 210, 255, 0.1);
+  background: rgba(227, 24, 55, 0.1);
+  border-color: #e31837;
+  color: white;
+  box-shadow: 0 0 30px rgba(227, 24, 55, 0.2);
 }
 
 @media (max-width: 768px) {

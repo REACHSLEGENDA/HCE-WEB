@@ -76,7 +76,7 @@ const AboutUs = () => {
               <div className="au-que-accent-line" />
               <span className="au-tag">¿Qué es HCE?</span>
               <h2 className="au-h2">
-                Healthcare Clinical <span className="au-gradient-text">Experience</span>
+                Healthcare Training <span className="au-gradient-text">Experience</span>
               </h2>
               
               <p className="au-lead">
@@ -102,7 +102,7 @@ const AboutUs = () => {
                 <div className="au-que-stat-divider" />
                 <div className="au-que-stat">
                    <div className="au-stat-mini-icon"><Globe size={14} /></div>
-                  <strong>15+</strong><span>Países</span>
+                  <strong>15+</strong><span>Países con presencia activa</span>
                 </div>
                 <div className="au-que-stat-divider" />
                 <div className="au-que-stat">
@@ -142,7 +142,7 @@ const AboutUs = () => {
               </div>
               <div className="au-man-card au-man-card--2">
                 <span className="au-man-card-num">15<sup>+</sup></span>
-                <p>Países con presencia activa</p>
+                <p>Alumnos de más de 15 Países de Latinoamérica</p>
               </div>
               <div className="au-man-card au-man-card--3">
                 <Globe size={26} />
@@ -165,43 +165,61 @@ const AboutUs = () => {
                 alt="Historia HCE"
                 className="au-history-img"
               />
-              <div className="au-history-badge">
-                <span className="au-history-year">2018</span>
-                <p>Año de fundación</p>
+              <div className="au-hist-box">
+                <div className="au-hist-year-wrap">
+                  <span className="au-history-year">2024</span>
+                  <span className="au-history-label">AÑO DE FUNDACIÓN</span>
+                </div>
               </div>
             </div>
 
             <div className="au-history-text">
               <span className="au-tag">Nuestra Historia</span>
-              <h2 className="au-h2">
-                Nació de una <span className="au-gradient-text">frustración real.</span>
-              </h2>
-              <p>
-                En 2018, un grupo de intensivistas latinoamericanos llegó a una certeza: la brecha entre la educación médica tradicional y la realidad de la UCI era inaceptable.
+              <p className="au-hist-lead">
+                Nació de una frustración real.
+              </p>
+              <p className="au-hist-p">
+                En 2024, llegamos a una conclusión: la brecha entre la educación médica tradicional y la realidad de la UCI era abismal.
               </p>
               <p>
-                Fundaron HCE con una sola misión — llevar formación de élite a Latinoamérica. Comenzaron con un primer curso ECMO en Ciudad de México, 18 participantes y un simulador prestado.
+                Fundamos HCE con una sola misión — llevar formación de élite a Latinoamérica. Comenzamos con una primer certificación ECMO en Ciudad de México con + de 200 participantes y un sueño.
               </p>
               <p>
-                Hoy operamos en más de 15 países, hemos entrenado a más de 2,000 profesionales y somos el único programa avalado por <strong>ELSO</strong> e <strong>ISHLT</strong> en la región.
+                Hoy entrenamos en todo latinoamérica, hemos impactado a más de 2,000 profesionales y creamos el único programa en español avalado por <strong>ISHLT</strong> en la región hasta el momento.
               </p>
 
               <div className="au-history-timeline">
                 <div className="au-tl-item">
-                  <span className="au-tl-year">2018</span>
-                  <p>Primer curso ECMO · CDMX · 18 participantes</p>
+                  <div className="au-tl-dot"></div>
+                  <div className="au-tl-content">
+                    <span className="au-tl-year">2023</span>
+                    <h4>Alianza Internacional</h4>
+                    <p>Alianza internacional Prático Santé creadores de ECMO Sim. Dra. Jenifer Trejo Embajada de ECMO Sim para todo Latinoamérica.</p>
+                  </div>
                 </div>
                 <div className="au-tl-item">
-                  <span className="au-tl-year">2020</span>
-                  <p>Alianza internacional con expertos en ECMO de París</p>
+                  <div className="au-tl-dot"></div>
+                  <div className="au-tl-content">
+                    <span className="au-tl-year">2024</span>
+                    <h4>Lanzamiento CDMX</h4>
+                    <p>Lanzamiento del Diploma Internacional de Paris en ECMO en Ciudad de México.</p>
+                  </div>
                 </div>
                 <div className="au-tl-item">
-                  <span className="au-tl-year">2022</span>
-                  <p>Lanzamiento del Paris Diploma ECMO en Latinoamérica</p>
+                  <div className="au-tl-dot"></div>
+                  <div className="au-tl-content">
+                    <span className="au-tl-year">2025</span>
+                    <h4>Expansión a Chile</h4>
+                    <p>Lanzamiento del Diploma Internacional de Paris en ECMO en Chile.</p>
+                  </div>
                 </div>
                 <div className="au-tl-item">
-                  <span className="au-tl-year">2024</span>
-                  <p>Aval ISHLT · expansión a 15+ países</p>
+                  <div className="au-tl-dot"></div>
+                  <div className="au-tl-content">
+                    <span className="au-tl-year">2026</span>
+                    <h4>Hito Regional</h4>
+                    <p>Lanzamiento del Primer Programa en español avalado por la ISHLT.</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -251,7 +269,7 @@ const AboutUs = () => {
               <div className="au-method-content">
                 <div className="au-method-icon"><Globe size={28} /></div>
                 <h3>Teoría Asíncrona</h3>
-                <p>Nuestra plataforma digital te da acceso a videoclases tipo Netflix, podcasts y material de lectura actualizado bajo protocolos ELSO, para que domines los fundamentos a tu ritmo.</p>
+                <p>A traves de nuestro campus virtual tendrás acceso 24/7 a material educativo asincrónico y sesiones sincrónicas con los expertos para resolver dudas además de una biblioteca científica amplia para reforzar tu conocimiento con guías y artículos científicos de vanguardia para que domines los fundamentos a tu ritmo.</p>
               </div>
             </div>
 
@@ -260,7 +278,7 @@ const AboutUs = () => {
               <div className="au-method-content">
                 <div className="au-method-icon"><MonitorPlay size={28} /></div>
                 <h3>Simulación ECMO</h3>
-                <p>Uso de simuladores virtuales fisiológicos (ECMO Sim / HARVI) donde observas en tiempo real cómo responde la hemodinamia del paciente a cada mililitro de flujo que cambias.</p>
+                <p>Uso de simuladores virtuales fisiológicos (ECMO Sim / HARVI) donde observas en tiempo real cómo responde la hemodinamia del paciente a cada intervención que realizas.</p>
               </div>
             </div>
 
@@ -269,7 +287,7 @@ const AboutUs = () => {
               <div className="au-method-content">
                 <div className="au-method-icon"><Zap size={28} /></div>
                 <h3>Práctica Inmersiva</h3>
-                <p>La culminación en nuestros bootcamps presenciales (ej. París, Monterrey). Maniquíes de alta fidelidad, circuitos reales y canulaciones bajo presión de tiempo.</p>
+                <p>La culminación en nuestros bootcamps presenciales a través de simulación de baja, mediana y alta fidelidad donde nos enfocamos en CRM y entorno seguro para tu aprendizaje y desarrollo de juicio clínico a través de discusión de casos reales con los expertos.</p>
               </div>
             </div>
 
@@ -291,12 +309,12 @@ const AboutUs = () => {
               <div className="au-core-box">
                 <div className="au-icon-wrap cyan"><Activity size={32} /></div>
                 <h3>Clínica Avanzada</h3>
-                <p>Dominio total del espectro cardiovascular y soporte ECMO/VAD. No enseñamos lo básico.</p>
+                <p>Dominio total del espectro cardiovascular y soporte ECMO/VAD.</p>
               </div>
               <div className="au-core-box">
                 <div className="au-icon-wrap blue"><Shield size={32} /></div>
-                <h3>Seguridad</h3>
-                <p>Reducción de eventos adversos a través del modelado de escenarios de crisis en simuladores.</p>
+                <h3>Seguridad del Paciente</h3>
+                <p>Prevención y manejo de emergencias a traves de aprendizaje basado en simulación.</p>
               </div>
               <div className="au-core-box">
                 <div className="au-icon-wrap cyan"><Target size={32} /></div>
@@ -306,7 +324,7 @@ const AboutUs = () => {
               <div className="au-core-box">
                 <div className="au-icon-wrap blue"><Award size={32} /></div>
                 <h3>Excelencia</h3>
-                <p>Auditoría de contenido alineada a las guías ELSO y certificaciones biomédicas más estrictas.</p>
+                <p>Contenido Vanguardista actualizado a las últimas recomendaciones y guías a nivel internacional.</p>
               </div>
             </div>
 

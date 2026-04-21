@@ -379,7 +379,7 @@ export default function Inscripciones() {
   );
 }
 
-function RegistrationForm() {
+export function RegistrationForm() {
   // Leer datos directamente del parámetro ?d= que Stripe preserva en la URL de retorno
   const stored = (() => {
     try {

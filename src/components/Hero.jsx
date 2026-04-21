@@ -11,7 +11,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <header className="hero" id="home">
+    <header className="hce-home-hero" id="home">
       <div className="hce-container hero-inner">
         <div className={`hero-content reveal ${active ? 'active' : ''}`}>
           <div className="badge-tag">
@@ -19,7 +19,7 @@ const Hero = () => {
           </div>
           <h1>
             La nueva era de la<br />
-            <span className="text-gradient">educación clínica</span>
+            <span className="text-gradient">educación</span> <span className="accent-text">clínica</span>
           </h1>
           <p>
             Domina el soporte extracorpóreo y las terapias críticas mediante aprendizaje inmersivo, simulación avanzada y entrenamiento de alto desempeño, diseñado para equipos multidisciplinarios de salud.

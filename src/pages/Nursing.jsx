@@ -86,15 +86,18 @@ const Nursing = () => {
         <div className="nursing-hero-overlay"></div>
         <div className="hce-container">
           <div ref={heroRef} className={`nursing-hero-content reveal ${heroInView ? 'active' : ''}`}>
-            <h1 className="n-hero-title">ECMO Nursing <span className="text-gradient">Care Course.</span></h1>
+            <h1 className="n-hero-title">
+              <span className="n-hero-title-main">Formación por y para</span><br />
+              <span className="n-hero-title-sub">Profesionales de Enfermería</span>
+            </h1>
             <p className="n-hero-subtitle">
-              Una experiencia de formación diseñada para fortalecer las competencias del personal de enfermería en el cuidado integral de pacientes con soporte ECMO.
+              Nuestro compromiso es consolidar un programa de capacitación de alta especialidad que te empodere como profesional de enfermería. A través de un modelo educativo de vanguardia, transformamos el cuidado del paciente con soporte ECMO en una práctica segura, técnica y profundamente humana.
               <br /><br />
-              <strong>Nadie comprende mejor tu labor que quien la vive a diario. Por eso, nuestro entrenamiento está liderado por enfermería, para enfermería.</strong>
+              <strong>Nadie comprende mejor tu labor que quien la vive a diario.</strong><br/>
+              Por eso, nuestro entrenamiento está diseñado y liderado por enfermería para enfermería. Entendemos tus retos y la precisión que exige cada segundo al pie de cama del paciente crítico en ECMO.
             </p>
             <div className="n-hero-actions">
-              <button className="n-btn n-btn-cyan">Reserva tu plaza <ArrowRight size={18} /></button>
-              <button className="n-btn n-btn-outline"><Download size={18} /> Brochure Corporativo</button>
+              <button className="n-btn n-btn-brand">Inscríbete <ArrowRight size={18} /></button>
             </div>
           </div>
         </div>
@@ -111,22 +114,22 @@ const Nursing = () => {
           <div className="n-training-grid">
             <div className="n-train-card featured">
               <div className="n-icon-box"><MonitorPlay size={32} /></div>
-              <span className="n-card-badge">OPEN ENROLLMENT</span>
-              <h3>Experiencia teórica virtual</h3>
-              <p>Inmersión asincrónica liderada por +20 líderes de opinión globales.</p>
-              <button className="n-card-cta">Ver Plataforma <ArrowRight size={14} /></button>
+              <span className="n-card-badge">+ 20 profesores</span>
+              <h3>Experiencia Teórica Virtual</h3>
+              <p>Inmersión de aprendizaje asincrónica y sincrónica virtual, diseñada para adaptarse a tu ritmo de vida profesional sin sacrificar la profundidad académica.</p>
+              <button className="n-card-cta">Inscripciones Abiertas <ArrowRight size={14} /></button>
             </div>
             <div className="n-train-card">
               <div className="n-icon-box"><BookOpen size={32} /></div>
-              <h3>Teoría Presencial</h3>
-              <p>Sesiones ejecutivas presenciales para la toma de decisiones críticas.</p>
+              <h3>Experiencia Teórica Presencial</h3>
+              <p>Ponencias Magistrales con ponentes profesionales de enfermería reconocidos a nivel internacional.</p>
               <button className="n-card-cta secondary">Consultar Sedes</button>
             </div>
             <div className="n-train-card">
               <div className="n-icon-box"><Layers size={32} /></div>
-              <h3>Simulación Clínica</h3>
-              <p>Entrenamiento de alta fidelidad con tecnología de última generación.</p>
-              <button className="n-card-cta secondary">Ver Simulador</button>
+              <h3>Experiencia Práctica Presencial</h3>
+              <p>Simulaciones de alta fidelidad con expertos reconocidos a nivel internacional.</p>
+              <button className="n-card-cta secondary">Próximamente</button>
             </div>
           </div>
 

@@ -9,6 +9,7 @@ import InsuficienciaCardiaca from './pages/InsuficienciaCardiaca';
 import Instructores from './pages/Instructores';
 import Retroalimentacion from './pages/Retroalimentacion';
 import Inscripciones from './pages/Inscripciones';
+import SecretPreview from './pages/SecretPreview';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -34,6 +35,7 @@ function App() {
         <Route path="/instructores" element={<Instructores />} />
         <Route path="/retroalimentacion" element={<Retroalimentacion />} />
         <Route path="/inscripciones-diploma-paris-ecmo" element={<Inscripciones />} />
+        <Route path="/debug-checkout-preview-2026" element={<SecretPreview />} />
       </Routes>
     </Router>
   );

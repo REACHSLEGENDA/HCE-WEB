@@ -22,7 +22,7 @@ const Partners = () => (
       </div>
       <h2 className="partners-title">Respaldados por la Excelencia</h2>
       <p className="partners-sub">
-        Instituciones, Sociedades Científicas y Centros de Prestigio Internacional que han confiado en nosotros o de los que forman parte nuestros docentes.
+        Instituciones, Sociedades Científicas y Centros de Prestigio Internacional de los que forman parte nuestros docentes.
       </p>
     </div>
 
