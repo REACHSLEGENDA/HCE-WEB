@@ -138,7 +138,7 @@ function SyllabusSection() {
 
                 {/* CTA */}
                 <div className="syl-cta">
-                    <p className="syl-cta-text">¿Listo para dominar el ECMO al más alto nivel?</p>
+                    <p className="syl-cta-text">¿Listo para dominar el soporte ECMO al más alto nivel?</p>
                     <a href="/inscripciones-diploma-paris-ecmo" className="syl-cta-btn">
                         Inscríbete ahora
                     </a>
@@ -207,7 +207,7 @@ const ParisNewDesign = () => {
                     <div className="h1-style">¡Conviértete en un especialista en <span className="gradient-text">ECMO</span>!</div>
                     <p className="hero-sub">Certifícate con la más alta tecnología de talla internacional.</p>
                     <div className="hero-actions">
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary" style={{ padding: '1.2rem 3rem' }}>Regístrate ahora</Link>
+                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
                     </div>
                     
                     {/* Hero Countdown */}
@@ -278,7 +278,7 @@ const ParisNewDesign = () => {
                         <span className="tag">Terapeutas Respiratorios</span>
                     </div>
                     <div style={{ textAlign: 'center', marginTop: '3rem', position: 'relative', zIndex: 3 }}>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary" style={{ padding: '1.2rem 3rem' }}>Certifícate</Link>
+                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Certifícate</Link>
                     </div>
                 </div>
             </section>
@@ -292,7 +292,7 @@ const ParisNewDesign = () => {
                         <p style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '2rem', lineHeight: '1.7' }}>
                             Jefe de la unidad de cuidados intensivos del <strong>Hospital La Pitié-Salpétrière</strong> de París, Francia, quien con su equipo ha entrenado a más de 2000 profesionales de la salud a nivel internacional.
                         </p>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary" style={{ padding: '1.2rem 3rem' }}>INSCRIBETE AHORA</Link>
+                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
                     </div>
                     <div className="experience-lead-img">
                         <img src="/assets/paris/DSC_0164.jpg" alt="Prof. Alain Combes Podium" />
@@ -369,7 +369,7 @@ const ParisNewDesign = () => {
                     </div>
                     
                     <div style={{ textAlign: 'center', marginTop: '4rem' }}>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary" style={{ padding: '1.2rem 3rem' }}>Inscríbete ahora</Link>
+                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
                     </div>
                 </div>
             </section>
@@ -440,7 +440,7 @@ const ParisNewDesign = () => {
                         <p style={{ fontSize: '1.3rem', marginBottom: '3.5rem', color: 'var(--text-muted)', maxWidth: '800px', marginInline: 'auto', lineHeight: '1.6' }}>
                             Entrenarte en ECMO te brinda acceso a formación de élite para desarrollar habilidades clave que no solo fortalecen tu perfil, sino que elevan el nivel clínico de todo tu equipo.
                         </p>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary btn-lg" style={{ padding: '1.5rem 4rem', fontSize: '1.2rem', borderRadius: '50px', boxShadow: '0 15px 35px rgba(0,0,0,0.1)' }}>Acceder a formación de élite</Link>
+                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Acceder a formación de élite</Link>
                     </div>
                 </div>
             </section>

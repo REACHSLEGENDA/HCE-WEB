@@ -78,14 +78,18 @@
 .hero-actions .btn-primary {
   background: var(--gradient-primary);
   color: white;
+  padding: 1.1rem 2.8rem;
   box-shadow: 0 10px 25px rgba(0, 72, 255, 0.3);
+  text-transform: uppercase;
 }
 
 .hero-actions .btn-outline {
   background: #ffffff;
   color: #0048ff;
   border: 2px solid #0048ff;
+  padding: 1.1rem 2.8rem;
   box-shadow: 0 4px 15px rgba(0, 72, 255, 0.1);
+  text-transform: uppercase;
 }
 
 .hero-actions .btn-outline:hover {

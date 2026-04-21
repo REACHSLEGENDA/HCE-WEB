@@ -85,7 +85,7 @@ const Navbar = () => {
             <h3>Experiencias</h3>
             <ul className="menu-list">
               {/* <li><Link to="/insuficiencia-cardiaca" onClick={() => toggleNav(false)}><Heart size={18} /> Insuficiencia Cardiaca</Link></li> */}
-              <li><Link to="/ecmo-nursing-care" onClick={() => toggleNav(false)}><Activity size={18} /> ECMO Nursing Care</Link></li>
+              {/* <li><Link to="/ecmo-nursing-care" onClick={() => toggleNav(false)}><Activity size={18} /> ECMO Nursing Care</Link></li> */}
               <li><Link to="/paris-diploma-ecmo" onClick={() => toggleNav(false)}><Award size={18} /> Paris Diploma ECMO</Link></li>
             </ul>
           </div>

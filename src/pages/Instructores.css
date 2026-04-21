@@ -133,16 +133,19 @@
 .inst-hero-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   background: var(--inst-grad);
   color: var(--inst-white);
-  font-size: 0.9rem;
-  font-weight: 700;
-  padding: 0.8rem 1.6rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 1.1rem 2.8rem;
   border-radius: 100px;
   border: none;
   cursor: pointer;
-  transition: opacity 0.25s, transform 0.25s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: 'Montserrat', sans-serif;
+  transition: all 0.3s ease;
 }
 .inst-hero-btn:hover { opacity: 0.88; transform: translateY(-2px); }
 
@@ -440,15 +443,18 @@
 .inst-cta-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   background: var(--inst-grad);
   color: var(--inst-white);
-  font-size: 0.9rem;
-  font-weight: 700;
-  padding: 0.85rem 1.8rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 1.1rem 2.8rem;
   border-radius: 100px;
   text-decoration: none;
-  transition: opacity 0.25s, transform 0.25s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: 'Montserrat', sans-serif;
+  transition: all 0.3s ease;
 }
 .inst-cta-btn:hover { opacity: 0.88; transform: translateY(-2px); }
 

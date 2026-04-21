@@ -7,7 +7,7 @@ const ExperienceCard = ({ title, description, link, img, imgClass, badge, badgeC
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   
   return (
-    <a href={link} ref={ref} className={`exp-premium-card reveal ${inView ? 'active' : ''} ${badge === 'PRÓXIMAMENTE' ? 'disabled-card' : ''}`} style={{ transitionDelay: `${delay}s`, pointerEvents: badge === 'PRÓXIMAMENTE' ? 'none' : 'auto' }}>
+    <a href={link} ref={ref} className={`exp-premium-card reveal ${inView ? 'active' : ''} ${badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'disabled-card' : ''}`} style={{ transitionDelay: `${delay}s`, pointerEvents: badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'none' : 'auto' }}>
       <div className="card-glass-glow"></div>
       <div className="exp-img-container">
         {badge && <div className={`status-badge ${badgeClass}`}>{badge}</div>}
@@ -21,8 +21,8 @@ const ExperienceCard = ({ title, description, link, img, imgClass, badge, badgeC
         <p className="exp-desc-premium">{description}</p>
         <div className="exp-footer-premium">
             <span className="exp-link-action">
-                <span>Ver programa</span>
-                <ArrowRight size={18} />
+                <span>{badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'Próximamente' : 'Ver programa'}</span>
+                {badge?.toUpperCase() !== 'PRÓXIMAMENTE' && <ArrowRight size={18} />}
             </span>
         </div>
       </div>
