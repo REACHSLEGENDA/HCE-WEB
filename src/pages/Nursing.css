@@ -717,3 +717,12 @@
   .n-training-grid { grid-template-columns: 1fr; }
   .n-outcomes-grid { grid-template-columns: 1fr; }
 }
+
+@media (max-width: 480px) {
+  .n-hero-title { font-size: 2.2rem; }
+  .n-hero { padding: 6rem 0 3rem; }
+  .n-presencial-grid { grid-template-columns: 1fr; }
+  .n-outcomes-grid { padding: 0; }
+  .n-final-content h2 { font-size: 1.8rem; }
+  .n-final-card { padding: 2rem 1.2rem; }
+}

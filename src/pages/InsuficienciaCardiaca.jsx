@@ -177,7 +177,7 @@ const InsuficienciaCardiaca = () => {
 
             <div className="ic-audience-img-wrap">
               <img
-                src="https://healthcareexp.com/wp-content/uploads/2025/10/dirigido.png"
+                src="/assets/paginas/dirigido.png"
                 alt="A quién está dirigido"
                 className="ic-audience-img"
               />
@@ -299,7 +299,7 @@ const InsuficienciaCardiaca = () => {
               <p>Programa con respaldo de la sociedad médica más importante en insuficiencia cardíaca y trasplante a nivel mundial.</p>
             </div>
             <div className="ic-avales-logo-wrap">
-              <img src="https://healthcareexp.com/wp-content/uploads/2025/10/ENDORSED-BY-ISHLT-1214x1536.png" alt="ISHLT" />
+              <img src="/assets/componentes/ENDORSED-BY-ISHLT.png" alt="ISHLT" />
             </div>
           </div>
         </div>

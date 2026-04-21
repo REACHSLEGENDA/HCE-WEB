@@ -492,4 +492,15 @@
     padding: 2.5rem 2rem;
     border-radius: 20px;
   }
+  .inst-h1 { font-size: clamp(1.8rem, 6vw, 2.8rem); }
+  .inst-card-photo { height: 220px; }
+}
+
+@media (max-width: 480px) {
+  .inst-stats-grid { grid-template-columns: 1fr; }
+  .inst-stat-item { border-right: none; border-bottom: 1px solid var(--inst-border); }
+  .inst-stat-item:nth-child(odd) { border-right: none; }
+  .inst-stat-item:last-child { border-bottom: none; }
+  .inst-hero { padding: 6rem 0 3rem; }
+  .inst-cta-box { padding: 2rem 1.5rem; }
 }

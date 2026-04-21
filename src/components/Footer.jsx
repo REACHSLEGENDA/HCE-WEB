@@ -16,7 +16,7 @@ const Footer = () => {
           {/* Brand Side */}
           <div className="f-brand">
             <a href="https://healthcareexp.com/">
-              <img src="https://healthcareexp.com/wp-content/uploads/2024/09/logo-hce-blanco--768x488.png" alt="HCE - Healthcare Training Experience" />
+              <img src="/assets/componentes/firma-hce.png" alt="HCE - Healthcare Training Experience" />
             </a>
             <p>
               Redefiniendo el estándar de la educación médica continua. Fusionamos ciencia, tecnología de simulación avanzada y excelencia académica para empoderar a los líderes del futuro en salud.

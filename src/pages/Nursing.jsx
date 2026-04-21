@@ -57,27 +57,24 @@ const Nursing = () => {
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   const virtualFaculty = [
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/p-carlosm.jpeg", name: "Perf. Carlos García Camacho", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Senior" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/p-juanm.jpeg", name: "Perf. Juan Blanco Morillo", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Coord. Terapias Extracorpóreas" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/p-eduardom.jpeg", name: "Enf. Eduardo Aguilar Rivera", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Experto en Soporte Crítico" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/p-moisem.png", name: "Perf. Moisés Espitia", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Líder de Perfusión Royal HC" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/82aaf183-a1b5-4353-a172-d499159086fd.jpg", name: "Perf. Dulce Nieto Arroyo", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Jefe de Perfusión INER" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/p-gonzalom.jpeg", name: "Perf. Gonzalo Cartes", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Enfermero Intensivista" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/a2e51cc5-9cb6-412c-b92e-7b9c9dcfc69e.jpg", name: "Enf. Lisbeth Ocaña Albites", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Líder Cardiovascular INCOR" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/219e522e-5aff-409c-8ab3-7e3904b9f45d.jpg", name: "Perf. Hans Castro Rosero", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Especialista en Circulación" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/de5ae3a6-8be9-41fe-a8e0-aae691d2172e.jpg", name: "Perfu. Mario Alejandro Meza", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/846fd848-ef66-4481-883a-ed3427059004.jpg", name: "Enf. Maira Rezende Girardi", country: "BRASIL", flag: "https://flagcdn.com/w80/br.png", role: "Hospital Israelita Albert Einstein" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/17520b78-52ae-4256-be3d-eaf541a51961.jpg", name: "Enf. Patricia Villazón Alcón", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Experta en POCUS y ECMO" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/172c41c8-98cd-42d7-9ac6-774a6d8eb608.jpg", name: "Enf. Edwin Sánchez", country: "SALVADOR", flag: "https://flagcdn.com/w80/sv.png", role: "Especialista UCI Pediátrica" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/Screenshot-2025-06-14-at-9.55.53%E2%80%AFa.m.png", name: "Perf. Gilberto Díaz Pérez", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Enfermero Naval Especialista" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/1be2aa8d-0d0f-4a45-92d8-e24eb76fcb84.jpg", name: "Enf. Miguel Ángel Albino", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Gestión de Servicios de Salud" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/4db1ce3a-243f-4330-9f6c-c8114140c1c8.jpg", name: "Enf. Elkin Peñaranda", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínica Medical Duarte" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/8d969ec9-4374-4808-bc65-77bd8f39a5b5-scaled.jpg", name: "Perf. Erick Paul Morales Vega", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Especialista Hospital CIMA" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/WhatsApp-Image-2025-06-26-at-20.38.16.jpeg", name: "Enf. María José Ayerbes Ceron", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Fundación Cardio Infantil" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/WhatsApp-Image-2025-06-22-at-12.01.16-1.jpeg", name: "Lic. Ricardo Fernando Rosero", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Fundación Favaloro" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/07/Captura-de-pantalla-2025-07-08-a-las-2.24.18%E2%80%AFp.m.png", name: "Lic. Natalia Fuentes", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Especialista UCIC y ECMO" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/08/WhatsApp-Image-2025-08-04-at-16.19.00.jpeg", name: "Lic. Fabio Salas Alvarez", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Coordinador Hospital Calderón Guardia" },
-    { src: "https://healthcareexp.com/wp-content/uploads/2025/06/p-elianam.jpeg", name: "Perf. Eliana Cerón López", country: "ECUADOR", flag: "https://flagcdn.com/w80/ec.png", role: "Clínica Guayaquil" },
+    { src: "/assets/instructores/p-carlosm.jpeg", name: "Perf. Carlos García Camacho", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Senior" },
+    { src: "/assets/instructores/p-juanm.jpeg", name: "Perf. Juan Blanco Morillo", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Coord. Terapias Extracorpóreas" },
+    { src: "/assets/instructores/p-eduardom.webp", name: "Enf. Eduardo Aguilar Rivera", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Experto en Soporte Crítico" },
+    { src: "/assets/instructores/p-moisem.png", name: "Perf. Moisés Espitia", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Líder de Perfusión Royal HC" },
+    { src: "/assets/instructores/p-gonzalom.jpeg", name: "Perf. Gonzalo Cartes", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Enfermero Intensivista" },
+    { src: "/assets/instructores/a2e51cc5-9cb6-412c-b92e-7b9c9dcfc69e.jpg", name: "Enf. Lisbeth Ocaña Albites", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Líder Cardiovascular INCOR" },
+    { src: "/assets/instructores/219e522e-5aff-409c-8ab3-7e3904b9f45d.jpg", name: "Perf. Hans Castro Rosero", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Especialista en Circulación" },
+    { src: "/assets/instructores/de5ae3a6-8be9-41fe-a8e0-aae691d2172e.jpg", name: "Perfu. Mario Alejandro Meza", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico" },
+    { src: "/assets/instructores/846fd848-ef66-4481-883a-ed3427059004.jpg", name: "Enf. Maira Rezende Girardi", country: "BRASIL", flag: "https://flagcdn.com/w80/br.png", role: "Hospital Israelita Albert Einstein" },
+    { src: "/assets/instructores/17520b78-52ae-4256-be3d-eaf541a51961.jpg", name: "Enf. Patricia Villazón Alcón", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Experta en POCUS y ECMO" },
+    { src: "/assets/instructores/172c41c8-98cd-42d7-9ac6-774a6d8eb608.jpg", name: "Enf. Edwin Sánchez", country: "SALVADOR", flag: "https://flagcdn.com/w80/sv.png", role: "Especialista UCI Pediátrica" },
+    { src: "/assets/instructores/1be2aa8d-0d0f-4a45-92d8-e24eb76fcb84.jpg", name: "Enf. Miguel Ángel Albino", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Gestión de Servicios de Salud" },
+    { src: "/assets/instructores/4db1ce3a-243f-4330-9f6c-c8114140c1c8.jpg", name: "Enf. Elkin Peñaranda", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínica Medical Duarte" },
+    { src: "/assets/instructores/8d969ec9-4374-4808-bc65-77bd8f39a5b5-scaled.jpg", name: "Perf. Erick Paul Morales Vega", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Especialista Hospital CIMA" },
+    { src: "/assets/instructores/WhatsApp-Image-2025-06-26-at-20.38.16.jpeg", name: "Enf. María José Ayerbes Ceron", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Fundación Cardio Infantil" },
+    { src: "/assets/instructores/WhatsApp-Image-2025-06-22-at-12.01.16-1.jpeg", name: "Lic. Ricardo Fernando Rosero", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Fundación Favaloro" },
+    { src: "/assets/instructores/WhatsApp-Image-2025-08-04-at-16.19.00.jpeg", name: "Lic. Fabio Salas Alvarez", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Coordinador Hospital Calderón Guardia" },
+    { src: "/assets/instructores/p-elianam.jpeg", name: "Perf. Eliana Cerón López", country: "ECUADOR", flag: "https://flagcdn.com/w80/ec.png", role: "Clínica Guayaquil" },
   ];
 
   return (
@@ -187,7 +184,7 @@ const Nursing = () => {
           <div className="n-section-header">
             <span className="n-tag">FACULTAD CIENTÍFICA</span>
             <h2 className="n-title">Expertos <span className="cyan-text">Virtuales.</span></h2>
-            <p className="n-subtitle">21 Referentes mundiales integrados en nuestra plataforma de aprendizaje.</p>
+            <p className="n-subtitle">18 Referentes mundiales integrados en nuestra plataforma de aprendizaje.</p>
           </div>
         </div>
         
@@ -214,7 +211,7 @@ const Nursing = () => {
             <PresencialCard 
               delay={0.1}
               flag="https://flagcdn.com/w160/ec.png"
-              img="https://healthcareexp.com/wp-content/uploads/2025/06/p-elianam.jpeg"
+              img="/assets/instructores/p-elianam.jpeg"
               name="Perf. Eliana Cerón López"
               country="ECUADOR"
               bio="Perfusionista y Especialista en ECMO en la Clínica Guayaquil. Formada en centros de referencia de LATAM."
@@ -222,7 +219,7 @@ const Nursing = () => {
             <PresencialCard 
               delay={0.2}
               flag="https://flagcdn.com/w160/es.png"
-              img="https://healthcareexp.com/wp-content/uploads/2025/06/p-carlosm.jpeg"
+              img="/assets/instructores/p-carlosm.jpeg"
               name="Perf. Carlos García Camacho"
               country="ESPAÑA"
               bio="Ex-presidente de la Asociación Española de Perfusionistas. +30 años de experiencia técnica internacional."
@@ -230,7 +227,7 @@ const Nursing = () => {
             <PresencialCard 
               delay={0.3}
               flag="https://flagcdn.com/w160/cl.png"
-              img="https://healthcareexp.com/wp-content/uploads/2025/06/p-christianm.png"
+              img="/assets/instructores/p-christianm.png"
               name="Perf. Christian Fajardo"
               country="CHILE"
               bio="Coordinador de Perfusión Clínica U. de los Andes. Co-Autor del Manual de Emergencias ECMO."
@@ -238,7 +235,7 @@ const Nursing = () => {
             <PresencialCard 
               delay={0.4}
               flag="https://flagcdn.com/w160/co.png"
-              img="https://healthcareexp.com/wp-content/uploads/2025/06/jefe-estefania-giraldo.webp"
+              img="/assets/instructores/tatiana-jaramillo.webp"
               name="Enf. Estefanía Giraldo"
               country="COLOMBIA"
               bio="Coordinadora Programa ECMO Clínica Shaio. Centro GOLD ELSO. Magister en Enf. Cardiovascular."
@@ -246,7 +243,7 @@ const Nursing = () => {
             <PresencialCard 
               delay={0.5}
               flag="https://flagcdn.com/w160/cr.png"
-              img="https://healthcareexp.com/wp-content/uploads/2025/06/p-eduardom.jpeg"
+              img="/assets/instructores/p-eduardom.webp"
               name="Enf. Eduardo Aguilar Rivera"
               country="COSTA RICA"
               bio="Especialista en ECMO. Fue Coordinador del Programa de ECMO del Hospital Rafael Ángel Calderón Guardia."
@@ -254,7 +251,7 @@ const Nursing = () => {
             <PresencialCard 
               delay={0.6}
               flag="https://flagcdn.com/w160/co.png"
-              img="https://healthcareexp.com/wp-content/uploads/2025/06/p-tatianm.png"
+              img="/assets/instructores/tatiana-jaramillo.jpg"
               name="MBA. Tatiana Jaramillo"
               country="COLOMBIA"
               bio="Especialista en Enf. en Críticos. Coordinadora del Programa de ECMO de la Clínica Shaio Centro GOLD ELSO."
@@ -262,7 +259,7 @@ const Nursing = () => {
             <PresencialCard 
               delay={0.7}
               flag="https://flagcdn.com/w160/mx.png"
-              img="https://healthcareexp.com/wp-content/uploads/2025/06/p-moisem.png"
+              img="/assets/instructores/p-moisem.png"
               name="Perf. Moisés Espitia"
               country="MÉXICO"
               bio="Jefe de Enfermería y Perfusión de ECMO Heart Team Mx. Más de 12 años de experiencia como docente."

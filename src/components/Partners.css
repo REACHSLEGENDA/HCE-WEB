@@ -95,3 +95,14 @@
   filter: grayscale(0) opacity(1);
   transform: scale(1.08);
 }
+
+@media (max-width: 768px) {
+  .partners-section { padding: 3rem 0; }
+  .partners-header { margin-bottom: 2rem; }
+  .partners-fade { width: 60px; }
+}
+
+@media (max-width: 480px) {
+  .partners-section { padding: 2.5rem 0; }
+  .partners-logo-item img { height: 36px; }
+}

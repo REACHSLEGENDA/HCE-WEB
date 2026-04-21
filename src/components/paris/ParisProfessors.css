@@ -204,3 +204,9 @@
     font-size: 2.2rem;
   }
 }
+
+@media (max-width: 480px) {
+  .paris-professors { padding: 40px 5%; }
+  .section-title-light { font-size: 1.8rem; }
+  .prof-image-wrapper { height: 260px; }
+}

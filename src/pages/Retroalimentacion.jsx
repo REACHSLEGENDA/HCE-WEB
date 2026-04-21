@@ -88,7 +88,7 @@ const Retroalimentacion = () => {
       <div className="ret-hero">
         <div className="ret-hero-inner hce-container">
           <img
-            src="https://raw.githubusercontent.com/REACHSLEGENDA/Imagenes/refs/heads/main/logo-hce-1-1.png"
+            src="/assets/componentes/firma-hce.png"
             alt="HCE"
             className="ret-logo"
           />

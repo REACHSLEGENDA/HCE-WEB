@@ -83,7 +83,7 @@
 .ic-hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url('https://healthcareexp.com/wp-content/uploads/2025/10/cabeza.png');
+  background-image: url('/assets/paginas/cabeza.png');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;

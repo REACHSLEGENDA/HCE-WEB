@@ -35,31 +35,31 @@ const Testimonials = () => {
 
   const testimonials = [
     {
-      img: "https://healthcareexp.com/wp-content/uploads/2024/11/aasd.png",
+      img: "/assets/componentes/aasd.png",
       name: "Dr. Carlos Durán",
       role: "Cirujano Pediatra - Hospital Nac. de Niños",
       text: "La herramienta ECMO Sim es sumamente didáctica. Una oportunidad única de entrenamiento para incursionar en el mundo del soporte extracorpóreo."
     },
     {
-      img: "https://healthcareexp.com/wp-content/uploads/2024/11/asdsdasdas.png",
+      img: "/assets/componentes/asdsdasdas.png",
       name: "Lic. Daniel Rodríguez",
       role: "Perfusionista - Grupo ECMO México",
       text: "Healthcare Training Experience brinda alta calidad en capacitación y actualización técnica. Es vital para elevar los estándares del equipo."
     },
     {
-      img: "https://healthcareexp.com/wp-content/uploads/2024/11/xsczc.png",
+      img: "/assets/componentes/xsczc.png",
       name: "Dra. Andrea Martínez",
       role: "Perfusionista - Hospital Benjamin Bloom",
       text: "Excelente herramienta para el intercambio de conocimientos con ponentes internacionales de México y Francia. Muy productivo."
     },
     {
-      img: "https://healthcareexp.com/wp-content/uploads/2024/11/dgf.png",
+      img: "/assets/componentes/dgf.png",
       name: "Dr. Elias Escalante",
       role: "Intensivista Pediatra",
       text: "Ha sido fabuloso capacitarnos con el simulador en un entorno pequeño. Muy eficiente para muchos profesionales a la vez."
     },
     {
-      img: "https://healthcareexp.com/wp-content/uploads/2024/11/Sin-titulo-2.png",
+      img: "/assets/componentes/Sin-titulo-2.png",
       name: "Dr. David Castillo",
       role: "Subdirector Médico - Hospital Benjamin Bloom",
       text: "La constante capacitación es clave para el éxito del equipo. El seminario de conceptos generales fue sumamente satisfactorio."

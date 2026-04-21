@@ -1005,43 +1005,29 @@
   .au-history-grid   { grid-template-columns: 1fr; gap: 3.5rem; }
   .au-mv-grid        { grid-template-columns: 1fr; }
   .au-history-badge  { right: 0; }
+  .au-core-cards     { grid-template-columns: 1fr 1fr; }
+  .au-method-grid    { grid-template-columns: 1fr; gap: 1.5rem; }
 }
 
 @media (max-width: 768px) {
   .au-que-logo-frame { width: 200px; height: 200px; }
-  .au-que-logo { width: 110px; }
-  .au-que-stats { gap: 1rem; }
-}
+  .au-que-logo       { width: 110px; }
+  .au-que-stats      { gap: 1rem; }
 
-@media (max-width: 768px) {
-  .au-stats-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem 1rem;
-  }
-
-  .au-stat-item:nth-child(2)::after {
-    display: none;
-  }
-
-  .au-cards-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .au-hero {
-    padding: 8rem 0 4rem;
-  }
-  
-  .au-btn {
-    width: 100%;
-  }
+  .au-stats-grid     { grid-template-columns: 1fr 1fr; gap: 3rem 1rem; }
+  .au-stat-item:nth-child(2)::after { display: none; }
+  .au-cards-grid     { grid-template-columns: 1fr; }
+  .au-core-cards     { grid-template-columns: 1fr; }
+  .au-hero           { padding: 8rem 0 4rem; }
+  .au-btn            { width: 100%; }
+  .au-endorse-logos  { gap: 2rem; flex-wrap: wrap; }
+  .au-endorse-img    { height: 55px; }
 }
 
 @media (max-width: 480px) {
-  .au-stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .au-stat-item::after {
-    display: none;
-  }
+  .au-h1             { font-size: clamp(2rem, 8vw, 3rem); }
+  .au-stats-grid     { grid-template-columns: 1fr; }
+  .au-stat-item::after { display: none; }
+  .au-cta-box        { padding: 3rem 1.5rem; border-radius: 28px; }
+  .au-method-card    { padding: 2rem 1.5rem; }
 }

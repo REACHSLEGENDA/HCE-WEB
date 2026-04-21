@@ -46,7 +46,7 @@ const Navbar = () => {
 
         <div className="logo-wrap">
           <Link to="/">
-            <img src="https://healthcareexp.com/wp-content/uploads/2024/09/ghghg.png" alt="HCE Logo" />
+            <img src="/assets/componentes/ghghg-scaled.png" alt="HCE Logo" />
           </Link>
         </div>
       </header>

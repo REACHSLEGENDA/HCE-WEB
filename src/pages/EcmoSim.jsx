@@ -46,7 +46,7 @@ const EcmoSim = () => {
           <div className="sim-feature-grid">
             <div className="sim-feature-box">
               <div className="sim-f-img">
-                <img src="https://healthcareexp.com/wp-content/uploads/2025/03/1920x1080_HomeEcmoSim.jpg" alt="ECMO Sim Gameplay" />
+                <img src="/assets/paginas/1920x1080_HomeEcmoSim.jpg" alt="ECMO Sim Gameplay" />
                 <div className="sim-f-overlay"></div>
               </div>
               <div className="sim-f-content">
@@ -66,7 +66,7 @@ const EcmoSim = () => {
                 </a>
               </div>
               <div className="sim-f-img">
-                <img src="https://healthcareexp.com/wp-content/uploads/2024/12/Game-ECMO_SIM_XX.jpg" alt="ECMO Sim Interface" />
+                <img src="/assets/paginas/Game-ECMO_SIM_XX.jpg" alt="ECMO Sim Interface" />
                 <div className="sim-f-overlay"></div>
               </div>
             </div>
@@ -128,7 +128,7 @@ const EcmoSim = () => {
           <div className="sim-modes-wrapper">
             <div className="sim-mode-card">
               <div className="sim-mode-img">
-                <img src="https://healthcareexp.com/wp-content/uploads/2024/12/Game-ECMO_SIM_VV.png" alt="ECMO Veno-Venoso" />
+                <img src="/assets/paginas/Game-ECMO_SIM_VV.png" alt="ECMO Veno-Venoso" />
               </div>
               <div className="sim-mode-info">
                 <h3>MODO: ECMO VV</h3>
@@ -141,7 +141,7 @@ const EcmoSim = () => {
 
             <div className="sim-mode-card center">
               <div className="sim-mode-img">
-                <img src="https://healthcareexp.com/wp-content/uploads/2024/12/Game-ECMO_SIM_VA.jpg" alt="ECMO Veno-Arterial" />
+                <img src="/assets/paginas/Game-ECMO_SIM_VA.jpg" alt="ECMO Veno-Arterial" />
               </div>
               <div className="sim-mode-info">
                 <h3>MODO: ECMO VA</h3>
@@ -154,7 +154,7 @@ const EcmoSim = () => {
 
             <div className="sim-mode-card">
               <div className="sim-mode-img">
-                <img src="https://healthcareexp.com/wp-content/uploads/2024/12/Game-ECMO_SIM_XX.jpg" alt="Nuevos Escenarios" />
+                <img src="/assets/paginas/Game-ECMO_SIM_XX.jpg" alt="Nuevos Escenarios" />
               </div>
               <div className="sim-mode-info">
                 <h3>PRÓXIMAMENTE</h3>

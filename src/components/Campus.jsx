@@ -46,14 +46,14 @@ const Campus = () => {
           <div className="glow-orb"></div>
           <div className="mockup-stack">
             <div className="m-card m-main">
-              <img src="https://healthcareexp.com/wp-content/uploads/2026/02/Captura-de-pantalla-2026-02-28-143925.png" alt="Plataforma HCE" />
+              <img src="/assets/componentes/Captura-de-pantalla-2026-02-28-143925.png" alt="Plataforma HCE" />
               <div className="m-label">Dashboard Principal</div>
             </div>
             <div className="m-card m-secondary">
-              <img src="https://healthcareexp.com/wp-content/uploads/2026/02/Captura-de-pantalla-2026-02-28-143944.png" alt="Cursos" />
+              <img src="/assets/componentes/Captura-de-pantalla-2026-02-28-143944.png" alt="Cursos" />
             </div>
             <div className="m-card m-tertiary">
-              <img src="https://healthcareexp.com/wp-content/uploads/2026/02/Captura-de-pantalla-2026-02-28-143959.png" alt="Simulación" />
+              <img src="/assets/componentes/Captura-de-pantalla-2026-02-28-143959.png" alt="Simulación" />
             </div>
           </div>
         </div>

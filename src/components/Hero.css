@@ -104,3 +104,10 @@
     align-items: center;
   }
 }
+
+@media (max-width: 480px) {
+  .hero-content h1 { font-size: 2rem; }
+  .hero-content p  { font-size: 1rem; }
+  .hero-actions a, .hero-actions button { width: 100%; text-align: center; }
+  .hero { padding-top: 80px; }
+}

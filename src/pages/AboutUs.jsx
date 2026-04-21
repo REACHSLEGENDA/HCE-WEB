@@ -65,7 +65,7 @@ const AboutUs = () => {
                 <div className="au-que-logo-ring au-que-logo-ring--1" />
                 <div className="au-que-logo-ring au-que-logo-ring--2" />
                 <img
-                  src="https://raw.githubusercontent.com/REACHSLEGENDA/Imagenes/refs/heads/main/logo-hce-1-1.png"
+                  src="/assets/componentes/firma-hce.png"
                   alt="HCE Logo"
                   className="au-que-logo"
                 />
@@ -161,7 +161,7 @@ const AboutUs = () => {
 
             <div className="au-history-img-wrap">
               <img
-                src="https://healthcareexp.com/wp-content/uploads/2025/04/DSC_0311.jpg"
+                src="/assets/aboutus/DSC_0311.jpg"
                 alt="Historia HCE"
                 className="au-history-img"
               />

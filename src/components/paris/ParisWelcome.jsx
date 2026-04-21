@@ -45,7 +45,7 @@ const ParisWelcome = () => {
           </div>
           <div className="promo-img-side">
             <img 
-              src="https://healthcareexp.com/wp-content/uploads/2025/06/ecmo-nursing-dm.png" 
+              src="/assets/componentes/ecmo-nursing-dm.png" 
               alt="Promoción ECMO Nursing" 
             />
           </div>

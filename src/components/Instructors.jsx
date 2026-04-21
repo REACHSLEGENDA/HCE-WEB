@@ -50,28 +50,28 @@ const Instructors = () => {
         <div className="faculty-grid-modern">
           <InstructorCard 
             delay={0.1} 
-            src="https://healthcareexp.com/wp-content/uploads/2024/11/Alain-Combes.jpg" 
+            src="/assets/componentes/Alain-Combes.jpg" 
             role="Director del Programa" 
             name="Prof. Alain Combes" 
             country="Francia - Pitié Salpêtrière"
           />
           <InstructorCard 
             delay={0.2} 
-            src="https://healthcareexp.com/wp-content/uploads/2024/11/Alain-Combes.png" 
+            src="/assets/componentes/Alain-Combes.png" 
             role="Presidente Científico" 
             name="Prof. Matthieu Schmidt" 
             country="Francia - Pitié Salpêtrière"
           />
           <InstructorCard 
             delay={0.3} 
-            src="https://healthcareexp.com/wp-content/uploads/2024/11/WhatsApp-Image-2024-04-09-at-11.02.32-10-1-1152x1536.jpeg" 
+            src="/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-10-1.jpeg" 
             role="CEO Pratico Santé" 
             name="Enf. Hugo Guillou" 
             country="Francia"
           />
           <InstructorCard 
             delay={0.4} 
-            src="https://healthcareexp.com/wp-content/uploads/2024/11/WhatsApp-Image-2024-04-09-at-11.02.32-7-1-1152x1536.jpeg" 
+            src="/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-7-1.jpeg" 
             role="Presidente Pratico Santé" 
             name="Enf. Emric Besnard" 
             country="Francia"

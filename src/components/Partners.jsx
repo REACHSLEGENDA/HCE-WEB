@@ -2,15 +2,15 @@ import { ShieldCheck } from 'lucide-react';
 import './Partners.css';
 
 const logos = [
-  { src: "https://healthcareexp.com/wp-content/uploads/2024/12/logo.png",      alt: "Institución 1" },
-  { src: "https://healthcareexp.com/wp-content/uploads/2024/12/534.png",       alt: "Institución 2" },
-  { src: "https://healthcareexp.com/wp-content/uploads/2024/12/65-1.png",      alt: "Institución 3" },
-  { src: "https://healthcareexp.com/wp-content/uploads/2024/12/sdfgf.png",     alt: "Institución 4" },
-  { src: "https://healthcareexp.com/wp-content/uploads/2024/12/ecmo-couj.png", alt: "Institución 5" },
-  { src: "https://healthcareexp.com/wp-content/uploads/2024/12/ecmo-coujj.png",alt: "Institución 6" },
-  { src: "https://healthcareexp.com/wp-content/uploads/2024/12/56.png",        alt: "Institución 7" },
-  { src: "https://healthcareexp.com/wp-content/uploads/2025/01/SS.png",        alt: "Institución 8" },
-  { src: "https://healthcareexp.com/wp-content/uploads/2026/03/images.png",    alt: "Institución 9" },
+  { src: "/assets/componentes/logo.webp",       alt: "Institución 1" },
+  { src: "/assets/componentes/534.webp",        alt: "Institución 2" },
+  { src: "/assets/paginas/65-1.png",            alt: "Institución 3" },
+  { src: "/assets/componentes/sdfgf.webp",      alt: "Institución 4" },
+  { src: "/assets/componentes/ecmo-couj.webp",  alt: "Institución 5" },
+  { src: "/assets/componentes/ecmo-coujj.png",  alt: "Institución 6" },
+  { src: "/assets/componentes/56.webp",         alt: "Institución 7" },
+  { src: "/assets/componentes/SS.webp",         alt: "Institución 8" },
+  { src: "/assets/componentes/images.webp",     alt: "Institución 9" },
 ];
 
 const Partners = () => (

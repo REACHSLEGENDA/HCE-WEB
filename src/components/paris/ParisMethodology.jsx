@@ -70,7 +70,7 @@ const ParisMethodology = () => {
             </a>
           </div>
           <div className="meth-showcase-image">
-            <img src="https://healthcareexp.com/wp-content/uploads/2024/11/DSC4952-scaled-1-1024x683.jpg" alt="ECMO Sim Demo en Hospital" />
+            <img src="/assets/paris/DSC4952.jpg" alt="ECMO Sim Demo en Hospital" />
           </div>
         </div>
 

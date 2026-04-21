@@ -19,7 +19,7 @@ const Instructores = () => {
       role: "Director del Programa",
       bio: "Jefe de la UCI del Hosp. Pitié-Salpêtrière, Paris. Investigador principal del estudio EOLIA. Más de 372 publicaciones científicas internacionales.",
       flag: "🇫🇷",
-      image: "https://healthcareexp.com/wp-content/uploads/2024/11/Alain-Combes.jpg",
+      image: "/assets/componentes/Alain-Combes.jpg",
       tag: "Intensivista · ECMO",
     },
     {
@@ -29,7 +29,7 @@ const Instructores = () => {
       role: "Presidente Científico",
       bio: "Médico de la UCI del Hosp. Pitié-Salpêtrière. Presidente del Comité Científico de EuroELSO (2018–2022). Experto mundial en ECMO-VV.",
       flag: "🇫🇷",
-      image: "https://healthcareexp.com/wp-content/uploads/2024/11/Alain-Combes.png",
+      image: "/assets/componentes/Alain-Combes.png",
       tag: "UCI · EuroELSO",
     },
     {
@@ -39,7 +39,7 @@ const Instructores = () => {
       role: "CEO Practico Santé",
       bio: "Enfermero Especialista en ECMO (Pitié-Salpêtrière). Entrenador certificado de Simulación ELSO. Creador de ECMO SIM.",
       flag: "🇫🇷",
-      image: "https://healthcareexp.com/wp-content/uploads/2024/11/WhatsApp-Image-2024-04-09-at-11.02.32-10-1-1152x1536.jpeg",
+      image: "/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-10-1.jpeg",
       tag: "Simulación · Enfermería",
     },
     {
@@ -49,7 +49,7 @@ const Instructores = () => {
       role: "Presidente Practico Santé",
       bio: "Enfermero Especialista en ECMO (Pitié-Salpêtrière). Entrenador certificado de Simulación ELSO. Co-creador de ECMO SIM.",
       flag: "🇫🇷",
-      image: "https://healthcareexp.com/wp-content/uploads/2024/11/WhatsApp-Image-2024-04-09-at-11.02.32-7-1-1152x1536.jpeg",
+      image: "/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-7-1.jpeg",
       tag: "Simulación · Enfermería",
     },
   ];

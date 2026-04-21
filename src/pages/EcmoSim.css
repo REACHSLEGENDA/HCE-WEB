@@ -116,7 +116,7 @@
   min-height: 90vh;
   display: flex;
   align-items: center;
-  background: url('https://healthcareexp.com/wp-content/uploads/2025/03/1920x1080_HomeEcmoSim.jpg') no-repeat center center / cover;
+  background: url('/assets/paginas/1920x1080_HomeEcmoSim.jpg') no-repeat center center / cover;
   padding-top: 100px;
 }
 
@@ -454,7 +454,7 @@
 /* FINAL CTA GLITCH THEME */
 .sim-final-cta {
   padding: 10rem 0;
-  background: url('https://healthcareexp.com/wp-content/uploads/2025/03/1920x1080_HomeEcmoSim.jpg') no-repeat center center / cover;
+  background: url('/assets/paginas/1920x1080_HomeEcmoSim.jpg') no-repeat center center / cover;
   position: relative;
 }
 

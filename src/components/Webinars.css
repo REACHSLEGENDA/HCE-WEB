@@ -132,3 +132,9 @@
     opacity: 1;
   }
 }
+
+@media (max-width: 480px) {
+  .webinar-immersive-card { height: 320px; border-radius: 20px; }
+  .webinar-card-title { font-size: 1.4rem; }
+  .webinar-card-content { padding: 1.5rem; }
+}

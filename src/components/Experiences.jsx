@@ -54,7 +54,7 @@ const Experiences = () => {
             title="Manejo de avanzada en insuficiencia cardiaca"
             description="Domina los criterios de selección para asistencia ventricular y trasplante con simulación HARVI de alta precisión."
             link="/insuficiencia-cardiaca"
-            img="https://healthcareexp.com/wp-content/uploads/2026/03/Generated-Image-March-03-2026-11_28PM.png"
+            img="/assets/componentes/Generated-Image-March-03-2026-11_28PM.png"
             badge="SOLD OUT"
             badgeClass="badge-danger"
           />
@@ -64,7 +64,7 @@ const Experiences = () => {
             title="ECMO Nursing Care Course"
             description="El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo."
             link="/ecmo-nursing-care"
-            img="https://healthcareexp.com/wp-content/uploads/2025/06/ecmo-nursing-dm.png"
+            img="/assets/componentes/ecmo-nursing-dm.png"
             imgClass="zoom-nursing"
             badge="Próximamente"
             badgeClass="badge-info"
@@ -75,7 +75,7 @@ const Experiences = () => {
             title="Paris International Diploma in ECMO"
             description="Certificación internacional directa desde el centro de referencia más grande del mundo en París, Francia."
             link="/paris-diploma-ecmo"
-            img="https://healthcareexp.com/wp-content/uploads/2026/03/WhatsApp-Image-2026-03-04-at-12.06.38-AM.jpeg"
+            img="/assets/componentes/WhatsApp-Image-2026-03-04-at-12.06.38-AM.jpeg"
           />
           <ExperienceCard 
             delay={0.4}
@@ -83,7 +83,7 @@ const Experiences = () => {
             title="ECMO SIM: Realidad Clínica"
             description="Interactúa con nuestra plataforma de simulación patentada. Mejora tu toma de decisiones en entornos de alta complejidad."
             link="/simulador-ecmo-sim"
-            img="https://healthcareexp.com/wp-content/uploads/2025/10/ecmosim.png"
+            img="/assets/componentes/ecmosim.png"
             badge="SIMULADOR"
             badgeClass="badge-warning"
           />

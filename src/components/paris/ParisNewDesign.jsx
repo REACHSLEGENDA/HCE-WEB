@@ -295,7 +295,7 @@ const ParisNewDesign = () => {
                         <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary" style={{ padding: '1.2rem 3rem' }}>INSCRIBETE AHORA</Link>
                     </div>
                     <div className="experience-lead-img">
-                        <img src="https://healthcareexp.com/wp-content/uploads/2025/04/DSC_0164.jpg" alt="Prof. Alain Combes Podium" />
+                        <img src="/assets/paris/DSC_0164.jpg" alt="Prof. Alain Combes Podium" />
                     </div>
                 </div>
             </section>
@@ -317,7 +317,7 @@ const ParisNewDesign = () => {
                         {/* Prof 1 */}
                         <div className="faculty-card reveal">
                             <div className="faculty-img-container">
-                                <img src="https://healthcareexp.com/wp-content/uploads/2024/11/Alain-Combes.jpg" alt="Prof. Alain Combes" className="faculty-img" />
+                                <img src="/assets/componentes/Alain-Combes.jpg" alt="Prof. Alain Combes" className="faculty-img" />
                             </div>
                             <div className="faculty-info">
                                 <span className="faculty-role-tag">Director del Programa</span>
@@ -330,7 +330,7 @@ const ParisNewDesign = () => {
                         {/* Prof 2 */}
                         <div className="faculty-card reveal">
                             <div className="faculty-img-container">
-                                <img src="https://healthcareexp.com/wp-content/uploads/2024/11/Alain-Combes.png" alt="Prof. Matthieu Schmidt" className="faculty-img" />
+                                <img src="/assets/componentes/Alain-Combes.png" alt="Prof. Matthieu Schmidt" className="faculty-img" />
                             </div>
                             <div className="faculty-info">
                                 <span className="faculty-role-tag">Presidente Científico</span>
@@ -343,7 +343,7 @@ const ParisNewDesign = () => {
                         {/* Prof 3 */}
                         <div className="faculty-card reveal">
                             <div className="faculty-img-container">
-                                <img src="https://healthcareexp.com/wp-content/uploads/2024/11/WhatsApp-Image-2024-04-09-at-11.02.32-10-1-1152x1536.jpeg" alt="Enf. Hugo Guillou" className="faculty-img" />
+                                <img src="/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-10-1.jpeg" alt="Enf. Hugo Guillou" className="faculty-img" />
                             </div>
                             <div className="faculty-info">
                                 <span className="faculty-role-tag">CEO Practico Santé</span>
@@ -356,7 +356,7 @@ const ParisNewDesign = () => {
                         {/* Prof 4 */}
                         <div className="faculty-card reveal">
                             <div className="faculty-img-container">
-                                <img src="https://healthcareexp.com/wp-content/uploads/2024/11/WhatsApp-Image-2024-04-09-at-11.02.32-7-1-1152x1536.jpeg" alt="Enf. Emric Besnard" className="faculty-img" />
+                                <img src="/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-7-1.jpeg" alt="Enf. Emric Besnard" className="faculty-img" />
                             </div>
                             <div className="faculty-info">
                                 <span className="faculty-role-tag">Presidente Practico Santé</span>
@@ -379,7 +379,7 @@ const ParisNewDesign = () => {
                 <div className="container">
                     <div className="method-content">
                         <div className="method-image reveal">
-                            <img src="https://healthcareexp.com/wp-content/uploads/2025/04/DSC_4075.jpg" alt="Simulación ECMO" />
+                            <img src="/assets/paris/DSC_4075.jpg" alt="Simulación ECMO" />
                         </div>
                         <div className="method-text reveal">
                             <div className="section-title" style={{ color: 'white', fontSize: '3rem', marginBottom: '2rem' }}>
@@ -403,8 +403,8 @@ const ParisNewDesign = () => {
                         <div className="video-mockup-side reveal">
                             <div className="phone-frame">
                                 <div className="phone-screen">
-                                    <video controls poster="https://healthcareexp.com/wp-content/uploads/2024/11/2500-x-1105-banner-1_.png">
-                                        <source src="https://healthcareexp.com/wp-content/uploads/2024/11/WhatsApp-Video-2024-04-02-at-7.24.03-AM.mp4" type="video/mp4" />
+                                    <video controls poster="https://raw.githubusercontent.com/REACHSLEGENDA/Imagenes/refs/heads/main/Generated%20Image%20April%2015%2C%202026%20-%201_42AM.jpg">
+                                        <source src="/assets/paris/WhatsApp-Video-2024-04-02-at-7.24.03-AM.mp4" type="video/mp4" />
                                     </video>
                                 </div>
                                 <div className="phone-button"></div>
@@ -412,7 +412,7 @@ const ParisNewDesign = () => {
                             <div className="floating-badge badge-top">Simulación 3D</div>
                             <div className="floating-badge badge-bottom">
                                 <img 
-                                    src="https://healthcareexp.com/wp-content/uploads/2026/03/Picsart_26-03-03_21-37-18-446.png" 
+                                    src="/assets/paginas/Picsart_26-03-03_21-37-18-446.png" 
                                     alt="ECMO SIM Logo" 
                                     className="logo-colored"
                                 />
@@ -457,7 +457,7 @@ const ParisNewDesign = () => {
                         </div>
                         <div style={{ flex: '0 0 auto' }}>
                             <div style={{ background: 'white', padding: '2.5rem', borderRadius: '20px', boxShadow: '0 20px 50px rgba(0,229,255,0.2)', transition: 'transform 0.3s ease' }}>
-                                <img src="https://healthcareexp.com/wp-content/uploads/2024/11/Captura-de-pantalla-2024-11-18-005556.png" alt="ELSO Certification" style={{ maxHeight: '120px', width: 'auto', filter: 'contrast(1.1)' }} />
+                                <img src="/assets/componentes/logo.webp" alt="ELSO Certification" style={{ maxHeight: '120px', width: 'auto', filter: 'contrast(1.1)' }} />
                             </div>
                         </div>
                     </div>

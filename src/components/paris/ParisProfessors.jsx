@@ -6,28 +6,28 @@ const professors = [
   {
     name: 'Prof. Alain Combes',
     role: 'Jefe UCI Pitié-Salpêtrière, Paris',
-    image: 'https://healthcareexp.com/wp-content/uploads/2024/11/Alain-Combes.jpg',
+    image: '/assets/componentes/Alain-Combes.jpg',
     description: 'Líder en uno de los centros de ECMO más grandes del mundo. Profesor de Medicina de Cuidados Intensivos en la Sorbonne Université. Investigador principal de EOLIA y +372 publicaciones.',
     highlights: ['+372 Publicaciones', 'Presidente EuroELSO 2017-2020']
   },
   {
     name: 'Prof. Matthieu Schmidt',
     role: 'Médico UCI Pitié-Salpêtrière, Paris',
-    image: 'https://healthcareexp.com/wp-content/uploads/2024/11/WhatsApp-Image-2024-04-09-at-11.02.32-7-1-768x1024.jpeg',
+    image: '/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-7-1.jpeg',
     description: 'Profesor de Medicina de Cuidados Intensivos. Presidente del Comité Científico de EuroELSO 2018-2022. Investigador de 3 ensayos clínicos multicéntricos y +235 publicaciones.',
     highlights: ['+235 Publicaciones', 'Comité EuroELSO 2018-2022']
   },
   {
     name: 'Enf. Hugo Guillou',
     role: 'CEO Pratico Santé & Simulación',
-    image: 'https://healthcareexp.com/wp-content/uploads/2024/11/WhatsApp-Image-2024-04-09-at-11.02.32-10-1-768x1024.jpeg',
+    image: '/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-10-1.jpeg',
     description: 'Enfermero Especialista en ECMO desde 2009. Creador del Serious Game Digital ECMO SIM y Entrenador de Simulación certificado por ELSO en la Universidad Drexel.',
     highlights: ['ECMO SIM Creator', 'ELSO Trainer']
   },
   {
     name: 'Enf. Emric Besnard',
     role: 'Presidente Pratico Santé',
-    image: 'https://healthcareexp.com/wp-content/uploads/2024/11/WhatsApp-Image-2024-04-09-at-11.02.32-7-1-768x1024.jpeg',
+    image: '/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-7-1.jpeg',
     description: 'Especialista en Cuidados Intensivos HMA Pitié-Salpêtrière (2012-2018). Co-desarrollador de la herramienta líder ECMO SIM y Entrenador de Simulación con aval internacional.',
     highlights: ['Simulation Leader', 'ELSO Certified']
   }
