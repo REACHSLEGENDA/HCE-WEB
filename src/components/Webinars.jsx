@@ -26,37 +26,29 @@ const WebinarCard = ({ delay }) => {
   );
 };
 
-const B2BTrainingCard = ({ delay }) => {
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
-
-  return (
-    <div ref={ref} className={`webinar-immersive-card reveal ${inView ? 'active' : ''}`} style={{ transitionDelay: `${delay}s` }}>
-      <div className="webinar-card-bg" style={{ background: 'linear-gradient(45deg, #0f172a, #001f3f)' }}>
-        <Briefcase size={80} style={{ opacity: 0.1, color: 'white' }} />
-      </div>
-      <div className="webinar-card-overlay"></div>
-
-      <div className="webinar-card-content">
-        <p className="webinar-card-date" style={{ color: 'var(--cyan)' }}>Programas a la medida</p>
-        <h3 className="webinar-card-title" style={{ marginBottom: '1rem', fontSize: '1.6rem' }}>¿Buscas capacitar a tu personal?</h3>
-        <p style={{ color: 'rgba(255, 255, 255, 0.8)', marginBottom: '1.5rem', lineHeight: '1.5', fontSize: '0.95rem', maxWidth: '400px' }}>
-          Entrena a tu equipo en terapias críticas con simulación avanzada y expertos y programas a la medida.
-        </p>
-        <div className="webinar-card-action">
-          <a href="#" className="btn-webinar-card" style={{ background: 'var(--cyan)', color: '#0a192f', fontWeight: '800' }}>
-            Contáctanos y solicita una propuesta personalizada
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const Webinars = () => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+  const { ref: b2bRef, inView: b2bInView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   return (
-    <section className="webinars-immersive-section" id="webinars-grid">
+    <>
+      <section className="b2b-training-banner">
+        <div className="b2b-banner-bg"></div>
+        <div ref={b2bRef} className={`hce-container b2b-banner-content reveal ${b2bInView ? 'active' : ''}`}>
+          <div className="b2b-text-area">
+            <h4 className="b2b-tag">PROGRAMAS A LA MEDIDA</h4>
+            <h2 className="b2b-title">¿Buscas capacitar a tu personal?</h2>
+            <p className="b2b-desc">Entrena a tu equipo en terapias críticas con simulación avanzada, expertos internacionales y programas a la medida para tu institución.</p>
+          </div>
+          <div className="b2b-action-area">
+            <a href="https://wa.me/525659271906" target="_blank" rel="noreferrer" className="btn-b2b-banner">
+              Contáctanos <span className="hide-mobile"> y solicita una propuesta</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="webinars-immersive-section" id="webinars-grid">
       <div className="hce-container">
         <div ref={ref} className={`section-header reveal ${inView ? 'active' : ''}`} style={{ marginBottom: '3.5rem', textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
@@ -79,9 +71,10 @@ const Webinars = () => {
       </div>
       <div className="webinar-immersive-grid">
         <WebinarCard delay={0.1} />
-        <B2BTrainingCard delay={0.2} />
+        <WebinarCard delay={0.2} />
       </div>
     </section>
+    </>
   );
 };
 

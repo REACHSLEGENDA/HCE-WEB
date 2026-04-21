@@ -277,7 +277,7 @@ const ParisNewDesign = () => {
                         <span className="tag">Perfusionistas</span>
                         <span className="tag">Terapeutas Respiratorios</span>
                     </div>
-                    <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                    <div style={{ textAlign: 'center', marginTop: '3rem', position: 'relative', zIndex: 3 }}>
                         <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary" style={{ padding: '1.2rem 3rem' }}>Certifícate</Link>
                     </div>
                 </div>

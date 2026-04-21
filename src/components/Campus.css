@@ -213,12 +213,14 @@
 @media (max-width: 768px) {
   .campus-title-main { font-size: 2.8rem; }
   .m-secondary, .m-tertiary { display: none; }
-  .m-main { width: 100%; left: 0; transform: none; }
+  .m-main { width: 100%; left: 0; top: 0; position: relative; transform: none; height: auto; aspect-ratio: 16/9; }
+  .mockup-stack { height: auto; min-height: 200px; margin-top: 2rem; }
 }
 
 @media (max-width: 480px) {
   .campus-title-main { font-size: 2rem; }
   .campus-features-list { grid-template-columns: 1fr; }
-  .mockup-stack { height: 300px; }
   .campus-futuristic-section { padding: 6rem 0; }
+  .m-main { width: 100%; top: 0; }
+  .mockup-stack { height: auto; }
 }

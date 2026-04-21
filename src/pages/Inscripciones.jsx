@@ -15,7 +15,8 @@ const EXTRA_CATALOG = {
     price: 3500,
   },
   ecmo_nursing: {
-    label: 'ECMO Nursing Care virtual',
+    label: 'ECMO Nursing Care Course',
+    subhint: 'Experiencia virtual',
     desc: 'Módulo especializado de ECMO para cuidados de enfermería intensiva',
     price: 3500,
   },
@@ -23,17 +24,17 @@ const EXTRA_CATALOG = {
 
 const PROFILES = {
   especialista: {
-    label: 'Médicos Especialistas',
+    label: 'Médico(a) Especialista',
     price: 39000,
     extras: ['ecmo_sim'],
   },
   residente: {
-    label: 'Médicos Residentes',
+    label: 'Médico(a) Residente',
     price: 37000,
     extras: ['ecmo_sim'],
   },
   enfermero: {
-    label: 'Enfermeros y Otros Profesionales',
+    label: 'Enfermero(a) / Otro Profesional',
     price: 37000,
     extras: ['ecmo_sim', 'ecmo_nursing'],
   },
@@ -102,7 +103,7 @@ export default function Inscripciones() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        throw new Error(data.error || 'No se pudo iniciar el pago');
+        throw new Error(data.error || 'No se pudo iniciar la inversión');
       }
     } catch (err) {
       setApiError(err.message);
@@ -128,7 +129,7 @@ export default function Inscripciones() {
         <div className="ins-result-wrap">
           <div className="ins-result-card">
             <div className="ins-result-icon ins-result-icon--cancel">✕</div>
-            <h2>Pago cancelado</h2>
+            <h2>Inversión cancelada</h2>
             <p>No se realizó ningún cargo.</p>
             <a href="/inscripciones-diploma-paris-ecmo" className="ins-btn ins-btn--primary">Intentar de nuevo</a>
           </div>
@@ -172,9 +173,8 @@ export default function Inscripciones() {
               {/* Card 1 — Especialista */}
               <button
                 type="button"
-                className={`ins-card ${cardSel === 'especialista' ? 'ins-card--active' : ''} ${cardSel === 'otros' ? 'ins-card--locked' : ''}`}
-                onClick={() => cardSel !== 'otros' && selectCard('especialista')}
-                disabled={cardSel === 'otros'}
+                className={`ins-card ${cardSel === 'especialista' ? 'ins-card--active' : ''}`}
+                onClick={() => selectCard('especialista')}
               >
                 <div className="ins-card-visual ins-card-visual--blue">
                   <Stethoscope size={40} strokeWidth={1.5} />
@@ -184,16 +184,15 @@ export default function Inscripciones() {
                     <span className="ins-card-tag">Perfil A</span>
                     {cardSel === 'especialista' && <CheckCircle2 size={20} className="ins-card-check" />}
                   </div>
-                  <h3 className="ins-card-title">Médicos Especialistas</h3>
+                  <h3 className="ins-card-title">Médico(a) Especialista</h3>
                 </div>
               </button>
 
               {/* Card 2 — Otros */}
               <button
                 type="button"
-                className={`ins-card ${cardSel === 'otros' ? 'ins-card--active' : ''} ${cardSel === 'especialista' ? 'ins-card--locked' : ''}`}
-                onClick={() => cardSel !== 'especialista' && selectCard('otros')}
-                disabled={cardSel === 'especialista'}
+                className={`ins-card ${cardSel === 'otros' ? 'ins-card--active' : ''}`}
+                onClick={() => selectCard('otros')}
               >
                 <div className="ins-card-visual ins-card-visual--cyan">
                   <Heart size={40} strokeWidth={1.5} />
@@ -203,7 +202,7 @@ export default function Inscripciones() {
                     <span className="ins-card-tag">Perfil B</span>
                     {cardSel === 'otros' && <CheckCircle2 size={20} className="ins-card-check" />}
                   </div>
-                  <h3 className="ins-card-title">Residentes, Enfermeros y Otros</h3>
+                  <h3 className="ins-card-title">Residente, Enfermero(a) y Otros</h3>
                 </div>
               </button>
             </div>
@@ -220,8 +219,8 @@ export default function Inscripciones() {
               </div>
               <div className="ins-role-grid">
                 {[
-                  { id: 'residente', label: 'Médico Residente', desc: 'Actualmente en programa de residencia médica' },
-                  { id: 'enfermero', label: 'Enfermero / Otro Profesional', desc: 'Enfermero, terapeuta respiratorio, fisioterapeuta, u otro' },
+                  { id: 'residente', label: 'Médico(a) Residente', desc: 'Actualmente en programa de residencia médica' },
+                  { id: 'enfermero', label: 'Enfermero(a) / Otro Profesional', desc: 'Enfermero, terapeuta respiratorio, fisioterapeuta, u otro' },
                 ].map((r) => (
                   <button
                     key={r.id}
@@ -369,7 +368,7 @@ export default function Inscripciones() {
             </button>
 
             <p className="ins-summary-secure">
-              <Shield size={13} /> Pago seguro con Stripe · SSL cifrado
+              <Shield size={13} /> Inversión segura con Stripe · SSL cifrado
             </p>
           </div>
         </aside>
@@ -449,10 +448,10 @@ function RegistrationForm() {
 
   return (
     <div className="reg-wrap hce-container">
-      {/* Banner pago exitoso */}
+      {/* Banner inversión exitosa */}
       <div className="reg-paid-banner">
         <CheckCircle2 size={20} />
-        <span>¡Pago procesado con éxito! Completa tu registro para confirmar tu lugar.</span>
+        <span>¡Inversión procesada con éxito! Completa tu registro para confirmar tu lugar.</span>
       </div>
 
       <div className="reg-layout">

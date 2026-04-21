@@ -144,6 +144,8 @@
     animation: fadeInUp 1s ease-out 0.2s both;
     text-align: left !important;
     margin-left: 0 !important;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .paris-redesign .h1-style .gradient-text {
@@ -311,6 +313,7 @@
     width: 15rem;
     height: 100%;
     z-index: 2;
+    pointer-events: none;
 }
 
 .paris-redesign .carousel-container::before {
@@ -890,10 +893,16 @@
 }
 
 @media (max-width: 768px) {
-    .paris-redesign .h1-style { font-size: 2.5rem; text-align: left; }
-    .paris-redesign .hero-sub { font-size: 1.25rem; text-align: left; }
-    .paris-redesign .hero { justify-content: flex-start; text-align: left; padding: 2rem; }
-    .paris-redesign .hero-content { margin-inline: 0; }
+    .paris-redesign .h1-style { font-size: 2.2rem; text-align: left; }
+    .paris-redesign .hero-sub { font-size: 1.15rem; text-align: left; }
+    .paris-redesign .hero { justify-content: flex-start; text-align: center; padding: 130px 1rem 40px 1rem !important; min-height: auto; }
+    .paris-redesign .hero-content { margin-inline: 0; align-items: center !important; text-align: center !important; overflow: hidden; width: 100%; }
+    .paris-redesign .h1-style, .paris-redesign .hero-sub, .paris-redesign .hero-tagline { text-align: center !important; }
+    
+    .paris-redesign .hero-countdown { padding: 1rem 1.2rem; width: 100%; max-width: 320px; }
+    .paris-redesign .countdown-timer { gap: 0.8rem; justify-content: center; }
+    .paris-redesign .time-value { font-size: 1.6rem; }
+    .paris-redesign .time-sep { margin-top: -10px; font-size: 1.2rem; }
     
     .paris-redesign .section-padding { padding: 4rem 0; }
     .paris-redesign .section-title { font-size: 2rem; }
@@ -906,11 +915,13 @@
     .paris-redesign .hospital-outreach-full > div > div { flex: 1; min-width: 100% !important; padding: 3rem 5% !important; text-align: center; }
     .paris-redesign .hospital-outreach-full .h2-style { font-size: 2rem; }
     
-    .paris-redesign .video-experience-redesign { padding: 5rem 0; }
-    .paris-redesign .video-flex-container { gap: 4rem; justify-content: center; }
-    .paris-redesign .phone-frame { width: 280px; height: 560px; }
-    .paris-redesign .badge-top { left: 0; }
-    .paris-redesign .badge-bottom { right: 0; }
+    .paris-redesign .video-experience-redesign { padding: 4rem 0; overflow-x: hidden; }
+    .paris-redesign .video-flex-container { gap: 3rem; justify-content: center; }
+    .paris-redesign .video-mockup-side { min-width: 100%; padding: 0.5rem; }
+    .paris-redesign .phone-frame { width: 100%; max-width: 300px; height: auto; aspect-ratio: 1/2; padding: 8px; }
+    .paris-redesign .badge-top { left: -10px; padding: 0.8rem 1.5rem; font-size: 0.9rem; }
+    .paris-redesign .badge-bottom { right: -10px; min-width: 140px; height: 50px; }
+    .paris-redesign .logo-colored { height: 80px; }
     .paris-redesign .video-text-side { text-align: center; min-width: 100%; }
     .paris-redesign .video-text-side .h2-style { font-size: 2.5rem; }
 

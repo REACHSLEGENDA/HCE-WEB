@@ -1025,10 +1025,16 @@
 }
 
 @media (max-width: 640px) {
-  .ins-hero { padding: 3.5rem 0 3rem; }
-  .ins-layout { padding-top: 2rem; padding-bottom: 4rem; }
+  .ins-hero { padding: 3.5rem 1rem 3rem; }
+  .ins-layout { padding-top: 2rem; padding-bottom: 4rem; gap: 1.5rem; }
   .ins-section { padding: 1.5rem; }
   .ins-cards { grid-template-columns: 1fr; }
-  .ins-summary { border-radius: 16px; padding: 1.4rem; }
+  .ins-summary { border-radius: 16px; padding: 1.2rem; }
   .ins-step-header { gap: 0.7rem; }
+  .ins-hero-title { font-size: 2.2rem; }
+  .ins-hero-sub { font-size: 0.95rem; padding: 0 1rem; }
+  .ins-result-card { padding: 2.5rem 1.5rem; }
+  .ins-card-body { padding: 1rem; }
+  .reg-form { padding: 1.5rem 1rem; }
+  .ins-extra-card { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
 }

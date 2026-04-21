@@ -63,6 +63,7 @@
   line-height: 1.6;
   margin-bottom: 2.5rem;
   max-width: 700px;
+  font-weight: 500;
 }
 
 .n-hero-actions {
@@ -713,9 +714,16 @@
 }
 
 @media (max-width: 768px) {
-  .n-hero-title { font-size: 3rem; }
+  .n-hero-title { font-size: 3rem; text-align: center; }
+  .n-hero-subtitle { text-align: center; }
+  .n-hero-actions { flex-direction: column; width: 100%; gap: 1rem; align-items: center; }
+  .n-btn { width: 100%; justify-content: center; transform: none !important; border-radius: 12px; }
   .n-training-grid { grid-template-columns: 1fr; }
   .n-outcomes-grid { grid-template-columns: 1fr; }
+  
+  .nursing-hero-overlay {
+    background: linear-gradient(180deg, rgba(10, 25, 47, 0.98) 0%, rgba(10, 25, 47, 0.85) 60%, rgba(10, 25, 47, 0.95) 100%);
+  }
 }
 
 @media (max-width: 480px) {

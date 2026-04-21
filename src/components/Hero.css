@@ -92,22 +92,39 @@
 @media (max-width: 768px) {
   .hero {
     min-height: auto;
-    padding-top: 100px;
-    padding-bottom: 40px;
+    padding: 120px 1rem 50px 1rem;
+    align-items: center;
+  }
+  .hero-inner {
+    margin-left: 0;
+    width: 100%;
+    padding: 0 1rem; /* Control exacto sobre el Hero sin depender del hce-container global */
+  }
+  .hero-content {
+    align-items: center;
+    margin: 0 auto;
+    width: 100%;
   }
   .hero-content h1 {
     font-size: 2.8rem;
+    text-align: center;
+    width: 100%;
+  }
+  .hero-content p {
+    text-align: center;
+    padding: 0 0.5rem;
   }
   .hero-actions {
     flex-direction: column;
     width: 100%;
     align-items: center;
+    gap: 1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .hero-content h1 { font-size: 2rem; }
-  .hero-content p  { font-size: 1rem; }
+  .hero-content h1 { font-size: 2.2rem; }
+  .hero-content p  { font-size: 1.05rem; }
   .hero-actions a, .hero-actions button { width: 100%; text-align: center; }
-  .hero { padding-top: 80px; }
+  .hero { padding-top: 90px; }
 }

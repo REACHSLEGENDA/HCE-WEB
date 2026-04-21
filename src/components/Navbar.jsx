@@ -59,6 +59,13 @@ const Navbar = () => {
         </div>
 
         <div className="nav-grid">
+          
+          {/* Logo dentro del menú */}
+          <div className="nav-logo-overlay">
+            <Link to="/" onClick={() => toggleNav(false)}>
+              <img src="/assets/componentes/ghghg-scaled.png" alt="HCE Logo" />
+            </Link>
+          </div>
 
           {/* Nosotros */}
           <div className="menu-section">
