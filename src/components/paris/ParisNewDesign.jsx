@@ -452,7 +452,7 @@ const ParisNewDesign = () => {
                                 <img src="/assets/componentes/lgo7-1.png" alt="INER" className="sede-v2-logo" />
                                 <span className="sede-v2-badge"><MapPin size={13} /> Ciudad de México</span>
                             </div>
-                            <div className="sede-v2-label">Sede Oficial 2026</div>
+                            <div className="sede-v2-label">SEDE Octubre 2026</div>
                             <h2 className="sede-v2-title">Instituto Nacional de Enfermedades Respiratorias</h2>
                             <p className="sede-v2-abbr">(INER)</p>
                             <div className="sede-v2-addr">
