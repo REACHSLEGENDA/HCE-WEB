@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -496,10 +496,10 @@ const COUNTRIES = [
 
 function PhoneSelect({ value, onChange }) {
   const [open, setOpen] = useState(false);
-  const ref = React.useRef(null);
+  const ref = useRef(null);
   const selected = COUNTRIES.find(c => c.code === value) || COUNTRIES[0];
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -533,13 +533,18 @@ function PhoneSelect({ value, onChange }) {
 }
 
 export function RegistrationForm() {
-  // Leer datos directamente del parámetro ?d= que Stripe preserva en la URL de retorno
+  const [params] = useSearchParams();
   const stored = (() => {
     try {
-      const d = new URLSearchParams(window.location.search).get('d');
+      const d = params.get('d');
       if (!d) return {};
-      return JSON.parse(atob(d.replace(/-/g, '+').replace(/_/g, '/')));
-    } catch { return {}; }
+      // Revertir base64url a base64 estándar y decodificar
+      const b64 = d.replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(b64));
+    } catch (err) { 
+      console.error('Error decoding pay data:', err);
+      return {}; 
+    }
   })();
 
   const [form, setForm] = useState({
