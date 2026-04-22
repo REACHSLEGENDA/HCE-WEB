@@ -61,8 +61,7 @@ export default function Inscripciones() {
   const [apiError, setApiError] = useState('');
 
   const payStatus = searchParams.get('status'); // 'success' | 'cancel'
-
-  const perfil = cardSel === 'especialista' ? 'especialista' : subRole;
+  const perfil = cardSel === 'otros' ? subRole : cardSel;
 
   const selectCard = (card) => {
     setCardSel(card);

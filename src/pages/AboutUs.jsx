@@ -1,6 +1,6 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Globe, Users, Activity, Shield, Sparkles, ArrowRight, PlayCircle, Award, Target, MonitorPlay, Zap, Gamepad2, Laptop } from 'lucide-react';
+import { Globe, Users, Activity, Shield, Sparkles, ArrowRight, PlayCircle, Award, Target, MonitorPlay, Zap, Gamepad2, Laptop, GraduationCap, CheckCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './AboutUs.css'; 
@@ -14,6 +14,7 @@ const AboutUs = () => {
   const { ref: methodRef,   inView: methodInView   } = useInView({ triggerOnce: true, threshold: 0.1 });
   const { ref: coreRef,     inView: coreInView     } = useInView({ triggerOnce: true, threshold: 0.1 });
   const { ref: statsRef,    inView: statsInView    } = useInView({ triggerOnce: true, threshold: 0.1 });
+  const { ref: founderRef,  inView: founderInView  } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   return (
     <div className="au-page">
