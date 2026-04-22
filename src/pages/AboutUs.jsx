@@ -239,6 +239,55 @@ const AboutUs = () => {
         </div>
       </section>
 
+      {/* ── FUNDADORA ── */}
+      <section className="au-founder">
+        <div className="hce-container">
+          <div ref={founderRef} className={`au-founder-grid au-reveal ${founderInView ? 'active' : ''}`}>
+
+            <div className="au-founder-text">
+              <span className="section-badge"><GraduationCap size={15} /> Fundadora & CEO</span>
+              <h2 className="au-h2">
+                Dra. Jenifer <span className="au-gradient-text">Trejo Guerra</span>
+              </h2>
+              <p className="au-founder-lead">
+                Médica por la Universidad Panamericana, CEO de la Academia Healthcare Training Experience y Embajadora para Latinoamérica de ECMO SIM de Pratico Santé.
+              </p>
+              <p className="au-founder-body">
+                Desde su rol impulsa la formación especializada de profesionales de la salud en temas de cuidados críticos como ECMO en Latinoamérica, con una visión de impacto regional y estándares internacionales.
+              </p>
+              <p className="au-founder-body">
+                Sus intereses profesionales se centran en la educación basada en simulación, el fortalecimiento de equipos interdisciplinarios y el desarrollo de programas educativos sostenibles, participando activamente en la organización de eventos académicos y científicos en la región.
+              </p>
+
+              <div className="au-founder-creds">
+                {[
+                  'Certificación ECMO avalada por ELSO, EuroELSO y ELSO Norteamérica',
+                  'Certificación europea en simulación clínica (EuSim)',
+                  'Formación en debriefing — Penn State Ross and Carol Nese College of Nursing',
+                ].map((c, i) => (
+                  <div key={i} className="au-founder-cred-item">
+                    <CheckCircle size={16} className="au-founder-cred-icon" />
+                    <span>{c}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="au-founder-img-side">
+              <div className="au-founder-img-wrap">
+                <img src="/assets/aboutus/jenifer-trejo.jpg" alt="Dra. Jenifer Trejo Guerra" className="au-founder-img" />
+                <div className="au-founder-img-overlay" />
+                <div className="au-founder-name-tag">
+                  <span className="au-founder-tag-name">Dra. Jenifer Trejo Guerra</span>
+                  <span className="au-founder-tag-role">CEO & Fundadora · HCE</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* ── MISIÓN Y VISIÓN ── */}
       <section className="au-mv-section">
         <div className="hce-container">

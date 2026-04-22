@@ -51,7 +51,7 @@ const PRICES_MXN = {
   enfermero:     37000,
   ecmo_sim:       3500,
   ecmo_nursing:   3500,
-  test:              5,
+  test:             10,
   test_extra_a:      5,
   test_extra_b:      5,
 };

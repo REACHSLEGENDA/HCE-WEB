@@ -40,7 +40,7 @@ const PROFILES = {
   },
   test: {
     label: 'Perfil de Testeo',
-    price: 5,
+    price: 10,
     extras: [],
   },
 };
@@ -226,7 +226,7 @@ export default function Inscripciones() {
                     <span className="ins-card-tag">Prueba</span>
                     {cardSel === 'test' && <CheckCircle2 size={20} className="ins-card-check" />}
                   </div>
-                  <h3 className="ins-card-title">Testeo (5 MXN)</h3>
+                  <h3 className="ins-card-title">Testeo (10 MXN)</h3>
                 </div>
               </button>
             </div>
