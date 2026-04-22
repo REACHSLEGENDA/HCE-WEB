@@ -52,7 +52,20 @@ export const handler = async (event) => {
     const upsertData = await upsertRes.json();
     console.log('Mailchimp upsert:', upsertRes.status, upsertData.id || upsertData.detail);
 
-    // Aplicar tag ECMOParis2026
+    // Forzar re-entrada del tag para disparar Customer Journeys
+    // Paso 1: Quitar tag (inactivo)
+    await fetch(`${baseUrl}/members/${hash}/tags`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        tags: [{ name: MAILCHIMP_TAG, status: 'inactive' }],
+      }),
+    });
+
+    // Paso 2: Pequeña espera para que Mailchimp procese el cambio
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Paso 3: Volver a poner el tag (activo)
     await fetch(`${baseUrl}/members/${hash}/tags`, {
       method: 'POST',
       headers,
