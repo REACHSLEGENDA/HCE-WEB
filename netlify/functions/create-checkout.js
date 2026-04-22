@@ -51,7 +51,7 @@ const PRICES_MXN = {
   enfermero:     37000,
   ecmo_sim:       3500,
   ecmo_nursing:   3500,
-  test:             10,
+  test:              5,
   test_extra_a:      5,
   test_extra_b:      5,
 };
@@ -60,12 +60,12 @@ const PROFILE_LABELS = {
   especialista: 'Médicos Especialistas',
   residente:    'Médicos Residentes',
   enfermero:    'Enfermeros y Otros Profesionales',
-  test:         '[PRUEBA] Inscripción de testeo',
+  test:         'Perfil de Testeo (Prueba)',
 };
 
 const EXTRA_LABELS = {
-  ecmo_sim:     'Módulo adicional: ECMO SIM',
-  ecmo_nursing: 'Módulo adicional: ECMO NURSING',
+  ecmo_sim:     'Módulo adicional: Simulador ECMO SIM',
+  ecmo_nursing: 'Módulo adicional: ECMO Nursing Care Course',
   test_extra_a: '[PRUEBA] Extra A',
   test_extra_b: '[PRUEBA] Extra B',
 };
@@ -107,7 +107,7 @@ export const handler = async (event) => {
           currency,
           product_data: {
             name: `Inscripción HCE — ${PROFILE_LABELS[perfil]}`,
-            description: 'Healthcare Clinical Experience · Programa de formación clínica avanzada',
+            description: 'Healthcare Training Experience · Programa de formación clínica avanzada',
           },
           unit_amount: mxnToUnit(PRICES_MXN[perfil]),
         },
@@ -148,7 +148,12 @@ export const handler = async (event) => {
       mode: 'payment',
       success_url: `${origin}/inscripciones?status=success&d=${payData}`,
       cancel_url:  `${origin}/inscripciones?status=cancel`,
-      locale: 'es',
+      locale: 'es-419',
+      custom_text: {
+        submit: {
+          message: '*Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana. El acceso a las videolecciones será durante la duración completa del curso (4 semanas) y durante un periodo de gracia de 15 dias más.'
+        }
+      },
       metadata: {
         perfil,
         extras: validExtras.join(','),

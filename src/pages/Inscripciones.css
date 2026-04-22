@@ -818,6 +818,41 @@
   margin-bottom: 1.5rem;
 }
 
+.tel-group {
+  display: flex;
+  align-items: stretch;
+  background: var(--ins-bg);
+  border: 1.5px solid var(--ins-border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.tel-group:focus-within {
+  border-color: var(--ins-blue);
+  background: var(--ins-white);
+}
+
+.reg-lada-select {
+  width: 95px !important;
+  border: none !important;
+  border-right: 1.5px solid var(--ins-border) !important;
+  border-radius: 0 !important;
+  background-position: right 0.5rem center !important;
+  padding: 0.65rem 0.5rem !important;
+  font-size: 0.85rem !important;
+  flex-shrink: 0;
+}
+
+.tel-group input {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.875rem;
+  outline: none;
+}
+
 .reg-field {
   display: flex;
   flex-direction: column;

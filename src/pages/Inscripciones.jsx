@@ -38,6 +38,11 @@ const PROFILES = {
     price: 37000,
     extras: ['ecmo_sim', 'ecmo_nursing'],
   },
+  test: {
+    label: 'Perfil de Testeo',
+    price: 5,
+    extras: [],
+  },
 };
 
 const fmt = (n, cur) =>
@@ -148,7 +153,7 @@ export default function Inscripciones() {
       {/* HERO */}
       <div className="ins-hero">
         <div className="ins-hero-inner hce-container">
-          <span className="section-badge">Programas 2026</span>
+          <span className="section-badge">PROGRAMAS 2026</span>
           <h1 className="ins-hero-title">Inscripciones</h1>
           <p className="ins-hero-sub">
             Personaliza tu inscripción al programa de formación en ECMO de élite, aprovecha nuestras promociones.
@@ -205,6 +210,24 @@ export default function Inscripciones() {
                     {cardSel === 'otros' && <CheckCircle2 size={20} className="ins-card-check" />}
                   </div>
                   <h3 className="ins-card-title">Residente, Enfermero(a) y Otros</h3>
+                </div>
+              </button>
+
+              {/* Card 3 — Testeo */}
+              <button
+                type="button"
+                className={`ins-card ${cardSel === 'test' ? 'ins-card--active' : ''}`}
+                onClick={() => selectCard('test')}
+              >
+                <div className="ins-card-visual" style={{ background: '#64748b' }}>
+                  <Shield size={40} strokeWidth={1.5} />
+                </div>
+                <div className="ins-card-body">
+                  <div className="ins-card-top">
+                    <span className="ins-card-tag">Prueba</span>
+                    {cardSel === 'test' && <CheckCircle2 size={20} className="ins-card-check" />}
+                  </div>
+                  <h3 className="ins-card-title">Testeo (5 MXN)</h3>
                 </div>
               </button>
             </div>
@@ -407,7 +430,7 @@ export function RegistrationForm() {
   })();
 
   const [form, setForm] = useState({
-    nombres: '', apellidos: '', email: stored.email || '', telefono: '',
+    nombres: '', apellidos: '', email: stored.email || '', telefono: '', lada: '+52',
     pais: '', estado: '', grado: '', especialidad: '', institucion: '', cargo: '',
   });
   const [status, setStatus] = useState('idle');
@@ -420,6 +443,7 @@ export function RegistrationForm() {
     try {
       const payload = {
         ...form,
+        telefono:    `${form.lada} ${form.telefono}`,
         perfil:      stored.perfilLabel || '',
         extras:      stored.extrasLabel || '',
         moneda:      stored.moneda || '',
@@ -486,8 +510,8 @@ export function RegistrationForm() {
 
         {/* Formulario */}
         <form className="reg-form" onSubmit={handleSubmit}>
-          <h2 className="reg-form-title">Completa tu registro</h2>
-          <p className="reg-form-sub">Necesitamos tus datos para enviarte el acceso y materiales del programa.</p>
+          <h2 className="reg-form-title">Completa tu inscripción</h2>
+          <p className="reg-form-sub">Una vez enviado este formulario, recibirás en tu correo electrónico la confirmación oficial y los detalles de acceso nuestro programa.</p>
 
           <div className="reg-grid">
             <div className="reg-field">
@@ -503,8 +527,22 @@ export function RegistrationForm() {
               <input type="email" value={form.email} onChange={set('email')} required />
             </div>
             <div className="reg-field">
-              <label>Teléfono * <span className="reg-hint">(con código de país)</span></label>
-              <input type="tel" value={form.telefono} onChange={set('telefono')} required />
+              <label>Teléfono *</label>
+              <div className="tel-group">
+                <select value={form.lada} onChange={set('lada')} className="reg-lada-select" required>
+                  <option value="+52">🇲🇽 +52</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+57">🇨🇴 +57</option>
+                  <option value="+54">🇦🇷 +54</option>
+                  <option value="+56">🇨🇱 +56</option>
+                  <option value="+51">🇵🇪 +51</option>
+                  <option value="+593">🇪🇨 +593</option>
+                  <option value="+502">🇬🇹 +502</option>
+                  <option value="+506">🇨🇷 +506</option>
+                  <option value="+34">🇪🇸 +34</option>
+                </select>
+                <input type="tel" value={form.telefono} onChange={set('telefono')} required placeholder="10 dígitos" />
+              </div>
             </div>
             <div className="reg-field">
               <label>País *</label>
