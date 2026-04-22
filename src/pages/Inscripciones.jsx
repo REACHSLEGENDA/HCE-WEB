@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield } from 'lucide-react';
+import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';

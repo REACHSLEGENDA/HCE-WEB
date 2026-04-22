@@ -146,8 +146,8 @@ export const handler = async (event) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${origin}/inscripciones?status=success&d=${payData}`,
-      cancel_url:  `${origin}/inscripciones?status=cancel`,
+      success_url: `${origin}/inscripciones-diploma-paris-ecmo?status=success&d=${payData}`,
+      cancel_url:  `${origin}/inscripciones-diploma-paris-ecmo?status=cancel`,
       locale: 'es-419',
       custom_text: {
         submit: {
