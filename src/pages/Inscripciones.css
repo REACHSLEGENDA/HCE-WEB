@@ -1038,3 +1038,52 @@
   .reg-form { padding: 1.5rem 1rem; }
   .ins-extra-card { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
 }
+
+/* ── Privacy consent block ── */
+.ins-privacy-block {
+  border-top: 1px solid var(--ins-border);
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ins-privacy-text {
+  font-size: 0.78rem;
+  color: var(--ins-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ins-privacy-link {
+  color: #2563eb;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.ins-privacy-link:hover {
+  color: #1d4ed8;
+}
+
+.ins-consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.ins-consent-row input[type="checkbox"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--ins-blue);
+  cursor: pointer;
+}
+
+.ins-consent-row span {
+  font-size: 0.76rem;
+  color: var(--ins-muted);
+  line-height: 1.5;
+}

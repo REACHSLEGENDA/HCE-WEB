@@ -22,14 +22,16 @@ const EcmoSim = () => {
               ECMO <span className="sim-neon-text">Sim.</span>
             </h1>
             <p className="sim-subtitle">
-              El primer videojuego de simulación clínica diseñado por y para profesionales de la salud. Asume el control, toma decisiones críticas y salva vidas en un entorno 3D de alta fidelidad.
+              Toma el control de la Unidad de Cuidados Intensivos. Interactúa con dispositivos de alta complejidad —desde ventiladores mecánicos hasta consolas de ECMO— con un nivel de realismo que te hará sentir dentro de la unidad.
+              <br /><br />
+              <strong>El videojuego de los profesionales de la salud.</strong>
             </p>
             
             <div className="sim-hero-actions">
               <a href="https://buy.stripe.com/bJe8wHezt5Rm58fbEP9IQ0U" className="btn-gaming">
                 <PlayCircle size={24} /> JUGAR AHORA
               </a>
-              <p className="sim-cta-hint">Suscripción mensual. Acceso ilimitado a todos los escenarios.</p>
+              <p className="sim-cta-hint">Suscripción de acceso por 4 meses. Ilimitado a todos los escenarios.</p>
             </div>
           </div>
         </div>
@@ -200,7 +202,7 @@ const EcmoSim = () => {
             </div>
             
             <div className="sim-players-visual">
-              <img src="https://healthcareexp.com/wp-content/uploads/2024/11/aprendizaje-electronico.png" alt="Players" className="sim-float-img" />
+              <img src="/assets/componentes/ecmosim-logo-new.png" alt="ECMO Sim Logo" className="sim-float-img" />
             </div>
           </div>
         </div>
@@ -216,7 +218,7 @@ const EcmoSim = () => {
             <a href="https://buy.stripe.com/bJe8wHezt5Rm58fbEP9IQ0U" className="btn-gaming mega shadow-glow">
               <Gamepad2 size={28} /> COMPRAR SUSCRIPCIÓN MENSUAL
             </a>
-            <p className="sim-secure-checkout">Pago seguro vía Stripe. Cancela cuando quieras.</p>
+            <p className="sim-secure-checkout">Pago seguro vía Stripe.</p>
           </div>
         </div>
       </section>

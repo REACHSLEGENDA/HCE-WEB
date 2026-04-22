@@ -53,7 +53,7 @@ const InsuficienciaCardiaca = () => {
         <div className="ic-hero-inner hce-container">
           <div ref={heroRef} className={`ic-hero-content reveal ${heroInView ? 'active' : ''}`}>
 
-            <div className="ic-badge">
+            <div className="section-badge">
               <HeartPulse size={14} />
               Educación Médica de Élite
             </div>
@@ -91,7 +91,7 @@ const InsuficienciaCardiaca = () => {
           <div ref={valueRef} className={`ic-value-wrap reveal ${valueInView ? 'active' : ''}`}>
 
             <div className="ic-value-header">
-              <span className="ic-section-tag ic-section-tag--dark">Por qué elegirnos</span>
+              <span className="section-badge">Por qué elegirnos</span>
               <h2 className="ic-h2">
                 Todo lo que necesitas<br />
                 <span className="ic-grad-text">en un solo programa</span>
@@ -151,7 +151,7 @@ const InsuficienciaCardiaca = () => {
           <div ref={audienceRef} className={`ic-audience-grid reveal ${audienceInView ? 'active' : ''}`}>
 
             <div className="ic-audience-text">
-              <span className="ic-section-tag">Perfil de Ingreso</span>
+              <span className="section-badge">Perfil de Ingreso</span>
               <h2 className="ic-h2">
                 ¿A quién<br />
                 <span className="ic-grad-text">dirigimos el éxito?</span>
@@ -262,7 +262,7 @@ const InsuficienciaCardiaca = () => {
               <p className="ic-waitlist-desc">
                 Nuestros cupos son estrictamente limitados para garantizar acompañamiento personalizado. Únete a la lista prioritaria.
               </p>
-              <div className="ic-priority-badge">
+              <div className="section-badge">
                 <CheckCircle2 size={14} />
                 Prioridad de inscripción
               </div>

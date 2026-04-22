@@ -71,7 +71,7 @@ const Testimonials = () => {
       <div className="testimonials-bg-glow"></div>
       <div className="hce-container">
         <div ref={ref} className={`testimonials-header reveal ${inView ? 'active' : ''}`}>
-          <div className="testi-tag">
+          <div className="section-badge">
             <MessageSquare size={16} /> Voces de éxito
           </div>
           <h2 className="testi-headline">Impacto en la <span>práctica clínica</span></h2>

@@ -45,18 +45,20 @@
 }
 
 .hero-content h1 .text-gradient {
-  filter: drop-shadow(0 15px 30px rgba(0, 114, 255, 0.3));
+  filter: drop-shadow(0 15px 30px rgba(0, 210, 255, 0.3));
   display: inline-block;
-  background: linear-gradient(135deg, #0048ff 0%, #00d2ff 100%);
+  background: linear-gradient(135deg, #00d2ff 0%, #f97316 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .hero-content h1 span.accent-text {
-  background: linear-gradient(135deg, #fbc531 0%, #e1b12c 100%);
+  background: linear-gradient(135deg, #00d2ff 0%, #f97316 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 10px 20px rgba(251, 197, 49, 0.2));
+  background-clip: text;
+  filter: drop-shadow(0 10px 20px rgba(249, 115, 22, 0.2));
 }
 
 .hero-content p {
@@ -75,29 +77,32 @@
   gap: 2rem;
 }
 
-.hero-actions .btn-primary {
-  background: var(--gradient-primary);
-  color: white;
-  padding: 1.1rem 2.8rem;
-  box-shadow: 0 10px 25px rgba(0, 72, 255, 0.3);
-  text-transform: uppercase;
-}
-
+.hero-actions .btn-primary,
 .hero-actions .btn-outline {
-  background: #ffffff;
-  color: #0048ff;
-  border: 2px solid #0048ff;
+  background: linear-gradient(to right, #0048ff, #00d2ff);
+  color: white;
   padding: 1.1rem 2.8rem;
-  box-shadow: 0 4px 15px rgba(0, 72, 255, 0.1);
+  border-radius: 50px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  box-shadow: 0 10px 25px rgba(0, 72, 255, 0.3);
   text-transform: uppercase;
+  min-width: 280px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  border: none;
+  text-decoration: none;
 }
 
+.hero-actions .btn-primary:hover,
 .hero-actions .btn-outline:hover {
-  background: var(--gradient-primary);
-  color: white;
-  border-color: transparent;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(0, 72, 255, 0.3);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 210, 255, 0.4);
+  filter: brightness(1.1);
 }
 
 @media (max-width: 768px) {

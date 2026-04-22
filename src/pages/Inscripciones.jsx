@@ -50,6 +50,8 @@ export default function Inscripciones() {
   const [extras, setExtras] = useState(new Set());
   const [moneda, setMoneda] = useState('mxn');
   const [email, setEmail] = useState('');
+  const [consentPrimary, setConsentPrimary] = useState(false);
+  const [consentSecondary, setConsentSecondary] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
 
@@ -87,7 +89,7 @@ export default function Inscripciones() {
   const cur = moneda.toUpperCase();
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const canPay = !!perfil && emailValid;
+  const canPay = !!perfil && emailValid && consentPrimary;
 
   const handlePay = async () => {
     if (!canPay) return;
@@ -146,10 +148,10 @@ export default function Inscripciones() {
       {/* HERO */}
       <div className="ins-hero">
         <div className="ins-hero-inner hce-container">
-          <span className="ins-hero-badge">Programas 2026</span>
+          <span className="section-badge">Programas 2026</span>
           <h1 className="ins-hero-title">Inscripciones</h1>
           <p className="ins-hero-sub">
-            Selecciona tu perfil y personaliza tu inscripción al programa de formación clínica más completo de Latinoamérica.
+            Personaliza tu inscripción al programa de formación en ECMO de élite, aprovecha nuestras promociones.
           </p>
         </div>
       </div>
@@ -246,7 +248,7 @@ export default function Inscripciones() {
                 <span className="ins-step-num">{cardSel === 'otros' ? '3' : '2'}</span>
                 <div>
                   <h2 className="ins-step-title">Potencia tu formación</h2>
-                  <p className="ins-step-sub" style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Añade un curso con un precio especial por tiempo limitado</p>
+                  <p className="ins-step-sub" style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Añade un curso ¡Promoción especial por tiempo limitado!</p>
                 </div>
               </div>
               <div className="ins-extras">
@@ -351,6 +353,21 @@ export default function Inscripciones() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+            </div>
+
+            <div className="ins-privacy-block">
+              <p className="ins-privacy-text">
+                Healthcare Training Experience recaba sus datos personales necesarios para su inscripción a nuestros entrenamientos y la relación jurídica. Para mayor información consulta nuestro{' '}
+                <a href="/aviso-de-privacidad" target="_blank" rel="noopener noreferrer" className="ins-privacy-link">Aviso de Privacidad</a>.
+              </p>
+              <label className="ins-consent-row">
+                <input type="checkbox" checked={consentPrimary} onChange={(e) => setConsentPrimary(e.target.checked)} />
+                <span>Consiento y autorizo expresamente que los datos personales aquí señalados sean tratados conforme al Aviso de Privacidad.</span>
+              </label>
+              <label className="ins-consent-row">
+                <input type="checkbox" checked={consentSecondary} onChange={(e) => setConsentSecondary(e.target.checked)} />
+                <span>Consiento y autorizo expresamente que mis datos personales sean tratados para finalidades secundarias, como publicidad sobre futuros entrenamientos, mismas que no son necesarias para tu acceso.</span>
+              </label>
             </div>
 
             {apiError && <p className="ins-error">{apiError}</p>}

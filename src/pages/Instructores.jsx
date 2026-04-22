@@ -58,7 +58,7 @@ const Instructores = () => {
     { num: "372+", label: "Publicaciones científicas" },
     { num: "30+",  label: "Años de experiencia clínica" },
     { num: "4",    label: "Centros de referencia mundial" },
-    { num: "1,500+", label: "Profesionales formados" },
+    { num: "2,000+", label: "Alumnos profesionales" },
   ];
 
   const pillars = [
@@ -79,7 +79,7 @@ const Instructores = () => {
     },
     {
       icon: <Users size={22} />,
-      title: "Tutoría directa",
+      title: "Mentoría directa",
       desc: "Acceso personalizado al docente durante todo el programa, no solo en clases magistrales.",
     },
   ];
@@ -97,7 +97,7 @@ const Instructores = () => {
         <div className="inst-hero-overlay" />
         <div className="hce-container">
           <div ref={heroRef} className={`inst-hero-content inst-reveal ${heroInView ? 'active' : ''}`}>
-            <div className="inst-badge">
+            <div className="section-badge">
               <Sparkles size={14} />
               Facultad de Élite
             </div>
@@ -136,7 +136,7 @@ const Instructores = () => {
       <section className="inst-faculty-section" id="faculty">
         <div className="hce-container">
           <div className="inst-section-head">
-            <span className="inst-section-tag">Staff Académico</span>
+            <span className="section-badge">Staff Académico</span>
             <h2 className="inst-h2">
               Expertos que definen<br />
               <span className="inst-grad-text">el estándar global</span>
@@ -149,19 +149,13 @@ const Instructores = () => {
               <div key={doc.id} className="inst-card" style={{ transitionDelay: `${i * 0.1}s` }}>
                 <div className="inst-card-photo">
                   <div className="inst-card-img" style={{ backgroundImage: `url(${doc.image})` }} />
-                  <div className="inst-card-bio-overlay">
-                    <p>{doc.bio}</p>
-                  </div>
                   <div className="inst-card-country">
                     <span>{doc.flag}</span> {doc.country}
                   </div>
                 </div>
                 <div className="inst-card-body">
-                  <div className="inst-card-meta">
-                    <span className="inst-card-tag">{doc.tag}</span>
-                    <span className="inst-card-role"><Award size={12} /> {doc.role}</span>
-                  </div>
                   <h3 className="inst-card-name">{doc.name}</h3>
+                  <p className="inst-card-bio-static">{doc.bio}</p>
                 </div>
               </div>
             ))}
@@ -175,13 +169,13 @@ const Instructores = () => {
           <div ref={pillarsRef} className={`inst-pillars-inner inst-reveal ${pillarsInView ? 'active' : ''}`}>
 
             <div className="inst-pillars-left">
-              <span className="inst-section-tag inst-section-tag--dark">Metodología</span>
+              <span className="section-badge">Metodología</span>
               <h2 className="inst-h2">
                 ¿Por qué aprender<br />
                 <span className="inst-grad-text">de ellos?</span>
               </h2>
               <p className="inst-pillars-desc">
-                No contratamos conferenciantes. Traemos a los clínicos que publicaron los estudios que tú estudias.
+                Aprende directamente de la fuente, traemos a los autores de la evidencia científica que consultas a diario.
               </p>
             </div>
 
@@ -212,7 +206,7 @@ const Instructores = () => {
                 <span className="inst-grad-text">Forma parte del programa.</span>
               </h2>
               <p className="inst-cta-sub">
-                Cupos estrictamente limitados para garantizar acompañamiento personalizado por parte de los docentes.
+                Transformamos la forma en que aprendes, interactúas y salvas vidas. Explora nuestros programas, domina la técnica en nuestros simuladores y experimenta el estándar de excelencia HCE.
               </p>
               <a href="/" className="inst-cta-btn">
                 Ver programas disponibles <ArrowRight size={16} />

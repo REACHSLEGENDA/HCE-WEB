@@ -73,7 +73,7 @@ img, video {
 }
 
 .text-gradient {
-  background: linear-gradient(90deg, #1e37b8 0%, #fbc531 100%);
+  background: linear-gradient(135deg, #00d2ff 0%, #f97316 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -161,6 +161,38 @@ img, video {
   color: white;
   transform: translateY(-5px);
   box-shadow: var(--shadow-soft);
+}
+
+/* Global Badges/Tags (Unified Section Headers) */
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: #051124;
+  color: #00d2ff;
+  padding: 0.5rem 1.4rem;
+  border-radius: 100px;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+  width: fit-content;
+}
+
+.section-badge svg {
+  color: #00d2ff;
+  filter: drop-shadow(0 0 5px rgba(0, 210, 255, 0.5));
+}
+
+.section-badge:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 210, 255, 0.5);
+  box-shadow: 0 8px 25px rgba(0, 210, 255, 0.15);
 }
 
 /* Animations */

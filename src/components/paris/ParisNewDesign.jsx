@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, Calendar, Clock } from 'lucide-react';
+import { ShieldCheck, Calendar, Clock, Sparkles, MapPin, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './ParisNewDesign.css';
 import Navbar from '../Navbar';
@@ -236,6 +236,12 @@ const ParisNewDesign = () => {
                                 <span className="time-label">Seg</span>
                             </div>
                         </div>
+                        <div className="hero-venue-info">
+                            <MapPin size={12} /> 
+                            <a href="https://share.google/sHSrTC0wdg5BJAodK" target="_blank" rel="noopener noreferrer" className="hero-venue-link">
+                                Sede: INER, Ciudad de México
+                            </a>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -287,7 +293,9 @@ const ParisNewDesign = () => {
             <section className="experience-lead reveal">
                 <div className="container">
                     <div className="experience-lead-text">
-                        <div className="h4-style" style={{ color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Aprende de los expertos</div>
+                        <div className="section-badge">
+                            <Sparkles size={16} /> Aprende de los expertos
+                        </div>
                         <div className="h2-style" style={{ fontSize: '2.5rem', lineHeight: '1.2', marginBottom: '2rem' }}>Nuestro diplomado está liderado por el <span className="gradient-text">Prof. Alain Combes</span></div>
                         <p style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '2rem', lineHeight: '1.7' }}>
                             Jefe de la unidad de cuidados intensivos del <strong>Hospital La Pitié-Salpétrière</strong> de París, Francia, quien con su equipo ha entrenado a más de 2000 profesionales de la salud a nivel internacional.
@@ -302,6 +310,29 @@ const ParisNewDesign = () => {
 
             {/* SECTION 3: SYLLABUS (TEMARIO) */}
             <SyllabusSection />
+
+            {/* SECTION 4: METHODOLOGY (MOVED HERE) */}
+            <section className="section-padding methodology reveal">
+                <div className="container">
+                    <div className="method-content">
+                        <div className="method-image reveal">
+                            <img src="/assets/paris/DSC_4075.jpg" alt="Simulación ECMO" />
+                        </div>
+                        <div className="method-text reveal">
+                            <div className="section-title" style={{ color: 'white', fontSize: '3rem', marginBottom: '2rem' }}>
+                                <span className="gradient-text">Metodología</span> de la Experiencia
+                            </div>
+                            <p style={{ marginBottom: '2.5rem', opacity: 0.8, fontSize: '1.15rem' }}>Entrenamiento aplicable desde el primer día con una metodología dinámica e interactiva a través de:</p>
+                            <ul className="method-list">
+                                <li><ShieldCheck style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '15px' }} /> Conferencias magistrales</li>
+                                <li><ShieldCheck style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '15px' }} /> Estudio de casos reales</li>
+                                <li><ShieldCheck style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '15px' }} /> Simulación Clínica de alta fidelidad</li>
+                                <li><ShieldCheck style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '15px' }} /> Sesiones de Q&A con los expertos referentes internacionales</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             {/* SECTION 3.5: EXPERTS */}
             <section className="section-padding" id="experts">
@@ -374,28 +405,7 @@ const ParisNewDesign = () => {
                 </div>
             </section>
 
-            {/* SECTION 4: METHODOLOGY */}
-            <section className="section-padding methodology reveal">
-                <div className="container">
-                    <div className="method-content">
-                        <div className="method-image reveal">
-                            <img src="/assets/paris/DSC_4075.jpg" alt="Simulación ECMO" />
-                        </div>
-                        <div className="method-text reveal">
-                            <div className="section-title" style={{ color: 'white', fontSize: '3rem', marginBottom: '2rem' }}>
-                                <span className="gradient-text">Metodología</span> de la Experiencia
-                            </div>
-                            <p style={{ marginBottom: '2.5rem', opacity: 0.8, fontSize: '1.15rem' }}>Entrenamiento aplicable desde el primer día con una metodología dinámica e interactiva a través de:</p>
-                            <ul className="method-list">
-                                <li><ShieldCheck style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '15px' }} /> Conferencias magistrales</li>
-                                <li><ShieldCheck style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '15px' }} /> Estudio de casos reales</li>
-                                <li><ShieldCheck style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '15px' }} /> Simulación Clínica de alta fidelidad</li>
-                                <li><ShieldCheck style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '15px' }} /> Sesiones de Q&A con los expertos referentes internacionales</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </section>
+
 
             <section className="video-experience-redesign">
                 <div className="container">
@@ -427,6 +437,42 @@ const ParisNewDesign = () => {
                                 Sé parte de un entrenamiento revolucionario en Latinoamérica con herramientas de entrenamiento como <strong>ECMO SIM</strong>. Potenciamos tus habilidades para convertirte en un líder en ECMO.
                             </p>
                             <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary btn-lg">Empezar</Link>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION 3.6: SEDE 2026 (REDESIGNED) */}
+            <section className="sede-section-v2" id="sede">
+                <div className="container">
+                    <div className="sede-v2-grid">
+                        {/* Left: info */}
+                        <div className="sede-v2-info reveal">
+                            <div className="sede-v2-top">
+                                <img src="/assets/componentes/lgo7-1.png" alt="INER" className="sede-v2-logo" />
+                                <span className="sede-v2-badge"><MapPin size={13} /> Ciudad de México</span>
+                            </div>
+                            <div className="sede-v2-label">Sede Oficial 2026</div>
+                            <h2 className="sede-v2-title">Instituto Nacional de Enfermedades Respiratorias</h2>
+                            <p className="sede-v2-abbr">(INER)</p>
+                            <div className="sede-v2-addr">
+                                <MapPin size={16} />
+                                <span>Calz. de Tlalpan 4502, Belisario Domínguez Secc 16, Tlalpan, 14080 CDMX</span>
+                            </div>
+                            <div className="sede-v2-actions">
+                                <a href="https://share.google/sHSrTC0wdg5BJAodK" target="_blank" rel="noopener noreferrer" className="btn btn-outline sede-v2-map-btn">
+                                    <ExternalLink size={16} /> Ver en Maps
+                                </a>
+                                <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
+                            </div>
+                        </div>
+
+                        {/* Right: image */}
+                        <div className="sede-v2-img-wrap reveal">
+                            <img src="https://i0.wp.com/gaceta.facmed.unam.mx/wp-content/uploads/2021/03/edificio-de-gobierno.jpeg?resize=1024%2C475&ssl=1" alt="INER Sede 2026" className="sede-v2-img" />
+                            <div className="sede-v2-img-badge">
+                                <MapPin size={14} /> INER · CDMX · 2026
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
+import { Target } from 'lucide-react';
 import './Objective.css';
 
 const TimelineItem = ({ icon, text, delay }) => {
@@ -19,6 +20,9 @@ const Objective = () => {
   return (
     <section className="objective-section clinical-bg-anim" id="objetivo">
       <div ref={ref} className={`hce-container reveal ${inView ? 'active' : ''}`}>
+        <div className="section-badge">
+          <Target size={16} /> Pasión y Propósito
+        </div>
         <h2>
           Nuestro Objetivo: <span className="text-gradient">Entrenar con Pasión y Propósito</span>
         </h2>

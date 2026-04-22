@@ -14,7 +14,7 @@ const Hero = () => {
     <header className="hce-home-hero" id="home">
       <div className="hce-container hero-inner">
         <div className={`hero-content reveal ${active ? 'active' : ''}`}>
-          <div className="badge-tag">
+          <div className="section-badge">
             <Sparkles size={16} /> Experiencia clínica de vanguardia
           </div>
           <h1>

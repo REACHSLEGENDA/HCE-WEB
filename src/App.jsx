@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import CookieBanner from './components/CookieBanner';
 import Home from './pages/Home';
 import ParisDiploma from './pages/ParisDiploma';
 import AboutUs from './pages/AboutUs';
@@ -10,6 +11,7 @@ import Instructores from './pages/Instructores';
 import Retroalimentacion from './pages/Retroalimentacion';
 import Inscripciones from './pages/Inscripciones';
 import SecretPreview from './pages/SecretPreview';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -25,6 +27,7 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
+      <CookieBanner />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/paris-diploma-ecmo" element={<ParisDiploma />} />
@@ -36,6 +39,7 @@ function App() {
         <Route path="/retroalimentacion" element={<Retroalimentacion />} />
         <Route path="/inscripciones-diploma-paris-ecmo" element={<Inscripciones />} />
         <Route path="/debug-checkout-preview-2026" element={<SecretPreview />} />
+        <Route path="/aviso-de-privacidad" element={<PrivacyPolicy />} />
       </Routes>
     </Router>
   );

@@ -1,5 +1,5 @@
-import React from 'react';
 import { ChevronRight, ArrowUpRight, Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './Footer.css';
 
 const Footer = () => {
@@ -28,7 +28,7 @@ const Footer = () => {
             <h4>Navegación</h4>
             <ul className="f-nav">
               <li><a href="#"><ChevronRight size={12} /> Términos</a></li>
-              <li><a href="https://healthcareexp.com/privacy-policy/" target="_blank" rel="noreferrer"><ChevronRight size={12} /> Privacidad</a></li>
+              <li><Link to="/aviso-de-privacidad"><ChevronRight size={12} /> Privacidad</Link></li>
               <li><a href="#"><ChevronRight size={12} /> FAQ</a></li>
             </ul>
           </div>

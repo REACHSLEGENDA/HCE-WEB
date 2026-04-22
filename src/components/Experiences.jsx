@@ -1,6 +1,6 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Star, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, Heart } from 'lucide-react';
+import { Star, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, Heart, Stethoscope, Activity, Gamepad2, HeartPulse } from 'lucide-react';
 import './Experiences.css';
 
 const ExperienceCard = ({ title, description, link, img, imgClass, badge, badgeClass, delay, icon: Icon }) => {
@@ -38,7 +38,7 @@ const Experiences = () => {
       <div className="bg-dots-pattern"></div>
       <div className="hce-container">
         <div ref={ref} className={`section-header-modern reveal ${inView ? 'active' : ''}`}>
-          <div className="premium-tag">
+          <div className="section-badge">
             <Sparkles size={16} /> ENTRENAMIENTOS DE ÉLITE
           </div>
           <h2 className="title-3d">Experiencias <span className="text-gradient">Transformadoras</span></h2>
@@ -60,7 +60,7 @@ const Experiences = () => {
           />
           <ExperienceCard 
             delay={0.2}
-            icon={ShieldCheck}
+            icon={Stethoscope}
             title="ECMO Nursing Care Course"
             description="El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo."
             link="/ecmo-nursing-care"
@@ -71,17 +71,17 @@ const Experiences = () => {
           />
           <ExperienceCard 
             delay={0.3}
-            icon={Globe}
+            icon={HeartPulse}
             title="Paris International Diploma in ECMO"
-            description="Certificación internacional directa desde el centro de referencia más grande del mundo en París, Francia."
+            description="La especialización en ECMO transforma tu trayectoria. Desarrolla habilidades críticas que no solo potencian tu perfil profesional, sino que redefinen el estándar clínico de todo tu equipo."
             link="/paris-diploma-ecmo"
             img="/assets/componentes/WhatsApp-Image-2026-03-04-at-12.06.38-AM.jpeg"
           />
           <ExperienceCard 
             delay={0.4}
-            icon={Zap}
+            icon={Gamepad2}
             title="ECMO SIM: Realidad Clínica"
-            description="Interactúa con nuestra plataforma de simulación patentada. Mejora tu toma de decisiones en entornos de alta complejidad."
+            description="Fusionamos educación, simulación y tecnología inmersiva de vanguardia. Especialízate en el manejo del paciente crítico en un entorno de alta fidelidad, donde el error es aprendizaje y la seguridad del paciente es la prioridad."
             link="/simulador-ecmo-sim"
             img="/assets/componentes/ecmosim.png"
             badge="SIMULADOR"

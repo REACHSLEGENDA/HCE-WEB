@@ -61,7 +61,7 @@ const Impact = () => {
       <div className="impact-nebula-bg"></div>
       <div className="hce-container">
         <div ref={ref} className={`impact-header reveal ${inView ? 'active' : ''}`}>
-          <div className="impact-tag">
+          <div className="section-badge">
             <BarChart3 size={16} /> Métricas de éxito
           </div>
           <h2 className="impact-main-title">Impacto <span className="cyan-highlight">académico</span> global</h2>
@@ -73,9 +73,9 @@ const Impact = () => {
         <div className="impact-flex-grid">
           <ImpactCard 
             icon={<Users size={32} />}
-            target={1500}
+            target={2000}
             plus
-            title="Profesionales formados"
+            title="Alumnos profesionales"
             desc="Egresados de nuestros programas de <strong>entrenamiento intensivo</strong>."
             delay={0.1}
             triggerAnim={inView}

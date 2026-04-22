@@ -107,7 +107,7 @@ const Nursing = () => {
       <section className="n-experience-section section-padding">
         <div className="hce-container">
           <div className="n-section-header">
-            <span className="n-tag">PROGRAMA DE ALTO RENDIMIENTO</span>
+            <span className="section-badge">PROGRAMA DE ALTO RENDIMIENTO</span>
             <h2 className="n-title">Ecosistema de <span className="cyan-text">Formación.</span></h2>
           </div>
 
@@ -154,7 +154,7 @@ const Nursing = () => {
         <div className="n-outcomes-bg"></div>
         <div className="hce-container">
           <div className="n-section-header light">
-            <span className="n-tag-dark">ROI & OUTCOMES</span>
+            <span className="section-badge">ROI & OUTCOMES</span>
             <h2 className="n-title-white">Valor Clínico e <span className="cyan-text">Institucional</span></h2>
           </div>
 
@@ -185,7 +185,7 @@ const Nursing = () => {
       <section className="n-virtual-faculty">
         <div className="hce-container">
           <div className="n-section-header">
-            <span className="n-tag">FACULTAD CIENTÍFICA</span>
+            <span className="section-badge">FACULTAD CIENTÍFICA</span>
             <h2 className="n-title">Expertos <span className="cyan-text">Virtuales.</span></h2>
             <p className="n-subtitle">18 Referentes mundiales integrados en nuestra plataforma de aprendizaje.</p>
           </div>
@@ -205,7 +205,7 @@ const Nursing = () => {
         <div className="n-presencial-bg-glow"></div>
         <div className="hce-container">
           <div className="n-section-header">
-            <span className="n-tag">EXPERIENCIA IN-SITU</span>
+            <span className="section-badge">EXPERIENCIA IN-SITU</span>
             <h2 className="n-title">Facultad <span className="cyan-text">Presencial.</span></h2>
             <p className="n-subtitle">Expertos internacionales que guiarán el entrenamiento práctico de alta fidelidad.</p>
           </div>
@@ -280,7 +280,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-final-card">
             <div className="n-final-content">
-              <span className="n-tag-cyan">ÚLTIMOS CUPOS DISPONIBLES</span>
+              <span className="section-badge">ÚLTIMOS CUPOS DISPONIBLES</span>
               <h2>Transforma tu carrera en el cuidado crítico con <span className="cyan-text">ECMO Nursing.</span></h2>
               <p>Únete a la red global de enfermería líder en soporte extracorpóreo. Entrenamiento de élite para desafíos reales.</p>
               <div className="n-final-actions">

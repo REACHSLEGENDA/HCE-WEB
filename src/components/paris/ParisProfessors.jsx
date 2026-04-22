@@ -44,7 +44,7 @@ const ParisProfessors = () => {
       <div className={`prof-container ${inView ? 'is-visible' : ''}`}>
         
         <div className="prof-header text-center">
-          <div className="elite-badge"><Award size={16}/> Docencia Mundial</div>
+          <div className="section-badge"><Award size={16}/> Docencia Mundial</div>
           <h2 className="section-title-light">Liderado por la Élite Mundial</h2>
           <p className="section-subtitle-light">
             Vive la Experiencia de Paris en Latinoamérica. Fórmate con el equipo clínico responsable de uno de los centros de ECMO más prestigiosos y activos a nivel global.

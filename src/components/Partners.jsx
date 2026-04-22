@@ -16,7 +16,7 @@ const logos = [
 const Partners = () => (
   <section className="partners-section">
     <div className="hce-container partners-header">
-      <div className="partners-badge">
+      <div className="section-badge">
         <ShieldCheck size={15} />
         Confianza Global
       </div>

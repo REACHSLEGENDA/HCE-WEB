@@ -20,10 +20,11 @@
 .mb-8 { margin-bottom: 2rem; }
 
 .sim-h3-sub {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.5rem;
+  font-weight: 800;
   color: #FBC531;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 /* Gaming Buttons */
@@ -31,18 +32,20 @@
   background: linear-gradient(45deg, #FBC531, #f1c40f);
   color: #0b0c10;
   border: none;
-  padding: 1.2rem 2.5rem;
-  font-size: 1.1rem;
+  padding: 1rem 2.8rem;
+  font-size: 1rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+  letter-spacing: 1px;
+  border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   text-decoration: none;
+  min-width: 280px;
 }
 
 .btn-gaming:hover {
@@ -56,11 +59,12 @@
 }
 
 .btn-gaming.mega {
-  font-size: 1.4rem;
-  padding: 1.8rem 4rem;
+  font-size: 1.2rem;
+  padding: 1.4rem 3.5rem;
   background: linear-gradient(45deg, #FBC531, #FFEE58);
   color: #0b0c10;
   box-shadow: 0 0 20px rgba(251, 197, 49, 0.3);
+  border-radius: 50px;
 }
 .btn-gaming.mega:hover {
   background: linear-gradient(45deg, #FFEE58, #FBC531);
@@ -68,46 +72,58 @@
 }
 
 .btn-gaming-sm {
-  background: transparent;
-  color: #FBC531;
-  border: 2px solid #FBC531;
-  padding: 0.8rem 1.5rem;
-  font-weight: 700;
+  background: linear-gradient(45deg, #FBC531, #f1c40f);
+  color: #0b0c10;
+  border: none;
+  padding: 0.7rem 1.8rem;
+  font-weight: 800;
+  font-size: 0.85rem;
   text-transform: uppercase;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-decoration: none;
   transition: all 0.3s;
+  border-radius: 50px;
+  min-width: 220px;
+  box-shadow: 0 4px 15px rgba(251, 197, 49, 0.2);
 }
 .btn-gaming-sm:hover {
-  background: rgba(251, 197, 49, 0.1);
-  box-shadow: inset 0 0 10px rgba(251, 197, 49, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(251, 197, 49, 0.4);
 }
 
 .btn-gaming-outline {
-  background: transparent;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 1rem 3rem;
-  font-weight: 700;
+  background: linear-gradient(45deg, #FBC531, #f1c40f);
+  color: #0b0c10;
+  border: none;
+  padding: 0.9rem 2.8rem;
+  font-weight: 800;
+  font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  display: inline-block;
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-decoration: none;
   transition: all 0.3s;
-  border-radius: 4px;
+  border-radius: 50px;
+  min-width: 280px;
+  box-shadow: 0 4px 15px rgba(251, 197, 49, 0.2);
 }
 .btn-gaming-outline:hover {
-  border-color: #FBC531;
-  color: #FBC531;
-  box-shadow: 0 0 15px rgba(251, 197, 49, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(251, 197, 49, 0.4);
 }
 
 /* Base Headings */
 .sim-h2 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 3rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 3.2rem;
+  font-weight: 900;
   color: white;
   margin-bottom: 1rem;
+  letter-spacing: -1px;
 }
 
 /* HERO */
@@ -148,14 +164,14 @@
 }
 
 .sim-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 5rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 5.5rem;
   font-weight: 900;
   color: white;
   margin-bottom: 1.5rem;
-  line-height: 1.1;
+  line-height: 1;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: -2px;
 }
 
 .sim-subtitle {
@@ -240,10 +256,12 @@
 }
 
 .sim-f-content h3 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 2rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 900;
   color: white;
   margin-bottom: 1rem;
+  letter-spacing: -0.5px;
 }
 .sim-f-content p {
   font-size: 1.1rem;
@@ -369,7 +387,9 @@
   padding: 2rem;
 }
 .sim-mode-info h3 {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 900;
   color: white;
   margin-bottom: 1rem;
 }
@@ -424,10 +444,11 @@
 }
 
 .sim-stat-num {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 2.5rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 3.5rem;
   font-weight: 900;
   color: white;
+  line-height: 1;
 }
 
 .sim-stat-label {
@@ -474,7 +495,7 @@
 }
 
 .sim-glitch {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 6rem;
   font-weight: 900;
   color: white;
@@ -482,6 +503,7 @@
   position: relative;
   display: inline-block;
   margin-bottom: 2rem;
+  letter-spacing: -2px;
 }
 
 .sim-final-box h3 {

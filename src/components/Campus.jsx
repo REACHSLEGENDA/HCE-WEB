@@ -1,6 +1,6 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Layout, Globe, Cpu, Zap, ExternalLink } from 'lucide-react';
+import { Layout, Globe, Cpu, Zap, ExternalLink, Smartphone } from 'lucide-react';
 import './Campus.css';
 
 const Campus = () => {
@@ -12,20 +12,24 @@ const Campus = () => {
       <div className="hce-container campus-flex-container">
         
         <div ref={ref} className={`campus-info-block reveal ${inView ? 'active' : ''}`}>
-          <div className="tech-badge">
+          <div className="section-badge">
             <Cpu size={14} /> Plataforma impulsada por IA
           </div>
           <h2 className="campus-title-main">
-            Tu clínica <span className="blue-gradient-text">evoluciona</span>
+            Evoluciona tu <span className="blue-gradient-text">formación</span>
           </h2>
           <p className="campus-description">
-            Accede al ecosistema digital más avanzado de la región: una plataforma inteligente que potencia el razonamiento clínico mediante simulación virtual y aprendizaje adaptativo.
+            Únete al ecosistema digital líder en Latinoamérica y potencia tu carrera profesional con nuestra plataforma inteligente que combina sesiones en vivo y contenido científico a tu ritmo, siempre guiado por expertos.
           </p>
           
           <div className="campus-features-list">
             <div className="c-feature-item">
               <div className="cf-icon"><Zap size={18} /></div>
               <span>Acceso 24/7</span>
+            </div>
+            <div className="c-feature-item">
+              <div className="cf-icon"><Smartphone size={18} /></div>
+              <span>App Móvil</span>
             </div>
             <div className="c-feature-item">
               <div className="cf-icon"><Globe size={18} /></div>

@@ -3,22 +3,26 @@ import { useInView } from 'react-intersection-observer';
 import { CalendarDays, Briefcase } from 'lucide-react';
 import './Webinars.css';
 
-const WebinarCard = ({ delay }) => {
+const WebinarCard = ({ image, title, date, time, link, delay }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   return (
-    <div ref={ref} className={`webinar-immersive-card reveal ${inView ? 'active' : ''}`} style={{ transitionDelay: `${delay}s` }}>
-      <div className="webinar-card-bg">
-        <CalendarDays size={80} style={{ opacity: 0.1, color: 'white' }} />
-      </div>
+    <div className="webinar-immersive-card" style={{ opacity: 1, transform: 'none' }}>
+      <div className="webinar-card-bg" style={{ 
+        backgroundImage: `url(${image})`, 
+        opacity: 1, 
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}></div>
       <div className="webinar-card-overlay"></div>
 
       <div className="webinar-card-content">
-        <p className="webinar-card-date">Próximamente</p>
-        <h3 className="webinar-card-title">Nuevo Webinar en Preparación</h3>
+        <p className="webinar-card-date">{date}</p>
+        <h3 className="webinar-card-title">{title}</h3>
+        <p className="webinar-card-time" style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '1.5rem', fontWeight: '500' }}>{time}</p>
         <div className="webinar-card-action">
-          <a href="#" className="btn-webinar-card disabled-btn">
-            Pronto más información
+          <a href={link} target="_blank" rel="noreferrer" className="btn-webinar-card">
+            Registrarme Gratis
           </a>
         </div>
       </div>
@@ -33,28 +37,29 @@ const Webinars = () => {
     <>
       <section className="webinars-immersive-section" id="webinars-grid">
       <div className="hce-container">
-        <div ref={ref} className={`section-header reveal ${inView ? 'active' : ''}`} style={{ marginBottom: '3.5rem', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-            <span style={{ 
-              display: 'flex', alignItems: 'center', gap: '0.5rem', 
-              background: 'rgba(0, 204, 255, 0.1)', color: 'var(--cyan)', 
-              padding: '0.4rem 1rem', borderRadius: '50px', 
-              fontSize: '0.9rem', fontWeight: 600, letterSpacing: '1px' 
-            }}>
+        <div className="section-header" style={{ marginBottom: '3.5rem', textAlign: 'center', opacity: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <span className="section-badge">
               <CalendarDays size={16} /> webinars
             </span>
           </div>
           <h2 className="section-title" style={{ textAlign: 'center' }}>
             Próximos webinars <span className="text-gradient">gratuitos</span>
           </h2>
-          <p style={{ color: 'var(--text-light)', maxWidth: '600px', margin: '1rem auto 0', fontSize: '1.1rem', lineHeight: '1.5', textAlign: 'center' }}>
+          <p style={{ color: '#4b5563', maxWidth: '600px', margin: '1rem auto 0', fontSize: '1.1rem', lineHeight: '1.5', textAlign: 'center' }}>
             Actualización clínica con expertos, casos reales y mejores prácticas.
           </p>
         </div>
       </div>
       <div className="webinar-immersive-grid">
-        <WebinarCard delay={0.1} />
-        <WebinarCard delay={0.2} />
+        <WebinarCard 
+          delay={0.1} 
+          image="https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/WhatsApp%20Image%202026-04-21%20at%2011.18.02%20AM.jpeg"
+          title="Trasplante pulmonar en Latinoamérica"
+          date="28 de Abril, 2026"
+          time="5:00 PM (MEX/CR) | 8:00 PM (ARG/CHI)"
+          link="https://bit.ly/LATICE-Trasplante-Pulmonar"
+        />
       </div>
     </section>
     </>

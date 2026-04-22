@@ -252,41 +252,29 @@
 }
 .inst-card:hover .inst-card-img { transform: scale(1.06); }
 
-/* Bio overlay on hover */
-.inst-card-bio-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(2,8,16,0.96) 0%, rgba(2,8,16,0.7) 60%, transparent 100%);
-  display: flex;
-  align-items: flex-end;
-  padding: 1.5rem;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-}
-.inst-card:hover .inst-card-bio-overlay { opacity: 1; }
-
-.inst-card-bio-overlay p {
-  font-size: 0.82rem;
-  color: rgba(255,255,255,0.88);
-  line-height: 1.6;
-  margin: 0;
-}
+/* Bio overlay eliminada - información ahora estática */
 
 .inst-card-country {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(2,8,16,0.65);
-  backdrop-filter: blur(8px);
+  top: 1.2rem;
+  right: 1.2rem;
+  background: rgba(2,8,16,0.75);
+  backdrop-filter: blur(12px);
   color: var(--inst-white);
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
   border-radius: 100px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  z-index: 5;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.inst-card-country span {
+  font-size: 1.2rem; /* Bandera más grande */
 }
 
 .inst-card-body {
@@ -296,10 +284,9 @@
 .inst-card-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(0,0,0,0.05);
 }
 
 .inst-card-tag {
@@ -313,19 +300,29 @@
 .inst-card-role {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.72rem;
-  color: var(--inst-muted);
-  font-weight: 600;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #0ea5e9;
+  font-weight: 700;
 }
 
 .inst-card-name {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-size: 1.4rem;
+  font-weight: 900;
   color: var(--inst-dark);
-  margin: 0;
-  line-height: 1.25;
+  margin-bottom: 0.3rem;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.inst-card-bio-static {
+  font-size: 0.88rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 1.2rem 0 0;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* =============================================

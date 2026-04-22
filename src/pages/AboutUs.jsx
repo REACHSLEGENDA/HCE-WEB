@@ -1,6 +1,6 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Globe, Users, Activity, Shield, Sparkles, ArrowRight, PlayCircle, Award, Target, MonitorPlay, Zap } from 'lucide-react';
+import { Globe, Users, Activity, Shield, Sparkles, ArrowRight, PlayCircle, Award, Target, MonitorPlay, Zap, Gamepad2, Laptop } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './AboutUs.css'; 
@@ -29,7 +29,7 @@ const AboutUs = () => {
 
         <div className="hce-container">
           <div ref={heroRef} className={`au-hero-content au-reveal ${heroInView ? 'active' : ''}`}>
-            <div className="au-badge">
+            <div className="section-badge">
               <Sparkles size={16} />
               MÁS ALLÁ DE LA TEORÍA
             </div>
@@ -44,12 +44,14 @@ const AboutUs = () => {
             </p>
 
             <div className="au-hero-actions">
-              <button 
-                onClick={() => document.getElementById('manifiesto').scrollIntoView({ behavior: 'smooth' })}
+              <a 
+                href="https://youtu.be/yxIz2LKxuwg?si=csFc3oMbY9WQVdME"
+                target="_blank"
+                rel="noreferrer"
                 className="au-btn au-btn-primary"
               >
                 Conoce a HCE <ArrowRight size={18} />
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -74,7 +76,7 @@ const AboutUs = () => {
 
             <div className="au-que-text">
               <div className="au-que-accent-line" />
-              <span className="au-tag">¿Qué es HCE?</span>
+              <span className="section-badge">¿Qué es HCE?</span>
               <h2 className="au-h2">
                 Healthcare Training <span className="au-gradient-text">Experience</span>
               </h2>
@@ -97,7 +99,7 @@ const AboutUs = () => {
               <div className="au-que-stats">
                 <div className="au-que-stat">
                    <div className="au-stat-mini-icon"><Users size={14} /></div>
-                  <strong>1,500+</strong><span>Profesionales</span>
+                  <strong>2,000+</strong><span>Alumnos Profesionales</span>
                 </div>
                 <div className="au-que-stat-divider" />
                 <div className="au-que-stat">
@@ -107,7 +109,7 @@ const AboutUs = () => {
                 <div className="au-que-stat-divider" />
                 <div className="au-que-stat">
                    <div className="au-stat-mini-icon"><Award size={14} /></div>
-                  <strong>4</strong><span>Diplomados</span>
+                  <strong>4</strong><span>Experiencias</span>
                 </div>
               </div>
             </div>
@@ -122,7 +124,7 @@ const AboutUs = () => {
           <div ref={manifestRef} className={`au-man-grid au-reveal ${manifestInView ? 'active' : ''}`}>
 
             <div className="au-man-left">
-              <span className="au-tag">Nuestro Manifiesto</span>
+              <span className="section-badge">Nuestro Manifiesto</span>
               <blockquote className="au-man-quote">
                 "No formamos médicos.<br />
                 <span className="au-gradient-text">Entrenamos a la élite.</span>"
@@ -138,7 +140,7 @@ const AboutUs = () => {
             <div className="au-man-right">
               <div className="au-man-card au-man-card--1">
                 <span className="au-man-card-num">2,000<sup>+</sup></span>
-                <p>Profesionales entrenados en Latinoamérica</p>
+                <p>Alumnos profesionales entrenados en Latinoamérica</p>
               </div>
               <div className="au-man-card au-man-card--2">
                 <span className="au-man-card-num">15<sup>+</sup></span>
@@ -174,7 +176,7 @@ const AboutUs = () => {
             </div>
 
             <div className="au-history-text">
-              <span className="au-tag">Nuestra Historia</span>
+              <span className="section-badge">Nuestra Historia</span>
               <p className="au-hist-lead">
                 Nació de una frustración real.
               </p>
@@ -208,6 +210,14 @@ const AboutUs = () => {
                 <div className="au-tl-item">
                   <div className="au-tl-dot"></div>
                   <div className="au-tl-content">
+                    <span className="au-tl-year">2024</span>
+                    <h4>Expansión a Ecuador</h4>
+                    <p>Lanzamiento de ECMO Nursing Care Course. Primer entrenamiento diseñado de enfermería para enfermería en la región.</p>
+                  </div>
+                </div>
+                <div className="au-tl-item">
+                  <div className="au-tl-dot"></div>
+                  <div className="au-tl-content">
                     <span className="au-tl-year">2025</span>
                     <h4>Expansión a Chile</h4>
                     <p>Lanzamiento del Diploma Internacional de Paris en ECMO en Chile.</p>
@@ -218,7 +228,7 @@ const AboutUs = () => {
                   <div className="au-tl-content">
                     <span className="au-tl-year">2026</span>
                     <h4>Hito Regional</h4>
-                    <p>Lanzamiento del Primer Programa en español avalado por la ISHLT.</p>
+                    <p>Diplomado de Manejo de Avanzada en Insuficiencia Cardiaca; Primer programa en español avalado por la ISHLT.</p>
                   </div>
                 </div>
               </div>
@@ -258,7 +268,7 @@ const AboutUs = () => {
         <div className="au-methodology-overlay"></div>
         <div className="hce-container relative z-10">
           <div className="au-section-header">
-            <span className="au-tag" style={{ color: '#00d2ff' }}>Cómo lo Hacemos</span>
+            <span className="section-badge">Cómo lo Hacemos</span>
             <h2 className="au-h2" style={{ color: "white" }}>Arquitectura de <span className="au-gradient-text">Aprendizaje</span></h2>
           </div>
 
@@ -267,18 +277,18 @@ const AboutUs = () => {
             <div className="au-method-card">
               <div className="au-method-num">01</div>
               <div className="au-method-content">
-                <div className="au-method-icon"><Globe size={28} /></div>
-                <h3>Teoría Asíncrona</h3>
-                <p>A traves de nuestro campus virtual tendrás acceso 24/7 a material educativo asincrónico y sesiones sincrónicas con los expertos para resolver dudas además de una biblioteca científica amplia para reforzar tu conocimiento con guías y artículos científicos de vanguardia para que domines los fundamentos a tu ritmo.</p>
+                <div className="au-method-icon"><Laptop size={28} /></div>
+                <h3>Accede a nuestro ecosistema digital</h3>
+                <p>Una combinación perfecta de formación asincrónica, tutorías sincrónicas con especialistas y una biblioteca científica de alto nivel. Todo diseñado para que refuerces tu conocimiento cuando y donde quieras.</p>
               </div>
             </div>
 
             <div className="au-method-card">
               <div className="au-method-num">02</div>
               <div className="au-method-content">
-                <div className="au-method-icon"><MonitorPlay size={28} /></div>
-                <h3>Simulación ECMO</h3>
-                <p>Uso de simuladores virtuales fisiológicos (ECMO Sim / HARVI) donde observas en tiempo real cómo responde la hemodinamia del paciente a cada intervención que realizas.</p>
+                <div className="au-method-icon"><Gamepad2 size={28} /></div>
+                <h3>Simulación fisiológica avanzada</h3>
+                <p>Con nuestros simuladores virtuales (ECMO Sim / HARVI), observarás en tiempo real el impacto de tus decisiones sobre el paciente, permitiéndote perfeccionar el juicio clínico en escenarios críticos.</p>
               </div>
             </div>
 
@@ -286,8 +296,8 @@ const AboutUs = () => {
               <div className="au-method-num">03</div>
               <div className="au-method-content">
                 <div className="au-method-icon"><Zap size={28} /></div>
-                <h3>Práctica Inmersiva</h3>
-                <p>La culminación en nuestros bootcamps presenciales a través de simulación de baja, mediana y alta fidelidad donde nos enfocamos en CRM y entorno seguro para tu aprendizaje y desarrollo de juicio clínico a través de discusión de casos reales con los expertos.</p>
+                <h3>Simulación Clínica</h3>
+                <p>Culmina tu formación con una experiencia inmersiva. Nuestros bootcamps presenciales integran simulación de baja, mediana y alta fidelidad, con un enfoque prioritario en CRM (Crisis Resource Management). Desarrolla tu juicio clínico en un entorno seguro a través del análisis de casos reales junto a nuestros expertos.</p>
               </div>
             </div>
 
@@ -301,7 +311,7 @@ const AboutUs = () => {
           <div ref={coreRef} className={`au-core-grid au-reveal ${coreInView ? 'active' : ''}`}>
             
             <div className="au-core-header text-center mx-auto">
-              <span className="au-tag">ADN de Marca</span>
+              <span className="section-badge">ADN de Marca</span>
               <h2 className="au-h2">Nuestros Pilares <span className="au-gradient-text">Estructurales</span></h2>
             </div>
 
@@ -339,8 +349,8 @@ const AboutUs = () => {
           <div className="au-stats-grid">
             
             <div className={`au-stat-item au-reveal ${statsInView ? 'active' : ''}`} style={{ transitionDelay: '0.1s' }}>
-              <div className="au-stat-num">1,500<span>+</span></div>
-              <div className="au-stat-label">Profesionales Formados</div>
+              <div className="au-stat-num">2,000<span>+</span></div>
+              <div className="au-stat-label">Alumnos Profesionales</div>
             </div>
             <div className={`au-stat-item au-reveal ${statsInView ? 'active' : ''}`} style={{ transitionDelay: '0.2s' }}>
               <div className="au-stat-num">15<span>+</span></div>
@@ -348,7 +358,7 @@ const AboutUs = () => {
             </div>
             <div className={`au-stat-item au-reveal ${statsInView ? 'active' : ''}`} style={{ transitionDelay: '0.3s' }}>
               <div className="au-stat-num">4</div>
-              <div className="au-stat-label">Diplomados Élite</div>
+              <div className="au-stat-label">Experiencias Élite</div>
             </div>
             <div className={`au-stat-item au-reveal ${statsInView ? 'active' : ''}`} style={{ transitionDelay: '0.4s' }}>
               <div className="au-stat-num" style={{ fontSize: '2.8rem', paddingBottom: '0.5rem' }}>ISHLT</div>

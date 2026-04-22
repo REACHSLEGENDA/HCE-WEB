@@ -1,6 +1,7 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Users, GraduationCap, MapPin, Building2 } from 'lucide-react';
+import { GraduationCap, MapPin, Building2, Users, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './Instructors.css';
 
 const InstructorCard = ({ src, role, name, country, hospital, delay }) => {
@@ -20,7 +21,6 @@ const InstructorCard = ({ src, role, name, country, hospital, delay }) => {
       <div className="expert-meta">
         <span className="expert-role-label">{role}</span>
         <h3 className="expert-full-name">{name}</h3>
-        <div className="expert-bio-peak">Líder global en soporte extracorpóreo y cuidados intensivos advanced.</div>
         <div className="expert-h-line"></div>
       </div>
     </div>
@@ -38,7 +38,7 @@ const Instructors = () => {
       </div>
       <div className="hce-container">
         <div ref={ref} className={`faculty-header-block reveal ${inView ? 'active' : ''}`}>
-          <div className="faculty-tag">
+          <div className="section-badge">
             <GraduationCap size={16} /> Facultad de élite
           </div>
           <h2 className="faculty-title">Referentes <span className="text-gradient">mundiales</span></h2>
@@ -82,11 +82,19 @@ const Instructors = () => {
           />
         </div>
 
+      </div>
+
+      <div className="hce-container">
         <div className={`faculty-bottom-call reveal ${inView ? 'active' : ''}`} style={{ transitionDelay: '0.5s' }}>
           <div className="f-call-icon"><Users size={24} /></div>
-          <p>
-            Nuestros docentes son un estándar de excelencia en educación ECMO: combinan décadas de experiencia clínica en centros de referencia de Europa, Estados Unidos y Latinoamérica.
-          </p>
+          <div className="f-call-text-area">
+            <p>
+              Nuestros docentes son un estándar de excelencia en educación ECMO: combinan décadas de experiencia clínica en centros de referencia de Europa, Estados Unidos y Latinoamérica.
+            </p>
+            <Link to="/instructores" className="btn-faculty-cta">
+              Conoce a todo nuestro Staff Académico <ArrowRight size={18} />
+            </Link>
+          </div>
         </div>
       </div>
     </section>
