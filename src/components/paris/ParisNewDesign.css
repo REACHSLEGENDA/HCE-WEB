@@ -284,6 +284,14 @@
     align-items: center;
 }
 
+.paris-redesign .welcome-logo {
+    max-width: 800px;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 1rem;
+    display: block;
+}
+
 .paris-redesign .section-title {
     font-size: 3rem;
     margin-bottom: 2rem;
@@ -1015,21 +1023,28 @@
     letter-spacing: 0.5px;
 }
 
-.paris-redesign .sede-v2-label {
-    font-size: 0.75rem;
-    font-weight: 800;
+.paris-redesign .sede-v2-big-title {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 950;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    color: #0047FF;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #0047FF 0%, #FF0000 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 0.75rem;
+    line-height: 1;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .paris-redesign .sede-v2-title {
-    font-size: clamp(1.8rem, 3vw, 2.6rem);
-    font-weight: 900;
+    font-size: 1.4rem;
+    font-weight: 700;
     color: var(--primary);
-    line-height: 1.15;
-    margin-bottom: 0.25rem;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+    text-transform: none;
+    letter-spacing: normal;
 }
 
 .paris-redesign .sede-v2-abbr {

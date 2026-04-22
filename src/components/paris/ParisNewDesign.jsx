@@ -251,7 +251,11 @@ const ParisNewDesign = () => {
                 <div className="container">
                     <div style={{ textAlign: 'center', maxWidth: '900px', margin: '0 auto 4rem' }}>
                         <div className="section-title">
-                            <span className="gradient-text">Paris International Diploma in ECMO &amp; Simulation Course</span> en Latinoamérica.
+                            <img 
+                                src="https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-27-31-723.png" 
+                                alt="Paris International Diploma in ECMO & Simulation Course" 
+                                className="welcome-logo"
+                            />
                         </div>
                         <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', lineHeight: '1.8' }}>
                             Vive la experiencia teórico-práctica liderada por expertos mundiales y certifícate como un profesional en soporte ECMO.
@@ -452,8 +456,8 @@ const ParisNewDesign = () => {
                                 <img src="/assets/componentes/lgo7-1.png" alt="INER" className="sede-v2-logo" />
                                 <span className="sede-v2-badge"><MapPin size={13} /> Ciudad de México</span>
                             </div>
-                            <div className="sede-v2-label">SEDE Octubre 2026</div>
-                            <h2 className="sede-v2-title">Instituto Nacional de Enfermedades Respiratorias</h2>
+                            <h2 className="sede-v2-big-title">SEDE Octubre 2026</h2>
+                            <h3 className="sede-v2-title">Instituto Nacional de Enfermedades Respiratorias</h3>
                             <p className="sede-v2-abbr">(INER)</p>
                             <div className="sede-v2-addr">
                                 <MapPin size={16} />
