@@ -474,6 +474,64 @@ export default function Inscripciones() {
   );
 }
 
+const COUNTRIES = [
+  { code: '+52',  iso: 'mx', label: 'MX' },
+  { code: '+1',   iso: 'us', label: 'US' },
+  { code: '+57',  iso: 'co', label: 'CO' },
+  { code: '+54',  iso: 'ar', label: 'AR' },
+  { code: '+56',  iso: 'cl', label: 'CL' },
+  { code: '+51',  iso: 'pe', label: 'PE' },
+  { code: '+593', iso: 'ec', label: 'EC' },
+  { code: '+502', iso: 'gt', label: 'GT' },
+  { code: '+506', iso: 'cr', label: 'CR' },
+  { code: '+503', iso: 'sv', label: 'SV' },
+  { code: '+58',  iso: 've', label: 'VE' },
+  { code: '+591', iso: 'bo', label: 'BO' },
+  { code: '+595', iso: 'py', label: 'PY' },
+  { code: '+598', iso: 'uy', label: 'UY' },
+  { code: '+507', iso: 'pa', label: 'PA' },
+  { code: '+34',  iso: 'es', label: 'ES' },
+  { code: '+33',  iso: 'fr', label: 'FR' },
+];
+
+function PhoneSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef(null);
+  const selected = COUNTRIES.find(c => c.code === value) || COUNTRIES[0];
+
+  React.useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div className="phone-select" ref={ref}>
+      <button type="button" className="phone-select__trigger" onClick={() => setOpen(v => !v)}>
+        <img src={`https://flagcdn.com/w40/${selected.iso}.png`} alt={selected.label} className="phone-select__flag" />
+        <span>{selected.code}</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round"/></svg>
+      </button>
+      {open && (
+        <div className="phone-select__dropdown">
+          {COUNTRIES.map(c => (
+            <button
+              key={c.code}
+              type="button"
+              className={`phone-select__option ${c.code === value ? 'active' : ''}`}
+              onClick={() => { onChange(c.code); setOpen(false); }}
+            >
+              <img src={`https://flagcdn.com/w40/${c.iso}.png`} alt={c.label} className="phone-select__flag" />
+              <span>{c.label}</span>
+              <span className="phone-select__dial">{c.code}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function RegistrationForm() {
   // Leer datos directamente del parámetro ?d= que Stripe preserva en la URL de retorno
   const stored = (() => {
@@ -584,18 +642,7 @@ export function RegistrationForm() {
             <div className="reg-field">
               <label>Teléfono *</label>
               <div className="tel-group">
-                <select value={form.lada} onChange={set('lada')} className="reg-lada-select" required>
-                  <option value="+52">🇲🇽 +52</option>
-                  <option value="+1">🇺🇸 +1</option>
-                  <option value="+57">🇨🇴 +57</option>
-                  <option value="+54">🇦🇷 +54</option>
-                  <option value="+56">🇨🇱 +56</option>
-                  <option value="+51">🇵🇪 +51</option>
-                  <option value="+593">🇪🇨 +593</option>
-                  <option value="+502">🇬🇹 +502</option>
-                  <option value="+506">🇨🇷 +506</option>
-                  <option value="+34">🇪🇸 +34</option>
-                </select>
+                <PhoneSelect value={form.lada} onChange={(v) => setForm(f => ({ ...f, lada: v }))} />
                 <input type="tel" value={form.telefono} onChange={set('telefono')} required placeholder="10 dígitos" />
               </div>
             </div>

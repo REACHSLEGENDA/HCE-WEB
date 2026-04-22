@@ -111,7 +111,7 @@ export const handler = async (event) => {
           currency,
           product_data: {
             name: `Inscripción HCE — ${PROFILE_LABELS[perfil]}`,
-            description: 'Healthcare Training Experience · Programa de formación clínica avanzada',
+            description: 'Healthcare Training Experience · Programa de formación clínica avanzada. *Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana. El acceso a las videolecciones será durante la duración completa del curso (4 semanas) y durante un periodo de gracia de 15 dias más.',
           },
           unit_amount: mxnToUnit(PRICES_MXN[perfil], true),
         },

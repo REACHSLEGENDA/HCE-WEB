@@ -1122,3 +1122,84 @@
   color: var(--ins-muted);
   line-height: 1.5;
 }
+
+/* ── Phone selector custom ── */
+.phone-select {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.phone-select__trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 0.75rem;
+  height: 100%;
+  min-height: 44px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.phone-select__trigger:hover {
+  background: #f1f5f9;
+}
+
+.phone-select__flag {
+  width: 22px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.phone-select__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 999;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  overflow-y: auto;
+  max-height: 260px;
+  min-width: 160px;
+}
+
+.phone-select__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0.55rem 0.9rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.83rem;
+  color: #1e293b;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.phone-select__option:hover {
+  background: #f1f5f9;
+}
+
+.phone-select__option.active {
+  background: #eff6ff;
+  font-weight: 700;
+}
+
+.phone-select__dial {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 0.78rem;
+}
