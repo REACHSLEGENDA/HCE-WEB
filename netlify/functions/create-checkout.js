@@ -83,7 +83,7 @@ export const handler = async (event) => {
   }
 
   try {
-    const { perfil, extras = [], moneda = 'mxn', email = '' } = JSON.parse(event.body);
+    const { perfil, extras = [], moneda = 'mxn', email = '', promoCode = null } = JSON.parse(event.body);
 
     if (!PRICES_MXN[perfil]) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Perfil inválido' }) };
@@ -91,8 +91,12 @@ export const handler = async (event) => {
 
     const currency = moneda === 'usd' ? 'usd' : 'mxn';
 
-    const mxnToUnit = (mxn) => {
-      const amount = currency === 'usd' ? mxn / USD_RATE : mxn;
+    const mxnToUnit = (mxn, isBase = false) => {
+      let finalMXN = mxn;
+      if (isBase && promoCode === 'HCE-INERPARIS2026') {
+        finalMXN = Math.floor(mxn * 0.7);
+      }
+      const amount = currency === 'usd' ? finalMXN / USD_RATE : finalMXN;
       return Math.round(amount * 100); // centavos / cents
     };
 
@@ -109,7 +113,7 @@ export const handler = async (event) => {
             name: `Inscripción HCE — ${PROFILE_LABELS[perfil]}`,
             description: 'Healthcare Training Experience · Programa de formación clínica avanzada',
           },
-          unit_amount: mxnToUnit(PRICES_MXN[perfil]),
+          unit_amount: mxnToUnit(PRICES_MXN[perfil], true),
         },
         quantity: 1,
       },
@@ -131,7 +135,10 @@ export const handler = async (event) => {
       'https://hce-web.netlify.app';
 
     // Codificar datos del pago en la URL de éxito para no depender de localStorage
-    const totalMXN = PRICES_MXN[perfil] + validExtras.reduce((s, e) => s + PRICES_MXN[e], 0);
+    const baseAmount = PRICES_MXN[perfil];
+    const discountedBase = promoCode === 'HCE-INERPARIS2026' ? Math.floor(baseAmount * 0.7) : baseAmount;
+    const totalMXN = discountedBase + validExtras.reduce((s, e) => s + PRICES_MXN[e], 0);
+
     const payData = Buffer.from(JSON.stringify({
       email,
       perfilLabel: PROFILE_LABELS[perfil],

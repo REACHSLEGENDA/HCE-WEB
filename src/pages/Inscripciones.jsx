@@ -59,6 +59,8 @@ export default function Inscripciones() {
   const [consentSecondary, setConsentSecondary] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null); // { code: string, discount: number }
 
   const payStatus = searchParams.get('status'); // 'success' | 'cancel'
   const perfil = cardSel === 'otros' ? subRole : cardSel;
@@ -83,8 +85,20 @@ export default function Inscripciones() {
     });
   };
 
+  const applyPromo = () => {
+    if (promoInput.trim().toUpperCase() === 'HCE-INERPARIS2026') {
+      setAppliedPromo({ code: 'HCE-INERPARIS2026', discount: 0.3 });
+    } else {
+      setAppliedPromo(null);
+      if (promoInput.trim()) setApiError('Código no válido');
+    }
+  };
+
   const availableExtras = perfil ? PROFILES[perfil].extras.map((id) => ({ id, ...EXTRA_CATALOG[id] })) : [];
-  const baseMXN = perfil ? PROFILES[perfil].price : 0;
+  const rawBase = perfil ? PROFILES[perfil].price : 0;
+  const baseDiscount = (perfil && appliedPromo) ? Math.floor(rawBase * appliedPromo.discount) : 0;
+  const baseMXN = rawBase - baseDiscount;
+  
   const extrasMXN = [...extras].reduce((s, id) => s + EXTRA_CATALOG[id].price, 0);
   const totalMXN = baseMXN + extrasMXN;
   const displayBase = moneda === 'usd' ? Math.ceil(baseMXN / USD_RATE) : baseMXN;
@@ -103,7 +117,13 @@ export default function Inscripciones() {
       const res = await fetch('/.netlify/functions/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ perfil, extras: [...extras], moneda, email: email.trim() }),
+        body: JSON.stringify({ 
+          perfil, 
+          extras: [...extras], 
+          moneda, 
+          email: email.trim(),
+          promoCode: appliedPromo?.code || null
+        }),
       });
       const data = await res.json();
       if (data.url) {
@@ -356,6 +376,42 @@ export default function Inscripciones() {
               <div className="ins-summary-total">
                 <span>Inversión total</span>
                 <strong>{fmt(displayTotal, cur)}</strong>
+              </div>
+            )}
+
+            {/* Promo code field */}
+            {perfil && (
+              <div className="ins-promo-wrap" style={{ marginTop: '1rem', borderTop: '1px dashed var(--ins-border)', paddingTop: '1rem' }}>
+                {!appliedPromo ? (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Código de descuento" 
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value)}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--ins-border)', fontSize: '0.8rem' }}
+                    />
+                    <button 
+                      onClick={applyPromo}
+                      className="ins-btn" 
+                      style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', background: 'var(--ins-dark)', color: '#fff' }}
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(16,185,129,0.1)', padding: '0.6rem 0.8rem', borderRadius: '10px' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#065f46', fontWeight: 600 }}>
+                      ✓ {appliedPromo.code} (-30%)
+                    </div>
+                    <button 
+                      onClick={() => { setAppliedPromo(null); setPromoInput(''); }}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
