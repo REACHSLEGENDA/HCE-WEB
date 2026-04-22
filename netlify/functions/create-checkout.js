@@ -5,6 +5,8 @@ const USD_RATE = 17; // 1 USD = 17 MXN (server-side source of truth)
 
 const MAILCHIMP_TAG = 'ECMOParis2026';
 
+const LEGAL_TEXT = '*Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.';
+
 async function addMailchimpTag(email, perfilLabel, extrasLabel) {
   const API_KEY     = process.env.MAILCHIMP_API_KEY;
   const AUDIENCE_ID = process.env.MAILCHIMP_AUDIENCE_ID;
@@ -104,7 +106,7 @@ export const handler = async (event) => {
           currency,
           product_data: {
             name: `Inscripción HCE — ${PROFILE_LABELS[perfil]}`,
-            description: 'Healthcare Training Experience · Programa de formación clínica avanzada. *Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.',
+            description: `Healthcare Training Experience · Programa de formación clínica avanzada. ${LEGAL_TEXT}`,
           },
           unit_amount: mxnToUnit(PRICES_MXN[perfil], true),
         },
@@ -151,7 +153,7 @@ export const handler = async (event) => {
       locale: 'es-419',
       custom_text: {
         submit: {
-          message: '*Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana. El acceso a las videolecciones será durante la duración completa del curso (4 semanas) y durante un periodo de gracia de 15 dias más.'
+          message: LEGAL_TEXT
         }
       },
       metadata: {

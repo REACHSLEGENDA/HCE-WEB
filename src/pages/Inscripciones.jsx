@@ -413,8 +413,7 @@ export default function Inscripciones() {
 
             <div className="ins-privacy-block">
               <p className="ins-privacy-text">
-                Healthcare Training Experience recaba sus datos personales necesarios para su inscripción a nuestros entrenamientos y la relación jurídica. Para mayor información consulta nuestro{' '}
-                <a href="/aviso-de-privacidad" target="_blank" rel="noopener noreferrer" className="ins-privacy-link">Aviso de Privacidad</a>.
+                *Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.
               </p>
               <label className="ins-consent-row">
                 <input type="checkbox" checked={consentPrimary} onChange={(e) => setConsentPrimary(e.target.checked)} />
