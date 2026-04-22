@@ -135,9 +135,17 @@
     animation: fadeInUp 1s ease-out;
 }
 
+.paris-redesign .hero-main-logo {
+    max-width: 550px;
+    width: 100%;
+    height: auto;
+    margin-bottom: 1rem;
+    animation: fadeInUp 1s ease-out;
+}
+
 .paris-redesign .h1-style {
-    font-size: clamp(2.2rem, 5.5vw, 4.2rem);
-    margin-bottom: 1.2rem;
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    margin-bottom: 1rem;
     line-height: 1.05;
     font-weight: 900;
     letter-spacing: -1.5px;
@@ -159,11 +167,11 @@
 }
 
 .paris-redesign .hero-sub {
-    font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
     font-weight: 500;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
     line-height: 1.5;
-    max-width: 550px;
+    max-width: 500px;
     color: rgba(255, 255, 255, 0.95);
     animation: fadeInUp 1s ease-out 0.4s both;
     text-align: left !important;
@@ -284,16 +292,8 @@
     align-items: center;
 }
 
-.paris-redesign .welcome-logo {
-    max-width: 800px;
-    width: 100%;
-    height: auto;
-    margin: 0 auto 1rem;
-    display: block;
-}
-
 .paris-redesign .section-title {
-    font-size: 3rem;
+    font-size: 2.8rem;
     margin-bottom: 2rem;
     color: var(--primary);
     line-height: 1.2;

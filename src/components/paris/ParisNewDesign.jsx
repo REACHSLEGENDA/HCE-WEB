@@ -204,6 +204,11 @@ const ParisNewDesign = () => {
             <section className="hero">
                 <div className="hero-bg"></div>
                 <div className="hero-content">
+                    <img 
+                        src="https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-25-51-449.png" 
+                        alt="Paris International Diploma Logo" 
+                        className="hero-main-logo"
+                    />
                     <div className="h1-style">¡Conviértete en un especialista en <span className="gradient-text">ECMO</span>!</div>
                     <p className="hero-sub">Certifícate con la más alta tecnología de talla internacional.</p>
                     <div className="hero-actions">
@@ -251,11 +256,7 @@ const ParisNewDesign = () => {
                 <div className="container">
                     <div style={{ textAlign: 'center', maxWidth: '900px', margin: '0 auto 4rem' }}>
                         <div className="section-title">
-                            <img 
-                                src="https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-27-31-723.png" 
-                                alt="Paris International Diploma in ECMO & Simulation Course" 
-                                className="welcome-logo"
-                            />
+                            <span className="gradient-text">Paris International Diploma in ECMO &amp; Simulation Course</span> en Latinoamérica.
                         </div>
                         <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', lineHeight: '1.8' }}>
                             Vive la experiencia teórico-práctica liderada por expertos mundiales y certifícate como un profesional en soporte ECMO.
