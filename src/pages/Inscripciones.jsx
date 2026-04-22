@@ -38,11 +38,6 @@ const PROFILES = {
     price: 37000,
     extras: ['ecmo_sim', 'ecmo_nursing'],
   },
-  test: {
-    label: 'Perfil de Testeo',
-    price: 10,
-    extras: [],
-  },
 };
 
 const fmt = (n, cur) =>
@@ -232,23 +227,6 @@ export default function Inscripciones() {
                 </div>
               </button>
 
-              {/* Card 3 — Testeo */}
-              <button
-                type="button"
-                className={`ins-card ${cardSel === 'test' ? 'ins-card--active' : ''}`}
-                onClick={() => selectCard('test')}
-              >
-                <div className="ins-card-visual" style={{ background: '#64748b' }}>
-                  <Shield size={40} strokeWidth={1.5} />
-                </div>
-                <div className="ins-card-body">
-                  <div className="ins-card-top">
-                    <span className="ins-card-tag">Prueba</span>
-                    {cardSel === 'test' && <CheckCircle2 size={20} className="ins-card-check" />}
-                  </div>
-                  <h3 className="ins-card-title">Testeo (10 MXN)</h3>
-                </div>
-              </button>
             </div>
           </section>
 

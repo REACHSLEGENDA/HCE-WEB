@@ -51,30 +51,23 @@ const PRICES_MXN = {
   enfermero:     37000,
   ecmo_sim:       3500,
   ecmo_nursing:   3500,
-  test:             10,
-  test_extra_a:      5,
-  test_extra_b:      5,
 };
 
 const PROFILE_LABELS = {
   especialista: 'Médicos Especialistas',
   residente:    'Médicos Residentes',
   enfermero:    'Enfermeros y Otros Profesionales',
-  test:         'Perfil de Testeo (Prueba)',
 };
 
 const EXTRA_LABELS = {
   ecmo_sim:     'Módulo adicional: Simulador ECMO SIM',
   ecmo_nursing: 'Módulo adicional: ECMO Nursing Care Course',
-  test_extra_a: '[PRUEBA] Extra A',
-  test_extra_b: '[PRUEBA] Extra B',
 };
 
 const ALLOWED_EXTRAS = {
   especialista: ['ecmo_sim'],
   residente:    ['ecmo_sim'],
   enfermero:    ['ecmo_sim', 'ecmo_nursing'],
-  test:         ['test_extra_a', 'test_extra_b'],
 };
 
 export const handler = async (event) => {
