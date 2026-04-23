@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import CookieBanner from './components/CookieBanner';
+import ChatBot from './components/ChatBot';
 import Home from './pages/Home';
 import ParisDiploma from './pages/ParisDiploma';
 import AboutUs from './pages/AboutUs';
@@ -28,6 +29,7 @@ function App() {
     <Router>
       <ScrollToTop />
       <CookieBanner />
+      <ChatBot />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/paris-diploma-ecmo" element={<ParisDiploma />} />

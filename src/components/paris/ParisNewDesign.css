@@ -81,14 +81,13 @@
 /* --- Hero --- */
 .paris-redesign .hero {
     position: relative;
-    height: 100vh;
-    min-height: 850px;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: flex-start !important;
     overflow: hidden;
     background-color: var(--primary);
-    padding: 250px 2rem 0 1rem !important;
+    padding: 120px 2rem 5rem 4rem !important;
 }
 
 .paris-redesign .hero-bg {
@@ -136,10 +135,10 @@
 }
 
 .paris-redesign .hero-main-logo {
-    max-width: 480px;
+    max-width: 360px;
     width: 100%;
     height: auto;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     animation: fadeInUp 1s ease-out;
 }
 
@@ -181,7 +180,7 @@
 
 /* --- Hero Countdown --- */
 .paris-redesign .hero-countdown {
-    margin-top: 3.5rem;
+    margin-top: 2rem;
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.1);
