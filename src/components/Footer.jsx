@@ -38,9 +38,9 @@ const Footer = () => {
             <h4>Facturación</h4>
             <div className="billing-content">
               <p>¿Necesitas factura?</p>
-              <a href="https://healthcareexp.com/facturacion/" target="_blank" rel="noreferrer" className="btn-premium" style={{ width: 'fit-content', padding: '0.5rem 1rem', fontSize: '0.75rem', borderRadius: '8px' }}>
+              <Link to="/facturacion" className="btn-premium" style={{ width: 'fit-content', padding: '0.5rem 1rem', fontSize: '0.75rem', borderRadius: '8px' }}>
                 Solicitar <ArrowUpRight size={12} />
-              </a>
+              </Link>
             </div>
           </div>
 

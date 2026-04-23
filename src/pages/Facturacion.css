@@ -1,0 +1,363 @@
+/* ══════════════════════════════════════════
+   Facturación Page
+══════════════════════════════════════════ */
+
+.fac-page {
+  background: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Hero ─────────────────────────────────── */
+.fac-hero {
+  background: linear-gradient(135deg, #0A1A2F 0%, #0d2d5e 100%);
+  padding: 100px 0 56px;
+  text-align: center;
+}
+.fac-hero-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.fac-badge {
+  display: inline-block;
+  background: rgba(0, 210, 255, 0.12);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  color: #00d2ff;
+  padding: 6px 18px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.fac-h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  line-height: 1.1;
+}
+.fac-gradient {
+  background: linear-gradient(135deg, #00d2ff, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.fac-hero-sub {
+  max-width: 560px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.97rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Body / Form ─────────────────────────── */
+.fac-body {
+  padding: 48px 0 80px;
+}
+.fac-form {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Section ─────────────────────────────── */
+.fac-section {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 32px 36px;
+  margin-bottom: 20px;
+}
+.fac-section-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0A1A2F;
+  margin: 0 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fac-section-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0047FF, #00d2ff);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.fac-subsection {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 20px 0 14px;
+}
+.fac-optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #94a3b8;
+}
+
+/* ── Grids ───────────────────────────────── */
+.fac-grid {
+  display: grid;
+  gap: 16px;
+}
+.fac-grid--2 { grid-template-columns: 1fr 1fr; }
+.fac-grid--3 { grid-template-columns: 1fr 1fr 1fr; }
+.fac-grid--4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ── Fields ──────────────────────────────── */
+.fac-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fac-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+.fac-req {
+  color: #ef4444;
+}
+.fac-input,
+.fac-select,
+.fac-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-family: 'Inter', sans-serif;
+  color: #0A1A2F;
+  background: #f8fafc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.fac-input:focus,
+.fac-select:focus,
+.fac-textarea:focus {
+  outline: none;
+  border-color: #0047FF;
+  box-shadow: 0 0 0 3px rgba(0, 71, 255, 0.1);
+  background: #fff;
+}
+.fac-input--mono {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.fac-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+.fac-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+.fac-field--error .fac-input,
+.fac-field--error .fac-select {
+  border-color: #ef4444;
+}
+.fac-error-msg {
+  font-size: 0.75rem;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* ── Dropzone ────────────────────────────── */
+.fac-file-hint {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0 0 16px;
+}
+.fac-dropzone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 36px 24px;
+  text-align: center;
+  cursor: pointer;
+  background: #f8fafc;
+  transition: border-color 0.2s, background 0.2s;
+}
+.fac-dropzone:hover {
+  border-color: #0047FF;
+  background: rgba(0, 71, 255, 0.03);
+}
+.fac-drop-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0047FF, #00d2ff);
+  color: white;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+.fac-drop-text {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 4px;
+}
+.fac-drop-text span {
+  color: #0047FF;
+  text-decoration: underline;
+}
+.fac-drop-sub {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* File list */
+.fac-file-list {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fac-file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+}
+.fac-file-icon { font-size: 1.1rem; flex-shrink: 0; }
+.fac-file-name { flex: 1; font-weight: 600; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fac-file-size { color: #94a3b8; white-space: nowrap; }
+.fac-file-remove {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+.fac-file-remove:hover { background: #fee2e2; color: #ef4444; }
+
+/* ── Submit ───────────────────────────────── */
+.fac-submit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 8px;
+  flex-wrap: wrap;
+}
+.fac-submit-note {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0;
+}
+.fac-btn-primary {
+  background: linear-gradient(135deg, #0047FF, #00d2ff);
+  color: #fff;
+  border: none;
+  padding: 14px 36px;
+  border-radius: 50px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.2s;
+  white-space: nowrap;
+}
+.fac-btn-primary:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.fac-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.fac-submit-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+/* ── Success ─────────────────────────────── */
+.fac-success-wrap {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+.fac-success-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 56px 48px;
+  text-align: center;
+  max-width: 480px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  border: 1px solid #e2e8f0;
+}
+.fac-success-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0047FF, #00d2ff);
+  color: white;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+.fac-success-card h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0A1A2F;
+  margin: 0 0 12px;
+}
+.fac-success-card p {
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 768px) {
+  .fac-section { padding: 24px 20px; }
+  .fac-grid--2 { grid-template-columns: 1fr; }
+  .fac-grid--3 { grid-template-columns: 1fr; }
+  .fac-grid--4 { grid-template-columns: 1fr 1fr; }
+  .fac-submit-row { flex-direction: column; align-items: stretch; }
+  .fac-btn-primary { text-align: center; }
+}
+@media (max-width: 480px) {
+  .fac-grid--4 { grid-template-columns: 1fr; }
+  .fac-hero { padding: 90px 0 40px; }
+}
