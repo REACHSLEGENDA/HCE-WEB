@@ -9,8 +9,15 @@ import Instructors from '../components/Instructors';
 import Testimonials from '../components/Testimonials';
 import Partners from '../components/Partners';
 import Footer from '../components/Footer';
+import { useSEO } from '../hooks/useSEO';
 
 const Home = () => {
+  useSEO({
+    title: 'Inicio',
+    description: 'Redefiniendo el estándar de la educación médica continua a través de simulación avanzada, ECMO y excelencia académica. Únete a HCE.',
+    keywords: 'educación médica, simulación clínica, ECMO, ECMO Nursing, HCE, Healthcare Training Experience, insuficiencia cardiaca'
+  });
+
   return (
     <>
       <Navbar />

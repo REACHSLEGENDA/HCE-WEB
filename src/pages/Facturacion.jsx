@@ -65,7 +65,15 @@ function Field({ label, required, error, children }) {
   );
 }
 
+import { useSEO } from '../hooks/useSEO';
+
 export default function Facturacion() {
+  useSEO({
+    title: 'Facturación Electrónica',
+    description: 'Solicita tu factura electrónica CFDI 4.0 para nuestros programas y certificaciones médicas. Completa tus datos fiscales y adjunta tu comprobante.',
+    keywords: 'facturación electrónica, facturación HCE, CFDI 4.0, solicitar factura, recibo médico'
+  });
+
   const [form, setForm] = useState(INITIAL);
   const [files, setFiles] = useState([]);
   const [errors, setErrors] = useState({});

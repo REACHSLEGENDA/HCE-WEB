@@ -43,7 +43,15 @@ const PROFILES = {
 const fmt = (n, cur) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: cur.toUpperCase(), maximumFractionDigits: 0 }).format(n);
 
+import { useSEO } from '../hooks/useSEO';
+
 export default function Inscripciones() {
+  useSEO({
+    title: 'Inscripciones',
+    description: 'Asegura tu lugar en nuestros programas educativos y certificaciones internacionales. Selecciona tu perfil e inscríbete de manera segura.',
+    keywords: 'inscripciones HCE, inscripción médica, diplomado ECMO, registrarse HCE, precios cursos médicos'
+  });
+
   const [searchParams] = useSearchParams();
   const [cardSel, setCardSel] = useState(null);   // 'especialista' | 'otros'
   const [subRole, setSubRole] = useState(null);    // 'residente' | 'enfermero'

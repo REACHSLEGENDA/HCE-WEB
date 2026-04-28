@@ -1,0 +1,39 @@
+# HCE - Healthcare Training Experience
+> Redefiniendo el estándar de la educación médica continua a través de simulación avanzada y excelencia académica.
+
+HCE (Healthcare Training Experience) es una institución educativa innovadora en Latinoamérica, especializada en el entrenamiento de alta complejidad para el manejo del paciente crítico cardiovascular. Fundada por la Dra. Jenifer Trejo Guerra.
+Brindamos educación superior a través de simulación clínica inmersiva, tecnología de punta y experiencia académica internacional, rompiendo los esquemas de la educación tradicional.
+
+## Programas Educativos Principales
+
+### 1. Paris International Diploma in ECMO
+- **Descripción**: El programa de formación en ECMO (Oxigenación por Membrana Extracorpórea) más completo de Latinoamérica, desarrollado en colaboración exclusiva con el Hospital Pitié-Salpêtrière de París (centro de referencia mundial).
+- **Modalidad**: Presencial intensiva.
+- **Sede**: INER (Instituto Nacional de Enfermedades Respiratorias), Ciudad de México.
+- **Instructores Clave**: Prof. Alain Combes, Prof. Matthieu Schmidt, Enf. Hugo Guillou, Enf. Emric Besnard, Dra. Jenifer Trejo.
+- **URL**: https://healthcareexp.com/paris-diploma-ecmo
+
+### 2. Simulador ECMO Sim
+- **Descripción**: Simulador clínico virtual 100% online diseñado para profesionales de la salud. Recrea una Unidad de Cuidados Intensivos (UCI) real en 3D. Permite interactuar con ventiladores mecánicos y consolas ECMO reales con constantes vitales que reaccionan a cada decisión médica en tiempo real.
+- **URL**: https://healthcareexp.com/simulador-ecmo-sim
+
+### 3. ECMO Nursing Care
+- **Descripción**: Programa de formación de alta especialidad diseñado específicamente para profesionales de enfermería en cuidados intensivos. Abarca monitorización, protocolos de canulación y destete de pacientes bajo soporte vital extracorpóreo.
+- **URL**: https://healthcareexp.com/ecmo-nursing-care
+
+### 4. Insuficiencia Cardiaca
+- **Descripción**: Experiencia educativa especializada en el manejo avanzado de la insuficiencia cardiaca.
+- **URL**: https://healthcareexp.com/insuficiencia-cardiaca
+
+## Información de Contacto y Links Adicionales
+- **Web Oficial**: https://healthcareexp.com/
+- **Quiénes Somos**: https://healthcareexp.com/quienes-somos
+- **Instructores**: https://healthcareexp.com/instructores
+- **Facturación CFDI**: https://healthcareexp.com/facturacion
+- **Aviso de Privacidad**: https://healthcareexp.com/aviso-de-privacidad
+
+## Instructores Nacionales e Internacionales
+El cuerpo docente de HCE incluye referentes mundiales de la medicina crítica, perfusionistas, enfermeros intensivistas y cirujanos cardiotorácicos procedentes de Francia, México y otras partes de Latinoamérica. Destacan el Prof. Alain Combes y el Prof. Matthieu Schmidt.
+
+## Impacto
+HCE ha formado a más de 2,000 profesionales de la salud provenientes de más de 15 países, redefiniendo los estándares de la medicina crítica en Iberoamérica.

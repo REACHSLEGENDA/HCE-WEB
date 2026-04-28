@@ -5,7 +5,15 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './AboutUs.css'; 
 
+import { useSEO } from '../hooks/useSEO';
+
 const AboutUs = () => {
+  useSEO({
+    title: 'Quiénes Somos',
+    description: 'Conoce HCE, nuestra misión, visión y a nuestra fundadora la Dra. Jenifer Trejo Guerra. Formamos a la élite médica en cuidados críticos y ECMO.',
+    keywords: 'HCE, Healthcare Training Experience, Dra. Jenifer Trejo Guerra, educación médica, quiénes somos, misión médica, simulación clínica'
+  });
+
   const { ref: heroRef,     inView: heroInView     } = useInView({ triggerOnce: true, threshold: 0.1 });
   const { ref: queRef,      inView: queInView      } = useInView({ triggerOnce: true, threshold: 0.1 });
   const { ref: manifestRef, inView: manifestInView } = useInView({ triggerOnce: true, threshold: 0.1 });

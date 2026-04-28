@@ -4,8 +4,15 @@ import { HeartPulse, Activity, BookOpen, Target, Users, Award, CheckCircle2, Che
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './InsuficienciaCardiaca.css';
+import { useSEO } from '../hooks/useSEO';
 
 const InsuficienciaCardiaca = () => {
+  useSEO({
+    title: 'Insuficiencia Cardíaca Avanzada',
+    description: 'Diplomado especializado en el manejo integral de la insuficiencia cardíaca avanzada, trasplante y soportes circulatorios. Avalado por ISHLT.',
+    keywords: 'insuficiencia cardíaca, trasplante cardíaco, soporte circulatorio mecánico, cardiología crítica, ISHLT, HCE insuficiencia cardiaca'
+  });
+
   const [activeModule, setActiveModule] = useState(1);
 
   const { ref: heroRef,       inView: heroInView       } = useInView({ triggerOnce: true, threshold: 0.1 });

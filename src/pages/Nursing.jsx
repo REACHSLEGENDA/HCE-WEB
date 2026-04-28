@@ -53,7 +53,15 @@ const PresencialCard = ({ flag, img, name, country, bio, delay }) => {
   );
 };
 
+import { useSEO } from '../hooks/useSEO';
+
 const Nursing = () => {
+  useSEO({
+    title: 'ECMO Nursing Care',
+    description: 'Programa de alta especialidad diseñado para profesionales de enfermería en cuidados intensivos. Domina el monitoreo y protocolos de pacientes en ECMO.',
+    keywords: 'ECMO Nursing, enfermería intensiva, cuidados críticos, soporte extracorpóreo, capacitación enfermería, HCE Nursing Care'
+  });
+
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   const virtualFaculty = [

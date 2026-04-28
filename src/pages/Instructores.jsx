@@ -3,8 +3,15 @@ import { Sparkles, ArrowRight, BookOpen, Microscope, Users, Award, FlaskConical 
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './Instructores.css';
+import { useSEO } from '../hooks/useSEO';
 
 const Instructores = () => {
+  useSEO({
+    title: 'Instructores y Facultad',
+    description: 'Aprende directamente de la fuente. Nuestros instructores incluyen a los referentes mundiales en ECMO y medicina crítica como el Prof. Alain Combes.',
+    keywords: 'instructores médicos, profesores ECMO, Alain Combes, Matthieu Schmidt, Jenifer Trejo Guerra, expertos en simulación médica, HCE instructores'
+  });
+
   const { ref: heroRef,    inView: heroInView    } = useInView({ triggerOnce: true, threshold: 0.1 });
   const { ref: statsRef,   inView: statsInView   } = useInView({ triggerOnce: true, threshold: 0.1 });
   const { ref: gridRef,    inView: gridInView    } = useInView({ triggerOnce: true, threshold: 0.1 });

@@ -4,8 +4,15 @@ import { Gamepad2, PlayCircle, Trophy, Users, Zap, ShieldAlert, MonitorPlay, Che
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './EcmoSim.css';
+import { useSEO } from '../hooks/useSEO';
 
 const EcmoSim = () => {
+  useSEO({
+    title: 'ECMO Sim - Simulador Clínico',
+    description: 'ECMO Sim es el simulador clínico virtual 100% online diseñado para profesionales de la salud. Recrea una UCI real en 3D para dominar el soporte ECMO.',
+    keywords: 'ECMO Sim, simulador clínico, simulador médico, UCI virtual, soporte extracorpóreo, videojuego médico, simulación médica 3D'
+  });
+
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.1 });
   const { ref: featuresRef, inView: featuresInView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
