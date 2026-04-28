@@ -15,7 +15,7 @@ const Home = () => {
   useSEO({
     title: 'Inicio',
     description: 'Redefiniendo el estándar de la educación médica continua a través de simulación avanzada, ECMO y excelencia académica. Únete a HCE.',
-    keywords: 'educación médica, simulación clínica, ECMO, ECMO Nursing, HCE, Healthcare Training Experience, insuficiencia cardiaca'
+    keywords: 'curso ECMO México, certificación ECMO México, donde estudiar ECMO, diplomado ECMO INER, simulación clínica ECMO, ECMO Nursing, HCE, Healthcare Training Experience'
   });
 
   return (

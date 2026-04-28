@@ -6,7 +6,7 @@ const ParisDiploma = () => {
   useSEO({
     title: 'Paris International Diploma en ECMO',
     description: 'El programa de formación en ECMO más completo de Latinoamérica, desarrollado con el Hospital Pitié-Salpêtrière de París.',
-    keywords: 'ECMO, Diploma Paris ECMO, Pitié-Salpêtrière, Prof. Alain Combes, INER, simulación clínica, medicina intensiva, soporte vital extracorpóreo'
+    keywords: 'certificación ECMO México, curso ECMO México, diplomado ECMO INER, mejores cursos ECMO Latinoamérica, ECMO Paris, Pitié-Salpêtrière, Alain Combes, ECMO ELSO'
   });
 
   return (
