@@ -89,8 +89,13 @@ export default function Inscripciones() {
   };
 
   const applyPromo = () => {
-    if (promoInput.trim().toUpperCase() === 'HCE-INERPARIS2026') {
-      setAppliedPromo({ code: 'HCE-INERPARIS2026', discount: 0.3 });
+    const code = promoInput.trim().toUpperCase();
+    if (code === 'HCE-INERPARIS2026') {
+      setAppliedPromo({ code: 'HCE-INERPARIS2026', discount: 0.3, type: 'discount' });
+      setApiError('');
+    } else if (code === 'HCEMS' || code === 'HCEMESES') {
+      setAppliedPromo({ code, discount: 0, type: 'installments' });
+      setApiError('');
     } else {
       setAppliedPromo(null);
       if (promoInput.trim()) setApiError('Código no válido');
@@ -386,12 +391,12 @@ export default function Inscripciones() {
                     </button>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(16,185,129,0.1)', padding: '0.6rem 0.8rem', borderRadius: '10px' }}>
-                    <div style={{ fontSize: '0.8rem', color: '#065f46', fontWeight: 600 }}>
-                      ✓ {appliedPromo.code} (-30%)
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: appliedPromo.type === 'installments' ? 'rgba(59,130,246,0.1)' : 'rgba(16,185,129,0.1)', padding: '0.6rem 0.8rem', borderRadius: '10px' }}>
+                    <div style={{ fontSize: '0.8rem', color: appliedPromo.type === 'installments' ? '#1d4ed8' : '#065f46', fontWeight: 600 }}>
+                      ✓ {appliedPromo.code} {appliedPromo.type === 'installments' ? '(Pagos a meses desbloqueado)' : `(-${appliedPromo.discount * 100}%)`}
                     </div>
                     <button 
-                      onClick={() => { setAppliedPromo(null); setPromoInput(''); }}
+                      onClick={() => { setAppliedPromo(null); setPromoInput(''); setApiError(''); }}
                       style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
                     >
                       Quitar

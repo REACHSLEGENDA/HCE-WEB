@@ -164,6 +164,17 @@ export const handler = async (event) => {
       },
     };
 
+    const enableInstallments = promoCode === 'HCEMS' || promoCode === 'HCEMESES';
+    if (enableInstallments) {
+      sessionOptions.payment_method_options = {
+        card: {
+          installments: {
+            enabled: true
+          }
+        }
+      };
+    }
+
     if (email) sessionOptions.customer_email = email;
 
     const session = await stripe.checkout.sessions.create(sessionOptions);
