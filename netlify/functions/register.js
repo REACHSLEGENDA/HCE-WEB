@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 
 const MAILCHIMP_TAG = 'ECMOParis2026';
+const CANCEL_TAG = 'CANCELPARIS';
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -53,12 +54,15 @@ export const handler = async (event) => {
     console.log('Mailchimp upsert:', upsertRes.status, upsertData.id || upsertData.detail);
 
     // Forzar re-entrada del tag para disparar Customer Journeys
-    // Paso 1: Quitar tag (inactivo)
+    // Paso 1: Quitar tag de abandono (inactivo) y refrescar tag de éxito
     await fetch(`${baseUrl}/members/${hash}/tags`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        tags: [{ name: MAILCHIMP_TAG, status: 'inactive' }],
+        tags: [
+          { name: CANCEL_TAG, status: 'inactive' },
+          { name: MAILCHIMP_TAG, status: 'inactive' }
+        ],
       }),
     });
 

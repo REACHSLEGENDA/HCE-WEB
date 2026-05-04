@@ -3,7 +3,7 @@ import { createHash } from 'crypto';
 
 const USD_RATE = 17; // 1 USD = 17 MXN (server-side source of truth)
 
-const MAILCHIMP_TAG = 'ECMOParis2026';
+const MAILCHIMP_TAG = 'CANCELPARIS';
 
 const LEGAL_TEXT = '*Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.';
 
