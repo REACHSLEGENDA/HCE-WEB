@@ -88,8 +88,12 @@ export const handler = async (event) => {
 
     const mxnToUnit = (mxn, isBase = false) => {
       let finalMXN = mxn;
-      if (isBase && promoCode === 'HCE-INERPARIS2026') {
-        finalMXN = Math.floor(mxn * 0.7);
+      if (isBase) {
+        if (promoCode === 'HCE-INERPARIS2026') {
+          finalMXN = Math.floor(mxn * 0.7);
+        } else if (promoCode === 'HCE10MSI') {
+          finalMXN = Math.floor(mxn * 0.9);
+        }
       }
       const amount = currency === 'usd' ? finalMXN / USD_RATE : finalMXN;
       return Math.round(amount * 100); // centavos / cents
@@ -131,7 +135,13 @@ export const handler = async (event) => {
 
     // Codificar datos del pago en la URL de éxito para no depender de localStorage
     const baseAmount = PRICES_MXN[perfil];
-    const discountedBase = promoCode === 'HCE-INERPARIS2026' ? Math.floor(baseAmount * 0.7) : baseAmount;
+    let discountedBase = baseAmount;
+    if (promoCode === 'HCE-INERPARIS2026') {
+      discountedBase = Math.floor(baseAmount * 0.7);
+    } else if (promoCode === 'HCE10MSI') {
+      discountedBase = Math.floor(baseAmount * 0.9);
+    }
+    
     const totalMXN = discountedBase + validExtras.reduce((s, e) => s + PRICES_MXN[e], 0);
 
     const payData = Buffer.from(JSON.stringify({
@@ -164,7 +174,7 @@ export const handler = async (event) => {
       },
     };
 
-    const enableInstallments = promoCode === 'HCEMS' || promoCode === 'HCEMESES';
+    const enableInstallments = promoCode === 'HCEMS' || promoCode === 'HCEMESES' || promoCode === 'HCE10MSI';
     if (enableInstallments) {
       sessionOptions.payment_method_options = {
         card: {

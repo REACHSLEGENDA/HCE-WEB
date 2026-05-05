@@ -96,6 +96,9 @@ export default function Inscripciones() {
     } else if (code === 'HCEMS' || code === 'HCEMESES') {
       setAppliedPromo({ code, discount: 0, type: 'installments' });
       setApiError('');
+    } else if (code === 'HCE10MSI') {
+      setAppliedPromo({ code, discount: 0.1, type: 'mixed' });
+      setApiError('');
     } else {
       setAppliedPromo(null);
       if (promoInput.trim()) setApiError('Código no válido');
@@ -391,9 +394,9 @@ export default function Inscripciones() {
                     </button>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: appliedPromo.type === 'installments' ? 'rgba(59,130,246,0.1)' : 'rgba(16,185,129,0.1)', padding: '0.6rem 0.8rem', borderRadius: '10px' }}>
-                    <div style={{ fontSize: '0.8rem', color: appliedPromo.type === 'installments' ? '#1d4ed8' : '#065f46', fontWeight: 600 }}>
-                      ✓ {appliedPromo.code} {appliedPromo.type === 'installments' ? '(Pagos a meses desbloqueado)' : `(-${appliedPromo.discount * 100}%)`}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: (appliedPromo.type === 'installments' || appliedPromo.type === 'mixed') ? 'rgba(59,130,246,0.1)' : 'rgba(16,185,129,0.1)', padding: '0.6rem 0.8rem', borderRadius: '10px' }}>
+                    <div style={{ fontSize: '0.8rem', color: (appliedPromo.type === 'installments' || appliedPromo.type === 'mixed') ? '#1d4ed8' : '#065f46', fontWeight: 600 }}>
+                      ✓ {appliedPromo.code} {appliedPromo.type === 'installments' ? '(Pagos a meses desbloqueado)' : appliedPromo.type === 'mixed' ? `(-${appliedPromo.discount * 100}% + Meses sin intereses)` : `(-${appliedPromo.discount * 100}%)`}
                     </div>
                     <button 
                       onClick={() => { setAppliedPromo(null); setPromoInput(''); setApiError(''); }}
