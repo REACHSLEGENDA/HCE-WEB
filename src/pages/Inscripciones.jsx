@@ -90,6 +90,10 @@ export default function Inscripciones() {
 
   const applyPromo = () => {
     const code = promoInput.trim().toUpperCase();
+    const now = new Date();
+    // Validar PERFUWEEK del 6 al 10 de Mayo 2026 (Zona horaria MX -06:00 aproximada)
+    const isPerfuweekValid = now >= new Date('2026-05-06T00:00:00-06:00') && now <= new Date('2026-05-10T23:59:59-06:00');
+
     if (code === 'HCE-INERPARIS2026') {
       setAppliedPromo({ code: 'HCE-INERPARIS2026', discount: 0.3, type: 'discount' });
       setApiError('');
@@ -99,6 +103,14 @@ export default function Inscripciones() {
     } else if (code === 'HCE10MSI') {
       setAppliedPromo({ code, discount: 0.1, type: 'mixed' });
       setApiError('');
+    } else if (code === 'PERFUWEEK') {
+      if (isPerfuweekValid) {
+        setAppliedPromo({ code, discount: 0.15, type: 'discount' });
+        setApiError('');
+      } else {
+        setAppliedPromo(null);
+        setApiError('El código PERFUWEEK solo es válido del 6 al 10 de Mayo.');
+      }
     } else {
       setAppliedPromo(null);
       if (promoInput.trim()) setApiError('Código no válido');

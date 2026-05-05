@@ -86,6 +86,9 @@ export const handler = async (event) => {
 
     const currency = moneda === 'usd' ? 'usd' : 'mxn';
 
+    const now = new Date();
+    const isPerfuweekValid = now >= new Date('2026-05-06T00:00:00-06:00') && now <= new Date('2026-05-10T23:59:59-06:00');
+
     const mxnToUnit = (mxn, isBase = false) => {
       let finalMXN = mxn;
       if (isBase) {
@@ -93,6 +96,8 @@ export const handler = async (event) => {
           finalMXN = Math.floor(mxn * 0.7);
         } else if (promoCode === 'HCE10MSI') {
           finalMXN = Math.floor(mxn * 0.9);
+        } else if (promoCode === 'PERFUWEEK' && isPerfuweekValid) {
+          finalMXN = Math.floor(mxn * 0.85);
         }
       }
       const amount = currency === 'usd' ? finalMXN / USD_RATE : finalMXN;
@@ -140,6 +145,8 @@ export const handler = async (event) => {
       discountedBase = Math.floor(baseAmount * 0.7);
     } else if (promoCode === 'HCE10MSI') {
       discountedBase = Math.floor(baseAmount * 0.9);
+    } else if (promoCode === 'PERFUWEEK' && isPerfuweekValid) {
+      discountedBase = Math.floor(baseAmount * 0.85);
     }
     
     const totalMXN = discountedBase + validExtras.reduce((s, e) => s + PRICES_MXN[e], 0);
