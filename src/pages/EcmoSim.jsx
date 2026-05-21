@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Gamepad2, PlayCircle, Trophy, Users, Zap, ShieldAlert, MonitorPlay, ChevronRight, Activity } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -15,6 +15,86 @@ const EcmoSim = () => {
 
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.1 });
   const { ref: featuresRef, inView: featuresInView } = useInView({ triggerOnce: true, threshold: 0.1 });
+
+  // Modal & Plan States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState('4m'); // '4m' or '12m'
+  const [usdRate, setUsdRate] = useState(18.0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
+  const [successInfo, setSuccessInfo] = useState(null);
+
+  // Live exchange rate & URL checking
+  useEffect(() => {
+    const fetchRate = async () => {
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.rates && data.rates.MXN) {
+            setUsdRate(data.rates.MXN);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching live USD rate:', err);
+      }
+    };
+    fetchRate();
+
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    if (status === 'success') {
+      const successEmail = params.get('email');
+      const successPlan = params.get('plan');
+      setSuccessInfo({ email: successEmail, plan: successPlan });
+
+      if (successEmail && successPlan) {
+        fetch('/.netlify/functions/sim-register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: successEmail, planId: successPlan }),
+        })
+        .then(r => r.json())
+        .then(d => console.log('Sim registration response:', d))
+        .catch(e => console.error('Sim registration error:', e));
+      }
+      
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (status === 'cancel') {
+      alert('Pago cancelado. Si tuviste algún problema, por favor contáctanos.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setCheckoutError('Por favor introduce un correo válido.');
+      return;
+    }
+    setCheckoutError('');
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/.netlify/functions/create-sim-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId: selectedPlan, email: email.trim() }),
+      });
+      
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        setCheckoutError(data.error || 'Ocurrió un error al procesar el pago.');
+        setIsSubmitting(false);
+      }
+    } catch (err) {
+      setCheckoutError('Error de red. Intenta nuevamente.');
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="ecmo-sim-page">
@@ -35,10 +115,10 @@ const EcmoSim = () => {
             </p>
             
             <div className="sim-hero-actions">
-              <a href="https://buy.stripe.com/bJe8wHezt5Rm58fbEP9IQ0U" className="btn-gaming">
+              <button onClick={() => setIsModalOpen(true)} className="btn-gaming">
                 <PlayCircle size={24} /> JUGAR AHORA
-              </a>
-              <p className="sim-cta-hint">Suscripción de acceso por 4 meses. Ilimitado a todos los escenarios.</p>
+              </button>
+              <p className="sim-cta-hint">Elige tu suscripción de 4 o 12 meses. Acceso ilimitado.</p>
             </div>
           </div>
         </div>
@@ -70,9 +150,9 @@ const EcmoSim = () => {
                 <div className="sim-icon-wrapper"><MonitorPlay size={28} /></div>
                 <h3>Entorno 3D Inmersivo</h3>
                 <p>Navega por una unidad de cuidados intensivos detallada. Interactúa con las bombas, el ventilador y la consola ECMO como si estuvieras allí.</p>
-                <a href="https://buy.stripe.com/bJe8wHezt5Rm58fbEP9IQ0U" className="btn-gaming-sm mt-4">
+                <button onClick={() => setIsModalOpen(true)} className="btn-gaming-sm mt-4">
                   Desbloquea el Simulador
-                </a>
+                </button>
               </div>
               <div className="sim-f-img">
                 <img src="/assets/paginas/Game-ECMO_SIM_XX.jpg" alt="ECMO Sim Interface" />
@@ -119,9 +199,9 @@ const EcmoSim = () => {
           </div>
           
           <div className="sim-cinema-footer">
-             <a href="https://buy.stripe.com/bJe8wHezt5Rm58fbEP9IQ0U" className="btn-gaming shadow-glow">
-                <Zap size={24} /> OBTENER MEMBRESÍA MENSUAL
-              </a>
+             <button onClick={() => setIsModalOpen(true)} className="btn-gaming shadow-glow">
+                <Zap size={24} /> DESBLOQUEAR EL SIMULADOR
+             </button>
           </div>
         </div>
       </section>
@@ -176,9 +256,9 @@ const EcmoSim = () => {
           </div>
           
           <div className="text-center mt-12">
-            <a href="https://buy.stripe.com/bJe8wHezt5Rm58fbEP9IQ0U" className="btn-gaming-outline">
+            <button onClick={() => setIsModalOpen(true)} className="btn-gaming-outline">
               Suscríbete para jugar todo
-            </a>
+            </button>
           </div>
         </div>
       </section>
@@ -222,13 +302,127 @@ const EcmoSim = () => {
             <div className="sim-glitch" data-text="GAME ON.">GAME ON.</div>
             <h3>El Simulador Definitivo para Profesionales.</h3>
             <p>La práctica hace al maestro. Equivócate aquí, salva vidas en el mundo real.</p>
-            <a href="https://buy.stripe.com/bJe8wHezt5Rm58fbEP9IQ0U" className="btn-gaming mega shadow-glow">
-              <Gamepad2 size={28} /> COMPRAR SUSCRIPCIÓN MENSUAL
-            </a>
+            <button onClick={() => setIsModalOpen(true)} className="btn-gaming mega shadow-glow">
+              <Gamepad2 size={28} /> ELEGIR PLAN Y JUGAR
+            </button>
             <p className="sim-secure-checkout">Pago seguro vía Stripe.</p>
           </div>
         </div>
       </section>
+
+      {/* EXTREMELY PREMIUM PLAN SELECTOR MODAL */}
+      {isModalOpen && (
+        <div className="sim-modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="sim-modal-card" onClick={(e) => e.stopPropagation()}>
+            <button className="sim-modal-close" onClick={() => setIsModalOpen(false)}>✕</button>
+            
+            <div className="sim-modal-header">
+              <div className="sim-modal-badge">
+                <Gamepad2 size={14} /> SELECCIÓN DE PLAN
+              </div>
+              <h2 className="sim-modal-title">ELIGE TU PLAN <span className="sim-neon-text">DE JUEGO</span></h2>
+              <p className="sim-modal-subtitle">
+                Acceso completo e ilimitado a todos los escenarios clínicos 3D en tiempo real.
+              </p>
+            </div>
+
+            <form onSubmit={handleCheckout} className="sim-modal-form">
+              {/* Email Input */}
+              <div className="sim-input-group">
+                <label htmlFor="sim-email">Correo electrónico *</label>
+                <input
+                  id="sim-email"
+                  type="email"
+                  required
+                  placeholder="ejemplo@medico.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="sim-modal-input"
+                />
+              </div>
+
+              {/* Plans Display */}
+              <div className="sim-plans-grid">
+                {/* Plan 4 Months */}
+                <div 
+                  className={`sim-plan-box ${selectedPlan === '4m' ? 'active' : ''}`}
+                  onClick={() => setSelectedPlan('4m')}
+                >
+                  <div className="sim-plan-meta">
+                    <span className="sim-plan-duration">4 MESES</span>
+                    <span className="sim-plan-badge-simple">ACCESO COMPLETO</span>
+                  </div>
+                  <div className="sim-plan-pricing">
+                    <span className="sim-price-usd">$250 USD</span>
+                    <span className="sim-price-mxn">
+                      ~ ${Math.round(250 * usdRate).toLocaleString()} MXN
+                    </span>
+                  </div>
+                  <p className="sim-plan-desc">Entrenamiento intensivo de mediano plazo.</p>
+                </div>
+
+                {/* Plan 12 Months */}
+                <div 
+                  className={`sim-plan-box ${selectedPlan === '12m' ? 'active' : ''}`}
+                  onClick={() => setSelectedPlan('12m')}
+                >
+                  <div className="sim-plan-tag">MEJOR OPCIÓN</div>
+                  <div className="sim-plan-meta">
+                    <span className="sim-plan-duration">12 MESES</span>
+                    <span className="sim-plan-badge-simple">AHORRA MÁS DEL 20%</span>
+                  </div>
+                  <div className="sim-plan-pricing">
+                    <span className="sim-price-usd">$700 USD</span>
+                    <span className="sim-price-mxn">
+                      ~ ${Math.round(700 * usdRate).toLocaleString()} MXN
+                    </span>
+                  </div>
+                  <p className="sim-plan-desc">Entrenamiento continuo para excelencia clínica.</p>
+                </div>
+              </div>
+
+              {/* Live exchange rate badge */}
+              <div className="sim-rate-badge">
+                💡 Tipo de cambio en tiempo real: <strong>1 USD = ${usdRate.toFixed(2)} MXN</strong> (El cobro final se procesará en MXN).
+              </div>
+
+              {checkoutError && <div className="sim-modal-error">{checkoutError}</div>}
+
+              {/* Action Button */}
+              <button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="btn-gaming mega w-full mt-4"
+                style={{ width: '100%' }}
+              >
+                {isSubmitting ? 'CARGANDO PASARELA…' : `PROCEDER AL PAGO — $${(selectedPlan === '4m' ? 250 : 700)} USD`}
+              </button>
+              
+              <p className="sim-modal-secure">🔒 Pago 100% seguro encriptado por Stripe.</p>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SUCCESS POPUP */}
+      {successInfo && (
+        <div className="sim-modal-overlay" onClick={() => setSuccessInfo(null)}>
+          <div className="sim-modal-card success text-center" onClick={(e) => e.stopPropagation()}>
+            <button className="sim-modal-close" onClick={() => setSuccessInfo(null)}>✕</button>
+            <div className="sim-success-icon-wrapper">✓</div>
+            <h2 className="sim-modal-title" style={{ marginTop: '1.5rem' }}>¡PAGO PROCESADO!</h2>
+            <p className="sim-modal-subtitle" style={{ color: '#fff', fontSize: '1.1rem', margin: '1rem 0 2rem' }}>
+              Tu suscripción al plan de <strong>{successInfo.plan === '4m' ? '4 meses' : '12 meses'}</strong> se ha completado con éxito.
+            </p>
+            <p style={{ color: '#9ea2a8', fontSize: '0.9rem', marginBottom: '2.5rem' }}>
+              Enviamos un correo a <strong>{successInfo.email}</strong> con las credenciales y el enlace para acceder de inmediato al simulador. ¡Que disfrutes tu entrenamiento clínico!
+            </p>
+            <button onClick={() => setSuccessInfo(null)} className="btn-gaming">
+              EMPEZAR A ENTRENAR
+            </button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

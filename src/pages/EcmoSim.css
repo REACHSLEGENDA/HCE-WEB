@@ -540,3 +540,274 @@
   .btn-gaming { width: 100%; justify-content: center; }
   .btn-gaming.mega { font-size: 1.1rem; padding: 1.5rem; }
 }
+
+/* PREMIUM PLANS MODAL STYLE */
+.sim-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 7, 9, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.sim-modal-card {
+  background: #151a21;
+  border: 2.5px solid #FBC531;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 680px;
+  padding: 2.5rem;
+  position: relative;
+  box-shadow: 0 0 40px rgba(251, 197, 49, 0.25), inset 0 0 20px rgba(0,0,0,0.8);
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+}
+
+.sim-modal-card.success {
+  border-color: #2ecc71;
+  box-shadow: 0 0 40px rgba(46, 204, 113, 0.25), inset 0 0 20px rgba(0,0,0,0.8);
+  max-width: 520px;
+}
+
+.sim-success-icon-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(46, 204, 113, 0.15);
+  border: 2px solid #2ecc71;
+  color: #2ecc71;
+  font-size: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
+}
+
+.sim-modal-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.2s;
+}
+.sim-modal-close:hover {
+  color: #FBC531;
+  transform: rotate(90deg);
+}
+
+.sim-modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.sim-modal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(251, 197, 49, 0.1);
+  color: #FBC531;
+  border: 1px solid rgba(251, 197, 49, 0.25);
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.sim-modal-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin: 0 0 0.5rem;
+}
+
+.sim-modal-subtitle {
+  color: #8a8d91;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.sim-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sim-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.sim-input-group label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #c5c6c7;
+}
+
+.sim-modal-input {
+  background: #0f1318;
+  border: 1.5px solid #2d3540;
+  border-radius: 10px;
+  padding: 0.85rem 1.2rem;
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.sim-modal-input:focus {
+  outline: none;
+  border-color: #FBC531;
+  box-shadow: 0 0 0 3px rgba(251, 197, 49, 0.15);
+}
+
+.sim-plans-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.sim-plan-box {
+  background: #0f1318;
+  border: 2px solid #2d3540;
+  border-radius: 14px;
+  padding: 1.5rem;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.sim-plan-box:hover {
+  border-color: rgba(251, 197, 49, 0.5);
+  transform: translateY(-2px);
+}
+.sim-plan-box.active {
+  border-color: #FBC531;
+  background: rgba(251, 197, 49, 0.04);
+  box-shadow: 0 0 20px rgba(251, 197, 49, 0.1);
+}
+
+.sim-plan-tag {
+  position: absolute;
+  top: -12px;
+  right: 1.5rem;
+  background: #FBC531;
+  color: #0b0c10;
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 2px 10px;
+  border-radius: 50px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 10px rgba(251, 197, 49, 0.3);
+}
+
+.sim-plan-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.sim-plan-duration {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #fff;
+}
+.sim-plan-badge-simple {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #FBC531;
+  letter-spacing: 0.5px;
+}
+
+.sim-plan-pricing {
+  display: flex;
+  flex-direction: column;
+}
+.sim-price-usd {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+}
+.sim-price-mxn {
+  font-size: 0.85rem;
+  color: #8a8d91;
+  font-weight: 600;
+}
+
+.sim-plan-desc {
+  font-size: 0.78rem;
+  color: #8a8d91;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.sim-rate-badge {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: #c5c6c7;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.sim-modal-error {
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sim-modal-secure {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  margin: 0.5rem 0 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 600px) {
+  .sim-modal-card { padding: 1.75rem; }
+  .sim-plans-grid { grid-template-columns: 1fr; }
+  .sim-modal-title { font-size: 1.6rem; }
+}
+
