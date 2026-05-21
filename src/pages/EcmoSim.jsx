@@ -16,7 +16,7 @@ const EcmoSim = () => {
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.1 });
   const { ref: featuresRef, inView: featuresInView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
-  // Modal & Plan States
+  // Modal, Plan & Promo States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [selectedPlan, setSelectedPlan] = useState('4m'); // '4m' or '12m'
@@ -24,6 +24,11 @@ const EcmoSim = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
   const [successInfo, setSuccessInfo] = useState(null);
+  
+  // Promo code states
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(false);
+  const [promoError, setPromoError] = useState('');
 
   // Live exchange rate & URL checking
   useEffect(() => {
@@ -48,17 +53,6 @@ const EcmoSim = () => {
       const successEmail = params.get('email');
       const successPlan = params.get('plan');
       setSuccessInfo({ email: successEmail, plan: successPlan });
-
-      if (successEmail && successPlan) {
-        fetch('/.netlify/functions/sim-register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: successEmail, planId: successPlan }),
-        })
-        .then(r => r.json())
-        .then(d => console.log('Sim registration response:', d))
-        .catch(e => console.error('Sim registration error:', e));
-      }
       
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (status === 'cancel') {
@@ -80,7 +74,11 @@ const EcmoSim = () => {
       const res = await fetch('/.netlify/functions/create-sim-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: selectedPlan, email: email.trim() }),
+        body: JSON.stringify({ 
+          planId: selectedPlan, 
+          email: email.trim(),
+          promoCode: appliedPromo ? 'EXPSIM26' : ''
+        }),
       });
       
       const data = await res.json();
@@ -93,6 +91,85 @@ const EcmoSim = () => {
     } catch (err) {
       setCheckoutError('Error de red. Intenta nuevamente.');
       setIsSubmitting(false);
+    }
+  };
+
+  const handleApplyPromo = () => {
+    if (promoInput.trim().toUpperCase() === 'EXPSIM26') {
+      setAppliedPromo(true);
+      setPromoError('');
+    } else {
+      setPromoError('Código de descuento inválido.');
+      setAppliedPromo(false);
+    }
+  };
+
+  // Success Form States
+  const [successFormData, setSuccessFormData] = useState({
+    nombres: '',
+    apellidos: '',
+    telefono: '',
+    email: '',
+    profesion: '',
+  });
+  const [isSuccessFormSubmitted, setIsSuccessFormSubmitted] = useState(false);
+  const [isSubmittingSuccessForm, setIsSubmittingSuccessForm] = useState(false);
+  const [successFormError, setSuccessFormError] = useState('');
+
+  // Prefill email in success form when checkout succeeds
+  useEffect(() => {
+    if (successInfo && successInfo.email) {
+      setSuccessFormData(prev => ({ ...prev, email: successInfo.email }));
+    }
+  }, [successInfo]);
+
+  const handleSuccessFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!successFormData.nombres.trim() || !successFormData.apellidos.trim() || !successFormData.telefono.trim() || !successFormData.email.trim() || !successFormData.profesion.trim()) {
+      setSuccessFormError('Todos los campos son obligatorios.');
+      return;
+    }
+    setSuccessFormError('');
+    setIsSubmittingSuccessForm(true);
+
+    const formData = new FormData();
+    formData.append('_subject', `Nuevo Registro de Accesos ECMO Sim — ${successFormData.nombres} ${successFormData.apellidos}`);
+    formData.append('Nombres', successFormData.nombres.trim());
+    formData.append('Apellidos', successFormData.apellidos.trim());
+    formData.append('Correo', successFormData.email.trim());
+    formData.append('WhatsApp/Telefono', successFormData.telefono.trim());
+    formData.append('Profesion/Especialidad', successFormData.profesion.trim());
+    formData.append('Plan Adquirido', successInfo.plan === '4m' ? 'Plan 4 Meses ($250 USD)' : 'Plan 12 Meses ($700 USD)');
+
+    try {
+      const res = await fetch('https://formspree.io/f/xredqyol', {
+        method: 'POST',
+        body: formData,
+        headers: { Accept: 'application/json' },
+      });
+      if (res.ok) {
+        // Enriquecer datos en Mailchimp de manera asíncrona
+        fetch('/.netlify/functions/sim-register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: successFormData.email.trim(),
+            planId: successInfo.plan,
+            nombres: successFormData.nombres.trim(),
+            apellidos: successFormData.apellidos.trim(),
+            telefono: successFormData.telefono.trim(),
+            profesion: successFormData.profesion.trim()
+          }),
+        }).catch(err => console.error('Error enriching Mailchimp:', err));
+
+        setIsSuccessFormSubmitted(true);
+      } else {
+        setSuccessFormError('Ocurrió un error al enviar el formulario. Intenta nuevamente.');
+      }
+    } catch (err) {
+      setSuccessFormError('Error de red. Por favor revisa tu conexión.');
+    } finally {
+      setIsSubmittingSuccessForm(false);
     }
   };
 
@@ -353,9 +430,11 @@ const EcmoSim = () => {
                     <span className="sim-plan-badge-simple">ACCESO COMPLETO</span>
                   </div>
                   <div className="sim-plan-pricing">
-                    <span className="sim-price-usd">$250 USD</span>
+                    <span className="sim-price-usd">
+                      ${appliedPromo ? '200' : '250'} USD
+                    </span>
                     <span className="sim-price-mxn">
-                      ~ ${Math.round(250 * usdRate).toLocaleString()} MXN
+                      ~ ${Math.round((appliedPromo ? 200 : 250) * usdRate).toLocaleString()} MXN
                     </span>
                   </div>
                   <p className="sim-plan-desc">Entrenamiento intensivo de mediano plazo.</p>
@@ -369,16 +448,58 @@ const EcmoSim = () => {
                   <div className="sim-plan-tag">MEJOR OPCIÓN</div>
                   <div className="sim-plan-meta">
                     <span className="sim-plan-duration">12 MESES</span>
-                    <span className="sim-plan-badge-simple">AHORRA MÁS DEL 20%</span>
+                    <span className="sim-plan-badge-simple">
+                      {appliedPromo ? 'AHORRO MAYOR AL 25%' : 'AHORRA MÁS DEL 20%'}
+                    </span>
                   </div>
                   <div className="sim-plan-pricing">
-                    <span className="sim-price-usd">$700 USD</span>
+                    <span className="sim-price-usd">
+                      ${appliedPromo ? '650' : '700'} USD
+                    </span>
                     <span className="sim-price-mxn">
-                      ~ ${Math.round(700 * usdRate).toLocaleString()} MXN
+                      ~ ${Math.round((appliedPromo ? 650 : 700) * usdRate).toLocaleString()} MXN
                     </span>
                   </div>
                   <p className="sim-plan-desc">Entrenamiento continuo para excelencia clínica.</p>
                 </div>
+              </div>
+
+              {/* Promo Code Input */}
+              <div className="sim-promo-row" style={{ marginTop: '0.25rem' }}>
+                {!appliedPromo ? (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      placeholder="Código de descuento (Ej: EXPSIM26)"
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value)}
+                      className="sim-modal-input"
+                      style={{ flex: 1, padding: '0.55rem 0.85rem', fontSize: '0.82rem', background: '#0a0d12' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyPromo}
+                      className="btn-gaming-sm"
+                      style={{ padding: '0.55rem 1.25rem', fontSize: '0.8rem', minWidth: 'auto', borderRadius: '8px' }}
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(46, 204, 113, 0.1)', border: '1px solid rgba(46, 204, 113, 0.25)', padding: '0.55rem 1rem', borderRadius: '10px' }}>
+                    <div style={{ fontSize: '0.82rem', color: '#2ecc71', fontWeight: 700 }}>
+                      ✓ Cupón EXPSIM26 Aplicado (-$50 USD)
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setAppliedPromo(false); setPromoInput(''); }}
+                      style={{ background: 'none', border: 'none', color: '#e74c3c', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline', fontWeight: 600 }}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                )}
+                {promoError && <div style={{ color: '#e74c3c', fontSize: '0.78rem', marginTop: '4px', fontWeight: 600 }}>{promoError}</div>}
               </div>
 
               {/* Live exchange rate badge */}
@@ -388,6 +509,24 @@ const EcmoSim = () => {
 
               {checkoutError && <div className="sim-modal-error">{checkoutError}</div>}
 
+              {/* Warning Clause */}
+              <div style={{
+                background: 'rgba(231, 76, 60, 0.08)',
+                border: '1px solid rgba(231, 76, 60, 0.25)',
+                borderRadius: '8px',
+                padding: '10px 14px',
+                marginTop: '12px',
+                fontSize: '0.78rem',
+                lineHeight: '1.4',
+                color: '#ecf0f1',
+                textAlign: 'left'
+              }}>
+                <span style={{ color: '#e74c3c', fontWeight: 'bold', display: 'block', marginBottom: '3px' }}>
+                  ⚠️ NOTA DE SEGURIDAD CRÍTICA Y USO INDIVIDUAL:
+                </span>
+                Tus accesos son <strong>estrictamente personales e intransferibles</strong>. El simulador cuenta con un sistema inteligente de monitoreo geolocalizado de IP y dispositivo. Las conexiones concurrentes o uso compartido causarán la <strong>suspensión inmediata y permanente de tu cuenta</strong> sin reembolso.
+              </div>
+
               {/* Action Button */}
               <button 
                 type="submit" 
@@ -395,7 +534,7 @@ const EcmoSim = () => {
                 className="btn-gaming mega w-full mt-4"
                 style={{ width: '100%' }}
               >
-                {isSubmitting ? 'CARGANDO PASARELA…' : `PROCEDER AL PAGO — $${(selectedPlan === '4m' ? 250 : 700)} USD`}
+                {isSubmitting ? 'CARGANDO PASARELA…' : `PROCEDER AL PAGO — $${(selectedPlan === '4m' ? (appliedPromo ? 200 : 250) : (appliedPromo ? 650 : 700))} USD`}
               </button>
               
               <p className="sim-modal-secure">🔒 Pago 100% seguro encriptado por Stripe.</p>
@@ -404,22 +543,141 @@ const EcmoSim = () => {
         </div>
       )}
 
-      {/* SUCCESS POPUP */}
+      {/* SUCCESS & REGISTRATION POPUP */}
       {successInfo && (
-        <div className="sim-modal-overlay" onClick={() => setSuccessInfo(null)}>
-          <div className="sim-modal-card success text-center" onClick={(e) => e.stopPropagation()}>
-            <button className="sim-modal-close" onClick={() => setSuccessInfo(null)}>✕</button>
-            <div className="sim-success-icon-wrapper">✓</div>
-            <h2 className="sim-modal-title" style={{ marginTop: '1.5rem' }}>¡PAGO PROCESADO!</h2>
-            <p className="sim-modal-subtitle" style={{ color: '#fff', fontSize: '1.1rem', margin: '1rem 0 2rem' }}>
-              Tu suscripción al plan de <strong>{successInfo.plan === '4m' ? '4 meses' : '12 meses'}</strong> se ha completado con éxito.
-            </p>
-            <p style={{ color: '#9ea2a8', fontSize: '0.9rem', marginBottom: '2.5rem' }}>
-              Enviamos un correo a <strong>{successInfo.email}</strong> con las credenciales y el enlace para acceder de inmediato al simulador. ¡Que disfrutes tu entrenamiento clínico!
-            </p>
-            <button onClick={() => setSuccessInfo(null)} className="btn-gaming">
-              EMPEZAR A ENTRENAR
-            </button>
+        <div className="sim-modal-overlay">
+          <div className="sim-modal-card success" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '580px' }}>
+            {!isSuccessFormSubmitted ? (
+              <>
+                <div className="text-center">
+                  <div className="sim-success-icon-wrapper">✓</div>
+                  <h2 className="sim-modal-title" style={{ marginTop: '1rem' }}>¡PAGO CONFIRMADO!</h2>
+                  <p className="sim-modal-subtitle" style={{ color: '#fff', fontSize: '0.95rem', margin: '0.5rem 0 1.25rem' }}>
+                    Suscripción activa: <strong>{successInfo.plan === '4m' ? 'Plan 4 Meses' : 'Plan 12 Meses'}</strong>.
+                  </p>
+                  <p style={{ color: '#FBC531', fontSize: '0.85rem', marginBottom: '1.25rem', fontWeight: 'bold' }}>
+                    ⚠️ Por favor completa tus datos de contacto para generar y enviarte tus accesos de inmediato.
+                  </p>
+                </div>
+
+                <form onSubmit={handleSuccessFormSubmit} className="sim-modal-form" style={{ gap: '0.85rem' }}>
+                  <div className="sim-plans-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                    <div className="sim-input-group">
+                      <label htmlFor="succ-nombres" style={{ fontSize: '0.72rem', color: '#c5c6c7' }}>Nombres *</label>
+                      <input
+                        id="succ-nombres"
+                        type="text"
+                        required
+                        placeholder="Ej: Juan"
+                        value={successFormData.nombres}
+                        onChange={e => setSuccessFormData(prev => ({ ...prev, nombres: e.target.value }))}
+                        className="sim-modal-input"
+                        style={{ padding: '0.55rem 0.85rem', fontSize: '0.82rem', background: '#0a0d12' }}
+                      />
+                    </div>
+                    <div className="sim-input-group">
+                      <label htmlFor="succ-apellidos" style={{ fontSize: '0.72rem', color: '#c5c6c7' }}>Apellidos *</label>
+                      <input
+                        id="succ-apellidos"
+                        type="text"
+                        required
+                        placeholder="Ej: Pérez"
+                        value={successFormData.apellidos}
+                        onChange={e => setSuccessFormData(prev => ({ ...prev, apellidos: e.target.value }))}
+                        className="sim-modal-input"
+                        style={{ padding: '0.55rem 0.85rem', fontSize: '0.82rem', background: '#0a0d12' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="sim-plans-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                    <div className="sim-input-group">
+                      <label htmlFor="succ-email" style={{ fontSize: '0.72rem', color: '#c5c6c7' }}>Correo Electrónico *</label>
+                      <input
+                        id="succ-email"
+                        type="email"
+                        required
+                        placeholder="tu@correo.com"
+                        value={successFormData.email}
+                        onChange={e => setSuccessFormData(prev => ({ ...prev, email: e.target.value }))}
+                        className="sim-modal-input"
+                        style={{ padding: '0.55rem 0.85rem', fontSize: '0.82rem', background: '#0a0d12' }}
+                      />
+                    </div>
+                    <div className="sim-input-group">
+                      <label htmlFor="succ-telefono" style={{ fontSize: '0.72rem', color: '#c5c6c7' }}>WhatsApp / Teléfono *</label>
+                      <input
+                        id="succ-telefono"
+                        type="tel"
+                        required
+                        placeholder="Ej: 55 1234 5678"
+                        value={successFormData.telefono}
+                        onChange={e => setSuccessFormData(prev => ({ ...prev, telefono: e.target.value }))}
+                        className="sim-modal-input"
+                        style={{ padding: '0.55rem 0.85rem', fontSize: '0.82rem', background: '#0a0d12' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="sim-input-group">
+                    <label htmlFor="succ-profesion" style={{ fontSize: '0.72rem', color: '#c5c6c7' }}>Profesión / Especialidad *</label>
+                    <input
+                      id="succ-profesion"
+                      type="text"
+                      required
+                      placeholder="Ej: Médico Intensivista, Lic. en Enfermería"
+                      value={successFormData.profesion}
+                      onChange={e => setSuccessFormData(prev => ({ ...prev, profesion: e.target.value }))}
+                      className="sim-modal-input"
+                      style={{ padding: '0.55rem 0.85rem', fontSize: '0.82rem', background: '#0a0d12' }}
+                    />
+                  </div>
+
+                  {successFormError && <div className="sim-modal-error" style={{ fontSize: '0.78rem', padding: '0.5rem' }}>{successFormError}</div>}
+
+                  {/* Anti-sharing Warning Clause */}
+                  <div style={{
+                    background: 'rgba(231, 76, 60, 0.08)',
+                    border: '1px solid rgba(231, 76, 60, 0.25)',
+                    borderRadius: '8px',
+                    padding: '10px 14px',
+                    fontSize: '0.78rem',
+                    lineHeight: '1.4',
+                    color: '#ecf0f1',
+                    textAlign: 'left',
+                    marginBottom: '12px'
+                  }}>
+                    <span style={{ color: '#e74c3c', fontWeight: 'bold', display: 'block', marginBottom: '3px' }}>
+                      ⚠️ ADVERTENCIA ANTI-COMPARTICIÓN DE ACCESOS:
+                    </span>
+                    Tus credenciales individuales se asocian a tu identidad profesional y son monitoreadas activamente por geolocalización e IP. El ingreso simultáneo desde múltiples IPs o ubicaciones no autorizadas suspenderá la cuenta permanentemente por violación de propiedad intelectual.
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={isSubmittingSuccessForm} 
+                    className="btn-gaming mega w-full"
+                    style={{ width: '100%', padding: '0.85rem', fontSize: '0.95rem', marginTop: '0.5rem' }}
+                  >
+                    {isSubmittingSuccessForm ? 'ENVIANDO REGISTRO…' : 'CONFIRMAR Y CREAR ACCESOS'}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="text-center" style={{ padding: '1rem 0' }}>
+                <div className="sim-success-icon-wrapper">✓</div>
+                <h2 className="sim-modal-title" style={{ marginTop: '1.5rem' }}>¡REGISTRO COMPLETADO!</h2>
+                <p className="sim-modal-subtitle" style={{ color: '#fff', fontSize: '1.1rem', margin: '1rem 0 2rem' }}>
+                  Hemos recibido tus datos con éxito.
+                </p>
+                <p style={{ color: '#9ea2a8', fontSize: '0.9rem', marginBottom: '2.5rem', lineHeight: '1.6' }}>
+                  Estamos dando de alta tu cuenta para el plan de <strong>{successInfo.plan === '4m' ? '4 meses' : '12 meses'}</strong>. En un plazo de **15 a 30 minutos** recibirás tus accesos (usuario y contraseña) a tu correo electrónico y a tu WhatsApp. ¡Prepárate para entrenar!
+                </p>
+                <button onClick={() => { setSuccessInfo(null); setIsSuccessFormSubmitted(false); }} className="btn-gaming">
+                  ENTENDIDO
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

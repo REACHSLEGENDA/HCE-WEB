@@ -49,7 +49,7 @@ export const handler = async (event) => {
   }
 
   try {
-    const { planId, email = '' } = JSON.parse(event.body);
+    const { planId, email = '', promoCode = '' } = JSON.parse(event.body);
 
     const PLANS = {
       '4m': {
@@ -67,6 +67,14 @@ export const handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: 'Plan inválido' }) };
     }
 
+    // Process promo code EXPSIM26 (-$50 USD)
+    let baseUsd = plan.usd;
+    let discountApplied = false;
+    if (promoCode && promoCode.trim().toUpperCase() === 'EXPSIM26') {
+      baseUsd = Math.max(0, baseUsd - 50);
+      discountApplied = true;
+    }
+
     // 1. Fetch dynamic exchange rate
     let usdRate = 18.0; // fallback
     try {
@@ -82,7 +90,7 @@ export const handler = async (event) => {
     }
 
     // 2. Calculate MXN Price (rounded to nearest integer)
-    const finalMXN = Math.round(plan.usd * usdRate);
+    const finalMXN = Math.round(baseUsd * usdRate);
     const amountCents = finalMXN * 100;
 
     const lineItems = [
@@ -90,8 +98,10 @@ export const handler = async (event) => {
         price_data: {
           currency: 'mxn',
           product_data: {
-            name: plan.name,
-            description: `Acceso al Simulador Clínico Virtual ECMO Sim por el periodo contratado. Conversión de $${plan.usd} USD al tipo de cambio actual de $${usdRate.toFixed(2)} MXN/USD.`,
+            name: discountApplied ? `${plan.name} (Descuento Aplicado)` : plan.name,
+            description: discountApplied 
+              ? `Acceso al Simulador Clínico Virtual ECMO Sim. Descuento especial de $50 USD aplicado con código EXPSIM26. Precio final de $${baseUsd} USD convertido al tipo de cambio actual de $${usdRate.toFixed(2)} MXN/USD.`
+              : `Acceso al Simulador Clínico Virtual ECMO Sim por el periodo contratado. Conversión de $${plan.usd} USD al tipo de cambio actual de $${usdRate.toFixed(2)} MXN/USD.`,
           },
           unit_amount: amountCents,
         },
@@ -118,6 +128,8 @@ export const handler = async (event) => {
         email,
         usd_rate: usdRate.toString(),
         usd_original: plan.usd.toString(),
+        usd_final: baseUsd.toString(),
+        promo_applied: discountApplied ? 'EXPSIM26' : 'none',
         total_mxn: finalMXN.toString(),
       },
     };

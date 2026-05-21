@@ -9,7 +9,7 @@ export const handler = async (event) => {
   }
 
   try {
-    const { email, planId } = JSON.parse(event.body);
+    const { email, planId, nombres = '', apellidos = '', telefono = '', profesion = '' } = JSON.parse(event.body);
 
     if (!email) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Email requerido' }) };
@@ -35,7 +35,26 @@ export const handler = async (event) => {
     const baseUrl = `https://${SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}`;
     const hash    = createHash('md5').update(email.toLowerCase()).digest('hex');
 
-    // 1. Quitar tag de abandono y de exito vieja para forzar re-entrada
+    // 1. Crear o actualizar contacto en Mailchimp con merge fields
+    const mergeFields = {
+      MMERGE8: planName
+    };
+    if (nombres) mergeFields.FNAME = nombres;
+    if (apellidos) mergeFields.LNAME = apellidos;
+    if (telefono) mergeFields.PHONE = telefono;
+    if (profesion) mergeFields.MMERGE5 = profesion;
+
+    await fetch(`${baseUrl}/members/${hash}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        email_address: email,
+        status_if_new: 'subscribed',
+        merge_fields: mergeFields
+      }),
+    });
+
+    // 2. Quitar tag de abandono y de exito vieja para forzar re-entrada
     await fetch(`${baseUrl}/members/${hash}/tags`, {
       method: 'POST',
       headers,
