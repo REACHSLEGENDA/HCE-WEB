@@ -203,6 +203,10 @@
   border-color: #0047FF;
   background: rgba(0, 71, 255, 0.03);
 }
+.fac-dropzone--error {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
 .fac-drop-icon {
   width: 44px;
   height: 44px;

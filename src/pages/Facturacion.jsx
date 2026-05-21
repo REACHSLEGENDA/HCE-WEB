@@ -47,7 +47,7 @@ const INITIAL = {
   colonia: '',
   ciudad: '',
   estado: '',
-  referencia_pago: '',
+  metodo_pago: '',
   concepto: '',
   monto: '',
   notas: '',
@@ -76,6 +76,7 @@ export default function Facturacion() {
 
   const [form, setForm] = useState(INITIAL);
   const [files, setFiles] = useState([]);
+  const [constanciaFile, setConstanciaFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
   const fileRef = useRef(null);
@@ -98,9 +99,23 @@ export default function Facturacion() {
     else if (!/^\d{5}$/.test(form.cp_fiscal)) e.cp_fiscal = 'Debe ser 5 dígitos';
     if (!form.regimen_fiscal) e.regimen_fiscal = 'Selecciona un régimen';
     if (!form.uso_cfdi) e.uso_cfdi = 'Selecciona el uso del CFDI';
-    if (!form.referencia_pago.trim()) e.referencia_pago = 'Campo requerido';
+    if (!form.metodo_pago) e.metodo_pago = 'Selecciona el método de pago';
+    if (!constanciaFile) e.constancia_file = 'Debes subir tu Constancia de Situación Fiscal';
     return e;
   };
+
+  const handleConstanciaFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size <= 25 * 1024 * 1024) {
+        setConstanciaFile(file);
+      } else {
+        alert('El archivo supera los 25 MB permitidos');
+      }
+    }
+  };
+
+  const removeConstanciaFile = () => setConstanciaFile(null);
 
   const handleFiles = (e) => {
     const selected = Array.from(e.target.files);
@@ -143,13 +158,16 @@ export default function Facturacion() {
     ].filter(Boolean).join(', ');
     if (dir.trim()) data.append('Dirección Fiscal', dir);
 
-    // Referencia de pago
-    data.append('Referencia de Pago', form.referencia_pago);
+    // Detalles del pago
+    data.append('Método de Pago', form.metodo_pago);
     if (form.concepto) data.append('Concepto', form.concepto);
     if (form.monto) data.append('Monto', form.monto);
     if (form.notas) data.append('Notas adicionales', form.notas);
 
     // Archivos
+    if (constanciaFile) {
+      data.append('Constancia_Situacion_Fiscal', constanciaFile, constanciaFile.name);
+    }
     files.forEach((f, i) => data.append(`Comprobante_${i + 1}`, f, f.name));
 
     try {
@@ -162,6 +180,7 @@ export default function Facturacion() {
         setStatus('success');
         setForm(INITIAL);
         setFiles([]);
+        setConstanciaFile(null);
       } else {
         setStatus('error');
       }
@@ -323,19 +342,24 @@ export default function Facturacion() {
             </div>
           </div>
 
-          {/* ── Referencia de pago ── */}
+          {/* ── Detalles del pago ── */}
           <div className="fac-section">
             <h3 className="fac-section-title">
-              <span className="fac-section-num">03</span> Referencia de pago
+              <span className="fac-section-num">03</span> Detalles del pago
             </h3>
-            <div className="fac-grid fac-grid--2">
-              <Field label="Número de orden / Referencia de pago" required error={errors.referencia_pago}>
-                <input
-                  className="fac-input fac-input--mono"
-                  placeholder="Ej: HCE-2026-00123"
-                  value={form.referencia_pago}
-                  onChange={e => set('referencia_pago', e.target.value)}
-                />
+            <div className="fac-grid fac-grid--3">
+              <Field label="Método de pago" required error={errors.metodo_pago}>
+                <select
+                  className="fac-select"
+                  value={form.metodo_pago}
+                  onChange={e => set('metodo_pago', e.target.value)}
+                >
+                  <option value="">Seleccionar…</option>
+                  <option value="Tarjeta de Crédito / Débito">Tarjeta de Crédito / Débito</option>
+                  <option value="Transferencia Electrónica (SPEI)">Transferencia Electrónica (SPEI)</option>
+                  <option value="Depósito Bancario">Depósito Bancario</option>
+                  <option value="Pago en OXXO / Efectivo">Pago en OXXO / Efectivo</option>
+                </select>
               </Field>
               <Field label="Monto pagado">
                 <input
@@ -345,21 +369,60 @@ export default function Facturacion() {
                   onChange={e => set('monto', e.target.value)}
                 />
               </Field>
+              <Field label="Concepto de facturación">
+                <input
+                  className="fac-input"
+                  placeholder="Ej: Diploma Paris International ECMO 2026"
+                  value={form.concepto}
+                  onChange={e => set('concepto', e.target.value)}
+                />
+              </Field>
             </div>
-            <Field label="Concepto de facturación">
+          </div>
+
+          {/* ── Constancia de Situación Fiscal ── */}
+          <div className="fac-section">
+            <h3 className="fac-section-title">
+              <span className="fac-section-num">04</span> Constancia de Situación Fiscal
+            </h3>
+            <p className="fac-file-hint">
+              Adjunta tu Constancia de Situación Fiscal actualizada (PDF o imagen). Requerido * · Máx. 25 MB.
+            </p>
+
+            <div className={`fac-dropzone ${errors.constancia_file ? 'fac-dropzone--error' : ''}`} style={{ padding: '1.5rem' }}>
               <input
-                className="fac-input"
-                placeholder="Ej: Diploma Paris International ECMO 2026"
-                value={form.concepto}
-                onChange={e => set('concepto', e.target.value)}
+                type="file"
+                accept="image/*,.pdf"
+                style={{ display: 'none' }}
+                id="constancia-upload"
+                onChange={handleConstanciaFile}
               />
-            </Field>
+              <label htmlFor="constancia-upload" style={{ cursor: 'pointer', display: 'block', width: '100%', height: '100%' }}>
+                <div className="fac-drop-icon">📄</div>
+                <p className="fac-drop-text" style={{ margin: '0.5rem 0' }}>
+                  {constanciaFile ? <span>{constanciaFile.name}</span> : <span>Seleccionar Constancia de Situación Fiscal</span>}
+                </p>
+                <p className="fac-drop-sub">PDF, JPG, PNG, WEBP</p>
+              </label>
+            </div>
+            {errors.constancia_file && <span className="fac-error-msg" style={{ display: 'block', marginTop: '0.5rem' }}>{errors.constancia_file}</span>}
+
+            {constanciaFile && (
+              <ul className="fac-file-list" style={{ marginTop: '1rem' }}>
+                <li className="fac-file-item">
+                  <span className="fac-file-icon">📄</span>
+                  <span className="fac-file-name">{constanciaFile.name}</span>
+                  <span className="fac-file-size">({(constanciaFile.size / 1024).toFixed(0)} KB)</span>
+                  <button type="button" className="fac-file-remove" onClick={removeConstanciaFile}>✕</button>
+                </li>
+              </ul>
+            )}
           </div>
 
           {/* ── Comprobante de pago ── */}
           <div className="fac-section">
             <h3 className="fac-section-title">
-              <span className="fac-section-num">04</span> Comprobante de pago
+              <span className="fac-section-num">05</span> Comprobante de pago
             </h3>
             <p className="fac-file-hint">
               Adjunta tu comprobante (captura de pantalla, PDF o imagen). Máx. 5 archivos · 25 MB cada uno.
@@ -401,7 +464,7 @@ export default function Facturacion() {
           {/* ── Notas ── */}
           <div className="fac-section">
             <h3 className="fac-section-title">
-              <span className="fac-section-num">05</span> Notas adicionales
+              <span className="fac-section-num">06</span> Notas adicionales
             </h3>
             <Field label="¿Algo más que debamos saber?">
               <textarea
