@@ -470,7 +470,7 @@ const EcmoSim = () => {
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <input
                       type="text"
-                      placeholder="Código de descuento (Ej: EXPSIM26)"
+                      placeholder="Código de descuento"
                       value={promoInput}
                       onChange={(e) => setPromoInput(e.target.value)}
                       className="sim-modal-input"

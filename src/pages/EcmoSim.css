@@ -541,7 +541,6 @@
   .btn-gaming.mega { font-size: 1.1rem; padding: 1.5rem; }
 }
 
-/* PREMIUM PLANS MODAL STYLE */
 .sim-modal-overlay {
   position: fixed;
   inset: 0;
@@ -552,6 +551,7 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  overflow-y: auto;
   animation: fadeIn 0.3s ease;
 }
 
@@ -561,12 +561,13 @@
   border-radius: 20px;
   width: 100%;
   max-width: 680px;
-  padding: 2.5rem;
+  padding: 2rem;
   position: relative;
   box-shadow: 0 0 40px rgba(251, 197, 49, 0.25), inset 0 0 20px rgba(0,0,0,0.8);
   animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   color: #fff;
   font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
 }
 
 .sim-modal-card.success {
@@ -805,9 +806,24 @@
   to { transform: scale(1); opacity: 1; }
 }
 
+@media (max-height: 820px) {
+  .sim-modal-card {
+    padding: 1.5rem 1.8rem;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .sim-modal-title { font-size: 1.8rem; }
+  .sim-modal-header { margin-bottom: 1.25rem; }
+  .sim-modal-form { gap: 1rem; }
+  .sim-plans-grid { gap: 1rem; }
+}
+
 @media (max-width: 600px) {
-  .sim-modal-card { padding: 1.75rem; }
-  .sim-plans-grid { grid-template-columns: 1fr; }
-  .sim-modal-title { font-size: 1.6rem; }
+  .sim-modal-overlay { padding: 0.75rem; }
+  .sim-modal-card { padding: 1.25rem 1rem; max-height: 95vh; overflow-y: auto; }
+  .sim-plans-grid { grid-template-columns: 1fr; gap: 0.85rem; }
+  .sim-modal-title { font-size: 1.5rem; }
+  .sim-modal-header { margin-bottom: 1rem; }
+  .sim-modal-form { gap: 0.85rem; }
 }
 
