@@ -111,6 +111,8 @@ const EcmoSim = () => {
     telefono: '',
     email: '',
     profesion: '',
+    institucion: '',
+    pais: '',
   });
   const [isSuccessFormSubmitted, setIsSuccessFormSubmitted] = useState(false);
   const [isSubmittingSuccessForm, setIsSubmittingSuccessForm] = useState(false);
@@ -125,7 +127,7 @@ const EcmoSim = () => {
 
   const handleSuccessFormSubmit = async (e) => {
     e.preventDefault();
-    if (!successFormData.nombres.trim() || !successFormData.apellidos.trim() || !successFormData.telefono.trim() || !successFormData.email.trim() || !successFormData.profesion.trim()) {
+    if (!successFormData.nombres.trim() || !successFormData.apellidos.trim() || !successFormData.telefono.trim() || !successFormData.email.trim() || !successFormData.profesion.trim() || !successFormData.institucion.trim() || !successFormData.pais.trim()) {
       setSuccessFormError('Todos los campos son obligatorios.');
       return;
     }
@@ -139,6 +141,8 @@ const EcmoSim = () => {
     formData.append('Correo', successFormData.email.trim());
     formData.append('WhatsApp/Telefono', successFormData.telefono.trim());
     formData.append('Profesion/Especialidad', successFormData.profesion.trim());
+    formData.append('Institucion', successFormData.institucion.trim());
+    formData.append('Pais', successFormData.pais.trim());
     formData.append('Plan Adquirido', successInfo.plan === '4m' ? 'Plan 4 Meses ($250 USD)' : 'Plan 12 Meses ($700 USD)');
 
     try {
@@ -158,7 +162,9 @@ const EcmoSim = () => {
             nombres: successFormData.nombres.trim(),
             apellidos: successFormData.apellidos.trim(),
             telefono: successFormData.telefono.trim(),
-            profesion: successFormData.profesion.trim()
+            profesion: successFormData.profesion.trim(),
+            institucion: successFormData.institucion.trim(),
+            pais: successFormData.pais.trim()
           }),
         }).catch(err => console.error('Error enriching Mailchimp:', err));
 
@@ -449,7 +455,7 @@ const EcmoSim = () => {
                   <div className="sim-plan-meta">
                     <span className="sim-plan-duration">12 MESES</span>
                     <span className="sim-plan-badge-simple">
-                      {appliedPromo ? 'AHORRO MAYOR AL 25%' : 'AHORRA MÁS DEL 20%'}
+                      AHORRA
                     </span>
                   </div>
                   <div className="sim-plan-pricing">
@@ -556,7 +562,7 @@ const EcmoSim = () => {
                     Suscripción activa: <strong>{successInfo.plan === '4m' ? 'Plan 4 Meses' : 'Plan 12 Meses'}</strong>.
                   </p>
                   <p style={{ color: '#FBC531', fontSize: '0.85rem', marginBottom: '1.25rem', fontWeight: 'bold' }}>
-                    ⚠️ Por favor completa tus datos de contacto para generar y enviarte tus accesos de inmediato.
+                    ⚠️ Por favor completa tus datos de contacto. Tu acceso se te enviará a tu correo dentro de 24-72 hrs.
                   </p>
                 </div>
 
@@ -633,6 +639,35 @@ const EcmoSim = () => {
                     />
                   </div>
 
+                  <div className="sim-plans-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                    <div className="sim-input-group">
+                      <label htmlFor="succ-institucion" style={{ fontSize: '0.72rem', color: '#c5c6c7' }}>Institución / Hospital *</label>
+                      <input
+                        id="succ-institucion"
+                        type="text"
+                        required
+                        placeholder="Ej: Hospital General"
+                        value={successFormData.institucion}
+                        onChange={e => setSuccessFormData(prev => ({ ...prev, institucion: e.target.value }))}
+                        className="sim-modal-input"
+                        style={{ padding: '0.55rem 0.85rem', fontSize: '0.82rem', background: '#0a0d12' }}
+                      />
+                    </div>
+                    <div className="sim-input-group">
+                      <label htmlFor="succ-pais" style={{ fontSize: '0.72rem', color: '#c5c6c7' }}>País *</label>
+                      <input
+                        id="succ-pais"
+                        type="text"
+                        required
+                        placeholder="Ej: México"
+                        value={successFormData.pais}
+                        onChange={e => setSuccessFormData(prev => ({ ...prev, pais: e.target.value }))}
+                        className="sim-modal-input"
+                        style={{ padding: '0.55rem 0.85rem', fontSize: '0.82rem', background: '#0a0d12' }}
+                      />
+                    </div>
+                  </div>
+
                   {successFormError && <div className="sim-modal-error" style={{ fontSize: '0.78rem', padding: '0.5rem' }}>{successFormError}</div>}
 
                   {/* Anti-sharing Warning Clause */}
@@ -671,7 +706,7 @@ const EcmoSim = () => {
                   Hemos recibido tus datos con éxito.
                 </p>
                 <p style={{ color: '#9ea2a8', fontSize: '0.9rem', marginBottom: '2.5rem', lineHeight: '1.6' }}>
-                  Estamos dando de alta tu cuenta para el plan de <strong>{successInfo.plan === '4m' ? '4 meses' : '12 meses'}</strong>. En un plazo de **15 a 30 minutos** recibirás tus accesos (usuario y contraseña) a tu correo electrónico y a tu WhatsApp. ¡Prepárate para entrenar!
+                  Estamos dando de alta tu cuenta para el plan de <strong>{successInfo.plan === '4m' ? '4 meses' : '12 meses'}</strong>. Tu acceso se te enviará a tu correo electrónico y a tu WhatsApp dentro de **24-72 hrs**. ¡Prepárate para entrenar!
                 </p>
                 <button onClick={() => { setSuccessInfo(null); setIsSuccessFormSubmitted(false); }} className="btn-gaming">
                   ENTENDIDO

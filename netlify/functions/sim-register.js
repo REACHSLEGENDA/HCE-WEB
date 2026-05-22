@@ -9,7 +9,7 @@ export const handler = async (event) => {
   }
 
   try {
-    const { email, planId, nombres = '', apellidos = '', telefono = '', profesion = '' } = JSON.parse(event.body);
+    const { email, planId, nombres = '', apellidos = '', telefono = '', profesion = '', institucion = '', pais = '' } = JSON.parse(event.body);
 
     if (!email) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Email requerido' }) };
@@ -43,6 +43,7 @@ export const handler = async (event) => {
     if (apellidos) mergeFields.LNAME = apellidos;
     if (telefono) mergeFields.PHONE = telefono;
     if (profesion) mergeFields.MMERGE5 = profesion;
+    if (institucion) mergeFields.MMERGE7 = institucion;
 
     await fetch(`${baseUrl}/members/${hash}`, {
       method: 'PUT',
@@ -83,6 +84,8 @@ export const handler = async (event) => {
       `COMPRA EXITOSA - SIMULADOR ECMO`,
       `PLAN: ${planName}`,
       `STATUS: COMPLETADO`,
+      `INSTITUCIÓN: ${institucion}`,
+      `PAÍS: ${pais}`,
       `TAG: ${MAILCHIMP_TAG}`,
     ].join('\n');
 
