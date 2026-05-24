@@ -14,6 +14,7 @@ import Inscripciones from './pages/Inscripciones';
 import SecretPreview from './pages/SecretPreview';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Facturacion from './pages/Facturacion';
+import Gallery from './pages/Gallery';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -44,6 +45,7 @@ function App() {
         <Route path="/debug-checkout-preview-2026" element={<SecretPreview />} />
         <Route path="/aviso-de-privacidad" element={<PrivacyPolicy />} />
         <Route path="/facturacion" element={<Facturacion />} />
+        <Route path="/galeria" element={<Gallery />} />
       </Routes>
     </Router>
   );

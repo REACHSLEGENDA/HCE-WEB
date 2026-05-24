@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Users, Heart, Activity, Award, Gamepad2, PlayCircle, Hospital, Home as HomeIcon } from 'lucide-react';
+import { X, Users, Heart, Activity, Award, Gamepad2, PlayCircle, Hospital, Home as HomeIcon, Image, Camera } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
 
@@ -107,12 +107,16 @@ const Navbar = () => {
           </div> */}
 
           {/* Galerías */}
-          {/* <div className="menu-section">
+          <div className="menu-section">
             <h3>Galerías</h3>
             <ul className="menu-list">
-              ... items ...
+              <li><Link to="/galeria" onClick={() => toggleNav(false)}><Image size={18} /> Ver Todas</Link></li>
+              <li><Link to="/galeria?tab=cdmx-inc-2024" onClick={() => toggleNav(false)}><Camera size={18} /> CDMX INC 2024</Link></li>
+              <li><Link to="/galeria?tab=cdmx-iner-2025" onClick={() => toggleNav(false)}><Camera size={18} /> CDMX INER 2025</Link></li>
+              <li><Link to="/galeria?tab=ecuador-2024" onClick={() => toggleNav(false)}><Camera size={18} /> Guayaquil 2024</Link></li>
+              <li><Link to="/galeria?tab=santiago-chile-2025" onClick={() => toggleNav(false)}><Camera size={18} /> Chile 2025</Link></li>
             </ul>
-          </div> */}
+          </div>
 
         </div>
       </nav>
