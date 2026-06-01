@@ -1,9 +1,9 @@
 [
   {
     "id": "cdmx-inc-2024",
-    "title": "Diploma CDMX INC (Septiembre 2024)",
-    "shortTitle": "CDMX INC 2024",
-    "description": "Diploma de la experiencia práctica de simulación en el Instituto Nacional de Cardiología Ignacio Chávez (INC).",
+    "title": "Diploma Internacional de Paris en ECMO INC Septiembre 2024",
+    "shortTitle": "CDMX INC (Septiembre 2024)",
+    "description": "Certificación Teórica y Práctica de ECMO en el Instituto Nacional de Cardiología.",
     "hasSubfolders": false,
     "images": [
       "/assets/paginas/galerias HCE/1. GALERIA DIPLOMA CDMX INC SEPTIEMBRE 2024/_DSC4702.jpg",
@@ -194,9 +194,9 @@
   },
   {
     "id": "cdmx-iner-2025",
-    "title": "CDMX INER (Marzo 2025)",
-    "shortTitle": "CDMX INER 2025",
-    "description": "Sesión intensiva de simulación práctica clínica y entrega de diplomas en el Instituto Nacional de Enfermedades Respiratorias (INER).",
+    "title": "Diploma Internacional de Paris INER Marzo 2025",
+    "shortTitle": "CDMX INER (Marzo 2025)",
+    "description": "Certificación Teórica y Práctica de ECMO en CDMX",
     "hasSubfolders": true,
     "subfolders": {
       "diploma": {
@@ -457,9 +457,9 @@
   },
   {
     "id": "ecuador-2024",
-    "title": "ECMO Nursing Guayaquil (Agosto 2024)",
-    "shortTitle": "Guayaquil 2024",
-    "description": "Taller práctico intensivo de ECMO Nursing Care y simulación clínica en Guayaquil, Ecuador.",
+    "title": "ECMO Nursing Care Course Clínica Guayaquil Agosto 2024",
+    "shortTitle": "ECMO Nursing Guayaquil (Agosto 2024)",
+    "description": "Experiencia Teórica y Práctica Presencial en Guayaquil.",
     "hasSubfolders": false,
     "images": [
       "/assets/paginas/galerias HCE/3. GALERIA ECMO NURSING GUAYAQUIL AGOSTO 2024/Ecuador-22ago25-001.jpg",
@@ -588,9 +588,9 @@
   },
   {
     "id": "santiago-chile-2025",
-    "title": "Santiago de Chile (Octubre 2025)",
-    "shortTitle": "Chile 2025",
-    "description": "Experiencia y simulación avanzada de ECMO Sim en Santiago de Chile.",
+    "title": "Diploma Internacional de Paris en ECMO INT Octubre 2025",
+    "shortTitle": "Santiago de Chile (Octubre 2025)",
+    "description": "Certificación Teórica y Práctica de ECMO en Santiago de Chile.",
     "hasSubfolders": false,
     "images": [
       "/assets/paginas/galerias HCE/4. GALERIA SANTIAGO DE CHILE OCTUBRE 2025/1-copy-0.jpg",

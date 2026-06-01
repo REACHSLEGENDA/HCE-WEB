@@ -41,7 +41,7 @@
   line-height: 1.1;
 }
 .fac-gradient {
-  background: linear-gradient(135deg, #00d2ff, #f97316);
+  background: linear-gradient(to right, #0098db 0%, #00b894 30%, #27ae60 55%, #c59b27 80%, #d35400 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

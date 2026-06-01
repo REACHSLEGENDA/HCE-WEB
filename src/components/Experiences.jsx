@@ -3,13 +3,13 @@ import { useInView } from 'react-intersection-observer';
 import { Star, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, Heart, Stethoscope, Activity, Gamepad2, HeartPulse } from 'lucide-react';
 import './Experiences.css';
 
-const ExperienceCard = ({ title, description, link, img, imgClass, badge, badgeClass, delay, icon: Icon }) => {
+const ExperienceCard = ({ title, description, link, img, imgClass, containerClass, badge, badgeClass, delay, icon: Icon }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   
   return (
     <a href={link} ref={ref} className={`exp-premium-card reveal ${inView ? 'active' : ''} ${badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'disabled-card' : ''}`} style={{ transitionDelay: `${delay}s`, pointerEvents: badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'none' : 'auto' }}>
       <div className="card-glass-glow"></div>
-      <div className="exp-img-container">
+      <div className={`exp-img-container ${containerClass || ''}`}>
         {badge && <div className={`status-badge ${badgeClass}`}>{badge}</div>}
         <img src={img} alt={title} className={`exp-main-img ${imgClass || ''}`} />
         <div className="img-overlay-gradient"></div>
@@ -55,6 +55,7 @@ const Experiences = () => {
             description="Domina los criterios de selección para asistencia ventricular y trasplante con simulación HARVI de alta precisión."
             link="/insuficiencia-cardiaca"
             img="/assets/componentes/Generated-Image-March-03-2026-11_28PM.png"
+            containerClass="bg-card-white"
             badge="PRÓXIMAMENTE"
             badgeClass="badge-info"
           />
@@ -66,6 +67,7 @@ const Experiences = () => {
             link="/ecmo-nursing-care"
             img="/assets/componentes/ecmo-nursing-dm.png"
             imgClass="zoom-nursing"
+            containerClass="bg-card-blue"
             badge="Próximamente"
             badgeClass="badge-info"
           />
@@ -73,17 +75,21 @@ const Experiences = () => {
             delay={0.3}
             icon={HeartPulse}
             title="Paris International Diploma in ECMO"
-            description="La especialización en ECMO transforma tu trayectoria. Desarrolla habilidades críticas que no solo potencian tu perfil profesional, sino que redefinen el estándar clínico de todo tu equipo."
+            description="La especialización de mayor prestigio global en ECMO. Desarrolla competencias críticas para liderar equipos de soporte extracorpóreo al más alto nivel clínico."
             link="/paris-diploma-ecmo"
-            img="/assets/componentes/WhatsApp-Image-2026-03-04-at-12.06.38-AM.jpeg"
+            img="https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-25-51-449.png"
+            imgClass="img-paris"
+            containerClass="bg-card-navy"
           />
           <ExperienceCard 
             delay={0.4}
             icon={Gamepad2}
             title="ECMO SIM: Realidad Clínica"
-            description="Fusionamos educación, simulación y tecnología inmersiva de vanguardia. Especialízate en el manejo del paciente crítico en un entorno de alta fidelidad, donde el error es aprendizaje y la seguridad del paciente es la prioridad."
+            description="Simulación de alta fidelidad con tecnología inmersiva de vanguardia. Domina el manejo de escenarios críticos en un entorno clínico interactivo y seguro."
             link="/simulador-ecmo-sim"
-            img="/assets/componentes/ecmosim.png"
+            img="/assets/componentes/ecmosim-logo-new.png"
+            imgClass="img-padded"
+            containerClass="bg-card-sim"
             badge="SIMULADOR"
             badgeClass="badge-warning"
           />

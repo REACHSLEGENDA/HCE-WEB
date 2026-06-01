@@ -15,17 +15,12 @@ const logos = [
 
 const Partners = () => (
   <section className="partners-section">
-    <div className="hce-container partners-header">
+    <div className="partners-header-compact">
       <div className="section-badge">
         <ShieldCheck size={15} />
         Confianza Global
       </div>
-      <h2 className="partners-title">Respaldados por la Excelencia</h2>
-      <p className="partners-sub">
-        Instituciones, Sociedades Científicas y Centros de Prestigio Internacional de los que forman parte nuestros docentes.
-      </p>
     </div>
-
     <div className="partners-marquee-wrap">
       <div className="partners-fade partners-fade--left" />
       <div className="partners-fade partners-fade--right" />

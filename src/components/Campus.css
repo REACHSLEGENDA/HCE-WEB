@@ -85,10 +85,10 @@
 }
 
 .cf-icon {
-  width: 36px;
-  height: 36px;
+  width: 46px;
+  height: 46px;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;

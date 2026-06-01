@@ -1,9 +1,43 @@
 import { useInView } from 'react-intersection-observer';
 import { Sparkles, ArrowRight, BookOpen, Microscope, Users, Award, FlaskConical } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './Instructores.css';
 import { useSEO } from '../hooks/useSEO';
+
+const Linkedin = ({ size = 24, className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect width="4" height="12" x="2" y="9" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+);
+
+const FranceFlag = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="12"
+    viewBox="0 0 3 2"
+    style={{ borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }}
+  >
+    <rect width="1" height="2" fill="#00209F"/>
+    <rect x="1" width="1" height="2" fill="#FFF"/>
+    <rect x="2" width="1" height="2" fill="#F42A38"/>
+  </svg>
+);
 
 const Instructores = () => {
   useSEO({
@@ -28,36 +62,52 @@ const Instructores = () => {
       flag: "🇫🇷",
       image: "/assets/componentes/Alain-Combes.jpg",
       tag: "Intensivista · ECMO",
+      linkedin: "https://www.linkedin.com/in/alain-combes-81534062/",
+      courses: [
+        { name: "Diplomado de París ECMO", path: "/paris-diploma-ecmo" }
+      ]
     },
     {
       id: 2,
       name: "Prof. Matthieu Schmidt",
       country: "Francia",
-      role: "Presidente Científico",
+      role: "Director Científico",
       bio: "Médico de la UCI del Hosp. Pitié-Salpêtrière. Presidente del Comité Científico de EuroELSO (2018–2022). Experto mundial en ECMO-VV.",
       flag: "🇫🇷",
       image: "/assets/componentes/Alain-Combes.png",
       tag: "UCI · EuroELSO",
+      linkedin: "https://www.linkedin.com/in/matthieu-schmidt-b19b6748/",
+      courses: [
+        { name: "Diplomado de París ECMO", path: "/paris-diploma-ecmo" }
+      ]
     },
     {
       id: 3,
       name: "Enf. Hugo Guillou",
       country: "Francia",
-      role: "CEO Practico Santé",
+      role: "Instructor Principal",
       bio: "Enfermero Especialista en ECMO (Pitié-Salpêtrière). Entrenador certificado de Simulación ELSO. Creador de ECMO SIM.",
       flag: "🇫🇷",
       image: "/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-10-1.jpeg",
       tag: "Simulación · Enfermería",
+      linkedin: "https://www.linkedin.com/in/hugo-guillou-022067160/",
+      courses: [
+        { name: "Diplomado de París ECMO", path: "/paris-diploma-ecmo" }
+      ]
     },
     {
       id: 4,
       name: "Enf. Emric Besnard",
       country: "Francia",
-      role: "Presidente Practico Santé",
+      role: "Instructor Principal",
       bio: "Enfermero Especialista en ECMO (Pitié-Salpêtrière). Entrenador certificado de Simulación ELSO. Co-creador de ECMO SIM.",
       flag: "🇫🇷",
       image: "/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-7-1.jpeg",
       tag: "Simulación · Enfermería",
+      linkedin: "https://www.linkedin.com/in/emric-besnard-b8a786221/",
+      courses: [
+        { name: "Diplomado de París ECMO", path: "/paris-diploma-ecmo" }
+      ]
     },
   ];
 
@@ -157,12 +207,40 @@ const Instructores = () => {
                 <div className="inst-card-photo">
                   <div className="inst-card-img" style={{ backgroundImage: `url(${doc.image})` }} />
                   <div className="inst-card-country">
-                    <span>{doc.flag}</span> {doc.country}
+                    <FranceFlag /> {doc.country}
                   </div>
                 </div>
                 <div className="inst-card-body">
-                  <h3 className="inst-card-name">{doc.name}</h3>
+                  <div className="inst-card-header">
+                    <h3 className="inst-card-name">{doc.name}</h3>
+                    {doc.linkedin && (
+                      <a
+                        href={doc.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inst-card-linkedin"
+                        aria-label={`Perfil de LinkedIn de ${doc.name}`}
+                      >
+                        <Linkedin size={16} />
+                      </a>
+                    )}
+                  </div>
+                  <span className="inst-card-role">{doc.role}</span>
                   <p className="inst-card-bio-static">{doc.bio}</p>
+                  
+                  {doc.courses && (
+                    <div className="inst-card-courses">
+                      <span className="inst-courses-label">Imparte:</span>
+                      <div className="inst-courses-list">
+                        {doc.courses.map((course, idx) => (
+                          <Link key={idx} to={course.path} className="inst-course-link">
+                            <span>{course.name}</span>
+                            <ArrowRight size={12} />
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

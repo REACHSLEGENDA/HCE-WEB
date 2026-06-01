@@ -1,12 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useSearchParams } from 'react-router-dom';
-import { Sparkles, Image as ImageIcon, ArrowRight, ArrowLeft, X, Eye, RefreshCw, Calendar, MapPin, Grid, FolderOpen } from 'lucide-react';
+import { Sparkles, Image as ImageIcon, ArrowRight, ArrowLeft, X, Eye, RefreshCw, Calendar, MapPin, Grid, FolderOpen, Download, PlayCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import galleryData from '../data/galleryData.json';
 import { useSEO } from '../hooks/useSEO';
 import './Gallery.css';
+
+const GALLERY_VIDEOS = {
+  'cdmx-inc-2024': [
+    { title: 'INC Teoría y Diploma', url: 'https://www.youtube.com/embed/3FUs6PvyW6U' },
+    { title: 'INC Simulación y Práctica', url: 'https://www.youtube.com/embed/meYNbtSaz0s' }
+  ],
+  'cdmx-iner-2025': [
+    { title: 'CDMX INER (Marzo 2025)', url: 'https://www.youtube.com/embed/UuC_N0CTYDo' }
+  ],
+  'ecuador-2024': [
+    {
+      title: 'ECMO Nursing Guayaquil (Agosto 2024)',
+      url: 'https://www.youtube.com/embed/oeRBmAyWjEE'
+    }
+  ],
+  'santiago-chile-2025': [
+    { title: 'Santiago de Chile (Octubre 2025)', url: 'https://www.youtube.com/embed/h31QPK4TumM' }
+  ]
+};
+
+const PLAYLIST_VIDEO = {
+  title: 'HCE Playlist Completa',
+  link: 'https://youtube.com/playlist?list=PL0LjQ7qCUvsjyR1JJOu1D4tGyt3RDUsQz&si=haLjFSO6d2zV6Ut5'
+};
 
 const Gallery = () => {
   useSEO({
@@ -94,6 +118,25 @@ const Gallery = () => {
   const loadMore = () => {
     setVisibleCount(prev => Math.min(prev + 24, activeImages.length));
   };
+
+  const handleDownload = async (imgUrl) => {
+    try {
+      const response = await fetch(imgUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = imgUrl.split('/').pop() || 'hce-gallery-photo.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.warn('CORS limitation, opening in new tab for manual download:', error);
+      window.open(imgUrl, '_blank');
+    }
+  };
+
 
   const openLightbox = (index) => {
     setLightboxIndex(index);
@@ -228,6 +271,94 @@ const Gallery = () => {
             </div>
           )}
 
+          {/* ── VIDEOS & PLAYLIST SECTION ── */}
+          <div className="gallery-videos-section">
+            <div className="video-section-header">
+              <span className="video-section-badge">
+                <Sparkles size={14} /> Resumen en Video
+              </span>
+              <h3>Revive la Experiencia Teórico-Práctica</h3>
+              <p>Visualiza los momentos más destacados y el bootcamp inmersivo del evento.</p>
+            </div>
+            
+            <div className="video-grid-wrap">
+              {/* Event Specific Videos - Embedded Iframes or Premium Click Cards */}
+              <div className="video-block event-videos">
+                {GALLERY_VIDEOS[activeTab]?.map((vid, idx) => (
+                  vid.isExternal ? (
+                    <a
+                      key={idx}
+                      href={vid.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="video-card-link-container"
+                    >
+                      <h4 className="video-card-title">
+                        <PlayCircle size={16} /> {vid.title}
+                      </h4>
+                      <div className="video-thumbnail-wrapper">
+                        <img
+                          src={vid.cover}
+                          alt={vid.title}
+                          className="video-thumbnail-img"
+                        />
+                        <div className="video-play-overlay">
+                          <div className="video-play-circle">
+                            <PlayCircle size={44} />
+                          </div>
+                          <span className="video-play-text">Ver Resumen en YouTube</span>
+                        </div>
+                      </div>
+                    </a>
+                  ) : (
+                    <div key={idx} className="video-card-container">
+                      <h4 className="video-card-title">
+                        <PlayCircle size={16} /> {vid.title}
+                      </h4>
+                      <div className="video-iframe-wrapper">
+                        <iframe
+                          src={vid.url}
+                          title={vid.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                    </div>
+                  )
+                ))}
+              </div>
+
+              {/* General Playlist - Click-to-Link Card */}
+              <div className="video-block playlist-video">
+                <a
+                  href={PLAYLIST_VIDEO.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="video-card-link-container playlist-card"
+                >
+                  <span className="playlist-badge">PLAYLIST COMPLETA HCE</span>
+                  <h4 className="video-card-title">
+                    <PlayCircle size={16} /> {PLAYLIST_VIDEO.title}
+                  </h4>
+                  <div className="video-thumbnail-wrapper">
+                    <img
+                      src="https://i.ytimg.com/vi/h31QPK4TumM/hqdefault.jpg"
+                      alt={PLAYLIST_VIDEO.title}
+                      className="video-thumbnail-img"
+                    />
+                    <div className="video-play-overlay">
+                      <div className="video-play-circle video-play-circle--gold">
+                        <PlayCircle size={44} />
+                      </div>
+                      <span className="video-play-text">Abrir Playlist en YouTube</span>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+
           {/* Images Grid */}
           {activeImages.length > 0 ? (
             <>
@@ -297,8 +428,18 @@ const Gallery = () => {
               className="lightbox-image"
             />
             <div className="lightbox-caption">
-              <h4>{activeGallery.title} {activeGallery.hasSubfolders ? `· ${activeGallery.subfolders[activeSubfolder]?.title}` : ''}</h4>
-              <p>Foto {lightboxIndex + 1} de {activeImages.length}</p>
+              <div className="lightbox-caption-main">
+                <h4>{activeGallery.title} {activeGallery.hasSubfolders ? `· ${activeGallery.subfolders[activeSubfolder]?.title}` : ''}</h4>
+                <p>Foto {lightboxIndex + 1} de {activeImages.length}</p>
+              </div>
+              <button
+                className="lightbox-download-btn"
+                onClick={(e) => { e.stopPropagation(); handleDownload(activeImages[lightboxIndex]); }}
+                title="Descargar imagen"
+              >
+                <Download size={18} />
+                <span>Descargar</span>
+              </button>
             </div>
           </div>
 

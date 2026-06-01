@@ -22,13 +22,13 @@ const Home = () => {
     <>
       <Navbar />
       <Hero />
+      <Partners />
       <Experiences />
       <Campus />
       <Instructors />
       <Impact />
       <Testimonials />
       <Webinars />
-      <Partners />
       <Footer />
     </>
   );

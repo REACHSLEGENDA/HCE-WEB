@@ -111,10 +111,10 @@ const Navbar = () => {
             <h3>Galerías</h3>
             <ul className="menu-list">
               <li><Link to="/galeria" onClick={() => toggleNav(false)}><Image size={18} /> Ver Todas</Link></li>
-              <li><Link to="/galeria?tab=cdmx-inc-2024" onClick={() => toggleNav(false)}><Camera size={18} /> CDMX INC 2024</Link></li>
-              <li><Link to="/galeria?tab=cdmx-iner-2025" onClick={() => toggleNav(false)}><Camera size={18} /> CDMX INER 2025</Link></li>
-              <li><Link to="/galeria?tab=ecuador-2024" onClick={() => toggleNav(false)}><Camera size={18} /> Guayaquil 2024</Link></li>
-              <li><Link to="/galeria?tab=santiago-chile-2025" onClick={() => toggleNav(false)}><Camera size={18} /> Chile 2025</Link></li>
+              <li><Link to="/galeria?tab=cdmx-inc-2024" onClick={() => toggleNav(false)}><Camera size={18} /> CDMX INC (Septiembre 2024)</Link></li>
+              <li><Link to="/galeria?tab=cdmx-iner-2025" onClick={() => toggleNav(false)}><Camera size={18} /> CDMX INER (Marzo 2025)</Link></li>
+              <li><Link to="/galeria?tab=ecuador-2024" onClick={() => toggleNav(false)}><Camera size={18} /> ECMO Nursing Guayaquil (Agosto 2024)</Link></li>
+              <li><Link to="/galeria?tab=santiago-chile-2025" onClick={() => toggleNav(false)}><Camera size={18} /> Santiago de Chile (Octubre 2025)</Link></li>
             </ul>
           </div>
 

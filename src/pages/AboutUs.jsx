@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Globe, Users, Activity, Shield, Sparkles, ArrowRight, PlayCircle, Award, Target, MonitorPlay, Zap, Gamepad2, Laptop, GraduationCap, CheckCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -8,6 +8,7 @@ import './AboutUs.css';
 import { useSEO } from '../hooks/useSEO';
 
 const AboutUs = () => {
+  const [showVideoModal, setShowVideoModal] = useState(false);
   useSEO({
     title: 'Quiénes Somos',
     description: 'Conoce HCE, nuestra misión, visión y a nuestra fundadora la Dra. Jenifer Trejo Guerra. Formamos a la élite médica en cuidados críticos y ECMO.',
@@ -53,14 +54,12 @@ const AboutUs = () => {
             </p>
 
             <div className="au-hero-actions">
-              <a 
-                href="https://youtu.be/yxIz2LKxuwg?si=csFc3oMbY9WQVdME"
-                target="_blank"
-                rel="noreferrer"
+              <button 
+                onClick={() => setShowVideoModal(true)}
                 className="au-btn au-btn-primary"
               >
                 Conoce a HCE <ArrowRight size={18} />
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -102,23 +101,6 @@ const AboutUs = () => {
                 <div className="au-q-feat">
                   <div className="au-q-feat-icon"><Globe size={18} /></div>
                   <p><strong>Impacto Regional:</strong> Preparamos a los equipos médicos líderes de Latinoamérica con estándares internacionales.</p>
-                </div>
-              </div>
-
-              <div className="au-que-stats">
-                <div className="au-que-stat">
-                   <div className="au-stat-mini-icon"><Users size={14} /></div>
-                  <strong>2,000+</strong><span>Alumnos Profesionales</span>
-                </div>
-                <div className="au-que-stat-divider" />
-                <div className="au-que-stat">
-                   <div className="au-stat-mini-icon"><Globe size={14} /></div>
-                  <strong>15+</strong><span>Países con presencia activa</span>
-                </div>
-                <div className="au-que-stat-divider" />
-                <div className="au-que-stat">
-                   <div className="au-stat-mini-icon"><Award size={14} /></div>
-                  <strong>4</strong><span>Experiencias</span>
                 </div>
               </div>
             </div>
@@ -457,6 +439,25 @@ const AboutUs = () => {
       </section>
 
       <Footer />
+      
+      {showVideoModal && (
+        <div className="au-video-modal-overlay" onClick={() => setShowVideoModal(false)}>
+          <div className="au-video-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="au-video-modal-close" onClick={() => setShowVideoModal(false)}>
+              &times;
+            </button>
+            <div className="au-video-responsive">
+              <iframe
+                src="https://www.youtube.com/embed/yxIz2LKxuwg?autoplay=1"
+                title="Video Corporativo HCE"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

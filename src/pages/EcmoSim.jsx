@@ -262,15 +262,19 @@ const EcmoSim = () => {
             <div className="sim-shorts-wrapper">
               <div className="sim-short-item">
                 <iframe src="https://www.youtube.com/embed/-C9U8-URKnE" allowFullScreen title="Short 1"></iframe>
+                <div className="sim-short-caption">Interfaz &amp; Navegación 3D</div>
               </div>
               <div className="sim-short-item">
                 <iframe src="https://www.youtube.com/embed/iuhlwMcpzDs" allowFullScreen title="Short 2"></iframe>
+                <div className="sim-short-caption">Manejo de Alarmas Clínicas</div>
               </div>
               <div className="sim-short-item">
                 <iframe src="https://www.youtube.com/embed/ejQidcKJN5M" allowFullScreen title="Short 3"></iframe>
+                <div className="sim-short-caption">Fisiología en Tiempo Real</div>
               </div>
               <div className="sim-short-item">
                 <iframe src="https://www.youtube.com/embed/1l0jcR4utro" allowFullScreen title="Short 4"></iframe>
+                <div className="sim-short-caption">Consola &amp; Flujo de Trabajo</div>
               </div>
             </div>
           </div>

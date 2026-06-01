@@ -24,19 +24,19 @@ const Campus = () => {
           
           <div className="campus-features-list">
             <div className="c-feature-item">
-              <div className="cf-icon"><Zap size={18} /></div>
+              <div className="cf-icon"><Zap size={22} /></div>
               <span>Acceso 24/7</span>
             </div>
             <div className="c-feature-item">
-              <div className="cf-icon"><Smartphone size={18} /></div>
+              <div className="cf-icon"><Smartphone size={22} /></div>
               <span>App Móvil</span>
             </div>
             <div className="c-feature-item">
-              <div className="cf-icon"><Globe size={18} /></div>
+              <div className="cf-icon"><Globe size={22} /></div>
               <span>Comunidad internacional</span>
             </div>
             <div className="c-feature-item">
-              <div className="cf-icon"><Layout size={18} /></div>
+              <div className="cf-icon"><Layout size={22} /></div>
               <span>Recursos exclusivos</span>
             </div>
           </div>

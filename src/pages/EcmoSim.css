@@ -3,14 +3,18 @@
 
 .ecmo-sim-page {
   background-color: #0b0c10;
-  color: #c5c6c7;
+  color: #ffffff;
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
 }
 
 .sim-neon-text {
-  color: #FBC531;
-  text-shadow: 0 0 10px rgba(251, 197, 49, 0.4), 0 0 20px rgba(251, 197, 49, 0.2);
+  background: linear-gradient(135deg, #00d2ff 0%, #00bc8c 45%, #fbc531 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent !important;
+  filter: drop-shadow(0 2px 12px rgba(0, 210, 255, 0.45));
 }
 
 .text-neon { color: #FBC531; }
@@ -129,63 +133,90 @@
 /* HERO */
 .sim-hero {
   position: relative;
-  min-height: 90vh;
+  min-height: 92vh;
   display: flex;
   align-items: center;
   background: url('/assets/paginas/1920x1080_HomeEcmoSim.jpg') no-repeat center center / cover;
   padding-top: 100px;
+  overflow: hidden;
 }
 
 .sim-hero::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #0b0c10 0%, rgba(11, 12, 16, 0.9) 50%, transparent 100%);
+  background:
+    linear-gradient(to right, #0b0c10 0%, #0b0c10 38%, rgba(11, 12, 16, 0.85) 60%, rgba(11, 12, 16, 0.1) 100%),
+    linear-gradient(to bottom, rgba(11, 12, 16, 0.5) 0%, transparent 30%, transparent 70%, rgba(11, 12, 16, 0.7) 100%);
   z-index: 1;
+}
+
+/* Cyber-grid dynamic high-tech mask overlay */
+.sim-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0, 210, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 210, 255, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: left center;
+  mask-image: radial-gradient(ellipse at left, black 25%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at left, black 25%, transparent 75%);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .sim-hero-content {
   position: relative;
-  z-index: 2;
-  max-width: 650px;
+  z-index: 5;
+  max-width: 680px;
 }
 
 .sim-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(251, 197, 49, 0.1);
-  color: #FBC531;
-  border: 1px solid rgba(251, 197, 49, 0.3);
-  font-weight: 700;
-  font-size: 0.85rem;
-  letter-spacing: 2px;
-  margin-bottom: 1.5rem;
+  background: rgba(0, 210, 255, 0.1);
+  color: #00d2ff;
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 2.5px;
+  padding: 0.4rem 1rem;
+  border-radius: 100px;
+  margin-bottom: 1.6rem;
+  text-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
 }
 
 .sim-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 5.5rem;
+  font-size: clamp(3rem, 6.5vw, 5.8rem);
   font-weight: 900;
   color: white;
   margin-bottom: 1.5rem;
-  line-height: 1;
+  line-height: 0.95;
   text-transform: uppercase;
   letter-spacing: -2px;
 }
 
 .sim-subtitle {
-  font-size: 1.25rem;
-  line-height: 1.7;
-  color: #c5c6c7;
-  margin-bottom: 3rem;
+  font-size: 1.2rem;
+  line-height: 2.0;
+  color: #ffffff !important;
+  opacity: 1;
+  margin-bottom: 3.2rem;
+  letter-spacing: 0.2px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  max-width: 640px;
 }
 
 .sim-cta-hint {
   font-size: 0.9rem;
-  color: rgba(197, 198, 199, 0.6);
+  color: rgba(255, 255, 255, 0.75);
   margin-top: 1rem;
   font-style: italic;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* FEATURES SECTION */
@@ -200,8 +231,9 @@
   margin-bottom: 5rem;
 }
 .sim-section-header p {
-  font-size: 1.2rem;
-  color: #8a8d91;
+  font-size: 1.25rem;
+  color: #e2e8f0;
+  line-height: 1.8;
 }
 
 .sim-feature-grid {
@@ -264,9 +296,11 @@
   letter-spacing: -0.5px;
 }
 .sim-f-content p {
-  font-size: 1.1rem;
-  line-height: 1.7;
-  color: #9ea2a8;
+  font-size: 1.15rem;
+  line-height: 1.85;
+  color: #ffffff !important;
+  opacity: 0.95;
+  letter-spacing: 0.15px;
 }
 
 /* CINEMA SECTION */
@@ -302,30 +336,53 @@
 .sim-shorts-wrapper {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-  max-width: 1000px;
+  gap: 2rem;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 .sim-short-item {
-  aspect-ratio: 9/16;
-  background: #000;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(251, 197, 49, 0.2);
-  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-radius: 16px;
+  overflow: visible;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sim-short-item:hover {
   transform: translateY(-8px);
-  border-color: #FBC531;
-  box-shadow: 0 10px 20px rgba(251, 197, 49, 0.1);
 }
 
 .sim-short-item iframe {
   width: 100%;
-  height: 100%;
-  border: none;
+  aspect-ratio: 9/16;
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  border-radius: 14px;
+  background: #000;
+  display: block;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sim-short-item:hover iframe {
+  border-color: rgba(0, 210, 255, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 210, 255, 0.12);
+}
+
+.sim-short-caption {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #00d2ff;
+  opacity: 0.9;
+  padding: 0.2rem 0;
+  transition: opacity 0.3s ease;
+}
+
+.sim-short-item:hover .sim-short-caption {
+  opacity: 1;
 }
 
 .sim-cinema-footer {
@@ -394,8 +451,10 @@
   margin-bottom: 1rem;
 }
 .sim-mode-info p {
-  color: #9ea2a8;
-  font-size: 0.95rem;
+  color: #ffffff !important;
+  opacity: 0.95;
+  font-size: 1rem;
+  line-height: 1.7;
   margin-bottom: 1.5rem;
   min-height: 60px;
 }
@@ -513,8 +572,10 @@
 }
 
 .sim-final-box p {
-  font-size: 1.2rem;
-  color: #c5c6c7;
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: #ffffff !important;
+  opacity: 0.95;
   margin-bottom: 3rem;
 }
 
@@ -536,9 +597,16 @@
   .sim-title { font-size: 3.5rem; }
   .sim-h2 { font-size: 2.2rem; }
   .sim-modes-wrapper { grid-template-columns: 1fr; }
-  .sim-shorts-wrapper { grid-template-columns: 1fr 1fr; }
+  .sim-shorts-wrapper { grid-template-columns: 1fr 1fr; gap: 1rem; }
   .btn-gaming { width: 100%; justify-content: center; }
   .btn-gaming.mega { font-size: 1.1rem; padding: 1.5rem; }
+  .sim-subtitle { font-size: 1.05rem; }
+}
+
+@media (max-width: 480px) {
+  .sim-shorts-wrapper { grid-template-columns: 1fr; max-width: 280px; }
+  .sim-title { font-size: 2.8rem; }
+  .sim-hero { min-height: 80vh; }
 }
 
 .sim-modal-overlay {

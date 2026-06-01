@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, Calendar, Clock, Sparkles, MapPin, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Calendar, Clock, Sparkles, MapPin, ExternalLink, BookOpen, Activity, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './ParisNewDesign.css';
 import Navbar from '../Navbar';
@@ -294,6 +294,43 @@ const ParisNewDesign = () => {
                 </div>
             </section>
 
+            {/* SECTION 1.5: WHY PARIS DIPLOMA */}
+            <section className="why-paris-section reveal">
+                <div className="container">
+                    <div className="why-header">
+                        <div className="section-title">
+                            ¿Por qué el <span className="gradient-text">Paris Diploma</span>?
+                        </div>
+                    </div>
+                    
+                    <div className="why-grid">
+                        <div className="why-card">
+                            <div className="why-icon-wrap">
+                                <BookOpen size={28} />
+                            </div>
+                            <h3 className="why-card-title">Faculty Internacional</h3>
+                            <p className="why-card-desc">Aprende de quienes escribieron las guías</p>
+                        </div>
+                        
+                        <div className="why-card">
+                            <div className="why-icon-wrap">
+                                <Activity size={28} />
+                            </div>
+                            <h3 className="why-card-title">Simulación de Élite</h3>
+                            <p className="why-card-desc">Tecnología que no encontrarás en otro lugar.</p>
+                        </div>
+                        
+                        <div className="why-card">
+                            <div className="why-icon-wrap">
+                                <Globe size={28} />
+                            </div>
+                            <h3 className="why-card-title">Red Global</h3>
+                            <p className="why-card-desc">Conecta con especialistas de todo el mundo.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* SECTION 2: EXPERIENCE LEAD */}
             <section className="experience-lead reveal">
                 <div className="container">
@@ -434,7 +471,7 @@ const ParisNewDesign = () => {
                             </div>
                         </div>
                         <div className="video-text-side reveal">
-                            <div className="h2-style" style={{ color: 'var(--primary)', fontSize: '3.5rem', lineHeight: '1', marginBottom: '2rem', fontWeight: 900 }}>
+                            <div className="h2-style" style={{ color: 'var(--primary)', fontSize: '3.5rem', lineHeight: '1.15', marginBottom: '2rem', fontWeight: 900 }}>
                                 Innovación en <br />
                                 <span className="gradient-text">Educación de Élite</span>
                             </div>

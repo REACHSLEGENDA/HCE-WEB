@@ -292,6 +292,7 @@
 }
 
 .paris-redesign .section-title {
+    font-family: 'Outfit', sans-serif !important;
     font-size: 2.8rem;
     margin-bottom: 2rem;
     color: var(--primary);
@@ -299,6 +300,7 @@
 }
 
 .paris-redesign .gradient-text {
+    font-family: 'Outfit', sans-serif !important;
     background: var(--gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -566,7 +568,7 @@
     font-size: 2.5rem;
     line-height: 1.2;
     margin-bottom: 2rem;
-    font-family: 'Outfit';
+    font-family: 'Outfit', sans-serif;
 }
 
 .paris-redesign .experience-lead-img img {
@@ -865,7 +867,7 @@
     border-radius: 20px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     font-weight: 800;
-    font-family: 'Outfit';
+    font-family: 'Outfit', sans-serif;
     color: var(--primary);
     z-index: 3;
     animation: floating 3s ease-in-out infinite;
@@ -1129,4 +1131,95 @@
 @media (max-width: 480px) {
     .paris-redesign .sede-v2-actions { flex-direction: column; }
     .paris-redesign .sede-v2-actions .btn { width: 100%; text-align: center; }
+}
+
+/* --- Why Paris Section --- */
+.paris-redesign .why-paris-section {
+    background-color: var(--bg-muted);
+    padding: 6rem 0;
+    border-top: 1px solid rgba(0, 71, 255, 0.04);
+    border-bottom: 1px solid rgba(0, 71, 255, 0.04);
+}
+
+.paris-redesign .why-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.paris-redesign .why-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+}
+
+.paris-redesign .why-card {
+    background: var(--bg-light);
+    padding: 3rem 2.2rem;
+    border-radius: 24px;
+    border: 1px solid rgba(0, 71, 255, 0.06);
+    box-shadow: 0 10px 30px rgba(10, 26, 47, 0.02);
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.paris-redesign .why-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 71, 255, 0.08);
+    border-color: rgba(0, 71, 255, 0.18);
+}
+
+.paris-redesign .why-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: #eff6ff;
+    color: #0047FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.8rem;
+    transition: var(--transition);
+}
+
+.paris-redesign .why-card:hover .why-icon-wrap {
+    transform: scale(1.1) rotate(5deg);
+    background: linear-gradient(135deg, #0047FF 0%, #FF0000 100%);
+    color: white;
+    box-shadow: 0 8px 20px rgba(0, 71, 255, 0.2);
+}
+
+.paris-redesign .why-card-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 0 0 0.8rem;
+    font-family: 'Outfit', sans-serif;
+}
+
+.paris-redesign .why-card-desc {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin: 0;
+}
+
+@media (max-width: 992px) {
+    .paris-redesign .why-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .paris-redesign .why-grid {
+        grid-template-columns: 1fr;
+        gap: 1.8rem;
+    }
+    
+    .paris-redesign .why-card {
+        padding: 2.5rem 1.5rem;
+    }
 }
