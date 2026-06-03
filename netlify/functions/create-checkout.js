@@ -92,7 +92,9 @@ export const handler = async (event) => {
     const mxnToUnit = (mxn, isBase = false) => {
       let finalMXN = mxn;
       if (isBase) {
-        if (promoCode === 'HCE-INERPARIS2026') {
+        if (promoCode === 'HCEPRACTICA26') {
+          finalMXN = 18500;
+        } else if (promoCode === 'HCE-INERPARIS2026') {
           finalMXN = Math.floor(mxn * 0.7);
         } else if (promoCode === 'HCE10MSI') {
           finalMXN = Math.floor(mxn * 0.9);
@@ -141,7 +143,9 @@ export const handler = async (event) => {
     // Codificar datos del pago en la URL de éxito para no depender de localStorage
     const baseAmount = PRICES_MXN[perfil];
     let discountedBase = baseAmount;
-    if (promoCode === 'HCE-INERPARIS2026') {
+    if (promoCode === 'HCEPRACTICA26') {
+      discountedBase = 18500;
+    } else if (promoCode === 'HCE-INERPARIS2026') {
       discountedBase = Math.floor(baseAmount * 0.7);
     } else if (promoCode === 'HCE10MSI') {
       discountedBase = Math.floor(baseAmount * 0.9);

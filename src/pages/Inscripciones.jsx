@@ -111,6 +111,9 @@ export default function Inscripciones() {
         setAppliedPromo(null);
         setApiError('El código PERFUWEEK solo es válido del 6 al 10 de Mayo.');
       }
+    } else if (code === 'HCEPRACTICA26') {
+      setAppliedPromo({ code, discount: 0, type: 'fixed_price', fixedPrice: 18500 });
+      setApiError('');
     } else {
       setAppliedPromo(null);
       if (promoInput.trim()) setApiError('Código no válido');
@@ -120,7 +123,7 @@ export default function Inscripciones() {
   const availableExtras = perfil ? PROFILES[perfil].extras.map((id) => ({ id, ...EXTRA_CATALOG[id] })) : [];
   const rawBase = perfil ? PROFILES[perfil].price : 0;
   const baseDiscount = (perfil && appliedPromo) ? Math.floor(rawBase * appliedPromo.discount) : 0;
-  const baseMXN = rawBase - baseDiscount;
+  const baseMXN = appliedPromo?.type === 'fixed_price' ? appliedPromo.fixedPrice : rawBase - baseDiscount;
   
   const extrasMXN = [...extras].reduce((s, id) => s + EXTRA_CATALOG[id].price, 0);
   const totalMXN = baseMXN + extrasMXN;
