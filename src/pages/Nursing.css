@@ -18,7 +18,7 @@
 .n-hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url('/assets/componentes/06_HCE Banners Programas_ECMO Nursing.png');
+  background-image: url('/assets/componentes/nursing.png');
   background-size: 80% auto;
   background-position: right 5% center;
   background-repeat: no-repeat;
