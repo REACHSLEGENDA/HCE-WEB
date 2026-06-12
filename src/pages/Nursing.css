@@ -12,15 +12,15 @@
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  min-height: 88vh;
+  min-height: 95vh;
 }
 
 .n-hero-bg {
   position: absolute;
   inset: 0;
   background-image: url('/assets/componentes/nursing.png');
-  background-size: 520px auto;
-  background-position: right -60px center;
+  background-size: cover;
+  background-position: center right;
   background-repeat: no-repeat;
   z-index: 1;
 }
