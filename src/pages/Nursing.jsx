@@ -145,79 +145,296 @@ const Nursing = () => {
         </div>
       </section>
 
-      {/* Experience Section */}
-      <section className="n-experience-section section-padding">
+      {/* 1. Metodología — "Cómo aprenderás" */}
+      <section className="n-sec-padding n-methodology-section">
         <div className="hce-container">
-          <div className="n-section-header">
-            <span className="section-badge">PROGRAMA DE ALTO RENDIMIENTO</span>
-            <h2 className="n-title">Ecosistema de <span className="red-text">Formación.</span></h2>
+          <div className="n-sec-header center">
+            <span className="n-sec-badge">METODOLOGÍA</span>
+            <h2 className="n-sec-title">Un método diseñado por enfermería, validado por la evidencia</h2>
+            <p className="n-sec-subtitle">Estructura pedagógica optimizada para el dominio práctico de la terapia de soporte vital extracorpóreo.</p>
           </div>
 
-          <div className="n-training-grid">
-            <div className="n-train-card featured">
-              <div className="n-icon-box"><MonitorPlay size={32} /></div>
-              <span className="n-card-badge">+ 20 profesores</span>
-              <h3>Experiencia Teórica Virtual</h3>
-              <p>Inmersión de aprendizaje asincrónica y sincrónica virtual, diseñada para adaptarse a tu ritmo de vida profesional sin sacrificar la profundidad académica.</p>
-              <button className="n-card-cta" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscripciones Abiertas <ArrowRight size={14} /></button>
+          <div className="n-methodology-grid">
+            {/* Card 1 */}
+            <div className="n-card-base n-phase-card">
+              <div className="n-phase-top">
+                <div className="n-circle-icon">
+                  <BookOpen size={26} />
+                </div>
+                <span className="n-phase-num">01</span>
+              </div>
+              <h3>Fase asincrónica</h3>
+              <p><strong>"Aprende a tu ritmo"</strong>: Plataforma flexible que respeta tus turnos de trabajo, con acceso completo a una biblioteca de guías ELSO y consensos internacionales.</p>
             </div>
-            <div className="n-train-card">
-              <div className="n-icon-box"><BookOpen size={32} /></div>
-              <h3>Experiencia Teórica Presencial</h3>
-              <p>Ponencias Magistrales con ponentes profesionales de enfermería reconocidos a nivel internacional.</p>
-              <button className="n-card-cta secondary">Consultar Sedes</button>
+
+            {/* Card 2 */}
+            <div className="n-card-base n-phase-card">
+              <div className="n-phase-top">
+                <div className="n-circle-icon">
+                  <UsersRound size={26} />
+                </div>
+                <span className="n-phase-num">02</span>
+              </div>
+              <h3>Sesiones en vivo</h3>
+              <p><strong>"Consolida con expertos"</strong>: Tutorías en tiempo real dirigidas a la resolución de dudas, análisis exhaustivo de casos clínicos y perlas clínicas clave de especialistas.</p>
             </div>
-            <div className="n-train-card">
-              <div className="n-icon-box"><Layers size={32} /></div>
-              <h3>Experiencia Práctica Presencial</h3>
-              <p>Simulaciones de alta fidelidad con expertos reconocidos a nivel internacional.</p>
-              <button className="n-card-cta secondary">Próximamente</button>
+
+            {/* Card 3 */}
+            <div className="n-card-base n-phase-card">
+              <div className="n-phase-top">
+                <div className="n-circle-icon">
+                  <BrainCircuit size={26} />
+                </div>
+                <span className="n-phase-num">03</span>
+              </div>
+              <h3>Simulación clínica</h3>
+              <p><strong>"Practica sin riesgo"</strong>: Práctica deliberada con simulaciones de fidelidad progresiva, donde resolverás complicaciones mecánicas y clínicas reales en un entorno controlado y seguro.</p>
             </div>
           </div>
 
-          <div className="n-training-footer sales">
-            <p>Asegura tu cupo en la certificación líder en cuidados críticos ECMO. <strong>Cupos limitados por cohorte.</strong></p>
-            <button className="n-sales-btn" onClick={() => navigate('/inscripciones-ecmo-nursing')}>
-              Inscribirme al Curso Ahora
-            </button>
+          <div className="n-methodology-footer">
+            "Liderado bajo un enfoque par a par: enfermeros especialistas en ECMO como tus instructores."
           </div>
+        </div>
+      </section>
 
-          <div className="n-brief-panel">
-            <div className="n-panel-item">
-              <div className="n-panel-head"><Target size={24} /> <h3>Propuesta de Valor:</h3></div>
-              <p>Elevar los estándares de seguridad y eficiencia operativa mediante la especialización avanzada en terapias extracorpóreas.</p>
+      {/* 2. Banda de cifras de impacto */}
+      <section className="n-stats-band">
+        <div className="hce-container">
+          <div className="n-stats-grid">
+            <div className="n-stat-card">
+              <span className="n-stat-num">86–88%</span>
+              <span className="n-stat-label">del tiempo de atención directa al paciente en ECMO lo brinda enfermería.</span>
+            </div>
+            <div className="n-stat-card">
+              <span className="n-stat-num">1:1</span>
+              <span className="n-stat-label">ratio ideal para la atención de un paciente en soporte ECMO en la UCI.</span>
+            </div>
+            <div className="n-stat-card">
+              <span className="n-stat-num">+20</span>
+              <span className="n-stat-label">expertos internacionales acompañando activamente tu formación.</span>
+            </div>
+            <div className="n-stat-card">
+              <span className="n-stat-num">2 meses</span>
+              <span className="n-stat-label">programa estructurado de aprendizaje híbrido con inmersión práctica final.</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Outcomes Section */}
-      <section className="n-outcomes-section">
-        <div className="n-outcomes-bg"></div>
+      {/* 3. Qué lograrás al terminar */}
+      <section className="n-sec-padding">
         <div className="hce-container">
-          <div className="n-section-header light">
-            <span className="section-badge">ROI & OUTCOMES</span>
-            <h2 className="n-title-white">Valor Clínico e <span className="red-text">Institucional</span></h2>
+          <div className="n-sec-header">
+            <span className="n-sec-badge">RESULTADOS</span>
+            <h2 className="n-sec-title">Al finalizar el curso serás capaz de:</h2>
+            <p className="n-sec-subtitle">Competencias críticas que integrarás a tu práctica clínica diaria.</p>
           </div>
 
-          <div className="n-outcomes-grid">
-            <div className="n-outcome-card">
-              <div className="n-o-num">01</div>
-              <div className="n-o-icon"><BrainCircuit size={32} /></div>
-              <h3>Liderazgo Estratégico</h3>
-              <p>Rol clave en equipos multidisciplinarios con visión de liderazgo en cuidados críticos avanzados.</p>
+          <div className="n-outcomes-list-grid">
+            <div className="n-outcome-list-item">
+              <div className="n-outcome-icon-wrapper">
+                <CheckCircle size={16} strokeWidth={3} />
+              </div>
+              <div className="n-outcome-text">
+                <h4>Fisiología y Hemodinamia</h4>
+                <p>Comprender a profundidad la fisiología y hemodinamia de las modalidades V-V y V-A, diferenciando con precisión sus indicaciones clínicas.</p>
+              </div>
             </div>
-            <div className="n-outcome-card">
-              <div className="n-o-num">02</div>
-              <div className="n-o-icon"><ShieldAlert size={32} /></div>
-              <h3>Eficiencia y Seguridad</h3>
-              <p>Optimización de protocolos ELSO para reducir complicaciones y mejorar la seguridad del paciente.</p>
+
+            <div className="n-outcome-list-item">
+              <div className="n-outcome-icon-wrapper">
+                <CheckCircle size={16} strokeWidth={3} />
+              </div>
+              <div className="n-outcome-text">
+                <h4>Monitoreo del Circuito</h4>
+                <p>Ejecutar protocolos estandarizados de monitoreo de componentes (consola, bomba centrífuga y oxigenador) bajo lineamientos internacionales.</p>
+              </div>
             </div>
-            <div className="n-outcome-card">
-              <div className="n-o-num">03</div>
-              <div className="n-o-icon"><TrendingUp size={32} /></div>
-              <h3>Cultura de Excelencia</h3>
-              <p>Fisología y toma de decisiones basadas en evidencia científica y simulación constante.</p>
+
+            <div className="n-outcome-list-item">
+              <div className="n-outcome-icon-wrapper">
+                <CheckCircle size={16} strokeWidth={3} />
+              </div>
+              <div className="n-outcome-text">
+                <h4>Detección de Complicaciones</h4>
+                <p>Detectar de forma precoz complicaciones clínicas (hemólisis, sangrados) y mecánicas (falla de bomba, embolismo aéreo, falla de oxigenador).</p>
+              </div>
+            </div>
+
+            <div className="n-outcome-list-item">
+              <div className="n-outcome-icon-wrapper">
+                <CheckCircle size={16} strokeWidth={3} />
+              </div>
+              <div className="n-outcome-text">
+                <h4>Resolución de Crisis</h4>
+                <p>Resolver situaciones críticas en equipo multidisciplinario, reduciendo al mínimo la latencia de respuesta ante emergencias.</p>
+              </div>
+            </div>
+
+            <div className="n-outcome-list-item">
+              <div className="n-outcome-icon-wrapper">
+                <CheckCircle size={16} strokeWidth={3} />
+              </div>
+              <div className="n-outcome-text">
+                <h4>Gestión de Recursos en Crisis (CRM)</h4>
+                <p>Aplicar principios fundamentales de CRM, incluyendo liderazgo efectivo y comunicación en bucle cerrado a pie de cama.</p>
+              </div>
+            </div>
+
+            <div className="n-outcome-list-item">
+              <div className="n-outcome-icon-wrapper">
+                <CheckCircle size={16} strokeWidth={3} />
+              </div>
+              <div className="n-outcome-text">
+                <h4>Consolidación de Juicio Clínico</h4>
+                <p>Fortalecer la toma de decisiones y el criterio de vigilancia del paciente crítico de alta complejidad en soporte vital extracorpóreo.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Itinerario / Estructura del programa */}
+      <section className="n-sec-padding n-itinerary-section">
+        <div className="hce-container">
+          <div className="n-sec-header center">
+            <span className="n-sec-badge">ITINERARIO</span>
+            <h2 className="n-sec-title">Tu recorrido formativo, fase por fase</h2>
+            <p className="n-sec-subtitle">Un diseño curricular que combina la flexibilidad teórica con la rigurosidad práctica.</p>
+          </div>
+
+          <div className="n-timeline-container">
+            {/* Step 1 */}
+            <div className="n-card-base n-timeline-step">
+              <span className="n-timeline-badge">Semanas 1 a 7</span>
+              <h3>Fase teórica e híbrida</h3>
+              <p>Aprendizaje combinado a través de nuestra plataforma virtual. Cubre de manera progresiva los fundamentos de la terapia, modalidades clínicas, monitoreo y prevención de complicaciones.</p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="n-card-base n-timeline-step">
+              <span className="n-timeline-badge">Semana 8</span>
+              <h3>Inmersión práctica intensiva</h3>
+              <p>Sesiones presenciales intensivas enfocadas en simulación de alta fidelidad, talleres de destrezas operativas con circuitos reales de ECMO y sesiones estructuradas de debriefing.</p>
+            </div>
+          </div>
+
+          <div className="n-chips-header">Temas Centrales de Aprendizaje</div>
+          <div className="n-chips-wrapper">
+            <span className="n-chip-tag">Fisiología y hemodinamia</span>
+            <span className="n-chip-tag">Modalidades V-V y V-A</span>
+            <span className="n-chip-tag">Monitoreo del circuito</span>
+            <span className="n-chip-tag">Detección de complicaciones</span>
+            <span className="n-chip-tag">Manejo de crisis (CRM)</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Recursos y equipamiento */}
+      <section className="n-sec-padding n-equipment-section">
+        <div className="hce-container">
+          <div className="n-sec-header center">
+            <span className="n-sec-badge">EQUIPAMIENTO</span>
+            <h2 className="n-sec-title white">Entrenas con tecnología real, no con diapositivas</h2>
+            <p className="n-sec-subtitle white-muted">Acceso directo a los dispositivos estándar utilizados en las unidades de cuidados intensivos líderes.</p>
+          </div>
+
+          <div className="n-equipment-grid">
+            {/* Card 1 */}
+            <div className="n-equipment-card">
+              <div className="n-circle-icon accent">
+                <MonitorPlay size={24} />
+              </div>
+              <h3>Consolas ECMO</h3>
+              <p>Práctica directa en consolas clínicas reales de marcas de referencia mundial (Getinge, Medtronic, Sorin).</p>
+            </div>
+
+            {/* Card 2 */}
+            <div className="n-equipment-card">
+              <div className="n-circle-icon accent">
+                <BrainCircuit size={24} />
+              </div>
+              <h3>Simulador ECMO SIM</h3>
+              <p>Integración de simuladores clínicos interactivos especializados para escenarios críticos y de alta fidelidad.</p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="n-equipment-card">
+              <div className="n-circle-icon accent">
+                <Layers size={24} />
+              </div>
+              <h3>Circuitos Reales</h3>
+              <p>Práctica deliberada en cebado, purgado y manipulación directa de líneas y circuitos reales de soporte vital.</p>
+            </div>
+
+            {/* Card 4 */}
+            <div className="n-equipment-card">
+              <div className="n-circle-icon accent">
+                <GraduationCap size={24} />
+              </div>
+              <h3>Estaciones de Destreza</h3>
+              <p>Guiadas de manera personalizada por instructores certificados bajo estándares de cuidados intensivos.</p>
+            </div>
+          </div>
+
+          <p className="n-equipment-disclaimer">* Nota de acreditación: Equipamiento sujeto a disponibilidad por sede y taller práctico.</p>
+        </div>
+      </section>
+
+      {/* 6. "Cómo se evalúa tu aprendizaje" */}
+      <section className="n-sec-padding">
+        <div className="hce-container">
+          <div className="n-sec-header center">
+            <span className="n-sec-badge">EVALUACIÓN</span>
+            <h2 className="n-sec-title">Tu progreso, medido en cada etapa</h2>
+            <p className="n-sec-subtitle">Un sistema integral que asegura que integras los conocimientos de forma teórica y procedimental.</p>
+          </div>
+
+          <div className="n-evaluation-grid">
+            {/* Step 1 */}
+            <div className="n-card-base n-eval-card">
+              <div className="n-eval-header">
+                <div className="n-circle-icon">
+                  <Target size={22} />
+                </div>
+                <span className="n-eval-step-num">Paso 1</span>
+              </div>
+              <h3>Diagnóstico inicial</h3>
+              <p>Identificamos tu nivel inicial de conocimientos para personalizar y enfocar el proceso de aprendizaje.</p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="n-card-base n-eval-card">
+              <div className="n-eval-header">
+                <div className="n-circle-icon">
+                  <TrendingUp size={22} />
+                </div>
+                <span className="n-eval-step-num">Paso 2</span>
+              </div>
+              <h3>Conocimiento teórico</h3>
+              <p>Evaluación comparativa (antes y después) de conceptos clave, guías internacionales y protocolos de monitoreo.</p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="n-card-base n-eval-card">
+              <div className="n-eval-header">
+                <div className="n-circle-icon">
+                  <Award size={22} />
+                </div>
+                <span className="n-eval-step-num">Paso 3</span>
+              </div>
+              <h3>Desempeño práctico</h3>
+              <p>Aplicación de listas de cotejo de destrezas y rúbricas estructuradas ELSO en entornos de simulación clínica.</p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="n-card-base n-eval-card">
+              <div className="n-circle-icon">
+                <UsersRound size={22} />
+              </div>
+              <h3>Debriefing estructurado</h3>
+              <p>Retroalimentación enfocada en la toma de decisiones, la comunicación en crisis y el análisis constructivo de los casos.</p>
             </div>
           </div>
         </div>
@@ -323,10 +540,10 @@ const Nursing = () => {
           <div className="n-final-card">
             <div className="n-final-content">
               <span className="section-badge">ÚLTIMOS CUPOS DISPONIBLES</span>
-              <h2>Transforma tu carrera en el cuidado crítico con <span className="red-text">ECMO Nursing.</span></h2>
-              <p>Únete a la red global de enfermería líder en soporte extracorpóreo. Entrenamiento de élite para desafíos reales.</p>
+              <h2>Empodera tu práctica. <span className="red-text">Salva más vidas.</span></h2>
+              <p>Formación de alta especialidad en ECMO, liderada por enfermería, para enfermería.</p>
               <div className="n-final-actions">
-                <button className="btn-buy-final" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscribirme al Curso Ahora <ArrowRight size={18} /></button>
+                <button className="btn-buy-final" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Reserva tu lugar <ArrowRight size={18} /></button>
                 <button className="btn-info-final" onClick={() => window.open('/assets/programa_ecmo_nursing_2026.pdf', '_blank')}>Ver Plan de Estudios</button>
               </div>
             </div>

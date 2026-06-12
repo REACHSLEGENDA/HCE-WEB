@@ -1,6 +1,28 @@
+:root {
+  /* Marca primaria */
+  --hce-navy:        #183A67;  /* dominante: titulares, fondos oscuros, header de sección */
+  --hce-navy-deep:   #00203F;  /* fondos oscuros profundos, hero bands */
+  --hce-red:         #DD2432;  /* acento único: CTAs, números de impacto, íconos clave */
+  --hce-red-soft:    #F4D6D9;  /* fondos tenues de tarjeta con acento rojo */
+
+  /* Azules de apoyo (del gradiente del logo) */
+  --hce-blue-mid:    #2E6A95;  /* secciones intermedias, gradientes */
+  --hce-blue-light:  #6AB3D3;  /* detalles, hover, líneas suaves */
+  --hce-blue-accent: #447999;  /* texto secundario sobre claro, el azul del wordmark "hce" */
+
+  /* Neutros */
+  --hce-white:       #FFFFFF;
+  --hce-off:         #F5F8FA;  /* fondo de secciones claras (NO usar beige/crema) */
+  --hce-ink:         #14253A;  /* texto de cuerpo sobre fondo claro */
+  --hce-muted:       #5A7184;  /* captions, etiquetas */
+
+  /* Gradiente firma (igual al fondo del logo) */
+  --hce-gradient: linear-gradient(160deg, #00203F 0%, #183A67 45%, #2E6A95 100%);
+}
+
 .nursing-page {
-  background-color: #f8fafc;
-  color: #0a192f;
+  background-color: var(--hce-off);
+  color: var(--hce-ink);
 }
 
 /* Hero Section - Clean Banner */
@@ -812,7 +834,7 @@
 }
 
 .btn-buy-final {
-  background: #e31837;
+  background: var(--hce-red);
   color: white;
   padding: 1.2rem 3.2rem;
   border-radius: 50px;
@@ -824,14 +846,14 @@
   align-items: center;
   gap: 12px;
   transition: all 0.3s ease;
-  box-shadow: 0 10px 25px rgba(227, 24, 55, 0.3);
+  box-shadow: 0 10px 25px rgba(221, 36, 50, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .btn-buy-final:hover {
   transform: translateY(-3px);
-  box-shadow: 0 15px 35px rgba(227, 24, 55, 0.45);
+  box-shadow: 0 15px 35px rgba(221, 36, 50, 0.45);
 }
 
 .btn-info-final {
@@ -932,3 +954,438 @@
     padding: 1.2rem 2rem;
   }
 }
+
+/* ==========================================================================
+   NEW LANDING SECTIONS - DESIGN SYSTEM ADHERENCE (60/30/10)
+   ========================================================================== */
+
+/* Common Section Layout */
+.n-sec-padding {
+  padding: 5.5rem 0;
+  position: relative;
+}
+
+.n-sec-header {
+  max-width: 750px;
+  margin-bottom: 3.5rem;
+  text-align: left;
+}
+
+.n-sec-header.center {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.n-sec-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--hce-blue-mid);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(46, 106, 149, 0.08);
+  border: 1px solid rgba(46, 106, 149, 0.2);
+  padding: 0.35rem 1rem;
+  border-radius: 100px;
+  margin-bottom: 0.9rem;
+}
+
+.n-sec-title {
+  font-family: 'Outfit', 'Poppins', sans-serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+  font-weight: 800;
+  color: var(--hce-navy);
+  line-height: 1.25;
+  margin: 0 0 0.8rem 0;
+}
+
+.n-sec-title.white {
+  color: var(--hce-white);
+}
+
+.n-sec-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--hce-muted);
+  margin: 0;
+}
+
+.n-sec-subtitle.white-muted {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Circle Icon Pattern */
+.n-circle-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--hce-navy);
+  border: 2px solid var(--hce-blue-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hce-white);
+  margin-bottom: 1.2rem;
+  flex-shrink: 0;
+}
+
+.n-circle-icon.accent {
+  border-color: var(--hce-red);
+}
+
+/* Card layout */
+.n-card-base {
+  background: var(--hce-white);
+  border: 1px solid rgba(24, 58, 103, 0.08);
+  border-radius: 16px;
+  padding: 2.2rem;
+  box-shadow: 0 4px 20px rgba(0, 32, 63, 0.03);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.n-card-base:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 32, 63, 0.06);
+}
+
+/* 1. Metodología Section */
+.n-methodology-section {
+  background: var(--hce-off);
+}
+
+.n-methodology-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 3.5rem;
+  position: relative;
+}
+
+.n-phase-card {
+  position: relative;
+}
+
+.n-phase-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.n-phase-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: rgba(24, 58, 103, 0.12);
+}
+
+.n-phase-card h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 750;
+  color: var(--hce-navy);
+  margin: 0 0 0.8rem 0;
+}
+
+.n-phase-card p {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--hce-muted);
+  margin: 0;
+}
+
+.n-methodology-footer {
+  text-align: center;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--hce-navy);
+  font-weight: 600;
+  padding: 1.5rem;
+  background: rgba(24, 58, 103, 0.04);
+  border-radius: 12px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 2. Cifras de Impacto Band */
+.n-stats-band {
+  background: var(--hce-gradient);
+  color: var(--hce-white);
+  padding: 4.5rem 0;
+}
+
+.n-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+.n-stat-card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.n-stat-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(3rem, 5vw, 4.2rem);
+  font-weight: 900;
+  color: var(--hce-red);
+  line-height: 1;
+  margin-bottom: 0.6rem;
+}
+
+.n-stat-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 220px;
+}
+
+/* 3. Qué lograrás al terminar */
+.n-outcomes-list-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.8rem;
+}
+
+.n-outcome-list-item {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+}
+
+.n-outcome-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--hce-red-soft);
+  border: 1px solid rgba(221, 36, 50, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hce-red);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.n-outcome-text h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--hce-navy);
+  margin: 0 0 0.4rem 0;
+}
+
+.n-outcome-text p {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--hce-muted);
+  margin: 0;
+}
+
+/* 4. Itinerario */
+.n-itinerary-section {
+  background: var(--hce-off);
+}
+
+.n-timeline-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3rem;
+  margin-bottom: 3.5rem;
+  position: relative;
+}
+
+.n-timeline-step {
+  position: relative;
+}
+
+.n-timeline-badge {
+  display: inline-block;
+  background: var(--hce-navy);
+  color: var(--hce-white);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.8rem;
+  border-radius: 4px;
+  margin-bottom: 0.9rem;
+}
+
+.n-timeline-step h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--hce-navy);
+  margin: 0 0 0.8rem 0;
+}
+
+.n-timeline-step p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--hce-muted);
+  margin: 0;
+}
+
+.n-chips-header {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--hce-navy);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.n-chips-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.n-chip-tag {
+  background: var(--hce-white);
+  border: 1px solid rgba(24, 58, 103, 0.12);
+  color: var(--hce-navy);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.5rem 1.1rem;
+  border-radius: 50px;
+  transition: all 0.2s ease;
+}
+
+.n-chip-tag:hover {
+  background: var(--hce-navy);
+  color: var(--hce-white);
+  border-color: var(--hce-navy);
+}
+
+/* 5. Recursos y equipamiento */
+.n-equipment-section {
+  background: var(--hce-navy-deep);
+  color: var(--hce-white);
+}
+
+.n-equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+.n-equipment-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 2rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.n-equipment-card h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 750;
+  color: var(--hce-white);
+  margin: 0 0 0.8rem 0;
+}
+
+.n-equipment-card p {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+.n-equipment-disclaimer {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* 6. Evaluación */
+.n-evaluation-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.8rem;
+}
+
+.n-eval-card {
+  position: relative;
+}
+
+.n-eval-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.n-eval-step-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--hce-red);
+}
+
+.n-eval-card h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 750;
+  color: var(--hce-navy);
+  margin: 0 0 0.6rem 0;
+}
+
+.n-eval-card p {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--hce-muted);
+  margin: 0;
+}
+
+/* Responsive Overrides */
+@media (max-width: 991px) {
+  .n-methodology-grid,
+  .n-equipment-grid,
+  .n-evaluation-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .n-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .n-methodology-grid,
+  .n-stats-grid,
+  .n-outcomes-list-grid,
+  .n-timeline-container,
+  .n-equipment-grid,
+  .n-evaluation-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .n-sec-padding {
+    padding: 3.5rem 0;
+  }
+  .n-sec-header {
+    margin-bottom: 2.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .n-stat-num {
+    font-size: 2.8rem;
+  }
+}
+
