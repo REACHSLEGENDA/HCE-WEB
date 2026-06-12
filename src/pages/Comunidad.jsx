@@ -16,7 +16,8 @@ import {
   HeartPulse,
   Gamepad2,
   PlayCircle,
-  Users
+  Users,
+  Award
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -25,13 +26,47 @@ import { supabase } from '../lib/supabase';
 import { getFlagUrl } from '../data/countries';
 import './Comunidad.css';
 
-const DEFAULT_TESTIMONIALS = [];
+const DEFAULT_TESTIMONIALS = [
+  {
+    id: 'seed_docente_1',
+    user_id: 'seed_user_1',
+    experience: 'Experiencia Docente',
+    content: 'La plataforma HCE y la integración de simuladores en la nube permiten que alumnos de toda Latinoamérica alcancen un nivel técnico óptimo antes de ingresar a la UCI. Una experiencia docente enriquecedora y de vanguardia.',
+    rating: 5,
+    created_at: '2026-05-15T12:00:00Z',
+    profiles: {
+      nombre_completo: 'Prof. Jean-Luc Viguier',
+      avatar_url: null,
+      pais: 'Francia',
+      grado: 'Médico Especialista',
+      cargo: 'Coordinador de Simulación ECMO',
+      institucion: 'Hôpital de la Pitié-Salpêtrière'
+    }
+  },
+  {
+    id: 'seed_docente_2',
+    user_id: 'seed_user_2',
+    experience: 'Experiencia Docente',
+    content: 'Ser parte del cuerpo docente de HCE ha sido un honor. La combinación de teoría estructurada y simulación interactiva hace que la enseñanza del soporte extracorpóreo sea fluida y altamente de alto impacto.',
+    rating: 5,
+    created_at: '2026-06-01T14:30:00Z',
+    profiles: {
+      nombre_completo: 'Dra. Elena Ruiz',
+      avatar_url: null,
+      pais: 'México',
+      grado: 'Médico Especialista',
+      cargo: 'Instructora de Soporte Vital Extracorpóreo',
+      institucion: 'Instituto Nacional de Cardiología'
+    }
+  }
+];
 
 const FORUM_CATEGORIES = [
   { id: 'Insuficiencia Cardiaca', label: 'Manejo de Avanzada en Insuficiencia Cardíaca', icon: Heart, desc: 'Soporte e insuficiencia cardíaca avanzada' },
   { id: 'ECMO Nursing Care', label: 'ECMO Nursing Care', icon: Stethoscope, desc: 'Cuidado crítico de enfermería en ECMO' },
   { id: 'Paris Diploma ECMO', label: 'Paris International Diploma in ECMO', icon: HeartPulse, desc: 'Diploma internacional de París en ECMO' },
   { id: 'ECMO SIM', label: 'Simulador ECMO SIM', icon: Gamepad2, desc: 'Entrenamiento interactivo y simulador clínico' },
+  { id: 'Experiencia Docente', label: 'Comentarios Docentes / Instructores', icon: Award, desc: 'Experiencias de nuestros profesores y facilitadores clínicos' },
   { id: 'Webinars portal', label: 'Webinars portal', icon: PlayCircle, desc: 'Webinars en vivo y educación continua' },
   { id: 'Entrenamiento Intrahospitalario In Situ', label: 'Entrenamiento Intrahospitalario In Situ', icon: Users, desc: 'Capacitación y simulación in situ en hospitales' }
 ];
@@ -401,7 +436,7 @@ const Comunidad = () => {
                           rows="5"
                           value={newComment}
                           onChange={(e) => setNewComment(e.target.value)}
-                          placeholder="Cuéntanos qué te pareció el curso, los simuladores, los docentes o las prácticas de simulación..."
+                          placeholder="Cuéntanos tu experiencia con el curso, los simuladores, las prácticas clínicas o comparte tu perspectiva como docente/instructor..."
                           required
                         ></textarea>
                       </div>
