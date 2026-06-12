@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin, Globe } from 'lucide-react';
+import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -18,7 +18,12 @@ const EXTRA_CATALOG = {
 
 const PROFILES = {
   especialista: {
-    label: 'Médico(a) Especialista / Residente',
+    label: 'Médico(a) Especialista',
+    price: 5000,
+    extras: ['ecmo_sim'],
+  },
+  residente: {
+    label: 'Médico(a) Residente',
     price: 5000,
     extras: ['ecmo_sim'],
   },
@@ -44,7 +49,7 @@ export default function InscripcionesNursing() {
 
   const [searchParams] = useSearchParams();
   const [cardSel, setCardSel] = useState(null);   // 'especialista' | 'otros'
-  const [subRole, setSubRole] = useState(null);    // 'enfermero'
+  const [subRole, setSubRole] = useState(null);    // 'residente' | 'enfermero'
   const [extras, setExtras] = useState(new Set());
   const [moneda, setMoneda] = useState('mxn');
   const [email, setEmail] = useState('');
@@ -167,7 +172,7 @@ export default function InscripcionesNursing() {
       {/* HERO */}
       <div className="ins-hero">
         <div className="ins-hero-inner hce-container">
-          <span className="section-badge">PROGRAMAS 2026</span>
+          <span className="ins-hero-badge">PROGRAMAS 2026</span>
           <h1 className="ins-hero-title">Inscripciones</h1>
           <p className="ins-hero-sub">
             Personaliza tu inscripción al programa ECMO Nursing Care Course y asegura tu lugar de manera segura.
@@ -191,222 +196,325 @@ export default function InscripcionesNursing() {
             </div>
 
             <div className="ins-cards">
-              {/* Card 1 — Enfermero */}
-              <button
-                type="button"
-                className={`ins-card ${cardSel === 'enfermero' ? 'ins-card--active' : ''}`}
-                onClick={() => selectCard('enfermero')}
-              >
-                <div className="ins-card-visual ins-card-visual--blue">
-                  <Heart size={40} strokeWidth={1.5} />
-                </div>
-                <div className="ins-card-body">
-                  <div className="ins-card-top">
-                    <span className="ins-card-tag">Perfil Principal</span>
-                    {cardSel === 'enfermero' && <CheckCircle2 size={20} className="ins-card-check" />}
-                  </div>
-                  <h3 className="ins-card-title">Enfermero(a) / Otro Profesional</h3>
-                </div>
-              </button>
-
-              {/* Card 2 — Especialista */}
+              {/* Card 1 — Especialista */}
               <button
                 type="button"
                 className={`ins-card ${cardSel === 'especialista' ? 'ins-card--active' : ''}`}
                 onClick={() => selectCard('especialista')}
               >
-                <div className="ins-card-visual ins-card-visual--cyan">
+                <div className="ins-card-visual ins-card-visual--blue">
                   <Stethoscope size={40} strokeWidth={1.5} />
                 </div>
                 <div className="ins-card-body">
                   <div className="ins-card-top">
-                    <span className="ins-card-tag">Perfil Médico</span>
+                    <span className="ins-card-tag">Perfil A</span>
                     {cardSel === 'especialista' && <CheckCircle2 size={20} className="ins-card-check" />}
                   </div>
-                  <h3 className="ins-card-title">Médico(a) Especialista / Residente</h3>
+                  <h3 className="ins-card-title">Médico(a) Especialista</h3>
+                </div>
+              </button>
+
+              {/* Card 2 — Otros */}
+              <button
+                type="button"
+                className={`ins-card ${cardSel === 'otros' ? 'ins-card--active' : ''}`}
+                onClick={() => selectCard('otros')}
+              >
+                <div className="ins-card-visual ins-card-visual--cyan">
+                  <Heart size={40} strokeWidth={1.5} />
+                </div>
+                <div className="ins-card-body">
+                  <div className="ins-card-top">
+                    <span className="ins-card-tag">Perfil B</span>
+                    {cardSel === 'otros' && <CheckCircle2 size={20} className="ins-card-check" />}
+                  </div>
+                  <h3 className="ins-card-title">Residente, Enfermero(a) y Otros</h3>
                 </div>
               </button>
             </div>
           </section>
 
-          {/* STEP 2 — extras selection */}
-          {perfil && availableExtras.length > 0 && (
-            <section className="ins-section">
+          {/* STEP 2 — sub-role (only card 'otros') */}
+          {cardSel === 'otros' && (
+            <section className="ins-section ins-section--animate">
               <div className="ins-step-header">
                 <span className="ins-step-num">2</span>
                 <div>
-                  <h2 className="ins-step-title">Potencia tu entrenamiento (Opcional)</h2>
-                  <p className="ins-step-subtext">Agrega módulos complementarios con precio preferencial:</p>
+                  <h2 className="ins-step-title">¿Cuál es tu rol?</h2>
                 </div>
               </div>
-
-              <div className="ins-extras-list">
-                {availableExtras.map((ex) => {
-                  const active = extras.has(ex.id);
-                  return (
-                    <div
-                      key={ex.id}
-                      className={`ins-extra-item ${active ? 'ins-extra-item--active' : ''}`}
-                      onClick={() => toggleExtra(ex.id)}
-                    >
-                      <div className="ins-extra-checkbox">
-                        {active && <CheckCircle2 size={20} />}
-                      </div>
-                      <div className="ins-extra-info">
-                        <div className="ins-extra-header">
-                          <h4>{ex.label}</h4>
-                          <span className="ins-extra-price">+{fmt(moneda === 'usd' ? Math.ceil(ex.price / USD_RATE) : ex.price, moneda)} {cur}</span>
-                        </div>
-                        <p className="ins-extra-desc">{ex.desc}</p>
-                      </div>
+              <div className="ins-role-grid">
+                {[
+                  { id: 'residente', label: 'Médico(a) Residente', desc: 'Actualmente en programa de residencia médica' },
+                  { id: 'enfermero', label: 'Enfermero(a) / Otro Profesional', desc: 'Enfermero, terapeuta respiratorio, perfusionista, u otro' },
+                ].map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className={`ins-role-btn ${subRole === r.id ? 'ins-role-btn--active' : ''}`}
+                    onClick={() => selectSubRole(r.id)}
+                  >
+                    <Shield size={18} />
+                    <div>
+                      <span className="ins-role-label">{r.label}</span>
                     </div>
-                  );
-                })}
+                    {subRole === r.id && <CheckCircle2 size={18} className="ins-role-check" />}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* STEP 3 — extras */}
+          {availableExtras.length > 0 && (
+            <section className="ins-section ins-section--animate">
+              <div className="ins-step-header">
+                <span className="ins-step-num">{cardSel === 'otros' ? '3' : '2'}</span>
+                <div>
+                  <h2 className="ins-step-title">Potencia tu formación</h2>
+                  <p className="ins-step-sub" style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Añade un curso ¡Promoción especial por tiempo limitado!</p>
+                </div>
+              </div>
+              <div className="ins-extras">
+                {availableExtras.map((ex) => (
+                  <label
+                    key={ex.id}
+                    className={`ins-extra-card ${extras.has(ex.id) ? 'ins-extra-card--active' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={extras.has(ex.id)}
+                      onChange={() => toggleExtra(ex.id)}
+                      className="ins-extra-input"
+                    />
+                    <div className="ins-extra-check">
+                      {extras.has(ex.id) && <CheckCircle2 size={16} />}
+                    </div>
+                    <div className="ins-extra-info">
+                      <span className="ins-extra-label">{ex.label}</span>
+                      {ex.subhint && <span style={{ fontSize: '0.75rem', opacity: 0.7, display: 'block', marginTop: '2px' }}>{ex.subhint}</span>}
+                    </div>
+                    <div className="ins-extra-price">
+                      +{fmt(ex.price, 'mxn')}
+                      {moneda === 'usd' && <small>≈ +{fmt(Math.ceil(ex.price / USD_RATE), 'usd')}</small>}
+                    </div>
+                  </label>
+                ))}
               </div>
             </section>
           )}
         </div>
 
-        {/* ── RIGHT: price summary & payment CTA ── */}
+        {/* ── RIGHT: sticky order summary ── */}
         <aside className="ins-sidebar">
-          <div className="ins-sidebar-card">
-            <h3 className="ins-sidebar-title">Tu inversión</h3>
+          <div className="ins-summary">
+            <h3 className="ins-summary-title">Resumen de inscripción</h3>
 
-            {/* Currency selector */}
-            <div className="ins-currency-toggle">
-              <button
-                type="button"
-                className={`ins-currency-btn ${moneda === 'mxn' ? 'ins-currency-btn--active' : ''}`}
-                onClick={() => setMoneda('mxn')}
-              >
-                MXN ($)
-              </button>
-              <button
-                type="button"
-                className={`ins-currency-btn ${moneda === 'usd' ? 'ins-currency-btn--active' : ''}`}
-                onClick={() => setMoneda('usd')}
-              >
-                USD ($)
-              </button>
+            {/* Currency toggle */}
+            <div className="ins-currency">
+              <span className="ins-currency-label">Moneda</span>
+              <div className="ins-currency-toggle">
+                {['mxn', 'usd'].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`ins-currency-btn ${moneda === c ? 'ins-currency-btn--active' : ''}`}
+                    onClick={() => setMoneda(c)}
+                  >
+                    {c.toUpperCase()}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Price breakdown */}
-            <div className="ins-breakdown">
+            <div className="ins-summary-lines">
               {perfil ? (
                 <>
-                  <div className="ins-row">
-                    <span>Base ({PROFILES[perfil].label})</span>
-                    <strong>{fmt(displayBase, moneda)} {cur}</strong>
+                  <div className="ins-summary-line">
+                    <span>{PROFILES[perfil].label}</span>
+                    <span>{fmt(displayBase, cur)}</span>
                   </div>
-                  {extras.size > 0 && (
-                    <div className="ins-row">
-                      <span>Módulos Adicionales</span>
-                      <strong>{fmt(displayExtras, moneda)} {cur}</strong>
-                    </div>
-                  )}
-                  {appliedPromo && appliedPromo.discount > 0 && (
-                    <div className="ins-row ins-row--discount">
-                      <span>Descuento ({appliedPromo.code})</span>
-                      <strong>-{fmt(moneda === 'usd' ? Math.ceil(baseDiscount / USD_RATE) : baseDiscount, moneda)} {cur}</strong>
-                    </div>
-                  )}
-                  <div className="ins-row ins-row--total">
-                    <span>Total</span>
-                    <span>{fmt(displayTotal, moneda)} {cur}</span>
-                  </div>
+                  {[...extras].map((id) => {
+                    const ex = EXTRA_CATALOG[id];
+                    const price = moneda === 'usd' ? Math.ceil(ex.price / USD_RATE) : ex.price;
+                    return (
+                      <div key={id} className="ins-summary-line ins-summary-line--extra" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                          <span>+ {ex.label}</span>
+                          <span>{fmt(price, cur)}</span>
+                        </div>
+                        {ex.subhint && <small style={{ fontSize: '0.7rem', opacity: 0.6, marginTop: '-2px' }}>{ex.subhint}</small>}
+                      </div>
+                    );
+                  })}
                 </>
               ) : (
-                <p className="ins-empty-state">Selecciona un perfil para ver el desglose de tu inversión.</p>
+                <p className="ins-summary-empty">Selecciona un perfil para ver el desglose.</p>
               )}
             </div>
 
-            {/* Promo code input */}
             {perfil && (
-              <div className="ins-promo-section">
-                {appliedPromo ? (
-                  <div className="ins-promo-badge">
-                    <span>Código aplicado: <strong>{appliedPromo.code}</strong></span>
-                    <button type="button" onClick={() => setAppliedPromo(null)}>Eliminar</button>
-                  </div>
-                ) : (
-                  <div className="ins-promo-form">
-                    <input
-                      type="text"
-                      placeholder="Código de descuento"
+              <div className="ins-summary-total">
+                <span>Inversión total</span>
+                <strong>{fmt(displayTotal, cur)}</strong>
+              </div>
+            )}
+
+            {/* Promo code field */}
+            {perfil && (
+              <div className="ins-promo-wrap" style={{ marginTop: '1rem', borderTop: '1px dashed var(--ins-border)', paddingTop: '1rem' }}>
+                {!appliedPromo ? (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Código de descuento" 
                       value={promoInput}
                       onChange={(e) => setPromoInput(e.target.value)}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--ins-border)', fontSize: '0.8rem' }}
                     />
-                    <button type="button" onClick={applyPromo}>Aplicar</button>
+                    <button 
+                      onClick={applyPromo}
+                      className="ins-btn" 
+                      style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', background: 'var(--ins-dark)', color: '#fff' }}
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(16,185,129,0.1)', padding: '0.6rem 0.8rem', borderRadius: '10px' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#065f46', fontWeight: 600 }}>
+                      ✓ {appliedPromo.code} (-{appliedPromo.discount * 100}%)
+                    </div>
+                    <button 
+                      onClick={() => { setAppliedPromo(null); setPromoInput(''); setApiError(''); }}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Quitar
+                    </button>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Email field */}
+            {moneda === 'usd' && perfil && (
+              <p className="ins-summary-note">Tipo de cambio referencial: 1 USD = {USD_RATE} MXN</p>
+            )}
+
             <div className="ins-email-field">
-              <label>Correo electrónico del alumno *</label>
+              <label className="ins-email-label" htmlFor="ins-email">
+                Correo electrónico del alumno *
+              </label>
               <input
+                id="ins-email"
                 type="email"
-                placeholder="ejemplo@correo.com"
+                className="ins-email-input"
+                placeholder="tu@correo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
               />
-              <p className="ins-field-hint">A este correo se enviarán las claves de acceso al finalizar el pago.</p>
             </div>
 
-            {/* Terms consents */}
-            <div className="ins-consents">
-              <label className="ins-consent-item">
-                <input
-                  type="checkbox"
-                  checked={consentPrimary}
-                  onChange={(e) => setConsentPrimary(e.target.checked)}
-                />
-                <span className="ins-consent-text">
-                  Acepto los términos de servicio, políticas de privacidad y propiedad intelectual de HCE. *
-                </span>
+            <div className="ins-privacy-block">
+              <p className="ins-privacy-text">
+                *Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.
+              </p>
+              <label className="ins-consent-row">
+                <input type="checkbox" checked={consentPrimary} onChange={(e) => setConsentPrimary(e.target.checked)} />
+                <span>Consiento y autorizo expresamente que los datos personales aquí señalados sean tratados conforme al Aviso de Privacidad. *</span>
               </label>
-              <label className="ins-consent-item">
-                <input
-                  type="checkbox"
-                  checked={consentSecondary}
-                  onChange={(e) => setConsentSecondary(e.target.checked)}
-                />
-                <span className="ins-consent-text">
-                  Deseo recibir actualizaciones académicas y promociones de nuevos programas.
-                </span>
+              <label className="ins-consent-row">
+                <input type="checkbox" checked={consentSecondary} onChange={(e) => setConsentSecondary(e.target.checked)} />
+                <span>Consiento y autorizo expresamente que mis datos personales sean tratados para finalidades secundarias, como publicidad sobre futuros entrenamientos.</span>
               </label>
             </div>
 
             {apiError && <p className="ins-error">{apiError}</p>}
 
-            {/* Pay Button */}
             <button
               type="button"
-              className="ins-btn ins-btn--brand ins-btn--pay"
-              onClick={handlePay}
+              className="ins-btn ins-btn--primary ins-btn--full"
               disabled={!canPay || loading}
+              onClick={handlePay}
             >
-              {loading ? (
-                <><Loader2 size={18} className="ins-spin" /> Procesando...</>
-              ) : (
-                <>Inscribirse Ahora <ChevronRight size={18} /></>
-              )}
+              {loading
+                ? <><Loader2 size={18} className="ins-spin" /> Procesando inversión...</>
+                : <><span>Invertir en inscripción</span><ChevronRight size={18} /></>
+              }
             </button>
 
-            {/* Legal details */}
-            <div className="ins-security-details">
-              <div className="ins-security-item">
-                <Shield size={16} />
-                <span>Pago Seguro procesado por Stripe</span>
-              </div>
-            </div>
+            <p className="ins-summary-secure">
+              <Shield size={13} /> Inversión segura con Stripe · SSL cifrado
+            </p>
           </div>
         </aside>
       </div>
 
       <Footer />
+    </div>
+  );
+}
+
+const COUNTRIES = [
+  { code: '+52',  iso: 'mx', label: 'MX' },
+  { code: '+1',   iso: 'us', label: 'US' },
+  { code: '+57',  iso: 'co', label: 'CO' },
+  { code: '+54',  iso: 'ar', label: 'AR' },
+  { code: '+56',  iso: 'cl', label: 'CL' },
+  { code: '+51',  iso: 'pe', label: 'PE' },
+  { code: '+593', iso: 'ec', label: 'EC' },
+  { code: '+502', iso: 'gt', label: 'GT' },
+  { code: '+506', iso: 'cr', label: 'CR' },
+  { code: '+503', iso: 'sv', label: 'SV' },
+  { code: '+504', iso: 'hn', label: 'HN' },
+  { code: '+505', iso: 'ni', label: 'NI' },
+  { code: '+58',  iso: 've', label: 'VE' },
+  { code: '+591', iso: 'bo', label: 'BO' },
+  { code: '+595', iso: 'py', label: 'PY' },
+  { code: '+598', iso: 'uy', label: 'UY' },
+  { code: '+507', iso: 'pa', label: 'PA' },
+  { code: '+1787', iso: 'pr', label: 'PR' },
+  { code: '+1809', iso: 'do', label: 'DO' },
+  { code: '+53',   iso: 'cu', label: 'CU' },
+  { code: '+509',  iso: 'ht', label: 'HT' },
+  { code: '+55',   iso: 'br', label: 'BR' },
+  { code: '+34',   iso: 'es', label: 'ES' },
+  { code: '+33',  iso: 'fr', label: 'FR' },
+];
+
+function PhoneSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = COUNTRIES.find(c => c.code === value) || COUNTRIES[0];
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div className="phone-select" ref={ref}>
+      <button type="button" className="phone-select__trigger" onClick={() => setOpen(v => !v)}>
+        <img src={`https://flagcdn.com/w40/${selected.iso}.png`} alt={selected.label} className="phone-select__flag" />
+        <span>{selected.code}</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round"/></svg>
+      </button>
+      {open && (
+        <div className="phone-select__dropdown">
+          {COUNTRIES.map(c => (
+            <button
+              key={c.code}
+              type="button"
+              className={`phone-select__option ${c.code === value ? 'active' : ''}`}
+              onClick={() => { onChange(c.code); setOpen(false); }}
+            >
+              <img src={`https://flagcdn.com/w40/${c.iso}.png`} alt={c.label} className="phone-select__flag" />
+              <span>{c.label}</span>
+              <span className="phone-select__dial">{c.code}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -449,14 +557,14 @@ export function RegistrationForm() {
       };
 
       await Promise.all([
-        // Formspree — notificación por email
+        // Formspree
         fetch('https://formspree.io/f/mnjlvbpw', {
           method: 'POST',
           headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         }).catch(() => {}),
 
-        // Mailchimp — alta del contacto + tag + flujo de bienvenida
+        // Mailchimp
         fetch('/.netlify/functions/nursing-register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -486,14 +594,12 @@ export function RegistrationForm() {
 
   return (
     <div className="reg-wrap hce-container">
-      {/* Banner inversión exitosa */}
       <div className="reg-paid-banner">
         <CheckCircle2 size={20} />
         <span>¡Inversión procesada con éxito! Completa tu registro para confirmar tu lugar.</span>
       </div>
 
       <div className="reg-layout">
-        {/* Resumen del pago */}
         <aside className="reg-summary-card">
           <h3 className="reg-summary-title">Resumen de tu inversión</h3>
           <div className="reg-summary-row"><span>Perfil</span><strong>{stored.perfilLabel || '—'}</strong></div>
@@ -505,10 +611,9 @@ export function RegistrationForm() {
           </div>
         </aside>
 
-        {/* Formulario */}
         <form className="reg-form" onSubmit={handleSubmit}>
           <h2 className="reg-form-title">Completa tu inscripción</h2>
-          <p className="reg-form-sub">Una vez enviado este formulario, recibirás en tu correo electrónico la confirmación oficial y los detalles de acceso nuestro programa.</p>
+          <p className="reg-form-sub">Una vez enviado este formulario, recibirás en tu correo electrónico la confirmación oficial y los detalles de acceso a nuestro programa.</p>
 
           <div className="reg-grid">
             <div className="reg-field">
@@ -639,50 +744,6 @@ export function RegistrationForm() {
           </button>
         </form>
       </div>
-    </div>
-  );
-}
-
-// Reutilizamos el selector de lada telefónica
-function PhoneSelect({ value, onChange }) {
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const clickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', clickOutside);
-    return () => document.removeEventListener('mousedown', clickOutside);
-  }, []);
-
-  const selected = ALL_COUNTRIES.find((c) => c.dial === value) || { code: 'mx', dial: '+52', name: 'México' };
-
-  return (
-    <div className="phone-select-wrap" ref={dropdownRef}>
-      <button type="button" className="phone-select-trigger" onClick={() => setOpen(!open)}>
-        <img src={`https://flagcdn.com/w40/${selected.code}.png`} alt={selected.name} />
-        <span>{selected.dial}</span>
-      </button>
-      {open && (
-        <div className="phone-select-dropdown">
-          {ALL_COUNTRIES.map((c) => (
-            <div
-              key={c.code}
-              className="phone-select-option"
-              onClick={() => {
-                onChange(c.dial);
-                setOpen(false);
-              }}
-            >
-              <img src={`https://flagcdn.com/w40/${c.code}.png`} alt={c.name} />
-              <span>{c.name} ({c.dial})</span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
