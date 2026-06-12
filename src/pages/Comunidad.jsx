@@ -38,6 +38,38 @@ const FORUM_CATEGORIES = [
   { id: 'Entrenamiento Intrahospitalario In Situ', label: 'Entrenamiento Intrahospitalario In Situ', icon: Users, desc: 'Capacitación y simulación in situ en hospitales' }
 ];
 
+const areRolesRedundant = (degree, cargo) => {
+  if (!degree || !cargo) return false;
+  
+  const normalize = (str) => {
+    return str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\/[a-z]/g, "")
+      .trim();
+  };
+
+  const d = normalize(degree);
+  const c = normalize(cargo);
+
+  if (d === c) return true;
+  if (d.includes(c) || c.includes(d)) return true;
+
+  const roots = ["enfermer", "medic", "terapeut", "fisioterapeut", "estudiant"];
+  for (const root of roots) {
+    if (d.includes(root) && c.includes(root)) {
+      return true;
+    }
+  }
+
+  if (d.length >= 5 && c.length >= 5 && d.substring(0, 5) === c.substring(0, 5)) {
+    return true;
+  }
+
+  return false;
+};
+
 const Comunidad = () => {
   useSEO({
     title: 'Testimonios y Comunidad HCE',
@@ -291,6 +323,7 @@ const Comunidad = () => {
                       const authorCargo = author.cargo;
                       const authorInst = author.institucion;
                       
+                      const showCargo = authorCargo && !areRolesRedundant(authorDegree, authorCargo);
                       const flagUrl = getFlagUrl(authorCountry);
                       
                       // Verification for Delete Authorization:
@@ -323,12 +356,12 @@ const Comunidad = () => {
                                 </div>
                                 <div className="forum-author-subdetails">
                                   <span className="forum-author-degree">{authorDegree}</span>
-                                  {(authorCargo || authorInst) && (
+                                  {(showCargo || authorInst) && (
                                     <span className="forum-author-divider">•</span>
                                   )}
                                   <span className="forum-author-role">
-                                    {authorCargo ? `${authorCargo}` : ''}
-                                    {authorCargo && authorInst ? `, ${authorInst}` : (authorInst || '')}
+                                    {showCargo ? `${authorCargo}` : ''}
+                                    {showCargo && authorInst ? `, ${authorInst}` : (authorInst || '')}
                                   </span>
                                 </div>
                               </div>
