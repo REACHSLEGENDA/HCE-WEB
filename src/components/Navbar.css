@@ -594,6 +594,9 @@
 }
 
 @media (max-width: 768px) {
+  .btn-campus-link {
+    display: none;
+  }
   .btn-portal-text {
     display: none; /* Only show icon on mobile */
   }
