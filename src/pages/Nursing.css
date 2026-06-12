@@ -19,8 +19,8 @@
   position: absolute;
   inset: 0;
   background-image: url('/assets/componentes/nursing.png');
-  background-size: cover;
-  background-position: center right;
+  background-size: contain;
+  background-position: right center;
   background-repeat: no-repeat;
   z-index: 1;
 }
@@ -49,6 +49,9 @@
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
+  max-width: 580px;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .n-hero-text .section-badge {

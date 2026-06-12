@@ -136,7 +136,7 @@
   min-height: 92vh;
   display: flex;
   align-items: center;
-  background: url('/assets/paginas/ecmosim.png') no-repeat center center / cover;
+  background: url('/assets/paginas/ecmosim.png') no-repeat center 35% / cover;
   padding-top: 100px;
   overflow: hidden;
 }
@@ -171,6 +171,8 @@
   position: relative;
   z-index: 5;
   max-width: 680px;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .sim-badge {
