@@ -19,8 +19,8 @@
   position: absolute;
   inset: 0;
   background-image: url('/assets/componentes/nursing.png');
-  background-size: contain;
-  background-position: right center;
+  background-size: cover;
+  background-position: center right;
   background-repeat: no-repeat;
   z-index: 1;
 }
