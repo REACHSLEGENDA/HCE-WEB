@@ -5,8 +5,10 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './EcmoSim.css';
 import { useSEO } from '../hooks/useSEO';
+import { useNotification } from '../context/NotificationContext';
 
 const EcmoSim = () => {
+  const { showToast } = useNotification();
   useSEO({
     title: 'ECMO Sim - Simulador Clínico',
     description: 'ECMO Sim es el simulador clínico virtual 100% online diseñado para profesionales de la salud. Recrea una UCI real en 3D para dominar el soporte ECMO.',
@@ -56,10 +58,10 @@ const EcmoSim = () => {
       
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (status === 'cancel') {
-      alert('Pago cancelado. Si tuviste algún problema, por favor contáctanos.');
+      showToast('Pago cancelado. Si tuviste algún problema, por favor contáctanos.', 'info');
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
+  }, [showToast]);
 
   const handleCheckout = async (e) => {
     e.preventDefault();

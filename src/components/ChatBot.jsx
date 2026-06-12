@@ -6,25 +6,141 @@ const BOT_IMG = 'https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/ma
 
 const FLOWS = {
 
-  // ── Bienvenida ──────────────────────────────────────────────────────────────
+  // ── Bienvenida General ──────────────────────────────────────────────────────
   welcome: {
     text: '¡Hola! Soy el asistente de HCE.\n\n¿En qué puedo ayudarte?',
     buttons: [
       { label: '¿Qué es HCE?',            next: 'que_es_hce' },
+      { label: '¿Qué es el Portal HCE?',  next: 'info_portal' },
       { label: 'Ver programas',            next: 'programas' },
       { label: 'Experiencias abiertas',    next: 'disponibles' },
       { label: 'Hablar con un asesor',     next: 'contacto' },
     ],
   },
 
+  info_portal: {
+    text: 'El **Portal Académico HCE** es nuestra plataforma digital de educación continua:\n\n**¿Para qué sirve?**\nSirve para que los estudiantes registrados tomen cursos especializados en cuidados críticos, realicen evaluaciones interactivas (aprobación del 80%) y descarguen sus certificados oficiales autogenerados.\n\n**¿Cómo accedo?**\nPuedes ingresar de forma segura usando la opción de "Acceso Alumnos" con tus credenciales asignadas.',
+    buttons: [
+      { label: 'Ingresar al Portal',      action: 'login' },
+      { label: 'Volver',                 next: 'home_portal' },
+    ],
+  },
+
+  // ── Bienvenida Estudiante ───────────────────────────────────────────────────
+  welcome_student: {
+    text: '¡Hola! Soy tu asistente de HCE.\n\nVeo que estás en el portal de estudiantes. ¿En qué puedo apoyarte hoy?',
+    buttons: [
+      { label: '¿Cómo tomo mis clases?',   next: 'estudiante_clases' },
+      { label: '¿Cómo obtengo certificados?', next: 'estudiante_certificados' },
+      { label: 'Problemas con un video',  next: 'estudiante_video_problemas' },
+      { label: '¿Cuánto duran mis cursos?', next: 'estudiante_duracion' },
+      { label: 'Otros temas (General)',   next: 'welcome' },
+    ],
+  },
+
+  // ── Bienvenida Administrador ────────────────────────────────────────────────
+  welcome_admin: {
+    text: '¡Hola! Soy tu asistente de control HCE.\n\nVeo que estás en el portal de administración. ¿En qué proceso de gestión puedo apoyarte hoy?',
+    buttons: [
+      { label: '¿Cómo edito/creo cursos?',  next: 'admin_gestion_cursos' },
+      { label: 'Gestionar Webinars',        next: 'admin_webinars' },
+      { label: 'Matricular alumnos',        next: 'admin_matricula' },
+      { label: '¿Cómo exporto reportes?',   next: 'admin_reportes' },
+      { label: 'Seguridad y Accesos',       next: 'admin_seguridad' },
+      { label: 'Otros temas (General)',   next: 'welcome' },
+    ],
+  },
+
+  // ── FLUJOS ESTUDIANTE ───────────────────────────────────────────────────────
+  estudiante_clases: {
+    text: 'Para ingresar y tomar tus clases:\n\n1. Ve a la pestaña **Explorar Cursos**.\n2. Selecciona la tarjeta del curso de tu interés.\n3. Esto abrirá tu aula virtual con el reproductor de video de la clase.\n4. Al finalizar la visualización (90% visto) podrás acceder al examen.',
+    buttons: [
+      { label: '¿Cómo obtengo certificados?', next: 'estudiante_certificados' },
+      { label: 'Volver a estudiante',      next: 'welcome_student' },
+    ],
+  },
+
+  estudiante_certificados: {
+    text: 'Los certificados se emiten automáticamente al aprobar la evaluación del curso:\n\n1. Requieren una calificación mínima de **80%** (o el mínimo definido en el curso).\n2. Al aprobar, puedes descargarlo de inmediato en el aula.\n3. También se guardará en tu historial de **Certificados** y en **Certificados Recientes** de tu dashboard.',
+    buttons: [
+      { label: '¿Tienen vigencia?',        next: 'estudiante_certificados_vigencia' },
+      { label: 'Volver a estudiante',      next: 'welcome_student' },
+    ],
+  },
+
+  estudiante_certificados_vigencia: {
+    text: 'Tu certificado **no expira** — una vez descargado es tuyo para siempre.\n\nLo que sí tiene límite son los **30 días de descarga**: a partir de la fecha de emisión tienes 30 días para descargarlo desde el portal. Pasado ese plazo, el archivo se elimina del sistema.\n\n📥 Te recomendamos descargarlo cuanto antes y guardarlo en un lugar seguro.',
+    buttons: [
+      { label: 'Volver a estudiante',      next: 'welcome_student' },
+    ],
+  },
+
+  estudiante_video_problemas: {
+    text: 'Si tienes problemas con la reproducción:\n\n1. Asegúrate de tener una conexión estable.\n2. El reproductor cuenta con protección anti-trampas. No intentes adelantar el video antes de haberlo visualizado de forma normal, o el avance se reajustará.\n3. Si ya visualizaste la clase previamente (ej. sesión en vivo), puedes utilizar el botón **"Bypass: Ya lo vi en vivo"** para desbloquear el examen directamente.',
+    buttons: [
+      { label: 'Volver a estudiante',      next: 'welcome_student' },
+    ],
+  },
+
+  estudiante_duracion: {
+    text: 'La duración varía según el programa formativo. Puedes consultar los detalles de horas curriculares, modalidad y temario en la ficha descriptiva de cada curso en **Explorar Cursos** o en el panel lateral del aula virtual.',
+    buttons: [
+      { label: 'Volver a estudiante',      next: 'welcome_student' },
+    ],
+  },
+
+  // ── FLUJOS ADMINISTRADOR ────────────────────────────────────────────────────
+  admin_gestion_cursos: {
+    text: 'Desde la pestaña **Gestión de Cursos** puedes realizar estas acciones:\n\n1. **Añadir Curso:** Haz clic en el botón de agregar. Define título, descripción, enlace de video (YouTube) y las preguntas del examen.\n2. **Editar:** Usa el icono de lápiz para modificar un curso existente.\n3. **Activar/Desactivar:** Haz clic en el interruptor de estado. Si un curso está inactivo, los alumnos no podrán verlo en el catálogo.',
+    buttons: [
+      { label: 'Volver a admin',           next: 'welcome_admin' },
+    ],
+  },
+
+  admin_webinars: {
+    text: 'Desde la pestaña **Webinars** puedes gestionar las transmisiones en vivo:\n\n1. **Crear/Editar:** Haz clic en "+ Crear Webinar" o en el icono de lápiz.\n2. **Fechas en Vivo (Automático):** Al configurar la fecha de inicio y fin, el sistema marcará automáticamente el webinar como **🔴 EN VIVO** en la página de inicio (Landing Page) durante ese periodo de tiempo.\n3. **Imagen del Webinar:** Puedes ingresar una **URL de imagen** directa o utilizar el botón **"Subir Archivo"** para cargar un archivo local (máx. 2MB).\n4. **Enlace y Visibilidad:** Agrega el enlace de la reunión (Zoom, Meet, etc.) y marca la casilla **"Activo"** para que sea visible en la web.',
+    buttons: [
+      { label: 'Volver a admin',           next: 'welcome_admin' },
+    ],
+  },
+
+  admin_matricula: {
+    text: 'Para gestionar matrículas y alumnos:\n\n1. Dirígete a la sección **Alumnos**.\n2. Busca al estudiante y haz clic en **Detalle / Matrícula**.\n3. Se abrirá su expediente con sus datos de contacto.\n4. Selecciona un programa y haz clic en **Inscribir Alumno**.\nTambién podrás auditar su Historial Académico y descargar sus constancias en esta ventana.',
+    buttons: [
+      { label: 'Bloquear alumnos',         next: 'admin_bloquear' },
+      { label: 'Volver a admin',           next: 'welcome_admin' },
+    ],
+  },
+
+  admin_bloquear: {
+    text: 'Si necesitas suspender temporalmente el acceso de un usuario:\n\n1. Ve a la sección **Alumnos**.\n2. Ubica al estudiante y haz clic en el candado de la columna de acciones.\n3. Confirma la acción. El alumno cambiará a estado "Bloqueado" y no podrá ingresar a su portal.',
+    buttons: [
+      { label: 'Volver a admin',           next: 'welcome_admin' },
+    ],
+  },
+
+  admin_reportes: {
+    text: 'En la sección **Reportes** puedes obtener las métricas y exportaciones:\n\n1. **EXCEL:** Descarga una base de datos en formato CSV con el listado de alumnos, su profesión, hospital, cursos inscritos y fecha de registro.\n2. **PDF:** Genera y abre un reporte ejecutivo imprimible con los KPIs de finalización, retención de cursos y certificados emitidos.',
+    buttons: [
+      { label: 'Volver a admin',           next: 'welcome_admin' },
+    ],
+  },
+
+  admin_seguridad: {
+    text: 'En la sección de **Administradores** puedes crear cuentas para otros colaboradores del portal.\n\nRecuerda asignar contraseñas seguras. Solo los administradores tienen permiso para editar la base de datos de Supabase y dar de alta cursos o preguntas.',
+    buttons: [
+      { label: 'Volver a admin',           next: 'welcome_admin' },
+    ],
+  },
+
   // ── Experiencias abiertas ────────────────────────────────────────────────────
   disponibles: {
-    text: 'Actualmente tenemos abierta la siguiente experiencia:\n\n**Paris International Diploma in ECMO**\nCertificación internacional en soporte vital extracorpóreo, desarrollada con el Hospital Pitié-Salpêtrière de París.\n\nFecha: **27 de octubre de 2026**\nSede: **INER — Instituto Nacional de Enfermedades Respiratorias, Ciudad de México**\nModalidad: Presencial\n\nCupo limitado.',
+    text: 'Actualmente tenemos abierta la siguiente experiencia:\n\n**Paris International Diploma in ECMO**\nCertificación internacional en soporte vital extracorpóreo, desarrollada con el Hospital Pitié-Salpêtrière de París.\n\nFecha: **27 de octubre de 2026**\nSede: **INER — Instituto Nacional de Enfermedaderas Respiratorias, Ciudad de México**\nModalidad: Presencial\n\nCupo limitado.',
     buttons: [
       { label: 'Ver temario completo',   next: 'temario' },
       { label: 'Quiénes lo imparten',    next: 'instructores' },
       { label: 'Quiero inscribirme',     next: 'inscripcion_paris' },
-      { label: 'Inicio',                 next: 'welcome' },
+      { label: 'Inicio',                 next: 'home_portal' },
     ],
   },
 
@@ -34,7 +150,7 @@ const FLOWS = {
     buttons: [
       { label: '¿Quién la fundó?',   next: 'fundadora' },
       { label: 'Ver programas',      next: 'programas' },
-      { label: 'Inicio',             next: 'welcome' },
+      { label: 'Inicio',             next: 'home_portal' },
     ],
   },
 
@@ -43,7 +159,7 @@ const FLOWS = {
     text: 'HCE fue fundada en 2024 por la **Dra. Jenifer Trejo Guerra**, médica especialista en Medicina Interna y Medicina Crítica con más de 8 años de experiencia en la UCI.\n\nRealizó su posgrado internacional en ECMO en el Hospital Pitié-Salpêtrière de París, uno de los centros de referencia mundial en soporte vital extracorpóreo.',
     buttons: [
       { label: 'Ver programas',   next: 'programas' },
-      { label: 'Inicio',          next: 'welcome' },
+      { label: 'Inicio',          next: 'home_portal' },
     ],
   },
 
@@ -54,7 +170,7 @@ const FLOWS = {
       { label: 'Diploma Paris ECMO',   next: 'paris' },
       { label: 'ECMO Sim',             next: 'ecmo_sim' },
       { label: 'ECMO Nursing Care',    next: 'nursing' },
-      { label: 'Inicio',               next: 'welcome' },
+      { label: 'Inicio',               next: 'home_portal' },
     ],
   },
 
@@ -65,7 +181,7 @@ const FLOWS = {
       { label: 'Ver temario completo',  next: 'temario' },
       { label: 'Quiénes lo imparten',   next: 'instructores' },
       { label: 'Quiero inscribirme',    next: 'inscripcion_paris' },
-      { label: 'Inicio',                next: 'welcome' },
+      { label: 'Inicio',                next: 'home_portal' },
     ],
   },
 
@@ -85,7 +201,7 @@ const FLOWS = {
     buttons: [
       { label: 'Quiero inscribirme',  next: 'inscripcion_paris' },
       { label: 'Volver a Paris',      next: 'paris' },
-      { label: 'Inicio',              next: 'welcome' },
+      { label: 'Inicio',              next: 'home_portal' },
     ],
   },
 
@@ -95,7 +211,7 @@ const FLOWS = {
     buttons: [
       { label: 'Ir a inscripción',       action: 'inscribirse' },
       { label: 'Hablar con un asesor',   next: 'contacto' },
-      { label: 'Inicio',                 next: 'welcome' },
+      { label: 'Inicio',                 next: 'home_portal' },
     ],
   },
 
@@ -105,7 +221,7 @@ const FLOWS = {
     buttons: [
       { label: 'Acceder al simulador',   action: 'ecmo_sim_buy' },
       { label: 'Ver otros programas',    next: 'programas' },
-      { label: 'Inicio',                 next: 'welcome' },
+      { label: 'Inicio',                 next: 'home_portal' },
     ],
   },
 
@@ -115,7 +231,7 @@ const FLOWS = {
     buttons: [
       { label: 'Hablar con un asesor',   next: 'contacto' },
       { label: 'Ver otros programas',    next: 'programas' },
-      { label: 'Inicio',                 next: 'welcome' },
+      { label: 'Inicio',                 next: 'home_portal' },
     ],
   },
 
@@ -125,7 +241,7 @@ const FLOWS = {
     buttons: [
       { label: 'WhatsApp',            action: 'whatsapp' },
       { label: 'Correo electrónico',  action: 'email' },
-      { label: 'Inicio',              next: 'welcome' },
+      { label: 'Inicio',              next: 'home_portal' },
     ],
   },
 
@@ -197,7 +313,14 @@ export default function ChatBot() {
     setShowTooltip(false);
     if (!hasOpened) {
       setHasOpened(true);
-      addBotMessage('welcome', 600);
+      const path = window.location.pathname;
+      if (path.startsWith('/admin')) {
+        addBotMessage('welcome_admin', 600);
+      } else if (path.startsWith('/dashboard') || path.startsWith('/classroom')) {
+        addBotMessage('welcome_student', 600);
+      } else {
+        addBotMessage('welcome', 600);
+      }
     }
   };
 
@@ -208,6 +331,11 @@ export default function ChatBot() {
     ]);
     if (btn.action === 'inscribirse') {
       navigate('/inscripciones-diploma-paris-ecmo');
+      setIsOpen(false);
+      return;
+    }
+    if (btn.action === 'login') {
+      navigate('/login');
       setIsOpen(false);
       return;
     }
@@ -223,6 +351,22 @@ export default function ChatBot() {
       window.open('mailto:info@hce.mx', '_blank');
       return;
     }
+    
+    // Resolve welcome redirection dynamically based on route
+    if (btn.next === 'home_portal') {
+      const path = window.location.pathname;
+      if (path.startsWith('/admin')) {
+        addBotMessage('welcome_admin');
+        return;
+      } else if (path.startsWith('/dashboard') || path.startsWith('/classroom')) {
+        addBotMessage('welcome_student');
+        return;
+      } else {
+        addBotMessage('welcome');
+        return;
+      }
+    }
+
     if (btn.next) addBotMessage(btn.next);
   };
 

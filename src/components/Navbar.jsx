@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Users, Heart, Activity, Award, Gamepad2, PlayCircle, Hospital, Home as HomeIcon, Image, Camera } from 'lucide-react';
+import { X, Users, Heart, Activity, Award, Gamepad2, PlayCircle, Hospital, Home as HomeIcon, Image, Camera, LogIn, User, LogOut, ExternalLink, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
 const Navbar = () => {
+  const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
 
@@ -48,6 +50,30 @@ const Navbar = () => {
             <img src="/assets/componentes/ghghg-scaled.png" alt="HCE Logo" />
           </Link>
         </div>
+
+        <div className="header-user-action">
+          <a
+            href="https://campus.healthcareexp.com/plus/login"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-campus-link"
+          >
+            Campus Virtual
+            <ExternalLink size={13} />
+          </a>
+
+          {user ? (
+            <Link to="/dashboard" className="btn-portal">
+              <User size={16} />
+              <span className="btn-portal-text">Mi Portal</span>
+            </Link>
+          ) : (
+            <Link to="/login" className="btn-portal login-style">
+              <LogIn size={16} />
+              <span className="btn-portal-text">Acceso Alumnos</span>
+            </Link>
+          )}
+        </div>
       </header>
 
       {/* Overlay Navigation */}
@@ -64,10 +90,24 @@ const Navbar = () => {
             <Link to="/" onClick={() => toggleNav(false)} className="nav-logo-link">
               <img src="/assets/componentes/ghghg-scaled.png" alt="HCE Logo" />
             </Link>
-            <div className="nav-home-wrapper">
+            <div className="nav-home-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                <Link to="/" onClick={() => toggleNav(false)} className="nav-home-item">
                   <HomeIcon size={20} /> Inicio
                </Link>
+               {user ? (
+                 <>
+                   <Link to="/dashboard" onClick={() => toggleNav(false)} className="nav-home-item">
+                     <User size={20} /> Mi Portal
+                   </Link>
+                   <a href="#" onClick={(e) => { e.preventDefault(); logout(); toggleNav(false); }} className="nav-home-item" style={{ color: '#ff7675' }}>
+                     <LogOut size={20} /> Cerrar Sesión
+                   </a>
+                 </>
+               ) : (
+                 <Link to="/login" onClick={() => toggleNav(false)} className="nav-home-item">
+                   <LogIn size={20} /> Acceso Alumnos
+                 </Link>
+               )}
             </div>
           </div>
 
@@ -77,6 +117,7 @@ const Navbar = () => {
             <ul className="menu-list">
               <li><Link to="/quienes-somos" onClick={() => toggleNav(false)}><Users size={18} /> Quiénes Somos</Link></li>
               <li><Link to="/instructores" onClick={() => toggleNav(false)}><Users size={18} /> Instructores</Link></li>
+              <li><Link to="/comunidad" onClick={() => toggleNav(false)}><MessageSquare size={18} /> Testimonios y Foro</Link></li>
             </ul>
           </div>
 
@@ -84,6 +125,19 @@ const Navbar = () => {
           <div className="menu-section">
             <h3>Experiencias</h3>
             <ul className="menu-list">
+              <li>
+                <a
+                  href="https://campus.healthcareexp.com/plus/login"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="menu-campus-link"
+                  onClick={() => toggleNav(false)}
+                >
+                  <PlayCircle size={18} />
+                  Campus Virtual
+                  <ExternalLink size={13} className="menu-campus-ext" />
+                </a>
+              </li>
               {/* <li><Link to="/insuficiencia-cardiaca" onClick={() => toggleNav(false)}><Heart size={18} /> Insuficiencia Cardiaca</Link></li> */}
               {/* <li><Link to="/ecmo-nursing-care" onClick={() => toggleNav(false)}><Activity size={18} /> ECMO Nursing Care</Link></li> */}
               <li><Link to="/paris-diploma-ecmo" onClick={() => toggleNav(false)}><Award size={18} /> Paris Diploma ECMO</Link></li>
@@ -117,6 +171,8 @@ const Navbar = () => {
               <li><Link to="/galeria?tab=santiago-chile-2025" onClick={() => toggleNav(false)}><Camera size={18} /> Santiago de Chile (Octubre 2025)</Link></li>
             </ul>
           </div>
+
+          {/* Alumnos / Mi Portal moved to the left sidebar */}
 
         </div>
       </nav>

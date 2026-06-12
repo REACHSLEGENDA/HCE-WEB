@@ -1,0 +1,490 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Light Clinical Background with Grid and EKG */
+.clinical-bg-light {
+  position: relative;
+  overflow: hidden !important;
+  background: linear-gradient(135deg, #FFFFFF 0%, #F0F9FB 100%) !important;
+}
+
+.clinical-bg-light::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+      url('data:image/svg+xml;utf8,<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M20 0v40M0 20h40" stroke="rgba(0,188,212,0.04)" stroke-width="1" fill="none"/></svg>'),
+      radial-gradient(circle at 15% 50%, rgba(0, 188, 212, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(2, 136, 209, 0.04) 0%, transparent 50%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.clinical-bg-light::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 200%; height: 100%;
+  background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='200' viewBox='0 0 1000 200'%3E%3Cpath d='M0 100 L100 100 L120 100 L130 60 L145 140 L160 100 L180 100 L200 100' fill='none' stroke='%2300BCD4' stroke-width='1.5' stroke-opacity='0.07'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: left 45%;
+  background-size: 50% 100px;
+  z-index: -1;
+  pointer-events: none;
+  animation: ekgScroll 12s linear infinite;
+}
+
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  flex-grow: 1;
+}
+
+/* White Clinical Login Card */
+.login-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 188, 212, 0.15);
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.04), 0 5px 15px rgba(0, 188, 212, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  transition: all 0.3s ease;
+}
+
+.login-card:hover {
+  border-color: rgba(0, 188, 212, 0.3);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.06), 0 5px 20px rgba(0, 188, 212, 0.03);
+}
+
+.login-card.large-card {
+  max-width: 740px;
+}
+
+.login-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-header h2 {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: #1A2B3C;
+  line-height: 1.25;
+  margin: 4px 0 0;
+}
+
+.login-header p {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(0, 188, 212, 0.1);
+  color: #00BCD4;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 100px;
+  letter-spacing: 0.5px;
+}
+
+.login-tabs {
+  display: flex;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  padding: 5px;
+  border-radius: 100px;
+  gap: 4px;
+}
+
+.tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 100px;
+  color: #64748b;
+  font-family: 'Sora', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  color: #1A2B3C;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #00BCD4 0%, #0288D1 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.2);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-group label {
+  color: #1A2B3C;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: 'Sora', sans-serif;
+}
+
+.label-hint {
+  font-weight: 400;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forgot-link {
+  background: none;
+  border: none;
+  color: #0288D1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.forgot-link:hover {
+  color: #00BCD4;
+  text-decoration: underline;
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  transition: color 0.2s ease;
+  pointer-events: none;
+}
+
+.input-wrapper input,
+.input-wrapper select {
+  width: 100%;
+  padding: 12px 16px 12px 42px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  color: #1A2B3C;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.input-wrapper input:focus,
+.input-wrapper select:focus {
+  outline: none;
+  border-color: #00BCD4;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.15);
+}
+
+.input-wrapper input:focus + .input-icon,
+.input-wrapper select:focus + .input-icon {
+  color: #00BCD4;
+}
+
+/* Grado académico dropdown */
+.select-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2364748b'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px !important;
+}
+
+/* Telephone Input Wrapper */
+.tel-group-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.tel-group-wrapper .phone-select__trigger {
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+}
+
+/* Visibility Password Toggle button */
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+  color: #00BCD4;
+  background-color: #F1F5F9;
+}
+
+/* Responsive registration form grid layout */
+.signup-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px 18px;
+}
+
+@media (min-width: 640px) {
+  .signup-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .signup-form-grid .span-2 {
+    grid-column: span 2;
+  }
+}
+
+/* Custom PhoneSelect elements */
+.phone-select {
+  position: relative;
+  display: flex;
+}
+
+.phone-select__trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  min-height: 46px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1A2B3C;
+  white-space: nowrap;
+  transition: border-color 0.2s, background-color 0.2s;
+  box-sizing: border-box;
+}
+
+.phone-select__trigger:hover {
+  background-color: #F8FAFC;
+  border-color: #94A3B8;
+}
+
+.phone-select__flag {
+  width: 20px;
+  height: 14px;
+  object-fit: cover;
+  border-radius: 1px;
+  flex-shrink: 0;
+  border: 1px solid #E2E8F0;
+}
+
+.phone-select__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 999;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  overflow-y: auto;
+  max-height: 240px;
+  min-width: 150px;
+}
+
+.phone-select__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #1A2B3C;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.phone-select__option:hover {
+  background: #F1F5F9;
+}
+
+.phone-select__option.active {
+  background: #E0F7FA;
+  font-weight: 700;
+  color: #00BCD4;
+}
+
+.phone-select__dial {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+/* Alert Messages styling */
+.auth-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.alert-error {
+  background: rgba(244, 81, 30, 0.08);
+  border: 1px solid rgba(244, 81, 30, 0.2);
+  color: #F4511E;
+}
+
+.alert-success {
+  background: rgba(67, 160, 71, 0.08);
+  border: 1px solid rgba(67, 160, 71, 0.2);
+  color: #43A047;
+}
+
+/* Recovery header & elements */
+.recovery-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.4rem;
+  color: #1A2B3C;
+  text-align: center;
+  margin: 0 0 4px;
+}
+
+.recovery-desc {
+  color: #64748b;
+  font-size: 0.88rem;
+  text-align: center;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+
+.back-to-login {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  margin-top: 8px;
+  text-align: center;
+  font-family: 'Sora', sans-serif;
+}
+
+.back-to-login:hover {
+  color: #00BCD4;
+}
+
+.w-full {
+  width: 100%;
+}
+
+/* Button style override to use premium clinical gradient */
+.login-card .btn-primary {
+  background: linear-gradient(135deg, #00BCD4 0%, #0288D1 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 100px;
+  padding: 12px 24px;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.2);
+  transition: all 0.25s ease;
+}
+
+.login-card .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 188, 212, 0.3);
+}
+
+.login-card .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 767px) {
+  .login-card {
+    padding: 30px 20px;
+  }
+}

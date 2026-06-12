@@ -202,3 +202,37 @@
   .testi-marquee-wrapper::after { width: 50px; }
   .premium-testimonial-card { width: 300px; padding: 1.5rem; }
 }
+
+.testi-cta-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 3.5rem;
+  position: relative;
+  z-index: 5;
+}
+
+.btn-testi-forum {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #00bcd4 0%, #0288d1 100%);
+  color: #ffffff;
+  padding: 14px 32px;
+  border-radius: 50px;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-testi-forum:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 188, 212, 0.4);
+  background: linear-gradient(135deg, #00acc1 0%, #0277bd 100%);
+}
+
+.btn-testi-forum:active {
+  transform: translateY(-1px);
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
 import { MessageSquare, Quote, Star, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './Testimonials.css';
 
 const TestimonialCard = ({ img, name, role, text, delay }) => {
@@ -87,6 +88,12 @@ const Testimonials = () => {
             <TestimonialCard key={idx} {...t} />
           ))}
         </div>
+      </div>
+
+      <div className="testi-cta-container">
+        <Link to="/comunidad" className="btn-testi-forum">
+          <MessageSquare size={16} /> Ver testimonios y participar en el foro
+        </Link>
       </div>
     </section>
   );

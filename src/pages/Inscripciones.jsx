@@ -44,6 +44,7 @@ const fmt = (n, cur) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: cur.toUpperCase(), maximumFractionDigits: 0 }).format(n);
 
 import { useSEO } from '../hooks/useSEO';
+import { COUNTRIES as ALL_COUNTRIES, getFlagUrl } from '../data/countries';
 
 export default function Inscripciones() {
   useSEO({
@@ -493,14 +494,23 @@ const COUNTRIES = [
   { code: '+502', iso: 'gt', label: 'GT' },
   { code: '+506', iso: 'cr', label: 'CR' },
   { code: '+503', iso: 'sv', label: 'SV' },
+  { code: '+504', iso: 'hn', label: 'HN' },
+  { code: '+505', iso: 'ni', label: 'NI' },
   { code: '+58',  iso: 've', label: 'VE' },
   { code: '+591', iso: 'bo', label: 'BO' },
   { code: '+595', iso: 'py', label: 'PY' },
   { code: '+598', iso: 'uy', label: 'UY' },
   { code: '+507', iso: 'pa', label: 'PA' },
-  { code: '+34',  iso: 'es', label: 'ES' },
+  { code: '+1787', iso: 'pr', label: 'PR' },
+  { code: '+1809', iso: 'do', label: 'DO' },
+  { code: '+53',   iso: 'cu', label: 'CU' },
+  { code: '+509',  iso: 'ht', label: 'HT' },
+  { code: '+55',   iso: 'br', label: 'BR' },
+  { code: '+34',   iso: 'es', label: 'ES' },
   { code: '+33',  iso: 'fr', label: 'FR' },
 ];
+
+
 
 function PhoneSelect({ value, onChange }) {
   const [open, setOpen] = useState(false);
@@ -560,6 +570,7 @@ export function RegistrationForm() {
     pais: '', estado: '', grado: '', especialidad: '', institucion: '', cargo: '',
   });
   const [status, setStatus] = useState('idle');
+  const [showCountrySuggestions, setShowCountrySuggestions] = useState(false);
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -659,9 +670,68 @@ export function RegistrationForm() {
                 <input type="tel" value={form.telefono} onChange={set('telefono')} required placeholder="10 dígitos" />
               </div>
             </div>
-            <div className="reg-field">
+            <div className="reg-field" style={{ position: 'relative' }}>
               <label>País *</label>
-              <input type="text" value={form.pais} onChange={set('pais')} required />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input 
+                  type="text" 
+                  value={form.pais} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setForm(f => ({ ...f, pais: val }));
+                    setShowCountrySuggestions(true);
+                  }}
+                  onFocus={() => setShowCountrySuggestions(true)}
+                  onBlur={() => {
+                    setTimeout(() => setShowCountrySuggestions(false), 250);
+                  }}
+                  required 
+                  style={{ paddingRight: getFlagUrl(form.pais) ? '45px' : '12px', width: '100%' }}
+                  placeholder="Escribe tu país..."
+                  autoComplete="off"
+                />
+                {getFlagUrl(form.pais) && (
+                  <img 
+                    src={getFlagUrl(form.pais)} 
+                    alt="Bandera" 
+                    style={{ 
+                      position: 'absolute', 
+                      right: '12px', 
+                      height: '18px', 
+                      width: 'auto', 
+                      borderRadius: '3px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                      pointerEvents: 'none'
+                    }} 
+                  />
+                )}
+              </div>
+
+              {showCountrySuggestions && form.pais.trim().length > 0 && (
+                <div className="country-autocomplete-dropdown">
+                  {ALL_COUNTRIES.filter(c => {
+                    const cleanName = c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const cleanInput = form.pais.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    return cleanName.includes(cleanInput);
+                  }).slice(0, 5).map(c => (
+                    <div 
+                      key={c.code} 
+                      className="country-suggestion-item"
+                      onMouseDown={() => {
+                        setForm(f => ({ ...f, pais: c.name }));
+                        setShowCountrySuggestions(false);
+                      }}
+                    >
+                      <img 
+                        src={`https://flagcdn.com/w40/${c.code}.png`} 
+                        alt={c.name} 
+                        className="suggestion-flag" 
+                      />
+                      <span>{c.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="reg-field">
               <label>Estado / Ciudad *</label>

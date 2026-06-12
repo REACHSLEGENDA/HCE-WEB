@@ -150,8 +150,12 @@
 
 /* ── Chat window ────────────────────────── */
 .hce-chat-window {
+  position: absolute;
+  bottom: 122px;
+  right: 0;
   width: 420px;
   height: 580px;
+  max-height: calc(100vh - 170px);
   background: #0A1A2F;
   border-radius: 22px;
   display: flex;

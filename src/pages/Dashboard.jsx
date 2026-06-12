@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -26,18 +27,28 @@ import {
   Sparkles,
   Eye,
   EyeOff,
+  Sun,
+  Moon,
+  Monitor,
   Heart,
   Stethoscope,
   HeartPulse,
   Gamepad2,
   ArrowRight,
-  Compass
+  Compass,
+  MessageSquare,
+  Star,
+  Send,
+  Trash2
 } from 'lucide-react';
 import './Dashboard.css';
 import '../components/Experiences.css';
 
+import { COUNTRIES as ALL_COUNTRIES, getFlagUrl } from '../data/countries';
+
 const Dashboard = () => {
-  const { user, profile, logout } = useAuth();
+  const { user, profile, logout, updateUserMetadata, updateProfile } = useAuth();
+  const { showToast } = useNotification();
   const navigate = useNavigate();
 
   // Redirect to admin portal if role is admin
@@ -50,31 +61,6 @@ const Dashboard = () => {
   // Sidebar states
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const playerRef = useRef(null);
-  const progressIntervalRef = useRef(null);
-
-  // Course player states
-  const [selectedCourse, setSelectedCourse] = useState(() => {
-    const saved = localStorage.getItem('studentSelectedCourse');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [watchPercent, setWatchPercent] = useState(() => {
-    const saved = localStorage.getItem('studentWatchPercent');
-    return saved ? parseInt(saved) : 0;
-  });
-  const [showExam, setShowExam] = useState(() => {
-    return localStorage.getItem('studentShowExam') === 'true';
-  });
-  const [examAnswers, setExamAnswers] = useState(() => {
-    const saved = localStorage.getItem('studentExamAnswers');
-    return saved ? JSON.parse(saved) : {};
-  });
-  const [examScore, setExamScore] = useState(() => {
-    const saved = localStorage.getItem('studentExamScore');
-    return saved && saved !== 'null' ? parseInt(saved) : null;
-  });
-  const [isGeneratingCert, setIsGeneratingCert] = useState(false);
-  const [generatedCertUrl, setGeneratedCertUrl] = useState('');
   const [myCertificates, setMyCertificates] = useState([]);
   
   // Dashboard Tabs: 'dashboard' | 'courses' | 'certificates' | 'profile' | 'settings'
@@ -86,7 +72,28 @@ const Dashboard = () => {
     setActiveTabState(tab);
     localStorage.setItem('studentActiveTab', tab);
   };
-  
+
+  const [theme, setThemeState] = useState(() => {
+    return localStorage.getItem('studentTheme') || 'light';
+  });
+
+  const setTheme = (t) => {
+    setThemeState(t);
+    localStorage.setItem('studentTheme', t);
+  };
+
+  // Resolve effective theme (system → OS preference)
+  const effectiveTheme = theme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : theme;
+
+  const bannerRef = useRef(null);
+  useEffect(() => {
+    if (!bannerRef.current) return;
+    bannerRef.current.style.setProperty('background-color', effectiveTheme === 'dark' ? '#1A2535' : '#F0F9FB', 'important');
+    bannerRef.current.style.setProperty('border-color', effectiveTheme === 'dark' ? '#2A3B50' : 'rgba(0,188,212,0.15)', 'important');
+  }, [effectiveTheme]);
+
   // Settings Form State
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -95,6 +102,121 @@ const Dashboard = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Avatar Upload State
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('La foto de perfil debe ser menor a 2MB', 'error');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result;
+        // 1. Update auth metadata
+        await updateUserMetadata({ avatar_url: base64String });
+        // 2. Try to update profiles table
+        try {
+          await updateProfile({ avatar_url: base64String });
+        } catch (dbErr) {
+          console.warn('Could not update avatar_url in profiles table:', dbErr.message);
+        }
+        showToast('Foto de perfil actualizada correctamente', 'success');
+        setUploadingAvatar(false);
+      };
+      reader.onerror = () => {
+        showToast('Error al leer el archivo de imagen', 'error');
+        setUploadingAvatar(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Error updating profile picture:', err);
+      showToast('Error al actualizar la foto de perfil', 'error');
+      setUploadingAvatar(false);
+    }
+  };
+
+  // Profile Edit States
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    nombre_completo: '',
+    telefono: '',
+    pais: '',
+    estado: '',
+    grado: '',
+    especialidad: '',
+    institucion: '',
+    cargo: ''
+  });
+  const [showProfileCountrySuggestions, setShowProfileCountrySuggestions] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const startEditingProfile = () => {
+    setProfileForm({
+      nombre_completo: profile?.nombre_completo || '',
+      telefono: profile?.telefono || '',
+      pais: user?.user_metadata?.pais || '',
+      estado: user?.user_metadata?.estado || '',
+      grado: user?.user_metadata?.grado || '',
+      especialidad: user?.user_metadata?.especialidad || '',
+      institucion: user?.user_metadata?.institucion || '',
+      cargo: user?.user_metadata?.cargo || ''
+    });
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      // 1. Update profiles table (with fallback if columns do not exist in database yet)
+      try {
+        await updateProfile({
+          nombre_completo: profileForm.nombre_completo,
+          telefono: profileForm.telefono,
+          pais: profileForm.pais,
+          estado: profileForm.estado,
+          grado: profileForm.grado,
+          especialidad: profileForm.especialidad,
+          institucion: profileForm.institucion,
+          cargo: profileForm.cargo
+        });
+      } catch (dbErr) {
+        console.warn('Could not update extended columns in profiles table, falling back to basic.', dbErr.message);
+        await updateProfile({
+          nombre_completo: profileForm.nombre_completo,
+          telefono: profileForm.telefono
+        });
+      }
+
+      // 2. Update auth metadata
+      await updateUserMetadata({
+        pais: profileForm.pais,
+        estado: profileForm.estado,
+        grado: profileForm.grado,
+        especialidad: profileForm.especialidad,
+        institucion: profileForm.institucion,
+        cargo: profileForm.cargo
+      });
+
+      showToast('Perfil actualizado correctamente', 'success');
+      setIsEditingProfile(false);
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      showToast('Error al actualizar el perfil', 'error');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   // Notification states
   const [showNotifications, setShowNotifications] = useState(false);
@@ -142,9 +264,10 @@ const Dashboard = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
     } catch (err) {
       console.error('Error al cerrar sesión:', err);
+    } finally {
+      navigate('/login');
     }
   };
 
@@ -190,249 +313,7 @@ const Dashboard = () => {
     }
   }, [user, fetchMyCertificates]);
 
-  const initYoutubePlayer = useCallback((videoId) => {
-    if (playerRef.current) {
-      playerRef.current.destroy();
-    }
 
-    // Extract Video ID if full URL is provided
-    let cleanVideoId = videoId;
-    if (videoId.includes('youtube.com') || videoId.includes('youtu.be')) {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-      const match = videoId.match(regExp);
-      if (match && match[2].length === 11) {
-        cleanVideoId = match[2];
-      }
-    }
-
-    try {
-      playerRef.current = new window.YT.Player('youtube-player', {
-        height: '100%',
-        width: '100%',
-        videoId: cleanVideoId,
-        playerVars: {
-          playsinline: 1,
-          rel: 0,
-          controls: 1
-        },
-        events: {
-          onStateChange: (event) => {
-            if (event.data === window.YT.PlayerState.PLAYING) {
-              startTrackingProgress();
-            } else {
-              stopTrackingProgress();
-            }
-          }
-        }
-      });
-    } catch (err) {
-      console.error('Error initializing YouTube Player:', err);
-    }
-  }, []);
-
-  // YouTube Player progress tracking logic
-  useEffect(() => {
-    let checkYoutubeAPI;
-    if (selectedCourse && selectedCourse.youtube_video_id) {
-      checkYoutubeAPI = setInterval(() => {
-        if (window.YT && window.YT.Player) {
-          initYoutubePlayer(selectedCourse.youtube_video_id);
-          clearInterval(checkYoutubeAPI);
-        }
-      }, 500);
-    }
-    return () => {
-      if (checkYoutubeAPI) clearInterval(checkYoutubeAPI);
-      stopTrackingProgress();
-      if (playerRef.current) {
-        playerRef.current.destroy();
-        playerRef.current = null;
-      }
-    };
-  }, [selectedCourse, initYoutubePlayer]);
-
-  useEffect(() => {
-    if (selectedCourse) {
-      localStorage.setItem('studentSelectedCourse', JSON.stringify(selectedCourse));
-    } else {
-      localStorage.removeItem('studentSelectedCourse');
-    }
-  }, [selectedCourse]);
-
-  useEffect(() => {
-    localStorage.setItem('studentWatchPercent', watchPercent);
-  }, [watchPercent]);
-
-  useEffect(() => {
-    localStorage.setItem('studentShowExam', showExam);
-  }, [showExam]);
-
-  useEffect(() => {
-    localStorage.setItem('studentExamAnswers', JSON.stringify(examAnswers));
-  }, [examAnswers]);
-
-  useEffect(() => {
-    if (examScore !== null) {
-      localStorage.setItem('studentExamScore', examScore);
-    } else {
-      localStorage.removeItem('studentExamScore');
-    }
-  }, [examScore]);
-
-  const startTrackingProgress = () => {
-    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-    progressIntervalRef.current = setInterval(() => {
-      if (playerRef.current && playerRef.current.getCurrentTime) {
-        const currentTime = playerRef.current.getCurrentTime();
-        const duration = playerRef.current.getDuration();
-        if (duration > 0) {
-          const percent = Math.floor((currentTime / duration) * 100);
-          setWatchPercent(prev => Math.max(prev, percent));
-        }
-      }
-    }, 1000);
-  };
-
-  const stopTrackingProgress = () => {
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
-    }
-  };
-
-  const closeCoursePlayer = () => {
-    stopTrackingProgress();
-    if (playerRef.current) {
-      playerRef.current.destroy();
-      playerRef.current = null;
-    }
-    setSelectedCourse(null);
-    setWatchPercent(0);
-    setShowExam(false);
-    setExamAnswers({});
-    setExamScore(null);
-    setGeneratedCertUrl('');
-  };
-
-  const handleOpenCoursePlayer = (course) => {
-    setSelectedCourse(course);
-    setWatchPercent(0);
-    setShowExam(false);
-    setExamAnswers({});
-    setExamScore(null);
-    setGeneratedCertUrl('');
-  };
-
-  const handleEvaluateExam = () => {
-    if (!selectedCourse) return;
-    const questions = selectedCourse.questions || [];
-    let correctCount = 0;
-    
-    questions.forEach((q, index) => {
-      if (examAnswers[index] === q.correct_option_index) {
-        correctCount += 1;
-      }
-    });
-    
-    const score = questions.length > 0 ? Math.floor((correctCount / questions.length) * 100) : 100;
-    setExamScore(score);
-    
-    const passingScore = selectedCourse.minAprobacion || selectedCourse.min_aprobacion || 80;
-    if (score >= passingScore) {
-      generateCertificate(score);
-    } else {
-      alert(`Tu calificación fue de ${score}%. Necesitas un mínimo de ${passingScore}% para aprobar. Vuelve a intentarlo.`);
-      setExamAnswers({});
-    }
-  };
-
-  const generateCertificate = async (scoreToUse = 100) => {
-    if (!selectedCourse || !user) return;
-    setIsGeneratingCert(true);
-    try {
-      const templateSrc = selectedCourse.certificado_template_url || 'https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-25-51-449.png';
-      
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = templateSrc;
-      
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = () => reject(new Error('No se pudo cargar la plantilla del certificado.'));
-      });
-      
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      
-      const x = selectedCourse.certificado_x || (canvas.width / 2);
-      const y = selectedCourse.certificado_y || (canvas.height / 2);
-      const fontSize = selectedCourse.certificado_font_size || 40;
-      
-      ctx.font = `bold ${fontSize}px Georgia, serif`;
-      ctx.fillStyle = '#1B2B3C';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      const studentName = profile?.nombre_completo || user.user_metadata?.nombre_completo || user.email;
-      ctx.fillText(studentName, x, y);
-      
-      const blob = await new Promise((resolve) => {
-        canvas.toBlob(resolve, 'image/png');
-      });
-
-      const folio = `FOL-${Math.floor(100000 + Math.random() * 900000)}`;
-      const filePath = `${user.id}/${selectedCourse.id}_${folio}.png`;
-      const dataUrl = canvas.toDataURL('image/png');
-      
-      let finalCertUrl = dataUrl;
-
-      try {
-        const { error: uploadError } = await supabase.storage
-          .from('certificates')
-          .upload(filePath, blob, { upsert: true });
-          
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('certificates')
-          .getPublicUrl(filePath);
-          
-        finalCertUrl = publicUrl;
-
-        const { error: dbError } = await supabase
-          .from('certificates')
-          .insert([{
-            user_id: user.id,
-            course_id: selectedCourse.id,
-            pdf_url: publicUrl,
-            folio: folio,
-            score: scoreToUse
-          }]);
-          
-        if (dbError) throw dbError;
-        alert('¡Certificado generado y guardado en tu perfil con éxito!');
-      } catch (uploadErr) {
-        console.warn('Storage upload or DB insert failed. Falling back to local Base64 URL. Error:', uploadErr.message);
-        alert('Aviso: No se pudo guardar el certificado en el servidor (asegúrate de crear el bucket "certificates" en Supabase). Podrás descargarlo directamente en tu navegador.');
-      }
-      
-      setGeneratedCertUrl(finalCertUrl);
-      try {
-        await fetchMyCertificates();
-      } catch (fErr) {
-        console.warn('Could not fetch certificates from Supabase:', fErr.message);
-      }
-    } catch (err) {
-      console.error('Error generating certificate:', err.message);
-      alert('Error al generar certificado: ' + err.message);
-    } finally {
-      setIsGeneratingCert(false);
-    }
-  };
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -455,7 +336,49 @@ const Dashboard = () => {
     }
   };
 
-  const freeCourses = [];
+  const premiumSponsorCourses = [
+    {
+      id: 1,
+      title: 'Manejo de avanzada en insuficiencia cardiaca',
+      description: 'Domina los criterios de selección para asistencia ventricular y trasplante con simulación HARVI de alta precisión.',
+      image: '/assets/componentes/06_HCE Banners Programas_Insuficiencia Cardiaca.png',
+      link: '/insuficiencia-cardiaca',
+      badge: 'PRÓXIMAMENTE',
+      badgeClass: 'badge-info',
+      icon: Heart
+    },
+    {
+      id: 2,
+      title: 'ECMO Nursing Care Course',
+      description: 'El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo.',
+      image: '/assets/componentes/06_HCE_Banners_Programas_ECMO_Nursing.png',
+      link: '/ecmo-nursing-care',
+      badge: 'PRÓXIMAMENTE',
+      badgeClass: 'badge-info',
+      icon: Stethoscope
+    },
+    {
+      id: 3,
+      title: 'Paris International Diploma in ECMO',
+      description: 'La especialización de mayor prestigio global en ECMO. Desarrolla competencias críticas para liderar equipos de soporte extracorpóreo al más alto nivel clínico.',
+      image: '/assets/componentes/06_HCE_Banners_Programas_Paris_Diploma_in_ECMO.png',
+      link: '/paris-diploma-ecmo',
+      icon: HeartPulse
+    },
+    {
+      id: 4,
+      title: 'ECMO SIM: Realidad Clínica',
+      description: 'Simulación de alta fidelidad con tecnología inmersiva de vanguardia. Domina el manejo de escenarios críticos en un entorno clínico interactivo y seguro.',
+      image: '/assets/componentes/06_HCE_Banners_Programas_Ecmo_SIM.png',
+      link: '/simulador-ecmo-sim',
+      badge: 'SIMULADOR',
+      badgeClass: 'badge-warning',
+      icon: Gamepad2
+    },
+  ];
+
+  const premiumCoursesOnly = premiumSponsorCourses.filter(course => course.badge !== 'SIMULADOR');
+  const simulatorCoursesOnly = premiumSponsorCourses.filter(course => course.badge === 'SIMULADOR');
 
   const [catalogCourses, setCatalogCourses] = useState(() => {
     const saved = localStorage.getItem('courses');
@@ -492,6 +415,7 @@ const Dashboard = () => {
           certificado_font_size: c.certificado_font_size,
           minAprobacion: c.min_aprobacion,
           activo: c.activo,
+          category_id: c.category_id,
           questions: dbQuestions || []
         };
       }));
@@ -523,8 +447,173 @@ const Dashboard = () => {
     return () => window.removeEventListener('storage', loadCourses);
   }, []);
 
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const getActionText = () => {
+      switch(activeTab) {
+        case 'dashboard': return 'Explorando: Panel de Control';
+        case 'explore': return 'Explorando: Catálogo de Cursos';
+        case 'courses': return 'Navegando: Mis Cursos';
+        case 'certificates': return 'Revisando: Certificados';
+        case 'profile': return 'Editando: Mi Perfil';
+        case 'settings': return 'Ajustando: Configuración';
+        default: return 'Activo en el Portal';
+      }
+    };
+
+    const getBrowserAndOS = () => {
+      const ua = navigator.userAgent;
+      let browser = 'Chrome';
+      let device = 'Windows';
+
+      if (ua.indexOf('Firefox') > -1) browser = 'Firefox';
+      else if (ua.indexOf('SamsungBrowser') > -1) browser = 'Samsung Browser';
+      else if (ua.indexOf('Opera') > -1 || ua.indexOf('OPR') > -1) browser = 'Opera';
+      else if (ua.indexOf('Edge') > -1 || ua.indexOf('Edg') > -1) browser = 'Edge';
+      else if (ua.indexOf('Chrome') > -1) browser = 'Chrome';
+      else if (ua.indexOf('Safari') > -1) browser = 'Safari';
+
+      if (ua.indexOf('Windows NT') > -1) device = 'Windows';
+      else if (ua.indexOf('Macintosh') > -1) device = 'Mac';
+      else if (ua.indexOf('Android') > -1) device = 'Android';
+      else if (ua.indexOf('iPhone') > -1 || ua.indexOf('iPad') > -1) device = 'iPhone';
+      else if (ua.indexOf('Linux') > -1) device = 'Linux';
+
+      return { browser, device };
+    };
+
+    const getMockIP = (uid) => {
+      if (!uid) return '189.143.12.45';
+      let hash = 0;
+      for (let i = 0; i < uid.length; i++) {
+        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const part3 = Math.abs((hash >> 8) & 255);
+      const part4 = Math.abs(hash & 255);
+      return `189.143.${part3}.${part4}`;
+    };
+
+    const sendConnectionState = async (isOnline) => {
+      const action = isOnline ? getActionText() : 'Desconectado';
+      const lastActive = isOnline ? new Date().toISOString() : new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const { browser, device } = getBrowserAndOS();
+      const ip = getMockIP(user.id);
+
+      // Local storage
+      try {
+        const allKey = 'backup_all_student_activities';
+        const savedAll = localStorage.getItem(allKey);
+        const allActivities = savedAll ? JSON.parse(savedAll) : {};
+        
+        allActivities[user.id] = {
+          user_id: user.id,
+          session_duration: (allActivities[user.id]?.session_duration || 300) + (isOnline ? 10 : 0),
+          last_active_at: lastActive,
+          current_action: action,
+          browser,
+          device,
+          ip_address: ip,
+          updated_at: new Date().toISOString()
+        };
+        localStorage.setItem(allKey, JSON.stringify(allActivities));
+      } catch (err) {
+        console.warn('Error saving local activity:', err);
+      }
+
+      // Supabase
+      try {
+        await supabase
+          .from('student_activity')
+          .upsert({
+            user_id: user.id,
+            last_active_at: lastActive,
+            current_action: action,
+            browser,
+            device,
+            ip_address: ip,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
+      } catch (err) {
+        // Fail silently
+      }
+    };
+
+    // Connect immediately
+    sendConnectionState(true);
+
+    const handleBeforeUnload = () => {
+      sendConnectionState(false);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      sendConnectionState(false);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [user?.id, activeTab]);
+
+  const downloadCertificateFile = async (url, filename) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.warn('Fetch download failed, opening in new tab:', err);
+      window.open(url, '_blank');
+    }
+  };
+
+  // Calculate course states dynamically
+  const getCourseProgress = (courseId) => {
+    // Check if they have a certificate
+    const hasCert = myCertificates.some(cert => cert.course_id === courseId);
+    if (hasCert) return 100;
+    
+    // Check watch percent from localStorage
+    const prefix = user?.id ? `${user.id}_` : '';
+    const pct = parseInt(localStorage.getItem(`watchPercent_${prefix}${courseId}`) || '0');
+    return pct;
+  };
+
+  const processedCourses = catalogCourses.map(course => {
+    const progress = getCourseProgress(course.id);
+    const completed = myCertificates.some(cert => cert.course_id === course.id);
+    const inProgress = progress > 0 && !completed;
+    const enrolled = completed || inProgress;
+    return {
+      ...course,
+      progress,
+      completed,
+      inProgress,
+      enrolled
+    };
+  });
+
+  const enrolledCourses = processedCourses.filter(c => c.enrolled);
+  const completedCourses = processedCourses.filter(c => c.completed);
+  const inProgressCourses = processedCourses.filter(c => c.inProgress);
+
+  const numEnrolled = enrolledCourses.length;
+  const numCompleted = completedCourses.length;
+  const numCertificates = myCertificates.length;
+  const numInProgress = inProgressCourses.length;
+
+  // Average progress
+  const avgProgress = numEnrolled > 0 
+    ? Math.round(enrolledCourses.reduce((sum, c) => sum + c.progress, 0) / numEnrolled)
+    : 0;
+
   return (
-    <div className="crm-layout">
+    <div className="crm-layout" data-theme={effectiveTheme}>
       {/* Sidebar Navigation */}
       <aside className={`crm-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
@@ -646,8 +735,12 @@ const Dashboard = () => {
 
             <div className="user-profile-summary">
               <span className="user-greeting">Hola, <strong>{getFirstName()}</strong></span>
-              <div className="user-avatar-circle">
-                {profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'}
+              <div className="user-avatar-circle" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {user?.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'
+                )}
               </div>
             </div>
           </div>
@@ -661,10 +754,14 @@ const Dashboard = () => {
             <div className="dashboard-view">
               
               {/* Welcome Section */}
-              <div className="welcome-banner-card">
+              <div ref={bannerRef} className="welcome-banner-card">
                 <div className="welcome-avatar-wrapper">
-                  <div className="welcome-avatar">
-                    {profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'}
+                  <div className="welcome-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {user?.user_metadata?.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'
+                    )}
                   </div>
                 </div>
                 <div className="welcome-text-details">
@@ -681,7 +778,7 @@ const Dashboard = () => {
                   </div>
                   <div className="kpi-details">
                     <span className="kpi-label">Cursos Inscritos</span>
-                    <h3 className="kpi-value">0</h3>
+                    <h3 className="kpi-value">{numEnrolled}</h3>
                   </div>
                 </div>
 
@@ -691,7 +788,7 @@ const Dashboard = () => {
                   </div>
                   <div className="kpi-details">
                     <span className="kpi-label">Cursos Completados</span>
-                    <h3 className="kpi-value">0</h3>
+                    <h3 className="kpi-value">{numCompleted}</h3>
                   </div>
                 </div>
 
@@ -701,7 +798,7 @@ const Dashboard = () => {
                   </div>
                   <div className="kpi-details">
                     <span className="kpi-label">Certificados Obtenidos</span>
-                    <h3 className="kpi-value">0</h3>
+                    <h3 className="kpi-value">{numCertificates}</h3>
                   </div>
                 </div>
 
@@ -711,22 +808,58 @@ const Dashboard = () => {
                   </div>
                   <div className="kpi-details">
                     <span className="kpi-label">Cursos en Progreso</span>
-                    <h3 className="kpi-value">0</h3>
+                    <h3 className="kpi-value">{numInProgress}</h3>
                   </div>
                 </div>
               </div>
 
-              {/* Continue Learning - Empty State */}
+              {/* Continue Learning */}
               <div className="continue-learning-section">
                 <h2>Continuar Aprendiendo</h2>
-                <div className="crm-empty-state-card">
-                  <Inbox size={48} className="empty-state-icon" />
-                  <h3>Sin cursos activos</h3>
-                  <p>Actualmente no tienes ninguna materia o diplomado inscrito en progreso.</p>
-                  <button className="btn-crm-action solid btn-empty-state" onClick={() => setActiveTab('explore')}>
-                    Explorar Cursos
-                  </button>
-                </div>
+                {inProgressCourses.length === 0 ? (
+                  <div className="crm-empty-state-card">
+                    <Inbox size={48} className="empty-state-icon" />
+                    <h3>Sin cursos activos</h3>
+                    <p>Actualmente no tienes ninguna materia o diplomado inscrito en progreso.</p>
+                    <button className="btn-crm-action solid btn-empty-state" onClick={() => setActiveTab('explore')}>
+                      Explorar Cursos
+                    </button>
+                  </div>
+                ) : (
+                  <div className="dash-exp-grid">
+                    {inProgressCourses.map(course => {
+                      const progress = course.progress;
+                      return (
+                        <div key={course.id} className="exp-premium-card" style={{ display: 'flex', flexDirection: 'column' }}>
+                          <div className="exp-img-container" style={{ aspectRatio: '16/9', height: 'auto', backgroundColor: '#0f172a' }}>
+                            <img src={course.image} alt={course.title} className="exp-main-img" style={{ objectFit: 'cover' }} />
+                            <div className="img-overlay-gradient"></div>
+                          </div>
+                          <div className="exp-content-body" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+                            <div>
+                              <h3 className="exp-title-premium" style={{ fontSize: '1rem', marginBottom: '8px' }}>{course.title}</h3>
+                              <div className="progress-bar-row" style={{ marginTop: '10px' }}>
+                                <div className="progress-track">
+                                  <div className="progress-fill" style={{ width: `${progress}%`, backgroundColor: 'var(--primary-cyan)', height: '100%' }}></div>
+                                </div>
+                                <span className="progress-percentage">{progress}%</span>
+                              </div>
+                            </div>
+                            <a
+                              href={`/classroom/${course.id}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn-crm-action solid"
+                              style={{ textDecoration: 'none', textAlign: 'center' }}
+                            >
+                              Continuar Aprendiendo
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Content Grid (Certificates, Recommendations, Activity) */}
@@ -735,14 +868,69 @@ const Dashboard = () => {
                 {/* Left Area */}
                 <div className="dashboard-left-panel">
                   
-                  {/* Recent Certificates - Empty State */}
+                  {/* Recent Certificates */}
                   <div className="sub-section-block">
                     <h2>Certificados Recientes</h2>
-                    <div className="crm-empty-state-card mini">
-                      <Award size={32} className="empty-state-icon" />
-                      <h4>Sin certificados emitidos</h4>
-                      <p>Tus diplomas se generarán una vez que completes y apruebes tus cursos.</p>
-                    </div>
+                    {myCertificates.length === 0 ? (
+                      <div className="crm-empty-state-card mini">
+                        <Award size={32} className="empty-state-icon" />
+                        <h4>Sin certificados emitidos</h4>
+                        <p>Tus diplomas se generarán una vez que completes y apruebes tus cursos.</p>
+                      </div>
+                    ) : (
+                      <div className="certificates-mini-list">
+                        {myCertificates.slice(0, 3).map(cert => (
+                          <div key={cert.id} className="certificate-mini-card">
+                            <div className="cert-mini-left">
+                              <Award size={24} className="cert-icon" />
+                              <div>
+                                <h4 style={{ fontSize: '0.9rem', margin: 0 }}>{cert.courses?.title || 'Curso Académico'}</h4>
+                                <p style={{ fontSize: '0.75rem', margin: '4px 0 0 0' }}>Folio: #{cert.folio} • Emitido: {new Date(cert.created_at).toLocaleDateString()}</p>
+                              </div>
+                            </div>
+                            <div>
+                              {cert.pdf_url === 'local-simulated' ? (
+                                <button 
+                                  onClick={() => {
+                                    // Local Canvas Redraw and Download
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = 800;
+                                    canvas.height = 600;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.fillStyle = '#F8FAFC';
+                                    ctx.fillRect(0, 0, 800, 600);
+                                    ctx.font = 'bold 36px Georgia, serif';
+                                    ctx.fillStyle = '#1E293B';
+                                    ctx.textAlign = 'center';
+                                    ctx.fillText(profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email, 400, 300);
+                                    ctx.font = '20px Georgia, serif';
+                                    ctx.fillText(`Acreditación de: ${cert.courses?.title || 'Curso Académico'}`, 400, 360);
+                                    
+                                    const dataUrl = canvas.toDataURL('image/png');
+                                    const a = document.createElement('a');
+                                    a.href = dataUrl;
+                                    a.download = `Certificado_${cert.folio}.png`;
+                                    a.click();
+                                  }}
+                                  className="btn-crm-action solid mini btn-sm-table"
+                                  style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+                                >
+                                  Descargar
+                                </button>
+                              ) : (
+                                <button 
+                                  onClick={() => downloadCertificateFile(cert.pdf_url, `Certificado_${cert.folio}.png`)}
+                                  className="btn-crm-action solid mini btn-sm-table"
+                                  style={{ padding: '6px 12px', fontSize: '0.75rem', border: 'none', cursor: 'pointer' }}
+                                >
+                                  Descargar
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                 </div>
@@ -767,44 +955,53 @@ const Dashboard = () => {
               <div className="sub-section-block" style={{ marginTop: '40px' }}>
                 <h2>Programas Premium Disponibles</h2>
                 <div className="dash-exp-grid" style={{ marginTop: '20px' }}>
-                  {catalogCourses.slice(0, 4).map(course => {
-                    const Icon = typeof course.icon === 'function' ? course.icon : BookOpen;
+                  {premiumCoursesOnly.map(course => {
                     const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
-                    const isDynamicCourse = !!course.youtube_video_id;
-                    const CardElement = isDynamicCourse ? 'div' : Link;
-                    const linkProps = isDynamicCourse ? {
-                      onClick: () => handleOpenCoursePlayer(course),
-                      style: { textDecoration: 'none', cursor: 'pointer' }
-                    } : {
-                      to: course.link,
-                      style: { textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }
-                    };
                     return (
-                      <CardElement
+                      <Link
                         key={course.id}
+                        to={course.link}
+                        target="_blank"
                         className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
-                        {...linkProps}
+                        style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
                       >
                         <div className="card-glass-glow"></div>
                         <div className={`exp-img-container ${course.containerClass || ''}`}>
-                          {course.badge && (
-                            <div className={`status-badge ${course.badgeClass || ''}`}>{course.badge}</div>
-                          )}
                           <img src={course.image} alt={course.title} className={`exp-main-img ${course.imgClass || ''}`} />
                           <div className="img-overlay-gradient"></div>
-                          {Icon && <div className="card-floating-icon"><Icon size={24} /></div>}
                         </div>
                         <div className="exp-content-body">
                           <h3 className="exp-title-premium">{course.title}</h3>
-                          <p className="exp-desc-premium">{course.description}</p>
-                          <div className="exp-footer-premium">
-                            <span className="exp-link-action">
-                              <span>{isComingSoon ? 'Próximamente' : isDynamicCourse ? 'Iniciar Curso' : 'Ver programa'}</span>
-                              {!isComingSoon && <ArrowRight size={18} />}
-                            </span>
-                          </div>
                         </div>
-                      </CardElement>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Simuladores */}
+              <div className="sub-section-block" style={{ marginTop: '40px' }}>
+                <h2>Simuladores</h2>
+                <div className="dash-exp-grid" style={{ marginTop: '20px' }}>
+                  {simulatorCoursesOnly.map(course => {
+                    const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
+                    return (
+                      <Link
+                        key={course.id}
+                        to={course.link}
+                        target="_blank"
+                        className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
+                        style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
+                      >
+                        <div className="card-glass-glow"></div>
+                        <div className={`exp-img-container ${course.containerClass || ''}`}>
+                          <img src={course.image} alt={course.title} className={`exp-main-img ${course.imgClass || ''}`} />
+                          <div className="img-overlay-gradient"></div>
+                        </div>
+                        <div className="exp-content-body">
+                          <h3 className="exp-title-premium">{course.title}</h3>
+                        </div>
+                      </Link>
                     );
                   })}
                 </div>
@@ -821,19 +1018,72 @@ const Dashboard = () => {
               </div>
 
               <div className="enrolled-courses-section-wrapper">
-                <h3 className="catalog-subtitle">Matrículas Activas (0)</h3>
-                <div className="crm-empty-state-card">
-                  <Inbox size={40} className="empty-state-icon" />
-                  <h3>No tienes asignaturas inscritas</h3>
-                  <p>Explora y solicita tu registro a través del catálogo de programas disponibles en la sección "Explorar Cursos".</p>
-                  <button 
-                    className="btn-crm-action solid btn-empty-state" 
-                    onClick={() => setActiveTab('explore')}
-                    style={{ marginTop: '15px' }}
-                  >
-                    Explorar Cursos
-                  </button>
-                </div>
+                <h3 className="catalog-subtitle">Matrículas Activas ({enrolledCourses.length})</h3>
+                {enrolledCourses.length === 0 ? (
+                  <div className="crm-empty-state-card">
+                    <Inbox size={40} className="empty-state-icon" />
+                    <h3>No tienes asignaturas inscritas</h3>
+                    <p>Explora y solicita tu registro a través del catálogo de programas disponibles en la sección "Explorar Cursos".</p>
+                    <button 
+                      className="btn-crm-action solid btn-empty-state" 
+                      onClick={() => setActiveTab('explore')}
+                      style={{ marginTop: '15px' }}
+                    >
+                      Explorar Cursos
+                    </button>
+                  </div>
+                ) : (
+                  <div className="dash-exp-grid">
+                    {enrolledCourses.map(course => {
+                      const progress = course.progress;
+                      const completed = course.completed;
+                      return (
+                        <div key={course.id} className="exp-premium-card" style={{ display: 'flex', flexDirection: 'column' }}>
+                          <div className="exp-img-container" style={{ aspectRatio: '16/9', height: 'auto', backgroundColor: '#0f172a' }}>
+                            <img src={course.image} alt={course.title} className="exp-main-img" style={{ objectFit: 'cover' }} />
+                            <div className="img-overlay-gradient"></div>
+                            {completed ? (
+                              <div className="status-badge badge-success" style={{ backgroundColor: '#10b981', color: '#fff', position: 'absolute', top: '12px', left: '12px', zIndex: 10 }}>COMPLETADO</div>
+                            ) : (
+                              <div className="status-badge badge-info" style={{ backgroundColor: 'var(--primary-cyan)', color: '#fff', position: 'absolute', top: '12px', left: '12px', zIndex: 10 }}>EN PROGRESO</div>
+                            )}
+                          </div>
+                          <div className="exp-content-body" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+                            <div>
+                              <h3 className="exp-title-premium" style={{ fontSize: '1rem', marginBottom: '8px' }}>{course.title}</h3>
+                              <div className="progress-bar-row" style={{ marginTop: '10px' }}>
+                                <div className="progress-track">
+                                  <div className="progress-fill" style={{ width: `${progress}%`, backgroundColor: completed ? '#10b981' : 'var(--primary-cyan)', height: '100%' }}></div>
+                                </div>
+                                <span className="progress-percentage">{progress}%</span>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                              <a
+                                href={`/classroom/${course.id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="btn-crm-action solid"
+                                style={{ textDecoration: 'none', textAlign: 'center', flex: 1 }}
+                              >
+                                Ir al aula
+                              </a>
+                              {completed && (
+                                <button
+                                  onClick={() => setActiveTab('certificates')}
+                                  className="btn-crm-action outlined"
+                                  style={{ flex: 1, padding: '12px 10px', fontSize: '0.7rem' }}
+                                >
+                                  Ver Certificado
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -857,53 +1107,24 @@ const Dashboard = () => {
                     Accede sin costo a contenido educativo de HCE.
                   </p>
                 </div>
-                <div className="free-courses-list">
-                  {freeCourses.length === 0 ? (
-                    <div className="crm-empty-state-card mini">
+                <div className="dash-exp-grid">
+                  {catalogCourses.length === 0 ? (
+                    <div className="crm-empty-state-card mini" style={{ gridColumn: '1 / -1' }}>
                       <PlayCircle size={32} className="empty-state-icon" />
                       <h4>Próximamente</h4>
                       <p>Estamos preparando contenido gratuito para ti. ¡Vuelve pronto!</p>
                     </div>
-                  ) : freeCourses.map(fc => (
-                    <a
-                      key={fc.id}
-                      href={fc.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="free-course-row"
-                    >
-                      <div className="free-course-icon-wrap">
-                        <PlayCircle size={22} />
-                      </div>
-                      <div className="free-course-info">
-                        <h4>{fc.title}</h4>
-                        <p>{fc.description}</p>
-                      </div>
-                      <div className="free-course-meta-right">
-                        <span className="free-tag">GRATIS</span>
-                        <span className="free-duration"><Clock size={13} /> {fc.duracion}</span>
-                        <span className="free-tipo">{fc.tipo}</span>
-                      </div>
-                      <ArrowRight size={18} className="free-arrow" />
-                    </a>
-                  ))}
-                </div>
-              </div>
-
-              {/* Programas Premium */}
-              <div className="catalog-courses-section-wrapper">
-                <h3 className="catalog-subtitle">Programas de Alta Especialidad</h3>
-                <div className="dash-exp-grid">
-                  {catalogCourses.map(course => {
-                    const Icon = typeof course.icon === 'function' ? course.icon : BookOpen;
+                  ) : catalogCourses.map(course => {
                     const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
                     const isDynamicCourse = !!course.youtube_video_id;
-                    const CardElement = isDynamicCourse ? 'div' : Link;
+                    const CardElement = isDynamicCourse ? 'a' : Link;
                     const linkProps = isDynamicCourse ? {
-                      onClick: () => handleOpenCoursePlayer(course),
+                      href: `/classroom/${course.id}`,
+                      target: '_blank',
                       style: { textDecoration: 'none', cursor: 'pointer' }
                     } : {
                       to: course.link,
+                      target: '_blank',
                       style: { textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }
                     };
                     return (
@@ -913,27 +1134,92 @@ const Dashboard = () => {
                         {...linkProps}
                       >
                         <div className="card-glass-glow"></div>
+                        <div className={`exp-img-container ${course.containerClass || ''}`} style={{ aspectRatio: '16/9', height: 'auto', backgroundColor: '#0f172a' }}>
+                          <img src={course.image} alt={course.title} className={`exp-main-img ${course.imgClass || ''}`} style={{ objectFit: 'cover' }} />
+                          <div className="img-overlay-gradient"></div>
+                        </div>
+                        <div className="exp-content-body">
+                          <h3 className="exp-title-premium">{course.title}</h3>
+                        </div>
+                      </CardElement>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Programas Premium */}
+              <div className="catalog-courses-section-wrapper" style={{ marginBottom: '40px' }}>
+                <h3 className="catalog-subtitle">Programas de Alta Especialidad</h3>
+                <div className="dash-exp-grid">
+                  {premiumCoursesOnly.map(course => {
+                    const Icon = typeof course.icon === 'function' ? course.icon : BookOpen;
+                    const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
+                    return (
+                      <Link
+                        key={course.id}
+                        to={course.link}
+                        className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
+                        style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
+                      >
+                        <div className="card-glass-glow"></div>
                         <div className={`exp-img-container ${course.containerClass || ''}`}>
                           {course.badge && (
                             <div className={`status-badge ${course.badgeClass || ''}`}>{course.badge}</div>
                           )}
                           <img src={course.image} alt={course.title} className={`exp-main-img ${course.imgClass || ''}`} />
                           <div className="img-overlay-gradient"></div>
-                          {Icon && (
-                            <div className="card-floating-icon"><Icon size={24} /></div>
-                          )}
+                          {Icon && <div className="card-floating-icon"><Icon size={24} /></div>}
                         </div>
                         <div className="exp-content-body">
                           <h3 className="exp-title-premium">{course.title}</h3>
                           <p className="exp-desc-premium">{course.description}</p>
                           <div className="exp-footer-premium">
                             <span className="exp-link-action">
-                              <span>{isComingSoon ? 'Próximamente' : isDynamicCourse ? 'Iniciar Curso' : 'Ver programa'}</span>
+                              <span>{isComingSoon ? 'Próximamente' : 'Ver programa'}</span>
                               {!isComingSoon && <ArrowRight size={18} />}
                             </span>
                           </div>
                         </div>
-                      </CardElement>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Simuladores */}
+              <div className="catalog-courses-section-wrapper">
+                <h3 className="catalog-subtitle">Simuladores</h3>
+                <div className="dash-exp-grid">
+                  {simulatorCoursesOnly.map(course => {
+                    const Icon = typeof course.icon === 'function' ? course.icon : BookOpen;
+                    const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
+                    return (
+                      <Link
+                        key={course.id}
+                        to={course.link}
+                        className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
+                        style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
+                      >
+                        <div className="card-glass-glow"></div>
+                        <div className={`exp-img-container ${course.containerClass || ''}`}>
+                          {course.badge && (
+                            <div className={`status-badge ${course.badgeClass || ''}`}>{course.badge}</div>
+                          )}
+                          <img src={course.image} alt={course.title} className={`exp-main-img ${course.imgClass || ''}`} />
+                          <div className="img-overlay-gradient"></div>
+                          {Icon && <div className="card-floating-icon"><Icon size={24} /></div>}
+                        </div>
+                        <div className="exp-content-body">
+                          <h3 className="exp-title-premium">{course.title}</h3>
+                          <p className="exp-desc-premium">{course.description}</p>
+                          <div className="exp-footer-premium">
+                            <span className="exp-link-action">
+                              <span>{isComingSoon ? 'Próximamente' : 'Ver programa'}</span>
+                              {!isComingSoon && <ArrowRight size={18} />}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
                     );
                   })}
                 </div>
@@ -963,7 +1249,7 @@ const Dashboard = () => {
                         <th>Folio</th>
                         <th>Curso</th>
                         <th>Fecha de Emisión</th>
-                        <th>Expiración (30 días)</th>
+                        <th>Descarga antes de</th>
                         <th>Calificación</th>
                         <th>Acción</th>
                       </tr>
@@ -974,10 +1260,13 @@ const Dashboard = () => {
                           <td><strong>#{cert.folio}</strong></td>
                           <td><strong>{cert.courses?.title || 'Curso Académico'}</strong></td>
                           <td>{new Date(cert.created_at).toLocaleDateString()}</td>
-                          <td>
-                            <span style={{ color: '#EF4444', fontWeight: '500' }}>
-                              {new Date(cert.expires_at).toLocaleDateString()}
+                          <td title="El certificado será eliminado del portal en esta fecha. Descárgalo antes para conservarlo.">
+                            <span style={{ color: '#EF4444', fontWeight: '600', fontSize: '0.85rem' }}>
+                              {cert.expires_at
+                                ? new Date(cert.expires_at).toLocaleDateString()
+                                : new Date(new Date(cert.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
                             </span>
+                            <span style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>límite de descarga</span>
                           </td>
                           <td>{cert.score}%</td>
                           <td>
@@ -1010,21 +1299,23 @@ const Dashboard = () => {
                                 Descargar
                               </button>
                             ) : (
-                              <a 
-                                href={cert.pdf_url} 
-                                target="_blank" 
-                                rel="noreferrer" 
+                              <button 
+                                onClick={() => downloadCertificateFile(cert.pdf_url, `Certificado_${cert.folio}.png`)}
                                 className="btn-crm-action solid mini"
-                                style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none' }}
+                                style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '5px', border: 'none', cursor: 'pointer' }}
                               >
                                 Descargar
-                              </a>
+                              </button>
                             )}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: '#EF4444', fontWeight: '700' }}>⚠</span>
+                    La fecha indica el límite para descargar tu constancia. Después de esa fecha el archivo será eliminado del portal. El certificado como tal <strong>no expira</strong> — es permanente una vez descargado.
+                  </p>
                 </div>
               )}
             </div>
@@ -1042,51 +1333,275 @@ const Dashboard = () => {
                 {/* Profile Card */}
                 <div className="profile-details-card">
                   <div className="profile-card-header">
-                    <div className="profile-big-avatar">
-                      {profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'}
+                    <div 
+                      className="profile-big-avatar"
+                      style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+                      onClick={() => document.getElementById('profile-avatar-upload').click()}
+                      title="Haz clic para cambiar foto de perfil"
+                    >
+                      {user?.user_metadata?.avatar_url ? (
+                        <img 
+                          src={user.user_metadata.avatar_url} 
+                          alt="Foto de perfil" 
+                          style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
+                        />
+                      ) : (
+                        profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'
+                      )}
+                      <div 
+                        style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          width: '100%',
+                          background: 'rgba(0, 0, 0, 0.6)',
+                          color: '#fff',
+                          fontSize: '0.65rem',
+                          padding: '4px 0',
+                          textAlign: 'center',
+                          opacity: 0,
+                          transition: 'opacity 0.2s',
+                        }}
+                        className="avatar-hover-overlay"
+                      >
+                        Subir Foto
+                      </div>
                     </div>
+                    <input 
+                      type="file"
+                      id="profile-avatar-upload"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleAvatarUpload}
+                    />
                     <h3>{profile?.nombre_completo || 'Usuario HCE'}</h3>
                     <span className="user-role-badge">Estudiante</span>
                   </div>
 
-                  <div className="profile-info-list">
-                    <div className="profile-info-item">
-                      <span className="info-label">Correo electrónico:</span>
-                      <span className="info-value">{user?.email}</span>
-                    </div>
-                    <div className="profile-info-item">
-                      <span className="info-label">Teléfono:</span>
-                      <span className="info-value">{profile?.telefono || user?.user_metadata?.telefono || 'No registrado'}</span>
-                    </div>
-                    <div className="profile-info-item">
-                      <span className="info-label">País:</span>
-                      <span className="info-value">{user?.user_metadata?.pais || 'No registrado'}</span>
-                    </div>
-                    <div className="profile-info-item">
-                      <span className="info-label">Estado / Ciudad:</span>
-                      <span className="info-value">{user?.user_metadata?.estado || 'No registrado'}</span>
-                    </div>
-                    <div className="profile-info-item">
-                      <span className="info-label">Grado académico / Profesión:</span>
-                      <span className="info-value">{user?.user_metadata?.grado || 'No registrado'}</span>
-                    </div>
-                    <div className="profile-info-item">
-                      <span className="info-label">Especialidad:</span>
-                      <span className="info-value">{user?.user_metadata?.especialidad || 'No registrado'}</span>
-                    </div>
-                    <div className="profile-info-item">
-                      <span className="info-label">Institución / Hospital:</span>
-                      <span className="info-value">{user?.user_metadata?.institucion || 'No registrado'}</span>
-                    </div>
-                    <div className="profile-info-item">
-                      <span className="info-label">Cargo / Puesto:</span>
-                      <span className="info-value">{user?.user_metadata?.cargo || 'No registrado'}</span>
-                    </div>
-                    <div className="profile-info-item">
-                      <span className="info-label">Miembro desde:</span>
-                      <span className="info-value">{getMemberSinceDate()}</span>
-                    </div>
-                  </div>
+                  {isEditingProfile ? (
+                    <form onSubmit={handleSaveProfile} className="profile-edit-form" style={{ width: '100%' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div className="crm-input-group">
+                          <label>Nombre Completo *</label>
+                          <input 
+                            type="text" 
+                            value={profileForm.nombre_completo} 
+                            onChange={(e) => setProfileForm(f => ({ ...f, nombre_completo: e.target.value }))}
+                            required 
+                          />
+                        </div>
+                        
+                        <div className="crm-input-group">
+                          <label>Teléfono *</label>
+                          <input 
+                            type="text" 
+                            value={profileForm.telefono} 
+                            onChange={(e) => setProfileForm(f => ({ ...f, telefono: e.target.value }))}
+                            required 
+                          />
+                        </div>
+
+                        <div className="crm-input-group" style={{ position: 'relative' }}>
+                          <label>País *</label>
+                          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                            <input 
+                              type="text" 
+                              value={profileForm.pais} 
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setProfileForm(f => ({ ...f, pais: val }));
+                                setShowProfileCountrySuggestions(true);
+                              }}
+                              onFocus={() => setShowProfileCountrySuggestions(true)}
+                              onBlur={() => {
+                                setTimeout(() => setShowProfileCountrySuggestions(false), 250);
+                              }}
+                              required 
+                              style={{ paddingRight: getFlagUrl(profileForm.pais) ? '45px' : '12px' }}
+                              placeholder="Escribe tu país..."
+                              autoComplete="off"
+                            />
+                            {getFlagUrl(profileForm.pais) && (
+                              <img 
+                                src={getFlagUrl(profileForm.pais)} 
+                                alt="Bandera" 
+                                style={{ 
+                                  position: 'absolute', 
+                                  right: '12px', 
+                                  height: '16px', 
+                                  width: 'auto', 
+                                  borderRadius: '2px',
+                                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                                  pointerEvents: 'none'
+                                }} 
+                              />
+                            )}
+                          </div>
+                          {showProfileCountrySuggestions && profileForm.pais.trim().length > 0 && (
+                            <div className="country-autocomplete-dropdown">
+                              {ALL_COUNTRIES.filter(c => {
+                                const cleanName = c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                                const cleanInput = profileForm.pais.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                                return cleanName.includes(cleanInput);
+                              }).slice(0, 5).map(c => (
+                                <div 
+                                  key={c.code} 
+                                  className="country-suggestion-item"
+                                  onMouseDown={() => {
+                                    setProfileForm(f => ({ ...f, pais: c.name }));
+                                    setShowProfileCountrySuggestions(false);
+                                  }}
+                                >
+                                  <img 
+                                    src={`https://flagcdn.com/w40/${c.code}.png`} 
+                                    alt={c.name} 
+                                    className="suggestion-flag" 
+                                  />
+                                  <span>{c.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="crm-input-group">
+                          <label>Estado / Ciudad *</label>
+                          <input 
+                            type="text" 
+                            value={profileForm.estado} 
+                            onChange={(e) => setProfileForm(f => ({ ...f, estado: e.target.value }))}
+                            required 
+                          />
+                        </div>
+
+                        <div className="crm-input-group">
+                          <label>Grado académico / Profesión *</label>
+                          <select 
+                            value={profileForm.grado} 
+                            onChange={(e) => setProfileForm(f => ({ ...f, grado: e.target.value }))}
+                            required
+                          >
+                            <option value="">Selecciona...</option>
+                            <option>Médico Especialista</option>
+                            <option>Médico Residente</option>
+                            <option>Enfermero/a</option>
+                            <option>Terapeuta Respiratorio</option>
+                            <option>Fisioterapeuta</option>
+                            <option>Estudiante</option>
+                            <option>Otro</option>
+                          </select>
+                        </div>
+
+                        <div className="crm-input-group">
+                          <label>Especialidad *</label>
+                          <input 
+                            type="text" 
+                            value={profileForm.especialidad} 
+                            onChange={(e) => setProfileForm(f => ({ ...f, especialidad: e.target.value }))}
+                            required 
+                          />
+                        </div>
+
+                        <div className="crm-input-group">
+                          <label>Institución / Hospital *</label>
+                          <input 
+                            type="text" 
+                            value={profileForm.institucion} 
+                            onChange={(e) => setProfileForm(f => ({ ...f, institucion: e.target.value }))}
+                            required 
+                          />
+                        </div>
+
+                        <div className="crm-input-group">
+                          <label>Cargo / Puesto *</label>
+                          <input 
+                            type="text" 
+                            value={profileForm.cargo} 
+                            onChange={(e) => setProfileForm(f => ({ ...f, cargo: e.target.value }))}
+                            required 
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '25px' }}>
+                        <button 
+                          type="submit" 
+                          className="btn-crm-action solid" 
+                          disabled={savingProfile}
+                          style={{ flex: 1, padding: '12px', background: 'var(--primary-cyan)', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                        >
+                          {savingProfile ? 'Guardando...' : 'Guardar Cambios'}
+                        </button>
+                        <button 
+                          type="button" 
+                          className="btn-crm-action outline" 
+                          onClick={() => setIsEditingProfile(false)}
+                          style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-dark)', borderRadius: '8px', cursor: 'pointer' }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="profile-info-list">
+                        <div className="profile-info-item">
+                          <span className="info-label">Correo electrónico:</span>
+                          <span className="info-value">{user?.email}</span>
+                        </div>
+                        <div className="profile-info-item">
+                          <span className="info-label">Teléfono:</span>
+                          <span className="info-value">{profile?.telefono || user?.user_metadata?.telefono || 'No registrado'}</span>
+                        </div>
+                        <div className="profile-info-item">
+                          <span className="info-label">País:</span>
+                          <span className="info-value" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {getFlagUrl(user?.user_metadata?.pais) && (
+                              <img 
+                                src={getFlagUrl(user.user_metadata.pais)} 
+                                alt="Bandera" 
+                                style={{ height: '14px', width: 'auto', borderRadius: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }} 
+                              />
+                            )}
+                            {user?.user_metadata?.pais || 'No registrado'}
+                          </span>
+                        </div>
+                        <div className="profile-info-item">
+                          <span className="info-label">Estado / Ciudad:</span>
+                          <span className="info-value">{user?.user_metadata?.estado || 'No registrado'}</span>
+                        </div>
+                        <div className="profile-info-item">
+                          <span className="info-label">Grado académico / Profesión:</span>
+                          <span className="info-value">{user?.user_metadata?.grado || 'No registrado'}</span>
+                        </div>
+                        <div className="profile-info-item">
+                          <span className="info-label">Especialidad:</span>
+                          <span className="info-value">{user?.user_metadata?.especialidad || 'No registrado'}</span>
+                        </div>
+                        <div className="profile-info-item">
+                          <span className="info-label">Institución / Hospital:</span>
+                          <span className="info-value">{user?.user_metadata?.institucion || 'No registrado'}</span>
+                        </div>
+                        <div className="profile-info-item">
+                          <span className="info-label">Cargo / Puesto:</span>
+                          <span className="info-value">{user?.user_metadata?.cargo || 'No registrado'}</span>
+                        </div>
+                        <div className="profile-info-item">
+                          <span className="info-label">Miembro desde:</span>
+                          <span className="info-value">{getMemberSinceDate()}</span>
+                        </div>
+                      </div>
+
+                      <button 
+                        type="button" 
+                        className="btn-crm-action solid" 
+                        onClick={startEditingProfile}
+                        style={{ marginTop: '25px', width: '100%', padding: '12px', background: 'var(--primary-cyan)', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                      >
+                        Editar Datos de Perfil
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {/* Academic Status Card */}
@@ -1094,29 +1609,45 @@ const Dashboard = () => {
                   <h3>Resumen Académico</h3>
                   <div className="academic-status-grid">
                     <div className="status-metric-box">
-                      <span className="status-metric-number">0</span>
+                      <span className="status-metric-number">{numEnrolled}</span>
                       <span className="status-metric-label">Cursos Inscritos</span>
                     </div>
                     <div className="status-metric-box">
-                      <span className="status-metric-number">0%</span>
+                      <span className="status-metric-number">{avgProgress}%</span>
                       <span className="status-metric-label">Avance Promedio</span>
                     </div>
                     <div className="status-metric-box">
-                      <span className="status-metric-number">0</span>
+                      <span className="status-metric-number">{numCertificates}</span>
                       <span className="status-metric-label">Certificados</span>
                     </div>
                   </div>
                   
                   <div className="active-enrollments-list" style={{ marginTop: '30px' }}>
                     <h4>Matrículas Activas</h4>
-                    <div className="crm-empty-state-card mini">
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No tienes matrículas activas en este momento.</p>
-                    </div>
+                    {enrolledCourses.length === 0 ? (
+                      <div className="crm-empty-state-card mini">
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No tienes matrículas activas en este momento.</p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {enrolledCourses.map(course => (
+                          <div key={course.id} className="active-enrollment-item">
+                            <div className="enrollment-bullet"></div>
+                            <div style={{ flex: 1 }}>
+                              <strong>{course.title}</strong>
+                              <p>{course.completed ? 'Completado (100%)' : `En Progreso (${course.progress}%)`}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           )}
+
+
 
           {/* VIEW: CONFIGURACIÓN */}
           {activeTab === 'settings' && (
@@ -1139,6 +1670,31 @@ const Dashboard = () => {
                   <span>{errorMsg}</span>
                 </div>
               )}
+
+              {/* Theme Selector */}
+              <div className="settings-card" style={{ marginBottom: '20px' }}>
+                <div className="settings-card-header">
+                  <h3>Apariencia</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '4px' }}>Elige el tema visual del portal.</p>
+                </div>
+                <div className="theme-selector-row">
+                  {[
+                    { value: 'light', label: 'Claro', icon: Sun },
+                    { value: 'dark',  label: 'Oscuro', icon: Moon },
+                    { value: 'system', label: 'Sistema', icon: Monitor },
+                  ].map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`theme-option-btn${theme === value ? ' active' : ''}`}
+                      onClick={() => setTheme(value)}
+                    >
+                      <Icon size={20} />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div className="settings-card">
                 <form onSubmit={handleUpdatePassword} className="crm-settings-form">
@@ -1230,247 +1786,6 @@ const Dashboard = () => {
         </main>
       </div>
 
-      {/* Course Player Modal */}
-      {selectedCourse && (
-        <div className="crm-modal-backdrop" style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '20px'
-        }}>
-          <div className="settings-card" style={{
-            width: '100%',
-            maxWidth: '850px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            position: 'relative',
-            padding: '30px',
-            backgroundColor: 'var(--bg-white)',
-            borderRadius: '16px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-          }}>
-            <button 
-              type="button" 
-              className="password-toggle-btn" 
-              onClick={closeCoursePlayer}
-              style={{
-                position: 'absolute',
-                right: '20px',
-                top: '20px',
-                background: '#F1F5F9',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#64748B',
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-                fontSize: '1.2rem',
-                lineHeight: '1'
-              }}
-            >
-              &times;
-            </button>
-
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '10px', color: 'var(--primary-cyan)' }}>
-              {selectedCourse.title}
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px' }}>
-              {selectedCourse.description}
-            </p>
-
-            {!showExam ? (
-              <div>
-                {/* VIDEO CONTAINER */}
-                <div style={{ background: '#000', borderRadius: '8px', overflow: 'hidden', position: 'relative', height: '400px' }}>
-                  {selectedCourse.youtube_video_id ? (
-                    <div id="youtube-player" style={{ width: '100%', height: '100%' }}></div>
-                  ) : (
-                    <div style={{ color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                      Cargando reproductor de video...
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', flexWrap: 'wrap', gap: '15px' }}>
-                  <div>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Avance del Video:</span>
-                    <strong style={{ marginLeft: '8px', color: 'var(--primary-cyan)' }}>{watchPercent}%</strong>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button 
-                      type="button" 
-                      className="btn-crm-action outlined"
-                      onClick={() => {
-                        setWatchPercent(100);
-                        setShowExam(true);
-                      }}
-                    >
-                      Bypass: Ya lo vi en vivo (Ir a Examen)
-                    </button>
-
-                    <button 
-                      type="button" 
-                      className="btn-crm-action solid"
-                      disabled={watchPercent < 90}
-                      onClick={() => setShowExam(true)}
-                    >
-                      Tomar Examen de Validación
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // EXAM CONTAINER
-              <div>
-                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary-cyan)', marginBottom: '15px' }}>
-                  Examen de Validación (Aprobación: {selectedCourse.minAprobacion || selectedCourse.min_aprobacion || 80}%)
-                </h3>
-
-                {!generatedCertUrl ? (
-                  <div>
-                    {selectedCourse.questions && selectedCourse.questions.length > 0 ? (
-                      <div>
-                        {selectedCourse.questions.map((q, qIndex) => (
-                          <div key={q.id || qIndex} style={{ marginBottom: '20px', padding: '15px', background: 'var(--bg-gray)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                            <p style={{ fontWeight: '600', marginBottom: '10px' }}>{qIndex + 1}. {q.question_text}</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                              {q.options.map((opt, optIndex) => (
-                                <label 
-                                  key={optIndex} 
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    padding: '10px',
-                                    background: 'var(--bg-white)',
-                                    borderRadius: '6px',
-                                    border: '1px solid var(--border-color)',
-                                    cursor: 'pointer'
-                                  }}
-                                >
-                                  <input 
-                                    type="radio" 
-                                    name={`q-${qIndex}`}
-                                    checked={examAnswers[qIndex] === optIndex}
-                                    onChange={() => setExamAnswers({...examAnswers, [qIndex]: optIndex})}
-                                  />
-                                  <span>{opt}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-
-                        <button 
-                          type="button" 
-                          className="btn-crm-action solid"
-                          style={{ width: '100%', marginTop: '15px' }}
-                          onClick={handleEvaluateExam}
-                          disabled={isGeneratingCert}
-                        >
-                          {isGeneratingCert ? 'Evaluando y Generando Certificado...' : 'Enviar Respuestas'}
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ textAlign: 'center', padding: '30px' }}>
-                        <p style={{ color: 'var(--text-muted)' }}>Este curso no tiene examen definido por el administrador. Puedes generar tu certificado directamente.</p>
-                        <button 
-                          type="button" 
-                          className="btn-crm-action solid"
-                          style={{ marginTop: '15px' }}
-                          onClick={() => generateCertificate(100)}
-                          disabled={isGeneratingCert}
-                        >
-                          {isGeneratingCert ? 'Generando...' : 'Obtener Certificado'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  // CERTIFICATE DOWNLOAD CONTAINER
-                  <div style={{ textAlign: 'center', padding: '30px' }}>
-                    <div style={{ color: '#10B981', fontSize: '3rem', marginBottom: '15px' }}>✓</div>
-                    <h3>¡Felicitaciones! Has completado el curso</h3>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '25px' }}>
-                      Tu calificación fue de <strong>{examScore}%</strong>. Tu certificado ha sido emitido con éxito. Recuerda que este certificado expira en 30 días de forma automática.
-                    </p>
-                    
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap', marginTop: '20px' }}>
-                      {generatedCertUrl === 'local-simulated' ? (
-                        <button 
-                          type="button" 
-                          className="btn-crm-action solid"
-                          onClick={() => {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = 800;
-                            canvas.height = 600;
-                            const ctx = canvas.getContext('2d');
-                            ctx.fillStyle = '#F8FAFC';
-                            ctx.fillRect(0, 0, 800, 600);
-                            ctx.font = 'bold 36px Georgia, serif';
-                            ctx.fillStyle = '#1E293B';
-                            ctx.textAlign = 'center';
-                            ctx.fillText(profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email, 400, 300);
-                            ctx.font = '20px Georgia, serif';
-                            ctx.fillText(`Acreditación de: ${selectedCourse.title}`, 400, 360);
-                            
-                            const dataUrl = canvas.toDataURL('image/png');
-                            const a = document.createElement('a');
-                            a.href = dataUrl;
-                            a.download = `Certificado_${selectedCourse.title.replace(/\s+/g, '_')}.png`;
-                            a.click();
-                          }}
-                        >
-                          Descargar Certificado
-                        </button>
-                      ) : generatedCertUrl?.startsWith('data:') ? (
-                        <a 
-                          href={generatedCertUrl} 
-                          download={`Certificado_${selectedCourse.title.replace(/\s+/g, '_')}.png`}
-                          className="btn-crm-action solid"
-                          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                        >
-                          Descargar Certificado
-                        </a>
-                      ) : (
-                        <a 
-                          href={generatedCertUrl} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="btn-crm-action solid"
-                          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                        >
-                          Descargar Certificado
-                        </a>
-                      )}
-
-                      <button 
-                        type="button" 
-                        className="btn-crm-action outlined"
-                        onClick={closeCoursePlayer}
-                      >
-                        Cerrar Aula
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

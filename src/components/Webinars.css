@@ -14,13 +14,17 @@
 .webinar-immersive-card {
   position: relative;
   width: 100%;
-  height: 450px;
+  max-width: 450px;
+  margin: 0 auto;
+  height: auto;
   border-radius: 30px;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #0a192f;
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
 }
 
 .webinar-immersive-card:hover {
@@ -28,28 +32,25 @@
   box-shadow: 0 40px 80px rgba(10, 25, 47, 0.25);
 }
 
-.webinar-card-bg {
-  position: absolute;
-  inset: 0;
+.webinar-card-image-container {
+  position: relative;
   width: 100%;
-  height: 100%;
-  background: linear-gradient(45deg, #0f172a, #1e293b);
+  overflow: hidden;
+  background: #0a192f;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.8s ease, opacity 0.8s ease;
-  opacity: 0.7;
 }
 
-.webinar-immersive-card:hover .webinar-card-bg {
-  transform: scale(1.1);
-  opacity: 0.4;
+.webinar-card-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.8s ease;
 }
 
-.webinar-card-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(10, 25, 47, 0.95) 0%, rgba(10, 25, 47, 0.4) 50%, transparent 100%);
+.webinar-immersive-card:hover .webinar-card-img {
+  transform: scale(1.05);
 }
 
 .webinar-card-content {
@@ -57,11 +58,18 @@
   bottom: 0;
   left: 0;
   width: 100%;
+  height: 100%;
   padding: 2.5rem;
-  transform: translateY(0);
-  transition: transform 0.4s ease;
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.75) 50%, rgba(15, 23, 42, 0.98) 100%);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 5;
-  background: linear-gradient(to top, rgba(10, 25, 47, 0.9) 0%, transparent 100%);
 }
 
 .webinar-immersive-card:hover .webinar-card-content {
@@ -81,19 +89,20 @@
   color: white;
   font-size: 1.8rem;
   font-weight: 800;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   line-height: 1.2;
 }
 
-.webinar-card-action {
-  opacity: 1;
-  transition: all 0.4s ease;
-  transform: translateY(0);
+.webinar-card-time {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
 }
 
-.webinar-immersive-card:hover .webinar-card-action {
+.webinar-card-action {
+  margin-top: auto;
   opacity: 1;
-  transform: translateY(0);
 }
 
 .btn-webinar-card {
@@ -106,6 +115,7 @@
   display: inline-block;
   transition: all 0.3s ease;
   text-decoration: none;
+  text-align: center;
 }
 
 .btn-webinar-card:hover {
@@ -124,20 +134,22 @@
     grid-template-columns: 1fr;
   }
   .webinar-immersive-card {
-    height: 400px;
+    height: auto;
   }
   .webinar-card-content {
+    position: relative;
+    height: auto;
     transform: translateY(0);
-  }
-  .webinar-card-action {
-    opacity: 1;
+    background: linear-gradient(to bottom, #0f172a, #0b0f19);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 2rem;
   }
 }
 
 @media (max-width: 480px) {
-  .webinar-immersive-card { height: 320px; border-radius: 20px; }
+  .webinar-immersive-card { border-radius: 20px; }
   .webinar-card-title { font-size: 1.4rem; }
-  .webinar-card-content { padding: 1.5rem; }
 }
 
 /* B2B Training Banner */
@@ -237,4 +249,51 @@
   .b2b-title { font-size: 1.8rem; }
   .b2b-training-banner { padding: 4rem 0 1rem 0; }
   .btn-b2b-banner { font-size: 1rem; width: 100%; text-align: center; }
+}
+
+/* Custom Live Badge */
+.webinar-live-badge {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+  background: rgba(239, 68, 68, 0.95);
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.live-pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  animation: livePulse 1.5s infinite ease-in-out;
+}
+
+@keyframes livePulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  70% {
+    transform: scale(1.2);
+    opacity: 1;
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
 }

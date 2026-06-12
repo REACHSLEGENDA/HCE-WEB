@@ -13,7 +13,7 @@ const FacultyCard = ({ src, role, name, country, flag, delay }) => {
     <div ref={ref} className={`nursing-faculty-card reveal ${inView ? 'active' : ''}`} style={{ transitionDelay: `${delay}s` }}>
       <div className="n-faculty-head">
         <img src={src} alt={name} className="n-faculty-img" />
-        <div className="n-verified"><CheckCircle size={14} fill="#00d2ff" color="white" /></div>
+        <div className="n-verified"><CheckCircle size={14} fill="#e31837" color="white" /></div>
       </div>
       <div className="n-faculty-info">
         <h3>{name}</h3>
@@ -26,7 +26,7 @@ const FacultyCard = ({ src, role, name, country, flag, delay }) => {
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="n-mini-flag-fallback"><Award size={14} color="#00d2ff" /></div>
+          <div className="n-mini-flag-fallback"><Award size={14} color="#e31837" /></div>
         )}
         <p className="n-role">{role}</p>
       </div>
@@ -89,23 +89,55 @@ const Nursing = () => {
     <div className="nursing-page">
       <Navbar />
       
-      {/* Business-Focused Hero */}
-      <section className="nursing-hero">
-        <div className="nursing-hero-overlay"></div>
-        <div className="hce-container">
-          <div ref={heroRef} className={`nursing-hero-content reveal ${heroInView ? 'active' : ''}`}>
-            <h1 className="n-hero-title">
-              <span className="n-hero-title-main">Formación por y para</span><br />
-              <span className="n-hero-title-sub">Profesionales de Enfermería</span>
+      {/* Hero Banner Section */}
+      <section className="nursing-hero-banner">
+        <div className="n-hero-bg" />
+        <div className="n-hero-overlay" />
+        <div className="n-hero-banner-wrap hce-container">
+          <div className="n-hero-text">
+            <span className="section-badge">PROGRAMA DE ALTA ESPECIALIDAD</span>
+            <h1 className="n-hero-title-text">
+              ¡Conviértete en un especialista en <span className="red-text">ECMO!</span>
             </h1>
-            <p className="n-hero-subtitle">
-              Nuestro compromiso es consolidar un programa de capacitación de alta especialidad que te empodere como profesional de enfermería. A través de un modelo educativo de vanguardia, transformamos el cuidado del paciente con soporte ECMO en una práctica segura, técnica y profundamente humana.
-              <br /><br />
-              <strong>Nadie comprende mejor tu labor que quien la vive a diario.</strong><br/>
-              Por eso, nuestro entrenamiento está diseñado y liderado por enfermería para enfermería. Entendemos tus retos y la precisión que exige cada segundo al pie de cama del paciente crítico en ECMO.
+            <p className="n-hero-subtitle-text">
+              Certifícate con la más alta tecnología de talla internacional.
             </p>
-            <div className="n-hero-actions">
-              <button className="n-btn n-btn-brand">Inscríbete <ArrowRight size={18} /></button>
+            <button 
+              className="n-hero-cta-btn" 
+              onClick={() => document.getElementById('final-cta')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              INSCRÍBETE AHORA
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Hero content moved below the banner */}
+      <section className="n-intro-section">
+        <div className="hce-container">
+          <div ref={heroRef} className={`n-intro-content reveal ${heroInView ? 'active' : ''}`}>
+            <span className="section-badge">PROGRAMA DE ALTA ESPECIALIDAD</span>
+            <h1 className="n-intro-title">
+              Formación por y para <span className="red-text">Profesionales de Enfermería</span>
+            </h1>
+            <div className="n-intro-body">
+              <div className="n-intro-text">
+                <p>
+                  Nuestro compromiso es consolidar un programa de capacitación de alta especialidad que te empodere como profesional de enfermería. A través de un modelo educativo de vanguardia, transformamos el cuidado del paciente con soporte ECMO en una práctica segura, técnica y profundamente humana.
+                </p>
+                <p>
+                  <strong>Nadie comprende mejor tu labor que quien la vive a diario.</strong> Por eso, nuestro entrenamiento está diseñado y liderado por enfermería para enfermería. Entendemos tus retos y la precisión que exige cada segundo al pie de cama del paciente crítico en ECMO.
+                </p>
+              </div>
+              <div className="n-intro-sidebar">
+                <div className="n-intro-card-box">
+                  <h4>Certificación HCE</h4>
+                  <p>Asegura tu cupo en la certificación líder en cuidados críticos ECMO. Cupos limitados por cohorte.</p>
+                  <button className="n-btn n-btn-brand" onClick={() => document.getElementById('final-cta')?.scrollIntoView({ behavior: 'smooth' })}>
+                    Inscríbete Ahora <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -116,7 +148,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-section-header">
             <span className="section-badge">PROGRAMA DE ALTO RENDIMIENTO</span>
-            <h2 className="n-title">Ecosistema de <span className="cyan-text">Formación.</span></h2>
+            <h2 className="n-title">Ecosistema de <span className="red-text">Formación.</span></h2>
           </div>
 
           <div className="n-training-grid">
@@ -163,7 +195,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-section-header light">
             <span className="section-badge">ROI & OUTCOMES</span>
-            <h2 className="n-title-white">Valor Clínico e <span className="cyan-text">Institucional</span></h2>
+            <h2 className="n-title-white">Valor Clínico e <span className="red-text">Institucional</span></h2>
           </div>
 
           <div className="n-outcomes-grid">
@@ -194,7 +226,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-section-header">
             <span className="section-badge">FACULTAD CIENTÍFICA</span>
-            <h2 className="n-title">Expertos <span className="cyan-text">Virtuales.</span></h2>
+            <h2 className="n-title">Expertos <span className="red-text">Virtuales.</span></h2>
             <p className="n-subtitle">18 Referentes mundiales integrados en nuestra plataforma de aprendizaje.</p>
           </div>
         </div>
@@ -214,7 +246,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-section-header">
             <span className="section-badge">EXPERIENCIA IN-SITU</span>
-            <h2 className="n-title">Facultad <span className="cyan-text">Presencial.</span></h2>
+            <h2 className="n-title">Facultad <span className="red-text">Presencial.</span></h2>
             <p className="n-subtitle">Expertos internacionales que guiarán el entrenamiento práctico de alta fidelidad.</p>
           </div>
 
@@ -284,16 +316,16 @@ const Nursing = () => {
       </section>
 
       {/* FINAL SALES BANNER */}
-      <section className="n-final-sales-section">
+      <section className="n-final-sales-section" id="final-cta">
         <div className="hce-container">
           <div className="n-final-card">
             <div className="n-final-content">
               <span className="section-badge">ÚLTIMOS CUPOS DISPONIBLES</span>
-              <h2>Transforma tu carrera en el cuidado crítico con <span className="cyan-text">ECMO Nursing.</span></h2>
+              <h2>Transforma tu carrera en el cuidado crítico con <span className="red-text">ECMO Nursing.</span></h2>
               <p>Únete a la red global de enfermería líder en soporte extracorpóreo. Entrenamiento de élite para desafíos reales.</p>
               <div className="n-final-actions">
-                <button className="btn-buy-final">Inscribirme al Curso Ahora <ArrowRight size={18} /></button>
-                <button className="btn-info-final">Ver Plan de Estudios</button>
+                <button className="btn-buy-final" onClick={() => window.open('https://api.whatsapp.com/send?phone=5215512345678&text=Hola,%20me%20interesa%20inscribirme%20al%20ECMO%20Nursing%20Care%20Course', '_blank')}>Inscribirme al Curso Ahora <ArrowRight size={18} /></button>
+                <button className="btn-info-final" onClick={() => window.open('/assets/programa_ecmo_nursing_2026.pdf', '_blank')}>Ver Plan de Estudios</button>
               </div>
             </div>
           </div>

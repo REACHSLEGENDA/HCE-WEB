@@ -6,9 +6,12 @@ import Footer from '../components/Footer';
 import './InsuficienciaCardiaca.css';
 import { useSEO } from '../hooks/useSEO';
 
+import { useNotification } from '../context/NotificationContext';
+
 const InsuficienciaCardiaca = () => {
+  const { showToast } = useNotification();
   useSEO({
-    title: 'Insuficiencia Cardíaca Avanzada',
+    title: 'Manejo de Avanzada en Insuficiencia Cardiaca',
     description: 'Diplomado especializado en el manejo integral de la insuficiencia cardíaca avanzada, trasplante y soportes circulatorios. Avalado por ISHLT.',
     keywords: 'insuficiencia cardíaca, trasplante cardíaco, soporte circulatorio mecánico, cardiología crítica, ISHLT, HCE insuficiencia cardiaca'
   });
@@ -66,8 +69,8 @@ const InsuficienciaCardiaca = () => {
             </div>
 
             <h1 className="ic-h1">
-              Vanguardia en<br />
-              <span className="ic-grad-text">Insuficiencia Cardíaca</span>
+              Manejo de Avanzada en<br />
+              <span className="ic-grad-text">Insuficiencia Cardiaca</span>
             </h1>
 
             <p className="ic-hero-sub">
@@ -278,7 +281,7 @@ const InsuficienciaCardiaca = () => {
             <div className="ic-waitlist-form">
               <h3 className="ic-form-title">Lista Prioritaria</h3>
               <p className="ic-form-sub">Acceso exclusivo a becas anticipadas y plan de estudios detallado.</p>
-              <form onSubmit={(e) => { e.preventDefault(); alert('¡Te hemos registrado con prioridad!'); }}>
+              <form onSubmit={(e) => { e.preventDefault(); showToast('¡Te hemos registrado con prioridad!', 'success'); }}>
                 <div className="ic-field">
                   <label>Nombre completo</label>
                   <input type="text" placeholder="Ej. Dr. Mauricio Cardona" required />

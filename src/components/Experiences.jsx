@@ -54,8 +54,7 @@ const Experiences = () => {
             title="Manejo de avanzada en insuficiencia cardiaca"
             description="Domina los criterios de selección para asistencia ventricular y trasplante con simulación HARVI de alta precisión."
             link="/insuficiencia-cardiaca"
-            img="/assets/componentes/Generated-Image-March-03-2026-11_28PM.png"
-            containerClass="bg-card-white"
+            img="/assets/componentes/06_HCE Banners Programas_Insuficiencia Cardiaca.png"
             badge="PRÓXIMAMENTE"
             badgeClass="badge-info"
           />
@@ -65,9 +64,7 @@ const Experiences = () => {
             title="ECMO Nursing Care Course"
             description="El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo."
             link="/ecmo-nursing-care"
-            img="/assets/componentes/ecmo-nursing-dm.png"
-            imgClass="zoom-nursing"
-            containerClass="bg-card-blue"
+            img="/assets/componentes/06_HCE_Banners_Programas_ECMO_Nursing.png"
             badge="Próximamente"
             badgeClass="badge-info"
           />
@@ -77,9 +74,7 @@ const Experiences = () => {
             title="Paris International Diploma in ECMO"
             description="La especialización de mayor prestigio global en ECMO. Desarrolla competencias críticas para liderar equipos de soporte extracorpóreo al más alto nivel clínico."
             link="/paris-diploma-ecmo"
-            img="https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-25-51-449.png"
-            imgClass="img-paris"
-            containerClass="bg-card-navy"
+            img="/assets/componentes/06_HCE_Banners_Programas_Paris_Diploma_in_ECMO.png"
           />
           <ExperienceCard 
             delay={0.4}
@@ -87,9 +82,7 @@ const Experiences = () => {
             title="ECMO SIM: Realidad Clínica"
             description="Simulación de alta fidelidad con tecnología inmersiva de vanguardia. Domina el manejo de escenarios críticos en un entorno clínico interactivo y seguro."
             link="/simulador-ecmo-sim"
-            img="/assets/componentes/ecmosim-logo-new.png"
-            imgClass="img-padded"
-            containerClass="bg-card-sim"
+            img="/assets/componentes/06_HCE_Banners_Programas_Ecmo_SIM.png"
             badge="SIMULADOR"
             badgeClass="badge-warning"
           />

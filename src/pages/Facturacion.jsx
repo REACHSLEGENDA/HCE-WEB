@@ -66,8 +66,10 @@ function Field({ label, required, error, children }) {
 }
 
 import { useSEO } from '../hooks/useSEO';
+import { useNotification } from '../context/NotificationContext';
 
 export default function Facturacion() {
+  const { showToast } = useNotification();
   useSEO({
     title: 'Facturación Electrónica',
     description: 'Solicita tu factura electrónica CFDI 4.0 para nuestros programas y certificaciones médicas. Completa tus datos fiscales y adjunta tu comprobante.',
@@ -110,7 +112,7 @@ export default function Facturacion() {
       if (file.size <= 25 * 1024 * 1024) {
         setConstanciaFile(file);
       } else {
-        alert('El archivo supera los 25 MB permitidos');
+        showToast('El archivo supera los 25 MB permitidos', 'error');
       }
     }
   };

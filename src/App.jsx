@@ -15,6 +15,14 @@ import SecretPreview from './pages/SecretPreview';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Facturacion from './pages/Facturacion';
 import Gallery from './pages/Gallery';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import Classroom from './pages/Classroom';
+import Comunidad from './pages/Comunidad';
+import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -29,24 +37,54 @@ const ScrollToTop = () => {
 function App() {
   return (
     <Router>
-      <ScrollToTop />
-      <CookieBanner />
-      <ChatBot />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/paris-diploma-ecmo" element={<ParisDiploma />} />
-        <Route path="/quienes-somos" element={<AboutUs />} />
-        <Route path="/ecmo-nursing-care" element={<Nursing />} />
-        <Route path="/simulador-ecmo-sim" element={<EcmoSim />} />
-        <Route path="/insuficiencia-cardiaca" element={<InsuficienciaCardiaca />} />
-        <Route path="/instructores" element={<Instructores />} />
-        <Route path="/retroalimentacion" element={<Retroalimentacion />} />
-        <Route path="/inscripciones-diploma-paris-ecmo" element={<Inscripciones />} />
-        <Route path="/debug-checkout-preview-2026" element={<SecretPreview />} />
-        <Route path="/aviso-de-privacidad" element={<PrivacyPolicy />} />
-        <Route path="/facturacion" element={<Facturacion />} />
-        <Route path="/galeria" element={<Gallery />} />
-      </Routes>
+      <AuthProvider>
+        <NotificationProvider>
+          <ScrollToTop />
+          <CookieBanner />
+          <ChatBot />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/classroom/:id" 
+              element={
+                <ProtectedRoute>
+                  <Classroom />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/paris-diploma-ecmo" element={<ParisDiploma />} />
+            <Route path="/quienes-somos" element={<AboutUs />} />
+            <Route path="/ecmo-nursing-care" element={<Nursing />} />
+            <Route path="/simulador-ecmo-sim" element={<EcmoSim />} />
+            <Route path="/insuficiencia-cardiaca" element={<InsuficienciaCardiaca />} />
+            <Route path="/instructores" element={<Instructores />} />
+            <Route path="/retroalimentacion" element={<Retroalimentacion />} />
+            <Route path="/inscripciones-diploma-paris-ecmo" element={<Inscripciones />} />
+            <Route path="/debug-checkout-preview-2026" element={<SecretPreview />} />
+            <Route path="/aviso-de-privacidad" element={<PrivacyPolicy />} />
+            <Route path="/facturacion" element={<Facturacion />} />
+            <Route path="/galeria" element={<Gallery />} />
+            <Route path="/comunidad" element={<Comunidad />} />
+          </Routes>
+        </NotificationProvider>
+      </AuthProvider>
     </Router>
   );
 }

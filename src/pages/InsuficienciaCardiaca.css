@@ -3,17 +3,17 @@
    ================================================ */
 
 .ic-page {
-  --ic-dark:       #020810;
-  --ic-blue:       #2979ff;
-  --ic-blue-lt:    #60a5fa;
-  --ic-cyan:       #00d2ff;
+  --ic-dark:       #4A0E0E;
+  --ic-blue:       #B91C1C;
+  --ic-blue-lt:    #F87171;
+  --ic-cyan:       #FBBF24;
   --ic-green:      #10b981;
   --ic-white:      #ffffff;
-  --ic-text:       #334155;
-  --ic-muted:      #64748b;
-  --ic-bg:         #f8fafc;
-  --ic-border:     #e2e8f0;
-  --ic-grad:       linear-gradient(135deg, #2979ff 0%, #00d2ff 100%);
+  --ic-text:       #3B1010;
+  --ic-muted:      #7A4F4F;
+  --ic-bg:         #FFF8F5;
+  --ic-border:     #FECACA;
+  --ic-grad:       linear-gradient(135deg, #7F1D1D 0%, #DC2626 60%, #F87171 100%);
   --ic-shadow:     0 20px 50px rgba(0,0,0,0.08);
   --ic-ease:       all 0.4s cubic-bezier(0.4,0,0.2,1);
 
@@ -83,7 +83,7 @@
 .ic-hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url('/assets/paginas/cabeza.png');
+  background-image: url('/assets/componentes/06_HCE Banners Programas_Insuficiencia Cardiaca.png');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -94,9 +94,9 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg,
-    rgba(2,8,16,0.97) 0%,
-    rgba(2,8,16,0.85) 50%,
-    rgba(2,8,16,0.2)  100%);
+    rgba(0,0,0,0.72) 0%,
+    rgba(0,0,0,0.45) 55%,
+    rgba(0,0,0,0.10) 100%);
   z-index: 2;
 }
 
@@ -114,9 +114,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(41,121,255,0.15);
-  color: var(--ic-cyan);
-  border: 1px solid rgba(41,121,255,0.3);
+  background: rgba(185,28,28,0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(185,28,28,0.35);
   padding: 0.5rem 1.2rem;
   border-radius: 40px;
   font-size: 0.72rem;
@@ -202,7 +202,7 @@
 .ic-btn-hero:hover {
   background: var(--ic-blue);
   color: var(--ic-white);
-  box-shadow: 0 10px 25px rgba(41,121,255,0.4);
+  box-shadow: 0 10px 25px rgba(185,28,28,0.4);
   transform: translateY(-2px);
 }
 
@@ -228,7 +228,7 @@
 }
 .ic-cta-btn--dark:hover {
   background: var(--ic-blue);
-  box-shadow: 0 10px 24px rgba(41,121,255,0.35);
+  box-shadow: 0 10px 24px rgba(185,28,28,0.35);
   transform: translateY(-2px);
 }
 
@@ -237,7 +237,7 @@
   color: var(--ic-white);
 }
 .ic-cta-btn--blue:hover {
-  box-shadow: 0 10px 24px rgba(41,121,255,0.4);
+  box-shadow: 0 10px 24px rgba(185,28,28,0.4);
   transform: translateY(-2px);
 }
 
@@ -273,9 +273,9 @@
 }
 
 .ic-section-tag--dark {
-  background: rgba(2,8,16,0.07);
+  background: rgba(74,14,14,0.07);
   color: var(--ic-dark);
-  border-color: rgba(2,8,16,0.12);
+  border-color: rgba(74,14,14,0.12);
 }
 
 .ic-value-sub {
@@ -313,16 +313,16 @@
 }
 
 .ic-feat-card:hover {
-  border-color: #93c5fd;
-  box-shadow: 0 8px 24px rgba(41,121,255,0.1);
+  border-color: #FCA5A5;
+  box-shadow: 0 8px 24px rgba(185,28,28,0.1);
   transform: translateY(-3px);
 }
 
 .ic-feat-card:hover::before { opacity: 1; }
 
 .ic-feat-card--accent {
-  background: #f0f7ff;
-  border-color: #bfdbfe;
+  background: #FFF5F5;
+  border-color: #FECACA;
 }
 
 .ic-feat-top {
@@ -406,7 +406,7 @@
   position: absolute;
   top: 0; right: 0;
   width: 55%; height: 100%;
-  background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+  background: linear-gradient(135deg, #FFF5F5 0%, #FEF2F2 100%);
   z-index: 0;
 }
 
@@ -421,9 +421,9 @@
 
 .ic-section-tag {
   display: inline-block;
-  background: rgba(41,121,255,0.1);
+  background: rgba(185,28,28,0.1);
   color: var(--ic-blue);
-  border: 1px solid rgba(41,121,255,0.2);
+  border: 1px solid rgba(185,28,28,0.2);
   padding: 0.35rem 1rem;
   border-radius: 30px;
   font-size: 0.68rem;
@@ -469,9 +469,9 @@
 
 .ic-tag-item:hover {
   border-color: var(--ic-blue);
-  background: #eff6ff;
+  background: #FFF5F5;
   transform: translateX(5px);
-  box-shadow: 0 4px 14px rgba(41,121,255,0.1);
+  box-shadow: 0 4px 14px rgba(185,28,28,0.1);
 }
 
 .ic-tag-dot {
@@ -491,7 +491,7 @@
   width: 100%;
   border-radius: 24px;
   border: 1px solid var(--ic-border);
-  box-shadow: 0 20px 60px rgba(41,121,255,0.12);
+  box-shadow: 0 20px 60px rgba(185,28,28,0.1);
   display: block;
   transition: transform 0.5s ease;
 }
@@ -516,7 +516,7 @@
   white-space: nowrap;
 }
 
-.ic-float-card svg { color: var(--ic-cyan); flex-shrink: 0; }
+.ic-float-card svg { color: #FBBF24; flex-shrink: 0; }
 
 .ic-float-card p {
   font-size: 0.75rem;
@@ -612,7 +612,7 @@
   width: 50px;
   height: 50px;
   border-radius: 12px;
-  background: rgba(41,121,255,0.08);
+  background: rgba(185,28,28,0.08);
   color: var(--ic-blue);
   display: flex;
   align-items: center;
@@ -662,8 +662,8 @@
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.ic-acc-item:hover              { border-color: #93c5fd; }
-.ic-acc-item.ic-acc-item--open  { border-color: var(--ic-blue); box-shadow: 0 8px 24px rgba(41,121,255,0.1); }
+.ic-acc-item:hover              { border-color: #FCA5A5; }
+.ic-acc-item.ic-acc-item--open  { border-color: var(--ic-blue); box-shadow: 0 8px 24px rgba(185,28,28,0.1); }
 
 .ic-acc-header {
   display: flex;
@@ -761,7 +761,7 @@
   position: absolute;
   top: -60px; right: -60px;
   width: 260px; height: 260px;
-  background: rgba(41,121,255,0.15);
+  background: rgba(185,28,28,0.2);
   border-radius: 50%;
   filter: blur(80px);
   pointer-events: none;
@@ -848,7 +848,7 @@
 }
 
 .ic-field input:focus          { border-color: var(--ic-blue); }
-.ic-field input::placeholder   { color: #cbd5e1; font-weight: 400; }
+.ic-field input::placeholder   { color: #F5C0C0; font-weight: 400; }
 
 .ic-submit-btn {
   width: 100%;
@@ -919,7 +919,7 @@
 }
 
 .ic-avales-logo-wrap:hover {
-  box-shadow: 0 8px 30px rgba(41,121,255,0.12);
+  box-shadow: 0 8px 30px rgba(185,28,28,0.12);
   transform: translateY(-3px);
 }
 

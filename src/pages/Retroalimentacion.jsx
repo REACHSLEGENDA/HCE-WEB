@@ -73,7 +73,31 @@ const Retroalimentacion = () => {
             <CheckCircle2 size={56} className="ret-success-icon" />
             <h2>¡Gracias por tu retroalimentación!</h2>
             <p>Tu opinión nos ayuda a seguir mejorando. Pronto estaremos en contacto.</p>
-            <a href="/" className="ret-btn ret-btn--primary">Volver al inicio</a>
+
+            <div className="ret-success-cta" style={{
+              marginTop: '2rem',
+              padding: '2rem',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, rgba(10, 25, 47, 0.03) 0%, rgba(0, 210, 255, 0.05) 100%)',
+              border: '1px solid rgba(0, 210, 255, 0.2)',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <h3 style={{ fontSize: '1.25rem', color: '#0a192f', fontWeight: '800', margin: 0 }}>¿Aún no tienes cuenta en el Portal HCE?</h3>
+              <p style={{ fontSize: '0.9rem', color: '#4b5563', margin: 0, maxWidth: '400px', lineHeight: '1.4' }}>
+                Regístrate gratis como alumno para acceder a webinars en vivo, historial académico y constancias de acreditación.
+              </p>
+              <a href="/login" className="ret-btn ret-btn--primary" style={{ marginTop: '8px', fontSize: '0.9rem', padding: '0.8rem 1.8rem' }}>
+                Registrarme en el Portal HCE
+              </a>
+            </div>
+
+            <a href="/" style={{ marginTop: '1.5rem', display: 'inline-block', color: '#6b7280', fontSize: '0.9rem', textDecoration: 'underline', fontWeight: '500' }}>
+              Volver al inicio
+            </a>
           </div>
         </div>
         <Footer />
