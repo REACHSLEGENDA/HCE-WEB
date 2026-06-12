@@ -20,6 +20,7 @@ import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Classroom from './pages/Classroom';
 import Comunidad from './pages/Comunidad';
+import Confirmacion from './pages/Confirmacion';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -45,6 +46,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/confirmacion" element={<Confirmacion />} />
             <Route 
               path="/dashboard" 
               element={
