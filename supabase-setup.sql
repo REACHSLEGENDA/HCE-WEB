@@ -364,6 +364,7 @@ CREATE TABLE IF NOT EXISTS public.testimonials (
   experience TEXT NOT NULL, -- 'Insuficiencia Cardiaca', 'ECMO Nursing Care', 'Paris Diploma ECMO', 'ECMO SIM', 'Webinars portal'
   content TEXT NOT NULL,
   rating INTEGER DEFAULT 5 CHECK (rating >= 1 AND rating <= 5),
+  image_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

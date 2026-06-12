@@ -593,7 +593,7 @@
   }
 }
 
-.forum-avatar-upload-label:hover {
+.forum-image-upload-label:hover {
   background: rgba(0, 188, 212, 0.12) !important;
   border-color: rgba(0, 188, 212, 0.5) !important;
   color: #00838f !important;

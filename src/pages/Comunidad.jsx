@@ -80,7 +80,7 @@ const Comunidad = () => {
     keywords: 'testimonios ecmo, foro medico ecmo, comunidad hce, opiniones cursos ecmo'
   });
 
-  const { user, profile, updateUserMetadata, updateProfile } = useAuth();
+  const { user, profile } = useAuth();
   const { showToast, showConfirm } = useNotification();
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
@@ -90,43 +90,30 @@ const Comunidad = () => {
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [submittingComment, setSubmittingComment] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [testimonialImage, setTestimonialImage] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
-  const handleAvatarUpload = async (e) => {
+  const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      showToast('La foto de perfil debe ser menor a 2MB', 'error');
+      showToast('La imagen debe ser menor a 2MB', 'error');
       return;
     }
 
-    setUploadingAvatar(true);
-    try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result;
-        try {
-          await updateUserMetadata({ avatar_url: base64String });
-          await updateProfile({ avatar_url: base64String });
-          showToast('Foto de perfil actualizada correctamente', 'success');
-          fetchTestimonials(forumCategory);
-        } catch (dbErr) {
-          console.warn('Error saving avatar:', dbErr.message);
-          showToast('Error al guardar la foto de perfil', 'error');
-        }
-        setUploadingAvatar(false);
-      };
-      reader.onerror = () => {
-        showToast('Error al leer el archivo de imagen', 'error');
-        setUploadingAvatar(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error('Error uploading avatar:', err);
-      showToast('Error al subir la foto de perfil', 'error');
-      setUploadingAvatar(false);
-    }
+    setUploadingImage(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setTestimonialImage(reader.result);
+      setUploadingImage(false);
+      showToast('Imagen adjuntada al testimonio', 'success');
+    };
+    reader.onerror = () => {
+      showToast('Error al leer el archivo de imagen', 'error');
+      setUploadingImage(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const fetchTestimonials = useCallback(async (category) => {
@@ -140,6 +127,7 @@ const Comunidad = () => {
           experience,
           content,
           rating,
+          image_url,
           created_at,
           profiles:user_id (
             nombre_completo,
@@ -192,7 +180,8 @@ const Comunidad = () => {
       user_id: user?.id,
       experience: forumCategory,
       content: newComment,
-      rating: newRating
+      rating: newRating,
+      image_url: testimonialImage || null
     };
 
     try {
@@ -205,6 +194,7 @@ const Comunidad = () => {
       showToast('Comentario publicado con éxito', 'success');
       setNewComment('');
       setNewRating(5);
+      setTestimonialImage('');
       fetchTestimonials(forumCategory);
     } catch (err) {
       console.warn('Failed to insert in database, using local fallback:', err.message);
@@ -216,6 +206,7 @@ const Comunidad = () => {
         experience: forumCategory,
         content: newComment,
         rating: newRating,
+        image_url: testimonialImage || null,
         created_at: new Date().toISOString(),
         profiles: {
           nombre_completo: profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email,
@@ -239,6 +230,7 @@ const Comunidad = () => {
       showToast('Comentario guardado localmente', 'success');
       setNewComment('');
       setNewRating(5);
+      setTestimonialImage('');
     } finally {
       setSubmittingComment(false);
     }
@@ -430,6 +422,27 @@ const Comunidad = () => {
                               ))}
                             </div>
                             <p className="forum-comment-text">{item.content}</p>
+                            {item.image_url && (
+                              <div className="forum-comment-image-wrapper" style={{
+                                marginTop: '14px',
+                                maxWidth: '100%',
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                border: '1px solid #e2e8f0',
+                                background: '#f8fafc'
+                              }}>
+                                <img 
+                                  src={item.image_url} 
+                                  alt="Evidencia adjunta" 
+                                  style={{
+                                    width: '100%',
+                                    maxHeight: '350px',
+                                    objectFit: 'contain',
+                                    display: 'block'
+                                  }} 
+                                />
+                              </div>
+                            )}
                             <span className="forum-comment-date">
                               {new Date(item.created_at).toLocaleDateString('es-MX', {
                                 year: 'numeric',
@@ -501,8 +514,8 @@ const Comunidad = () => {
                         </div>
                       </div>
 
-                      <div className="forum-avatar-upload-zone" style={{ marginTop: '15px' }}>
-                        <label className="forum-avatar-upload-label" style={{
+                      <div className="forum-image-upload-zone" style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
+                        <label className="forum-image-upload-label" style={{
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '8px',
@@ -517,15 +530,59 @@ const Comunidad = () => {
                           transition: 'all 0.2s'
                         }}>
                           <Camera size={15} />
-                          {uploadingAvatar ? 'Subiendo foto...' : 'Adjuntar foto'}
+                          {uploadingImage ? 'Cargando imagen...' : 'Adjuntar foto'}
                           <input 
                             type="file" 
                             accept="image/*" 
-                            onChange={handleAvatarUpload} 
-                            disabled={uploadingAvatar}
+                            onChange={handleImageUpload} 
+                            disabled={uploadingImage}
                             style={{ display: 'none' }} 
                           />
                         </label>
+
+                        {testimonialImage && (
+                          <div className="forum-image-preview-wrapper" style={{
+                            position: 'relative',
+                            display: 'inline-block',
+                            borderRadius: '8px',
+                            border: '1px solid #e2e8f0',
+                            overflow: 'hidden',
+                            background: '#f8fafc',
+                            padding: '4px'
+                          }}>
+                            <img 
+                              src={testimonialImage} 
+                              alt="Vista previa de testimonio" 
+                              style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', display: 'block' }} 
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setTestimonialImage('')}
+                              style={{
+                                position: 'absolute',
+                                top: '6px',
+                                right: '6px',
+                                background: 'rgba(15, 23, 42, 0.75)',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '18px',
+                                height: '18px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '11px',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                padding: '0',
+                                lineHeight: '1'
+                              }}
+                              title="Remover foto"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       <button
