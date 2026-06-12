@@ -12,6 +12,8 @@ import Instructores from './pages/Instructores';
 import Retroalimentacion from './pages/Retroalimentacion';
 import Inscripciones from './pages/Inscripciones';
 import SecretPreview from './pages/SecretPreview';
+import InscripcionesNursing from './pages/InscripcionesNursing';
+import SecretNursingPreview from './pages/SecretNursingPreview';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Facturacion from './pages/Facturacion';
 import Gallery from './pages/Gallery';
@@ -82,6 +84,8 @@ function App() {
             <Route path="/retroalimentacion" element={<Retroalimentacion />} />
             <Route path="/inscripciones-diploma-paris-ecmo" element={<Inscripciones />} />
             <Route path="/debug-checkout-preview-2026" element={<SecretPreview />} />
+            <Route path="/inscripciones-ecmo-nursing" element={<InscripcionesNursing />} />
+            <Route path="/debug-checkout-nursing-preview-2026" element={<SecretNursingPreview />} />
             <Route path="/aviso-de-privacidad" element={<PrivacyPolicy />} />
             <Route path="/facturacion" element={<Facturacion />} />
             <Route path="/galeria" element={<Gallery />} />

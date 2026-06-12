@@ -54,35 +54,35 @@ const Experiences = () => {
             title="Manejo de avanzada en insuficiencia cardiaca"
             description="Domina los criterios de selección para asistencia ventricular y trasplante con simulación HARVI de alta precisión."
             link="/insuficiencia-cardiaca"
-            img="/assets/componentes/06_HCE Banners Programas_Insuficiencia Cardiaca.png"
+            img="/assets/componentes/exopins.png"
             badge="PRÓXIMAMENTE"
             badgeClass="badge-info"
           />
-          <ExperienceCard 
+          <ExperienceCard
             delay={0.2}
             icon={Stethoscope}
             title="ECMO Nursing Care Course"
             description="El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo."
             link="/ecmo-nursing-care"
-            img="/assets/componentes/06_HCE_Banners_Programas_ECMO_Nursing.png"
+            img="/assets/componentes/expnur.png"
             badge="Próximamente"
             badgeClass="badge-info"
           />
-          <ExperienceCard 
+          <ExperienceCard
             delay={0.3}
             icon={HeartPulse}
             title="Paris International Diploma in ECMO"
             description="La especialización de mayor prestigio global en ECMO. Desarrolla competencias críticas para liderar equipos de soporte extracorpóreo al más alto nivel clínico."
             link="/paris-diploma-ecmo"
-            img="/assets/componentes/06_HCE_Banners_Programas_Paris_Diploma_in_ECMO.png"
+            img="/assets/componentes/expparis.png"
           />
-          <ExperienceCard 
+          <ExperienceCard
             delay={0.4}
             icon={Gamepad2}
             title="ECMO SIM: Realidad Clínica"
             description="Simulación de alta fidelidad con tecnología inmersiva de vanguardia. Domina el manejo de escenarios críticos en un entorno clínico interactivo y seguro."
             link="/simulador-ecmo-sim"
-            img="/assets/componentes/06_HCE_Banners_Programas_Ecmo_SIM.png"
+            img="/assets/componentes/expsim.png"
             badge="SIMULADOR"
             badgeClass="badge-warning"
           />
