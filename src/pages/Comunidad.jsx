@@ -17,7 +17,8 @@ import {
   Gamepad2,
   PlayCircle,
   Users,
-  Award
+  Award,
+  Video
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -34,6 +35,7 @@ const FORUM_CATEGORIES = [
   { id: 'Paris Diploma ECMO', label: 'Paris International Diploma in ECMO', icon: HeartPulse, desc: 'Diploma internacional de París en ECMO' },
   { id: 'ECMO SIM', label: 'Simulador ECMO SIM', icon: Gamepad2, desc: 'Entrenamiento interactivo y simulador clínico' },
   { id: 'Experiencia Docente', label: 'Comentarios Docentes / Instructores', icon: Award, desc: 'Experiencias de nuestros profesores y facilitadores clínicos' },
+  { id: 'Conferencias Virtuales', label: 'Conferencias Virtuales Académicas para Instituciones y Grupos Hospitalarios', icon: Video, desc: 'Ponencias y conferencias virtuales especializadas' },
   { id: 'Webinars portal', label: 'Webinars portal', icon: PlayCircle, desc: 'Webinars en vivo y educación continua' },
   { id: 'Entrenamiento Intrahospitalario In Situ', label: 'Entrenamiento Intrahospitalario In Situ', icon: Users, desc: 'Capacitación y simulación in situ en hospitales' }
 ];
