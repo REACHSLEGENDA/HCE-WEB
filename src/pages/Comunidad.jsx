@@ -18,7 +18,8 @@ import {
   PlayCircle,
   Users,
   Award,
-  Video
+  Video,
+  Camera
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -79,7 +80,7 @@ const Comunidad = () => {
     keywords: 'testimonios ecmo, foro medico ecmo, comunidad hce, opiniones cursos ecmo'
   });
 
-  const { user, profile } = useAuth();
+  const { user, profile, updateUserMetadata, updateProfile } = useAuth();
   const { showToast, showConfirm } = useNotification();
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
@@ -89,6 +90,44 @@ const Comunidad = () => {
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('La foto de perfil debe ser menor a 2MB', 'error');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result;
+        try {
+          await updateUserMetadata({ avatar_url: base64String });
+          await updateProfile({ avatar_url: base64String });
+          showToast('Foto de perfil actualizada correctamente', 'success');
+          fetchTestimonials(forumCategory);
+        } catch (dbErr) {
+          console.warn('Error saving avatar:', dbErr.message);
+          showToast('Error al guardar la foto de perfil', 'error');
+        }
+        setUploadingAvatar(false);
+      };
+      reader.onerror = () => {
+        showToast('Error al leer el archivo de imagen', 'error');
+        setUploadingAvatar(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Error uploading avatar:', err);
+      showToast('Error al subir la foto de perfil', 'error');
+      setUploadingAvatar(false);
+    }
+  };
 
   const fetchTestimonials = useCallback(async (category) => {
     setTestimonialsLoading(true);
@@ -460,6 +499,33 @@ const Comunidad = () => {
                           Publicarás como <strong>{profile?.nombre_completo || 'Usuario HCE'}</strong> de <strong>{profile?.pais || 'País no registrado'}</strong> ({profile?.grado || 'Profesión no registrada'}). 
                           <Link to="/dashboard" className="hint-link"> Editar perfil</Link>
                         </div>
+                      </div>
+
+                      <div className="forum-avatar-upload-zone" style={{ marginTop: '15px' }}>
+                        <label className="forum-avatar-upload-label" style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          background: 'rgba(0, 188, 212, 0.06)',
+                          border: '1px dashed rgba(0, 188, 212, 0.3)',
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          fontSize: '0.85rem',
+                          fontWeight: '600',
+                          color: '#00acc1',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}>
+                          <Camera size={15} />
+                          {uploadingAvatar ? 'Subiendo foto...' : 'Subir foto para que se vea más completo'}
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleAvatarUpload} 
+                            disabled={uploadingAvatar}
+                            style={{ display: 'none' }} 
+                          />
+                        </label>
                       </div>
 
                       <button
