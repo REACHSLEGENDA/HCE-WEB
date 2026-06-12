@@ -26,40 +26,7 @@ import { supabase } from '../lib/supabase';
 import { getFlagUrl } from '../data/countries';
 import './Comunidad.css';
 
-const DEFAULT_TESTIMONIALS = [
-  {
-    id: 'seed_docente_1',
-    user_id: 'seed_user_1',
-    experience: 'Experiencia Docente',
-    content: 'La plataforma HCE y la integración de simuladores en la nube permiten que alumnos de toda Latinoamérica alcancen un nivel técnico óptimo antes de ingresar a la UCI. Una experiencia docente enriquecedora y de vanguardia.',
-    rating: 5,
-    created_at: '2026-05-15T12:00:00Z',
-    profiles: {
-      nombre_completo: 'Prof. Jean-Luc Viguier',
-      avatar_url: null,
-      pais: 'Francia',
-      grado: 'Médico Especialista',
-      cargo: 'Coordinador de Simulación ECMO',
-      institucion: 'Hôpital de la Pitié-Salpêtrière'
-    }
-  },
-  {
-    id: 'seed_docente_2',
-    user_id: 'seed_user_2',
-    experience: 'Experiencia Docente',
-    content: 'Ser parte del cuerpo docente de HCE ha sido un honor. La combinación de teoría estructurada y simulación interactiva hace que la enseñanza del soporte extracorpóreo sea fluida y altamente de alto impacto.',
-    rating: 5,
-    created_at: '2026-06-01T14:30:00Z',
-    profiles: {
-      nombre_completo: 'Dra. Elena Ruiz',
-      avatar_url: null,
-      pais: 'México',
-      grado: 'Médico Especialista',
-      cargo: 'Instructora de Soporte Vital Extracorpóreo',
-      institucion: 'Instituto Nacional de Cardiología'
-    }
-  }
-];
+const DEFAULT_TESTIMONIALS = [];
 
 const FORUM_CATEGORIES = [
   { id: 'Insuficiencia Cardiaca', label: 'Manejo de Avanzada en Insuficiencia Cardíaca', icon: Heart, desc: 'Soporte e insuficiencia cardíaca avanzada' },
