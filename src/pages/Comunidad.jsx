@@ -234,6 +234,11 @@ const Comunidad = () => {
               </p>
             </div>
 
+            {/* Indicación del foro */}
+            <div className="forum-instruction-text">
+              👉 Selecciona el foro para dejar tu comentario o ver testimonios:
+            </div>
+
             {/* Categorías del foro */}
             <div className="forum-categories-grid">
               {FORUM_CATEGORIES.map(cat => {

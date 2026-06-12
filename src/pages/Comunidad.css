@@ -572,3 +572,23 @@
   max-width: 320px;
   line-height: 1.45;
 }
+
+.forum-instruction-text {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0d9488;
+  margin-top: 35px;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .forum-instruction-text {
+    font-size: 0.95rem;
+    margin-top: 25px;
+    line-height: 1.4;
+  }
+}
