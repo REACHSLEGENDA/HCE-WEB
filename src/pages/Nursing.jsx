@@ -1,5 +1,6 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
+import { useNavigate } from 'react-router-dom';
 import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -56,6 +57,7 @@ const PresencialCard = ({ flag, img, name, country, bio, delay }) => {
 import { useSEO } from '../hooks/useSEO';
 
 const Nursing = () => {
+  const navigate = useNavigate();
   useSEO({
     title: 'ECMO Nursing Care',
     description: 'Programa de alta especialidad diseñado para profesionales de enfermería en cuidados intensivos. Domina el monitoreo y protocolos de pacientes en ECMO.',
@@ -104,7 +106,7 @@ const Nursing = () => {
             </p>
             <button 
               className="n-hero-cta-btn" 
-              onClick={() => document.getElementById('final-cta')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => navigate('/inscripciones-ecmo-nursing')}
             >
               INSCRÍBETE AHORA
             </button>
@@ -133,7 +135,7 @@ const Nursing = () => {
                 <div className="n-intro-card-box">
                   <h4>Certificación HCE</h4>
                   <p>Asegura tu cupo en la certificación líder en cuidados críticos ECMO. Cupos limitados por cohorte.</p>
-                  <button className="n-btn n-btn-brand" onClick={() => document.getElementById('final-cta')?.scrollIntoView({ behavior: 'smooth' })}>
+                  <button className="n-btn n-btn-brand" onClick={() => navigate('/inscripciones-ecmo-nursing')}>
                     Inscríbete Ahora <ArrowRight size={18} />
                   </button>
                 </div>
@@ -157,7 +159,7 @@ const Nursing = () => {
               <span className="n-card-badge">+ 20 profesores</span>
               <h3>Experiencia Teórica Virtual</h3>
               <p>Inmersión de aprendizaje asincrónica y sincrónica virtual, diseñada para adaptarse a tu ritmo de vida profesional sin sacrificar la profundidad académica.</p>
-              <button className="n-card-cta">Inscripciones Abiertas <ArrowRight size={14} /></button>
+              <button className="n-card-cta" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscripciones Abiertas <ArrowRight size={14} /></button>
             </div>
             <div className="n-train-card">
               <div className="n-icon-box"><BookOpen size={32} /></div>
@@ -175,7 +177,7 @@ const Nursing = () => {
 
           <div className="n-training-footer sales">
             <p>Asegura tu cupo en la certificación líder en cuidados críticos ECMO. <strong>Cupos limitados por cohorte.</strong></p>
-            <button className="n-sales-btn">
+            <button className="n-sales-btn" onClick={() => navigate('/inscripciones-ecmo-nursing')}>
               Inscribirme al Curso Ahora
             </button>
           </div>
@@ -310,7 +312,7 @@ const Nursing = () => {
           </div>
           
           <div className="n-section-cta">
-            <button className="n-sales-btn large">Inscribirme al Curso Ahora <ArrowRight size={20} /></button>
+            <button className="n-sales-btn large" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscribirme al Curso Ahora <ArrowRight size={20} /></button>
           </div>
         </div>
       </section>
@@ -324,7 +326,7 @@ const Nursing = () => {
               <h2>Transforma tu carrera en el cuidado crítico con <span className="red-text">ECMO Nursing.</span></h2>
               <p>Únete a la red global de enfermería líder en soporte extracorpóreo. Entrenamiento de élite para desafíos reales.</p>
               <div className="n-final-actions">
-                <button className="btn-buy-final" onClick={() => window.open('https://api.whatsapp.com/send?phone=5215512345678&text=Hola,%20me%20interesa%20inscribirme%20al%20ECMO%20Nursing%20Care%20Course', '_blank')}>Inscribirme al Curso Ahora <ArrowRight size={18} /></button>
+                <button className="btn-buy-final" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscribirme al Curso Ahora <ArrowRight size={18} /></button>
                 <button className="btn-info-final" onClick={() => window.open('/assets/programa_ecmo_nursing_2026.pdf', '_blank')}>Ver Plan de Estudios</button>
               </div>
             </div>
