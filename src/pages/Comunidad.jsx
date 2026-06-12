@@ -15,7 +15,8 @@ import {
   Stethoscope,
   HeartPulse,
   Gamepad2,
-  PlayCircle
+  PlayCircle,
+  Users
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -31,7 +32,8 @@ const FORUM_CATEGORIES = [
   { id: 'ECMO Nursing Care', label: 'ECMO Nursing Care', icon: Stethoscope, desc: 'Cuidado crítico de enfermería en ECMO' },
   { id: 'Paris Diploma ECMO', label: 'Paris International Diploma in ECMO', icon: HeartPulse, desc: 'Diploma internacional de París en ECMO' },
   { id: 'ECMO SIM', label: 'ECMO SIM', icon: Gamepad2, desc: 'Entrenamiento interactivo y simulador clínico' },
-  { id: 'Webinars portal', label: 'Webinars portal', icon: PlayCircle, desc: 'Webinars en vivo y educación continua' }
+  { id: 'Webinars portal', label: 'Webinars portal', icon: PlayCircle, desc: 'Webinars en vivo y educación continua' },
+  { id: 'Entrenamiento Intrahospitalario In Situ', label: 'Entrenamiento Intrahospitalario In Situ', icon: Users, desc: 'Capacitación y simulación in situ en hospitales' }
 ];
 
 const Comunidad = () => {
