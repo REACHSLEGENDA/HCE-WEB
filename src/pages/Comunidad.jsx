@@ -517,7 +517,7 @@ const Comunidad = () => {
                           transition: 'all 0.2s'
                         }}>
                           <Camera size={15} />
-                          {uploadingAvatar ? 'Subiendo foto...' : 'Subir foto para que se vea más completo'}
+                          {uploadingAvatar ? 'Subiendo foto...' : 'Adjuntar foto'}
                           <input 
                             type="file" 
                             accept="image/*" 
