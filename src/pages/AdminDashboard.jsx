@@ -1248,6 +1248,7 @@ const AdminDashboard = () => {
         email: newStudentForm.email,
         password: newStudentForm.password,
         options: {
+          emailRedirectTo: 'https://healthcareexp.com/confirmacion',
           data: {
             nombre_completo: nombreCompleto,
             nombres: newStudentForm.nombres,
@@ -1311,6 +1312,7 @@ const AdminDashboard = () => {
         email: newAdminForm.email,
         password: newAdminForm.password,
         options: {
+          emailRedirectTo: 'https://healthcareexp.com/confirmacion',
           data: {
             nombre_completo: nombreCompleto,
             nombres: newAdminForm.nombres,

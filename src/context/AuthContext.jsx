@@ -108,6 +108,7 @@ export const AuthProvider = ({ children }) => {
       email,
       password,
       options: {
+        emailRedirectTo: 'https://healthcareexp.com/confirmacion',
         data: {
           nombre_completo: nombreCompleto,
           nombres,
