@@ -21,6 +21,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Classroom from './pages/Classroom';
 import Comunidad from './pages/Comunidad';
 import Confirmacion from './pages/Confirmacion';
+import RestablecerPassword from './pages/RestablecerPassword';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -47,6 +48,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/confirmacion" element={<Confirmacion />} />
+            <Route path="/restablecer-contrasena" element={<RestablecerPassword />} />
             <Route 
               path="/dashboard" 
               element={
