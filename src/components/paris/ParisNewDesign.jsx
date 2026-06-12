@@ -209,7 +209,7 @@ const ParisNewDesign = () => {
                         alt="Paris International Diploma Logo" 
                         className="hero-main-logo"
                     />
-                    <div className="h1-style">¡Conviértete en un especialista en <span className="gradient-text">ECMO</span>!</div>
+                    <div className="h1-style">¡Conviértete en un <br />especialista en <span className="gradient-text">ECMO</span>!</div>
                     <p className="hero-sub">Certifícate con la más alta tecnología de talla internacional.</p>
                     <div className="hero-actions">
                         <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
