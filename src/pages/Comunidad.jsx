@@ -90,30 +90,59 @@ const Comunidad = () => {
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [submittingComment, setSubmittingComment] = useState(false);
-  const [testimonialImage, setTestimonialImage] = useState('');
+  const [testimonialImages, setTestimonialImages] = useState([]);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleImageUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('La imagen debe ser menor a 2MB', 'error');
+    if (testimonialImages.length + files.length > 3) {
+      showToast('Puedes subir un máximo de 3 imágenes', 'error');
       return;
     }
 
     setUploadingImage(true);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setTestimonialImage(reader.result);
-      setUploadingImage(false);
-      showToast('Imagen adjuntada al testimonio', 'success');
-    };
-    reader.onerror = () => {
-      showToast('Error al leer el archivo de imagen', 'error');
-      setUploadingImage(false);
-    };
-    reader.readAsDataURL(file);
+    let loadedCount = 0;
+    const newImages = [];
+
+    files.forEach((file) => {
+      if (file.size > 2 * 1024 * 1024) {
+        showToast(`La imagen "${file.name}" supera el límite de 2MB`, 'error');
+        loadedCount++;
+        if (loadedCount === files.length) {
+          setUploadingImage(false);
+        }
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        newImages.push(reader.result);
+        loadedCount++;
+        if (loadedCount === files.length) {
+          setTestimonialImages(prev => {
+            const combined = [...prev, ...newImages].slice(0, 3);
+            showToast(
+              combined.length === 1 
+                ? 'Imagen adjuntada al testimonio' 
+                : `${combined.length} imágenes adjuntadas al testimonio`, 
+              'success'
+            );
+            return combined;
+          });
+          setUploadingImage(false);
+        }
+      };
+      reader.onerror = () => {
+        showToast(`Error al leer el archivo: ${file.name}`, 'error');
+        loadedCount++;
+        if (loadedCount === files.length) {
+          setUploadingImage(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const fetchTestimonials = useCallback(async (category) => {
@@ -181,7 +210,7 @@ const Comunidad = () => {
       experience: forumCategory,
       content: newComment,
       rating: newRating,
-      image_url: testimonialImage || null
+      image_url: testimonialImages.length > 0 ? JSON.stringify(testimonialImages) : null
     };
 
     try {
@@ -194,7 +223,7 @@ const Comunidad = () => {
       showToast('Comentario publicado con éxito', 'success');
       setNewComment('');
       setNewRating(5);
-      setTestimonialImage('');
+      setTestimonialImages([]);
       fetchTestimonials(forumCategory);
     } catch (err) {
       console.warn('Failed to insert in database, using local fallback:', err.message);
@@ -206,7 +235,7 @@ const Comunidad = () => {
         experience: forumCategory,
         content: newComment,
         rating: newRating,
-        image_url: testimonialImage || null,
+        image_url: testimonialImages.length > 0 ? JSON.stringify(testimonialImages) : null,
         created_at: new Date().toISOString(),
         profiles: {
           nombre_completo: profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email,
@@ -230,7 +259,7 @@ const Comunidad = () => {
       showToast('Comentario guardado localmente', 'success');
       setNewComment('');
       setNewRating(5);
-      setTestimonialImage('');
+      setTestimonialImages([]);
     } finally {
       setSubmittingComment(false);
     }
@@ -422,27 +451,64 @@ const Comunidad = () => {
                               ))}
                             </div>
                             <p className="forum-comment-text">{item.content}</p>
-                            {item.image_url && (
-                              <div className="forum-comment-image-wrapper" style={{
-                                marginTop: '14px',
-                                maxWidth: '100%',
-                                borderRadius: '12px',
-                                overflow: 'hidden',
-                                border: '1px solid #e2e8f0',
-                                background: '#f8fafc'
-                              }}>
-                                <img 
-                                  src={item.image_url} 
-                                  alt="Evidencia adjunta" 
-                                  style={{
-                                    width: '100%',
-                                    maxHeight: '350px',
-                                    objectFit: 'contain',
-                                    display: 'block'
-                                  }} 
-                                />
-                              </div>
-                            )}
+                            {(() => {
+                              if (!item.image_url) return null;
+                              let images = [];
+                              if (item.image_url.startsWith('[')) {
+                                try {
+                                  images = JSON.parse(item.image_url);
+                                } catch (e) {
+                                  images = [item.image_url];
+                                }
+                              } else {
+                                images = [item.image_url];
+                              }
+
+                              if (images.length === 0) return null;
+
+                              return (
+                                <div className="forum-comment-images-layout" style={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap',
+                                  gap: '10px',
+                                  marginTop: '14px'
+                                }}>
+                                  {images.map((img, idx) => (
+                                    <div key={idx} className="forum-comment-image-wrapper" style={{
+                                      borderRadius: '12px',
+                                      overflow: 'hidden',
+                                      border: '1px solid #e2e8f0',
+                                      background: '#f8fafc',
+                                      flex: images.length === 1 ? '1 1 100%' : images.length === 2 ? '1 1 calc(50% - 5px)' : '1 1 calc(33.333% - 7px)',
+                                      minWidth: '150px',
+                                      maxHeight: images.length === 1 ? '350px' : '200px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <img 
+                                        src={img} 
+                                        alt={`Evidencia adjunta ${idx + 1}`} 
+                                        style={{
+                                          width: '100%',
+                                          height: '100%',
+                                          maxHeight: images.length === 1 ? '350px' : '200px',
+                                          objectFit: images.length === 1 ? 'contain' : 'cover',
+                                          display: 'block',
+                                          cursor: 'pointer'
+                                        }}
+                                        onClick={() => {
+                                          const win = window.open();
+                                          if (win) {
+                                            win.document.write(`<img src="${img}" style="max-width:100%; max-height:100%; display:block; margin:auto;" />`);
+                                          }
+                                        }}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()}
                             <span className="forum-comment-date">
                               {new Date(item.created_at).toLocaleDateString('es-MX', {
                                 year: 'numeric',
@@ -514,75 +580,90 @@ const Comunidad = () => {
                         </div>
                       </div>
 
-                      <div className="forum-image-upload-zone" style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
-                        <label className="forum-image-upload-label" style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          background: 'rgba(0, 188, 212, 0.06)',
-                          border: '1px dashed rgba(0, 188, 212, 0.3)',
-                          padding: '8px 16px',
-                          borderRadius: '8px',
-                          fontSize: '0.85rem',
-                          fontWeight: '600',
-                          color: '#00acc1',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s'
-                        }}>
-                          <Camera size={15} />
-                          {uploadingImage ? 'Cargando imagen...' : 'Adjuntar foto'}
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={handleImageUpload} 
-                            disabled={uploadingImage}
-                            style={{ display: 'none' }} 
-                          />
-                        </label>
-
-                        {testimonialImage && (
-                          <div className="forum-image-preview-wrapper" style={{
-                            position: 'relative',
-                            display: 'inline-block',
+                      <div className="forum-image-upload-zone" style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start', width: '100%' }}>
+                        {testimonialImages.length < 3 && (
+                          <label className="forum-image-upload-label" style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            background: 'rgba(0, 188, 212, 0.06)',
+                            border: '1px dashed rgba(0, 188, 212, 0.3)',
+                            padding: '8px 16px',
                             borderRadius: '8px',
-                            border: '1px solid #e2e8f0',
-                            overflow: 'hidden',
-                            background: '#f8fafc',
-                            padding: '4px'
+                            fontSize: '0.85rem',
+                            fontWeight: '600',
+                            color: '#00acc1',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
                           }}>
-                            <img 
-                              src={testimonialImage} 
-                              alt="Vista previa de testimonio" 
-                              style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', display: 'block' }} 
+                            <Camera size={15} />
+                            {uploadingImage ? 'Cargando...' : 'Adjuntar fotos (máx. 3)'}
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              multiple
+                              onChange={handleImageUpload} 
+                              disabled={uploadingImage}
+                              style={{ display: 'none' }} 
                             />
-                            <button
-                              type="button"
-                              onClick={() => setTestimonialImage('')}
-                              style={{
-                                position: 'absolute',
-                                top: '6px',
-                                right: '6px',
-                                background: 'rgba(15, 23, 42, 0.75)',
-                                color: '#ffffff',
-                                border: 'none',
-                                borderRadius: '50%',
-                                width: '18px',
-                                height: '18px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '11px',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                padding: '0',
-                                lineHeight: '1'
-                              }}
-                              title="Remover foto"
-                            >
-                              ×
-                            </button>
+                          </label>
+                        )}
+
+                        {testimonialImages.length > 0 && (
+                          <div className="forum-image-previews-container" style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '10px',
+                            marginTop: '5px'
+                          }}>
+                            {testimonialImages.map((img, idx) => (
+                              <div key={idx} className="forum-image-preview-wrapper" style={{
+                                position: 'relative',
+                                display: 'inline-block',
+                                borderRadius: '8px',
+                                border: '1px solid #e2e8f0',
+                                overflow: 'hidden',
+                                background: '#f8fafc',
+                                padding: '4px'
+                              }}>
+                                <img 
+                                  src={img} 
+                                  alt={`Vista previa ${idx + 1}`} 
+                                  style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', display: 'block' }} 
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setTestimonialImages(prev => prev.filter((_, i) => i !== idx))}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '6px',
+                                    right: '6px',
+                                    background: 'rgba(239, 68, 68, 0.9)',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '18px',
+                                    height: '18px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '11px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    padding: '0',
+                                    lineHeight: '1'
+                                  }}
+                                  title="Remover foto"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
                           </div>
                         )}
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                          {testimonialImages.length} de 3 fotos adjuntas
+                        </span>
                       </div>
 
                       <button
