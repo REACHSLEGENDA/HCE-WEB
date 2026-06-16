@@ -86,6 +86,8 @@ export const handler = async (event) => {
       if (isBase) {
         if (promoCode === 'HCE10MSI') {
           finalMXN = Math.floor(mxn * 0.9);
+        } else if (promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15') {
+          finalMXN = Math.floor(mxn * 0.85);
         }
       }
       const amount = currency === 'usd' ? finalMXN / USD_RATE : finalMXN;
@@ -131,6 +133,8 @@ export const handler = async (event) => {
     let discountedBase = baseAmount;
     if (promoCode === 'HCE10MSI') {
       discountedBase = Math.floor(baseAmount * 0.9);
+    } else if (promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15') {
+      discountedBase = Math.floor(baseAmount * 0.85);
     }
     
     const totalMXN = discountedBase + validExtras.reduce((s, e) => s + PRICES_MXN[e], 0);
@@ -165,7 +169,7 @@ export const handler = async (event) => {
       },
     };
 
-    if (promoCode === 'HCE10MSI') {
+    if (promoCode === 'HCE10MSI' || promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15') {
       sessionOptions.payment_method_options = {
         card: {
           installments: {

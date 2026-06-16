@@ -98,6 +98,8 @@ export const handler = async (event) => {
           finalMXN = Math.floor(mxn * 0.7);
         } else if (promoCode === 'HCE10MSI') {
           finalMXN = Math.floor(mxn * 0.9);
+        } else if (promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15') {
+          finalMXN = Math.floor(mxn * 0.85);
         } else if (promoCode === 'PERFUWEEK' && isPerfuweekValid) {
           finalMXN = Math.floor(mxn * 0.85);
         }
@@ -149,6 +151,8 @@ export const handler = async (event) => {
       discountedBase = Math.floor(baseAmount * 0.7);
     } else if (promoCode === 'HCE10MSI') {
       discountedBase = Math.floor(baseAmount * 0.9);
+    } else if (promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15') {
+      discountedBase = Math.floor(baseAmount * 0.85);
     } else if (promoCode === 'PERFUWEEK' && isPerfuweekValid) {
       discountedBase = Math.floor(baseAmount * 0.85);
     }
@@ -185,7 +189,7 @@ export const handler = async (event) => {
       },
     };
 
-    const enableInstallments = promoCode === 'HCEMS' || promoCode === 'HCEMESES' || promoCode === 'HCE10MSI';
+    const enableInstallments = promoCode === 'HCEMS' || promoCode === 'HCEMESES' || promoCode === 'HCE10MSI' || promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15';
     if (enableInstallments) {
       sessionOptions.payment_method_options = {
         card: {

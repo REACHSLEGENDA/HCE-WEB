@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin } from 'lucide-react';
+import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin, Users } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -103,6 +103,9 @@ export default function Inscripciones() {
       setApiError('');
     } else if (code === 'HCE10MSI') {
       setAppliedPromo({ code, discount: 0.1, type: 'mixed' });
+      setApiError('');
+    } else if (code === 'HCEGRUPOS' || code === 'HCEGRUPOS15') {
+      setAppliedPromo({ code, discount: 0.15, type: 'mixed' });
       setApiError('');
     } else if (code === 'PERFUWEEK') {
       if (isPerfuweekValid) {
@@ -212,6 +215,38 @@ export default function Inscripciones() {
 
         {/* ── LEFT: selection flow ── */}
         <div className="ins-main">
+
+          {/* Announcement Banner */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(227, 24, 55, 0.05) 0%, rgba(227, 24, 55, 0.02) 100%)',
+            border: '1px solid rgba(227, 24, 55, 0.15)',
+            borderRadius: '12px',
+            padding: '1.2rem 1.5rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '15px'
+          }}>
+            <div style={{
+              background: '#e31837',
+              color: '#fff',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justify-content: 'center',
+              flexShrink: 0
+            }}>
+              <Users size={20} />
+            </div>
+            <div>
+              <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--ins-dark)' }}>Inscripción para Grupos</h4>
+              <p style={{ margin: '3px 0 0 0', fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
+                ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> para solicitar un descuento especial para grupos mayores de 6 personas.
+              </p>
+            </div>
+          </div>
 
           {/* STEP 1 — profile cards */}
           <section className="ins-section">
