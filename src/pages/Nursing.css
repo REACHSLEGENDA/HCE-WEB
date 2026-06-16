@@ -1389,90 +1389,131 @@
   }
 }
 
-/* Syllabus PDF Section */
-.n-syllabus-section {
-  background-color: var(--hce-off);
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.n-syllabus-container {
+/* Syllabus Accordion Styles */
+.n-syllabus-accordion {
   max-width: 900px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
-.n-syllabus-viewer-wrapper {
-  background: #ffffff;
+.n-syllabus-item {
+  background: var(--hce-white);
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 15px 35px rgba(24, 58, 103, 0.08);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(24, 58, 103, 0.02);
+  transition: all 0.3s ease;
 }
 
-.n-syllabus-iframe {
-  display: block;
-  border: none;
-  background: #ffffff;
+.n-syllabus-item:hover {
+  border-color: rgba(24, 58, 103, 0.2);
+  box-shadow: 0 8px 30px rgba(24, 58, 103, 0.06);
 }
 
-.n-syllabus-download-box {
+.n-syllabus-item.active {
+  border-color: var(--hce-navy);
+  box-shadow: 0 10px 35px rgba(24, 58, 103, 0.08);
+}
+
+.n-syllabus-trigger {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 2rem;
-  border-left: 5px solid var(--hce-red);
-  box-shadow: 0 10px 25px rgba(24, 58, 103, 0.04);
+  padding: 1.8rem 2.2rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
   gap: 1.5rem;
 }
 
-.n-syllabus-info h3 {
+.n-syllabus-mod-num {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.3rem;
+  font-size: 0.8rem;
   font-weight: 800;
-  color: var(--hce-navy);
-  margin: 0 0 0.5rem 0;
-}
-
-.n-syllabus-info p {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: var(--hce-muted);
-  margin: 0;
-}
-
-.n-btn-secondary {
-  background: var(--hce-navy);
-  color: var(--hce-white) !important;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
+  color: var(--hce-red);
+  background: rgba(227, 24, 55, 0.08);
+  padding: 4px 10px;
+  border-radius: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   white-space: nowrap;
 }
 
-.n-btn-secondary:hover {
-  background: var(--hce-navy-deep);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(24, 58, 103, 0.25);
+.n-syllabus-trigger h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--hce-navy);
+  margin: 0;
+  flex-grow: 1;
 }
 
-@media (max-width: 768px) {
-  .n-syllabus-download-box {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-    padding: 1.5rem;
-  }
-  .n-btn-secondary {
-    justify-content: center;
-  }
+.n-syllabus-icon {
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: var(--hce-navy);
+  line-height: 1;
 }
+
+.n-syllabus-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.n-syllabus-item.active .n-syllabus-content {
+  max-height: 1200px;
+}
+
+.n-syllabus-inner {
+  padding: 0 2.2rem 2.2rem 2.2rem;
+  border-top: 1px dashed #e2e8f0;
+  margin-top: 0;
+}
+
+.n-mod-desc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--hce-muted);
+  margin: 1.5rem 0 1rem 0;
+}
+
+.n-syllabus-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.n-syllabus-list li {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--hce-ink);
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.n-syllabus-list li::before {
+  content: "•";
+  color: var(--hce-red);
+  font-size: 1.4rem;
+  position: absolute;
+  left: 0.3rem;
+  top: -0.15rem;
+}
+
+/* Bottom FLECI Clickable Logo */
+.clickable-logo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
 
 /* FLECI Endorsement Section */
 .n-endorsement-section {

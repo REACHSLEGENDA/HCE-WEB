@@ -67,6 +67,11 @@ const Nursing = () => {
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [activeModule, setActiveModule] = useState(null);
+
+  const toggleModule = (index) => {
+    setActiveModule(activeModule === index ? null : index);
+  };
 
   useEffect(() => {
     const targetDate = new Date('2026-07-20T00:00:00');
@@ -400,38 +405,117 @@ const Nursing = () => {
         </div>
       </section>
 
-      {/* Sección Temario PDF */}
-      <section className="n-sec-padding n-syllabus-section">
+      {/* Sección Temario Desplegable */}
+      <section className="n-sec-padding n-syllabus-section" id="temario-section">
         <div className="hce-container">
           <div className="n-sec-header center">
             <span className="n-sec-badge">PLAN DE ESTUDIOS</span>
             <h2 className="n-sec-title">Temario y Contenido Detallado</h2>
-            <p className="n-sec-subtitle">Consulte el programa completo de clases, módulos y contenidos del curso ECMO Nursing Care.</p>
+            <p className="n-sec-subtitle">Haz clic en cada módulo para desplegar el programa completo de clases y objetivos de aprendizaje.</p>
           </div>
 
-          <div className="n-syllabus-container">
-            <div className="n-syllabus-viewer-wrapper">
-              <iframe
-                src="/Programa_ECMO_Nursing_Virtual_clases_.pdf#toolbar=1"
-                title="Temario ECMO Nursing Care"
-                className="n-syllabus-iframe"
-                width="100%"
-                height="600px"
-              />
-            </div>
-            
-            <div className="n-syllabus-download-box">
-              <div className="n-syllabus-info">
-                <h3>¿Prefiere descargarlo?</h3>
-                <p>Descargue el documento PDF oficial con la programación detallada de clases, fechas de tutorías y contenidos prácticos.</p>
+          <div className="n-syllabus-accordion">
+            {/* Módulo 1 */}
+            <div className={`n-syllabus-item ${activeModule === 1 ? 'active' : ''}`}>
+              <button type="button" className="n-syllabus-trigger" onClick={() => toggleModule(1)}>
+                <span className="n-syllabus-mod-num">Módulo 1</span>
+                <h3>Introducción al soporte ECMO: circuito y fisiología aplicada</h3>
+                <span className="n-syllabus-icon">{activeModule === 1 ? '−' : '+'}</span>
+              </button>
+              <div className="n-syllabus-content">
+                <div className="n-syllabus-inner">
+                  <p className="n-mod-desc"><strong>Objetivo del módulo:</strong> Comprender la base fisiológica del soporte de oxigenación por membrana extracorpórea (ECMO) y conocer en detalle el circuito, componentes y configuraciones estándar.</p>
+                  <ul className="n-syllabus-list">
+                    <li><strong>Historia y evolución del soporte ECMO:</strong> Hitos históricos y evolución de la tecnología en cuidados críticos.</li>
+                    <li><strong>Indicaciones y contraindicaciones de ECMO Veno-Venoso (V-V):</strong> Criterios de selección y contraindicaciones absolutas y relativas.</li>
+                    <li><strong>Indicaciones y contraindicaciones de ECMO Veno-Arterial (V-A):</strong> Criterios clínicos y fisiología cardiovascular.</li>
+                    <li><strong>Estructura y funcionamiento del circuito ECMO:</strong> Componentes esenciales (bombas, oxigenadores, mezcladores y líneas).</li>
+                    <li><strong>Canulación periférica y configuraciones:</strong> Abordajes estándar, alternativos e híbridos (V-V, V-A, V-A-V, etc.).</li>
+                    <li><strong>Principio de transferencia de gases en la membrana oxigenadora:</strong> Fisiología del intercambio de O₂ y CO₂.</li>
+                    <li><strong>Interpretación de gasometría y ajustes en la oxigenación:</strong> Parámetros del circuito y respuesta clínica.</li>
+                    <li><strong>Conceptos de aporte (DO₂) y consumo (VO₂) de oxígeno celular:</strong> Relación celular del soporte circulatorio y respiratorio.</li>
+                    <li><strong>Cebado del circuito de ECMO:</strong> Técnica paso a paso en adultos y particularidades en pacientes pediátricos.</li>
+                    <li><strong>Configuraciones especiales:</strong> ECMO Veno-Pulmonar y canulación central para V-A postcardiotomía.</li>
+                  </ul>
+                </div>
               </div>
-              <a 
-                href="/Programa_ECMO_Nursing_Virtual_clases_.pdf" 
-                download="Programa_ECMO_Nursing_Virtual_clases_.pdf"
-                className="n-btn n-btn-secondary"
-              >
-                <Download size={18} /> Descargar PDF Completo
-              </a>
+            </div>
+
+            {/* Módulo 2 */}
+            <div className={`n-syllabus-item ${activeModule === 2 ? 'active' : ''}`}>
+              <button type="button" className="n-syllabus-trigger" onClick={() => toggleModule(2)}>
+                <span className="n-syllabus-mod-num">Módulo 2</span>
+                <h3>Monitoreo integral del paciente en ECMO</h3>
+                <span className="n-syllabus-icon">{activeModule === 2 ? '−' : '+'}</span>
+              </button>
+              <div className="n-syllabus-content">
+                <div className="n-syllabus-inner">
+                  <p className="n-mod-desc"><strong>Objetivo del módulo:</strong> Adquirir competencias y pautas críticas para el monitoreo hemodinámico, respiratorio y general del paciente en soporte extracorpóreo.</p>
+                  <ul className="n-syllabus-list">
+                    <li><strong>Monitoreo Hemodinámico del Paciente en Soporte ECMO:</strong> Parámetros clave a vigilar y respuesta ante alteraciones frecuentes.</li>
+                    <li><strong>Ventilación Mecánica en pacientes con ECMO:</strong> Principios de ventilación mecánica protectora y minimización de daño pulmonar (VILI).</li>
+                    <li><strong>Anticoagulación y transfusiones en ECMO:</strong> Vigilancia y pautas del equilibrio de la coagulación.</li>
+                    <li><strong>Farmacología aplicada en ECMO:</strong> Cambios en la farmacocinética y dosificación de medicamentos críticos.</li>
+                    <li><strong>Monitoreo de Sedación y Analgesia:</strong> Escalas de valoración, control de dolor y prevención de delirio en UCI.</li>
+                    <li><strong>Monitorización de presiones, flujo y respuesta a alarmas del circuito:</strong> Presión pre-membrana, post-membrana y de drenaje.</li>
+                    <li><strong>Manejo nutricional del paciente en ECMO:</strong> Pautas de requerimiento nutricional y vías seguras de administración.</li>
+                    <li><strong>Cuidados de la piel y prevención de lesiones:</strong> Movilización progresiva y protocolos de prevención de úlceras.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Módulo 3 */}
+            <div className={`n-syllabus-item ${activeModule === 3 ? 'active' : ''}`}>
+              <button type="button" className="n-syllabus-trigger" onClick={() => toggleModule(3)}>
+                <span className="n-syllabus-mod-num">Módulo 3</span>
+                <h3>Complicaciones clínicas y mecánicas en ECMO</h3>
+                <span className="n-syllabus-icon">{activeModule === 3 ? '−' : '+'}</span>
+              </button>
+              <div className="n-syllabus-content">
+                <div className="n-syllabus-inner">
+                  <p className="n-mod-desc"><strong>Objetivo del módulo:</strong> Identificar, prevenir y manejar de forma oportuna y estructurada las complicaciones más recurrentes asociadas al circuito y al paciente en ECMO.</p>
+                  <ul className="n-syllabus-list">
+                    <li><strong>Prevención y Manejo de Infecciones:</strong> Vigilancia de infecciones asociadas a dispositivos extracorpóreos.</li>
+                    <li><strong>Drenaje insuficiente y Obstrucciones del Retorno:</strong> Causas, detección y resolución clínica.</li>
+                    <li><strong>Falla de Bomba en ECMO:</strong> Detección de fallas and planes de emergencia ante detención mecánica.</li>
+                    <li><strong>Disfunción de la Membrana Oxigenadora:</strong> Criterios y procedimiento para sustitución segura de la membrana.</li>
+                    <li><strong>Disrupción del circuito y Embolismo aéreo:</strong> Protocolos de emergencia ante entrada de aire o roturas.</li>
+                    <li><strong>Prevención y Manejo de la Decanulación Accidental:</strong> Fijación del circuito y protocols de respuesta rápida.</li>
+                    <li><strong>Trombosis y Sangrado en ECMO:</strong> Equilibrio pro y anticoagulante y control de hemorragias.</li>
+                    <li><strong>Hemólisis en ECMO:</strong> Mecanismos fisiopatológicos, parámetros de laboratorio y ajustes de flujo.</li>
+                    <li><strong>Manejo de paro cardiorrespiratorio en ECMO V-A:</strong> Protocolo de reanimación cardiopulmonar RCP en ECMO.</li>
+                    <li><strong>Isquemia de las Extremidades:</strong> Evaluación de perfusión distal y cánulas de reperfusión.</li>
+                    <li><strong>Valoración de Enfermería y Revisión sistemática del circuito:</strong> Lista de chequeo al pie de cama.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Módulo 4 */}
+            <div className={`n-syllabus-item ${activeModule === 4 ? 'active' : ''}`}>
+              <button type="button" className="n-syllabus-trigger" onClick={() => toggleModule(4)}>
+                <span className="n-syllabus-mod-num">Módulo 4</span>
+                <h3>Cuidados avanzados, puente a soportes ventriculares, trasplante y nuevas aplicaciones</h3>
+                <span className="n-syllabus-icon">{activeModule === 4 ? '−' : '+'}</span>
+              </button>
+              <div className="n-syllabus-content">
+                <div className="n-syllabus-inner">
+                  <p className="n-mod-desc"><strong>Objetivo del módulo:</strong> Explorar terapias avanzadas coordinadas con ECMO (CRRT, hemoadsorción), ultrasonido clínico, traslado seguro y el soporte como puente a destino final.</p>
+                  <ul className="n-syllabus-list">
+                    <li><strong>CRRT y ECMO:</strong> Estrategias e integración segura del circuito de depuración extrarrenal continua.</li>
+                    <li><strong>Hemoadsorción en ECMO:</strong> Indicaciones, configuraciones de conexión de columnas adsorbentes y monitorización.</li>
+                    <li><strong>Fundamentos y Aplicaciones de Ecografía Point-of-Care (POCUS):</strong> Sonosemiología cardiaca, pulmonar y vascular.</li>
+                    <li><strong>Aplicaciones de POCUS en Soporte ECMO:</strong> Guía de canulación y confirmación de posición.</li>
+                    <li><strong>De ECMO a los Soportes Ventriculares:</strong> Transición a soportes ventriculares temporales y definitivos.</li>
+                    <li><strong>ECMO como Puente a Trasplante Cardiaco:</strong> Cuidado de enfermería en pacientes en lista de espera y ECMO prolongado.</li>
+                    <li><strong>Rehabilitación y movilización temprana en pacientes con ECMO:</strong> Protocolos de movilización segura en UCI.</li>
+                    <li><strong>Papel de Enfermería en el Paciente Trasplantado con Soporte ECMO.</strong></li>
+                    <li><strong>Donación en Asistolia Controlada (cDCD) y ECMO normotérmico:</strong> Criterios y rol de preservación.</li>
+                    <li><strong>Procesos de Enfermería aplicados en ECMO:</strong> Planes de cuidado estandarizados utilizando NANDA, NIC, NOC.</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -643,13 +727,41 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-final-card">
             <div className="n-final-content">
-              <span className="section-badge">ÚLTIMOS CUPOS DISPONIBLES</span>
+              <span className="section-badge">CUPO LIMITADO</span>
               <h2>Empodera tu práctica. <span className="red-text">Salva más vidas.</span></h2>
               <p>Formación de alta especialidad en ECMO, liderada por enfermería, para enfermería.</p>
               <div className="n-final-actions">
                 <button className="btn-buy-final" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Reserva tu lugar <ArrowRight size={18} /></button>
-                <button className="btn-info-final" onClick={() => window.open('/Programa_ECMO_Nursing_Virtual_clases_.pdf', '_blank')}>Ver Plan de Estudios</button>
+                <button className="btn-info-final" onClick={() => {
+                  const el = document.getElementById('temario-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}>Ver Plan de Estudios</button>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Aval de FLECI al pie de página (Clickable) */}
+      <section className="n-endorsement-section bottom-endorsement" style={{ borderTop: '1px solid #e2e8f0', background: '#ffffff' }}>
+        <div className="hce-container">
+          <div className="n-endorsement-card">
+            <a href="https://www.facebook.com/FLECI2017/" target="_blank" rel="noreferrer" className="n-endorsement-link">
+              <img 
+                src="/assets/componentes/fleci.jpeg" 
+                alt="Aval FLECI" 
+                className="n-endorsement-img clickable-logo"
+                style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+              />
+            </a>
+            <div className="n-endorsement-text">
+              <span className="section-badge" style={{ marginBottom: '0.8rem', display: 'inline-block' }}>
+                AVAL ACADÉMICO INTERNACIONAL
+              </span>
+              <h3>Programa Avalado por FLECI</h3>
+              <p>
+                Este entrenamiento cuenta con el aval y reconocimiento científico de la <strong>Federación Latinoamericana de Enfermería en Cuidado Intensivo</strong> (FLECI). Haz clic en el logo para visitar su sitio oficial.
+              </p>
             </div>
           </div>
         </div>
