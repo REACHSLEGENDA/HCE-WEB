@@ -11,7 +11,7 @@ const FacultyCard = ({ src, role, name, country, flag, delay }) => {
   const [imgError, setImgError] = React.useState(false);
   
   return (
-    <div ref={ref} className={`nursing-faculty-card reveal ${inView ? 'active' : ''}`} style={{ transitionDelay: `${delay}s` }}>
+    <div ref={ref} className={`n-faculty-card reveal ${inView ? 'active' : ''}`} style={{ transitionDelay: `${delay}s` }}>
       <div className="n-faculty-head">
         <img src={src} alt={name} className="n-faculty-img" />
         <div className="n-verified"><CheckCircle size={14} fill="#e31837" color="white" /></div>
