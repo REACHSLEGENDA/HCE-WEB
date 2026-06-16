@@ -94,9 +94,9 @@ const Nursing = () => {
   }, []);
 
   const virtualFaculty = [
-    { src: "/assets/instructores/p-carlosm.jpeg", name: "Perf. Carlos García Camacho", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Clínico y ECMO Especialista" },
+    { src: "/assets/instructores/p-carlosm.jpeg", name: "Dr. Carlos García Camacho", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Clínico y ECMO Especialista" },
     { src: "/assets/instructores/p-juanm.jpeg", name: "Perf. Juan Blanco Morillo", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Clínico y ECMO Especialista" },
-    { src: "/assets/instructores/p-eduardom.webp", name: "Perf. Eduardo Aguilar Rivera", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Perfusionista Clínico y ECMO Especialista" },
+    { src: "/assets/instructores/p-eduardom.webp", name: "Mtro. Eduardo Aguilar Rivera", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Perfusionista Clínico y ECMO Especialista" },
     { src: "/assets/instructores/p-moisem.png", name: "Perf. Moisés Espitia", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Perfusionista Clínico y ECMO Especialista" },
     { src: "/assets/instructores/p-gonzalom.jpeg", name: "Perf. Gonzalo Cartes", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Perfusionista Clínico y ECMO Especialista" },
     { src: "/assets/instructores/a2e51cc5-9cb6-412c-b92e-7b9c9dcfc69e.jpg", name: "Perf. Lisbeth Ocaña Albites", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Perfusionista Clínico y ECMO Especialista" },
@@ -111,7 +111,7 @@ const Nursing = () => {
     { src: "/assets/instructores/WhatsApp-Image-2025-06-26-at-20.38.16.jpeg", name: "Perf. María José Ayerbes Cerón", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista, Fundación Cardioinfantil – LaCardio, Bogotá" },
     { src: "/assets/instructores/WhatsApp-Image-2025-06-22-at-12.01.16-1.jpeg", name: "Lic. Ricardo Fernando Rosero", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Fundación Favaloro" },
     { src: "/assets/instructores/WhatsApp-Image-2025-08-04-at-16.19.00.jpeg", name: "Lic. Fabio Salas Alvarez", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Coordinador Hospital Calderón Guardia" },
-    { src: "/assets/instructores/p-elianam.jpeg", name: "Perf. Eliana Marilin Cerón López", country: "ECUADOR", flag: "https://flagcdn.com/w80/ec.png", role: "Perfusionista Clínico y ECMO Especialista, Clínica Guayaquil, Ecuador" },
+    { src: "/assets/instructores/p-elianam.jpeg", name: "Mtra. Eliana Marilin Cerón López", country: "ECUADOR", flag: "https://flagcdn.com/w80/ec.png", role: "Perfusionista Clínico y ECMO Especialista, Clínica Guayaquil, Ecuador" },
   ];
 
   return (
@@ -662,7 +662,7 @@ const Nursing = () => {
               delay={0.1}
               flag="https://flagcdn.com/w160/ec.png"
               img="/assets/instructores/p-elianam.jpeg"
-              name="Perf. Eliana Cerón López"
+              name="Mtra. Eliana Cerón López"
               country="ECUADOR"
               bio="Perfusionista y Especialista en ECMO en la Clínica Guayaquil. Formada en centros de referencia de LATAM."
             />
@@ -670,9 +670,9 @@ const Nursing = () => {
               delay={0.2}
               flag="https://flagcdn.com/w160/es.png"
               img="/assets/instructores/p-carlosm.jpeg"
-              name="Perf. Carlos García Camacho"
+              name="Dr. Carlos García Camacho"
               country="ESPAÑA"
-              bio="Ex-presidente de la Asociación Española de Perfusionistas. +30 años de experiencia técnica internacional."
+              bio="Ex-presidente de la Asociación Española de Perfusionistas. +30 años de experiencia internacional."
             />
             <PresencialCard 
               delay={0.3}
@@ -686,7 +686,7 @@ const Nursing = () => {
               delay={0.4}
               flag="https://flagcdn.com/w160/co.png"
               img="/assets/instructores/tatiana-jaramillo.webp"
-              name="Enf. Estefanía Giraldo"
+              name="Mtra. Estefanía Giraldo"
               country="COLOMBIA"
               bio="Coordinadora Programa ECMO Clínica Shaio. Centro GOLD ELSO. Magister en Enf. Cardiovascular."
             />
@@ -694,7 +694,7 @@ const Nursing = () => {
               delay={0.5}
               flag="https://flagcdn.com/w160/cr.png"
               img="/assets/instructores/p-eduardom.webp"
-              name="Enf. Eduardo Aguilar Rivera"
+              name="Mtro. Eduardo Aguilar Rivera"
               country="COSTA RICA"
               bio="Especialista en ECMO. Fue Coordinador del Programa de ECMO del Hospital Rafael Ángel Calderón Guardia."
             />
