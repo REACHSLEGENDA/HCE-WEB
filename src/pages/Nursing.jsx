@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './Nursing.css';
 
-const FacultyCard = ({ src, role, name, country, flag, delay }) => {
+const FacultyCard = ({ src, role, name, country, flag, hospital, delay }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   const [imgError, setImgError] = React.useState(false);
   
@@ -19,7 +19,18 @@ const FacultyCard = ({ src, role, name, country, flag, delay }) => {
       <div className="n-faculty-info">
         <h3>{name}</h3>
         <span className="n-country">{country}</span>
-        {flag && !imgError ? (
+        {Array.isArray(flag) ? (
+          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', margin: '0.5rem auto 1rem' }}>
+            {flag.map((flg, idx) => (
+              <img 
+                key={idx} 
+                src={flg} 
+                alt={country} 
+                style={{ width: '28px', height: '18px', objectFit: 'cover', borderRadius: '3px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }} 
+              />
+            ))}
+          </div>
+        ) : flag && !imgError ? (
           <img 
             src={flag} 
             alt={country} 
@@ -30,6 +41,7 @@ const FacultyCard = ({ src, role, name, country, flag, delay }) => {
           <div className="n-mini-flag-fallback"><Award size={14} color="#e31837" /></div>
         )}
         <p className="n-role">{role}</p>
+        {hospital && <p className="n-hospital">{hospital}</p>}
       </div>
     </div>
   );
@@ -139,24 +151,24 @@ const Nursing = () => {
   }, []);
 
   const virtualFaculty = [
-    { src: "/assets/instructores/p-carlosm.jpeg", name: "Dr. Carlos García Camacho", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Clínico y ECMO Especialista" },
-    { src: "/assets/instructores/p-juanm.jpeg", name: "Perf. Juan Blanco Morillo", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Clínico y ECMO Especialista" },
-    { src: "/assets/instructores/p-eduardom.webp", name: "Mtro. Eduardo Aguilar Rivera", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Enfermero Especialista en Cuidados Críticos y Especialista en ECMO" },
-    { src: "/assets/instructores/p-moisem.png", name: "Perf. Moisés Espitia", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Perfusionista Clínico y ECMO Especialista" },
-    { src: "/assets/instructores/p-gonzalom.jpeg", name: "Gonzalo Cartes Cartes", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Enfermero Perfusionista, Especialista en Cuidados Intensivos, Hospital Regional de Concepción" },
-    { src: "/assets/instructores/a2e51cc5-9cb6-412c-b92e-7b9c9dcfc69e.jpg", name: "Perf. Lisbeth Ocaña Albites", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Perfusionista Clínico y ECMO Especialista" },
-    { src: "/assets/instructores/219e522e-5aff-409c-8ab3-7e3904b9f45d.jpg", name: "Perf. Hans Castro Rosero", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Perfusionista Clínico y ECMO Especialista" },
-    { src: "/assets/instructores/de5ae3a6-8be9-41fe-a8e0-aae691d2172e.jpg", name: "Perf. Mario Alejandro Meza Mier", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista, Clinaltec – Clínica Internacional de Alta Tecnología, Ibagué" },
-    { src: "/assets/instructores/846fd848-ef66-4481-883a-ed3427059004.jpg", name: "Perf. Maira Rezende Girardi", country: "BRASIL", flag: "https://flagcdn.com/w80/br.png", role: "Perfusionista Clínico y ECMO Especialista" },
-    { src: "/assets/instructores/17520b78-52ae-4256-be3d-eaf541a51961.jpg", name: "Perf. Patricia Villazón Alcón", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Perfusionista Clínico y ECMO Especialista" },
-    { src: "/assets/instructores/172c41c8-98cd-42d7-9ac6-774a6d8eb608.jpg", name: "Lic. Edwin Ernesto Sánchez Fuentes", country: "EL SALVADOR", flag: "https://flagcdn.com/w80/sv.png", role: "Enfermero Especialista en Cuidados Críticos y Especialista en ECMO, Hospital Nacional de Niños Benjamín Bloom" },
-    { src: "/assets/instructores/1be2aa8d-0d0f-4a45-92d8-e24eb76fcb84.jpg", name: "Perf. Miguel Ángel Albino", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Perfusionista Clínico y ECMO Especialista" },
-    { src: "/assets/instructores/4db1ce3a-243f-4330-9f6c-c8114140c1c8.jpg", name: "Perf. Elkin Herney Peñaranda Pabón", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista, Clínica Medical Duarte, Cúcuta" },
-    { src: "/assets/instructores/8d969ec9-4374-4808-bc65-77bd8f39a5b5-scaled.jpg", name: "Perf. Erick Paul Morales Vega", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Perfusionista Clínico y ECMO Especialista" },
-    { src: "/assets/instructores/WhatsApp-Image-2025-06-26-at-20.38.16.jpeg", name: "Perf. María José Ayerbes Cerón", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista, Fundación Cardioinfantil – LaCardio, Bogotá" },
-    { src: "/assets/instructores/WhatsApp-Image-2025-06-22-at-12.01.16-1.jpeg", name: "Lic. Ricardo Fernando Rosero", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Enfermero Especialista en Cuidados Críticos, Fundación Favaloro" },
-    { src: "/assets/instructores/WhatsApp-Image-2025-08-04-at-16.19.00.jpeg", name: "Lic. Fabio Salas Alvarez", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Coordinador Hospital Calderón Guardia" },
-    { src: "/assets/instructores/p-elianam.jpeg", name: "Mtra. Eliana Marilin Cerón López", country: "ECUADOR", flag: "https://flagcdn.com/w80/ec.png", role: "Perfusionista Clínico y ECMO Especialista, Clínica Guayaquil, Ecuador" },
+    { src: "/assets/instructores/p-carlosm.jpeg", name: "Dr. Carlos García Camacho", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Clínico y ECMO Especialista. Doctor en Ciencias de la Salud. Máster en Perfusión. Máster en Innovación e Investigación en Cuidados de la Salud. Ex Presidente de la Asociación Española de Perfusionistas", hospital: "Hospital Universitario Puerta del Mar de Cádiz" },
+    { src: "/assets/instructores/p-juanm.jpeg", name: "Dr. Juan Blanco Morillo", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Clínico y ECMO Especialista. Doctor en Ciencias de la Salud. Máster en Gestión del Riesgo Cardiovascular. Miembro Ejecutivo del Comité de ICEBP", hospital: "Hospital Universitario Virgen de la Arrixaca" },
+    { src: "/assets/instructores/p-eduardom.webp", name: "Mtro. Eduardo Aguilar Rivera", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Enfermero Especialista en Cuidados Intensivos. Maestría Académica en Educación con Énfasis en Docencia Universitaria. Maestría Profesional en Gestión del Riesgo en Desastres y Atención de Emergencias. Docente de la Universidad de Costa Rica. ECMO Especialista", hospital: "Caja Costarricense" },
+    { src: "/assets/instructores/p-moisem.png", name: "Perf. Moisés Espitia Victoria", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Perfusionista Clínico y Especialista Cardiovascular, Cuidados Intensivos y ECMO Especialista", hospital: "Centro Médico Nacional Siglo XXI y ECMO Heart Team CDMX" },
+    { src: "/assets/instructores/p-gonzalom.jpeg", name: "Gonzalo Cartes Cartes", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Enfermero Perfusionista, Especialista en Cuidados Intensivos, ECMO Especialista", hospital: "Hospital Regional de Concepción" },
+    { src: "/assets/instructores/a2e51cc5-9cb6-412c-b92e-7b9c9dcfc69e.jpg", name: "Mtra. Lisbeth Ocaña Albites", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Enfermera Especialista en Cuidados Intensivos y Cardiovascular. Maestría en gerencia en salud. Miembro del programa de trasplante cardíaco y asistencia circulatoria mecánica (ECMO y asistencia ventricular)", hospital: "INCOR EsSalud" },
+    { src: "/assets/instructores/219e522e-5aff-409c-8ab3-7e3904b9f45d.jpg", name: "Perf. Hans Castro Rosero", country: "CHILE / COLOMBIA", flag: ["https://flagcdn.com/w80/cl.png", "https://flagcdn.com/w80/co.png"], role: "Perfusionista Clínico y Especialista en Cuidados Intensivos y Cuidado Intermedio. ECMO Especialista", hospital: "Hospital Dr. Hernán Henríquez Aravena de Temuco" },
+    { src: "/assets/instructores/de5ae3a6-8be9-41fe-a8e0-aae691d2172e.jpg", name: "Perf. Mario Alejandro Meza Mier", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista", hospital: "Clinaltec – Clínica Internacional de Alta Tecnología, Ibagué" },
+    { src: "/assets/instructores/846fd848-ef66-4481-883a-ed3427059004.jpg", name: "Enf. Maira Rezende Girardi", country: "BRASIL", flag: "https://flagcdn.com/w80/br.png", role: "Enfermera especialista en Cardiología y Hemodinamia. Posgrado en Gestión Hospitalaria. ECMO Especialista", hospital: "Hospital da PUC-Campinas" },
+    { src: "/assets/instructores/17520b78-52ae-4256-be3d-eaf541a51961.jpg", name: "Enf. Patricia Villazón Alcón", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Enfermera Especialista en Cuidados Intensivos. Especialista en P.O.C.U.S y ECMO. Cursando Maestría en Investigación Clínica. Miembro comité docencia ATISPA. Miembro del Comité de Ecografía en el Paciente Crítico (SATI). ECMO Especialista", hospital: "Hospital Español" },
+    { src: "/assets/instructores/172c41c8-98cd-42d7-9ac6-774a6d8eb608.jpg", name: "Enf. Edwin Ernesto Sánchez Fuentes", country: "EL SALVADOR", flag: "https://flagcdn.com/w80/sv.png", role: "Enfermera Especialista en Cuidados Intensivos y ECMO Especialista", hospital: "Hospital Nacional de Niños Benjamín Bloom" },
+    { src: "/assets/instructores/1be2aa8d-0d0f-4a45-92d8-e24eb76fcb84.jpg", name: "Enf. Miguel Ángel Albino", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Enfermero Asistencial del Servicio de Cirugía Cardiovascular, Coordinador de áreas críticas de la Clínica Centenario Peruano Japonesa, Docente Universidad Peruana Cayetano Heredia. ECMO Especialista", hospital: "INCOR EsSalud" },
+    { src: "/assets/instructores/4db1ce3a-243f-4330-9f6c-c8114140c1c8.jpg", name: "Perf. Elkin Herney Peñaranda Pabón", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista", hospital: "Clínica Medical Duarte, Cúcuta" },
+    { src: "/assets/instructores/8d969ec9-4374-4808-bc65-77bd8f39a5b5-scaled.jpg", name: "Mtro. Erick Paul Morales Vega", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Perfusionista clínico certificado, Especialista en cuidados intensivos y ECMO. Master en Educación enfocado a desarrollo de recursos humanos. Enfermería Especializada en Medicina Crítica. Miembro del Comité Científico. ECMO Especialista", hospital: "Hospital CIMA Hermosillo" },
+    { src: "/assets/instructores/WhatsApp-Image-2025-06-26-at-20.38.16.jpeg", name: "Enf. María José Ayerbes Cerón", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Enfermera Especialista en Cuidados Intensivos y ECMO Especialista. Docente en la Universidad de la Sabana", hospital: "Fundación cardio infantil- LaCardio" },
+    { src: "/assets/instructores/WhatsApp-Image-2025-06-22-at-12.01.16-1.jpeg", name: "Lic. Ricardo Fernando Rosero", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Enfermero Especialista en Cuidados Críticos. ECMO Especialista", hospital: "Fundación Favaloro" },
+    { src: "/assets/instructores/WhatsApp-Image-2025-08-04-at-16.19.00.jpeg", name: "Lic. Fabio Salas Alvarez", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Coordinador de la Unidad de ECMO, Enfermero Especialista en Cuidados Críticos y ECMO Especialista", hospital: "Hospital Rafael Ángel Calderón Guardia" },
+    { src: "/assets/instructores/p-elianam.jpeg", name: "Mtra. Eliana Marilin Cerón López", country: "ECUADOR", flag: "https://flagcdn.com/w80/ec.png", role: "Perfusionista Clínico y ECMO Especialista", hospital: "Clínica Guayaquil, Ecuador" },
   ];
 
   return (

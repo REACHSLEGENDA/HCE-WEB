@@ -685,6 +685,14 @@
   line-height: 1.5;
 }
 
+.n-hospital {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.4rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 /* Presencial Faculty Section */
 .n-presencial-faculty {
   background: #f8fafc;
