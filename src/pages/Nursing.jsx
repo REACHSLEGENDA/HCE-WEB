@@ -219,7 +219,7 @@ const Nursing = () => {
           <div className="n-sec-header center">
             <span className="n-sec-badge">METODOLOGÍA</span>
             <h2 className="n-sec-title">Un método diseñado por enfermería, validado por la evidencia</h2>
-            <p className="n-sec-subtitle">Estructura pedagógica optimizada para el dominio práctico de la terapia de soporte vital extracorpóreo.</p>
+            <p className="n-sec-subtitle">Estructura pedagógica optimizada para el Dominio del Soporte ECMO.</p>
           </div>
 
           <div className="n-methodology-grid">
@@ -232,7 +232,7 @@ const Nursing = () => {
                 <span className="n-phase-num">01</span>
               </div>
               <h3>Fase asincrónica</h3>
-              <p><strong>"Aprende a tu ritmo"</strong>: Plataforma flexible que respeta tus turnos de trabajo, con acceso completo a una biblioteca de guías ELSO y consensos internacionales.</p>
+              <p><strong>"Aprende a tu ritmo"</strong>: Plataforma flexible que respeta tus turnos de trabajo, con acceso completo a clases pregrabadas, biblioteca de artículos científicos y guías ELSO.</p>
             </div>
 
             {/* Card 2 */}
@@ -244,7 +244,7 @@ const Nursing = () => {
                 <span className="n-phase-num">02</span>
               </div>
               <h3>Sesiones en vivo</h3>
-              <p><strong>"Consolida con expertos"</strong>: Tutorías en tiempo real dirigidas a la resolución de dudas, análisis exhaustivo de casos clínicos y perlas clínicas clave de especialistas.</p>
+              <p><strong>"Consolida con expertos"</strong>: Tutorías en tiempo real dirigidas a la resolución de dudas, análisis exhaustivo de casos clínicos y clave de especialistas de ECMO con amplia experiencia.</p>
             </div>
 
             {/* Card 3 */}
