@@ -59,6 +59,22 @@ export default function InscripcionesNursing() {
   const [apiError, setApiError] = useState('');
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null); // { code: string, discount: number }
+  const [showPopup, setShowPopup] = useState(false);
+
+  useEffect(() => {
+    const hasSeen = sessionStorage.getItem('hce_group_popup_seen');
+    if (!hasSeen) {
+      const timer = setTimeout(() => {
+        setShowPopup(true);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const closePopup = () => {
+    setShowPopup(false);
+    sessionStorage.setItem('hce_group_popup_seen', 'true');
+  };
 
   const payStatus = searchParams.get('status'); // 'success' | 'cancel'
   const perfil = cardSel === 'otros' ? subRole : cardSel;
@@ -513,6 +529,129 @@ export default function InscripcionesNursing() {
           </div>
         </aside>
       </div>
+
+      {showPopup && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(10, 26, 47, 0.6)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 100000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          fontFamily: 'Inter, sans-serif'
+        }} onClick={closePopup}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '450px',
+            padding: '2rem',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            position: 'relative',
+            border: '1px solid rgba(227, 24, 55, 0.1)',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1.2rem',
+            animation: 'ins-popup-in 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={closePopup}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                border: 'none',
+                background: 'transparent',
+                fontSize: '1.2rem',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                transition: 'color 0.2s',
+                padding: '4px'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#e31837'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+            >
+              ✕
+            </button>
+
+            <div style={{
+              background: 'rgba(227, 24, 55, 0.1)',
+              color: '#e31837',
+              borderRadius: '50%',
+              width: '60px',
+              height: '60px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Users size={30} />
+            </div>
+
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: 'var(--ins-dark)', letterSpacing: '-0.025em' }}>
+                Inscripción para Grupos
+              </h3>
+              <p style={{ margin: '8px 0 0 0', fontSize: '0.88rem', color: '#64748b', lineHeight: '1.5' }}>
+                ¿Te inscribes con tu equipo? Ofrecemos descuentos especiales y facilidades de pago para grupos mayores de 6 personas.
+              </p>
+            </div>
+
+            <a 
+              href="https://wa.me/525659271906?text=Hola,%20quiero%20solicitar%20un%20descuento%20especial%20para%20un%20grupo%20en%20el%20curso%20de%20ECMO%20Nursing."
+              target="_blank"
+              rel="noreferrer"
+              onClick={closePopup}
+              style={{
+                width: '100%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                background: '#25D366',
+                color: '#fff',
+                padding: '0.8rem 1.5rem',
+                borderRadius: '10px',
+                fontSize: '0.9rem',
+                fontWeight: '700',
+                textDecoration: 'none',
+                transition: 'background 0.2s',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(37, 211, 102, 0.2)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#128C7E'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#25D366'}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.79-4.276l.41.243c1.554.922 3.19 1.409 4.854 1.41 5.518 0 10.007-4.48 10.01-9.997.001-2.672-1.037-5.187-2.924-7.075-1.888-1.887-4.397-2.925-7.073-2.926-5.524 0-10.014 4.482-10.017 9.999-.001 1.764.469 3.488 1.359 5.011l.269.465-1.006 3.676 3.764-.988z"/>
+              </svg>
+              Preguntar por WhatsApp
+            </a>
+
+            <button 
+              onClick={closePopup}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#64748b',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              Continuar con registro individual
+            </button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
