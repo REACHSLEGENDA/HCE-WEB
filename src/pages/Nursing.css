@@ -1474,4 +1474,65 @@
   }
 }
 
+/* FLECI Endorsement Section */
+.n-endorsement-section {
+  padding: 3rem 0;
+  background-color: var(--hce-off);
+}
+
+.n-endorsement-card {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  background: var(--hce-white);
+  padding: 2.5rem 3.5rem;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.n-endorsement-img {
+  height: 90px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.n-endorsement-text {
+  text-align: left;
+}
+
+.n-endorsement-text h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--hce-navy);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.5px;
+}
+
+.n-endorsement-text p {
+  font-size: 0.95rem;
+  color: var(--hce-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .n-endorsement-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+  
+  .n-endorsement-text {
+    text-align: center;
+  }
+}
+
+
 

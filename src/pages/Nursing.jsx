@@ -191,6 +191,28 @@ const Nursing = () => {
         </div>
       </section>
 
+      {/* Aval de FLECI */}
+      <section className="n-endorsement-section">
+        <div className="hce-container">
+          <div className="n-endorsement-card">
+            <img 
+              src="/assets/componentes/fleci.jpeg" 
+              alt="Aval FLECI" 
+              className="n-endorsement-img"
+            />
+            <div className="n-endorsement-text">
+              <span className="section-badge" style={{ marginBottom: '0.8rem', display: 'inline-block' }}>
+                AVAL ACADÉMICO INTERNACIONAL
+              </span>
+              <h3>Programa Avalado por FLECI</h3>
+              <p>
+                Este entrenamiento cuenta con el aval y reconocimiento científico de la <strong>Federación Latinoamericana de Enfermería en Cuidado Intensivo</strong> (FLECI).
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 1. Metodología — "Cómo aprenderás" */}
       <section className="n-sec-padding n-methodology-section">
         <div className="hce-container">
