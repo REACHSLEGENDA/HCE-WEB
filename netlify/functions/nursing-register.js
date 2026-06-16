@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 
-const MAILCHIMP_TAG = 'ECMONursing2026';
+const MAILCHIMP_TAG = 'nursing2026';
 const CANCEL_TAG = 'CANCELNURSING';
 
 export const handler = async (event) => {

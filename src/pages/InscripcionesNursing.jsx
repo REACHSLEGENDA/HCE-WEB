@@ -757,7 +757,7 @@ export function RegistrationForm() {
         extras:      stored.extrasLabel || '',
         moneda:      stored.moneda || '',
         total_mxn:   stored.total_mxn || '',
-        tag:         'ECMONursing2026',
+        tag:         'nursing2026',
       };
 
       await Promise.all([
