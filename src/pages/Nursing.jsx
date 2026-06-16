@@ -49,9 +49,16 @@ const FacultyCard = ({ src, role, name, country, flag, hospital, delay }) => {
 
 const PresencialCard = ({ flag, img, name, country, bio, delay }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+  const bgStyle = Array.isArray(flag)
+    ? {
+        background: `linear-gradient(to right, rgba(255,255,255,0.1), rgba(255,255,255,0.1)), url(${flag[0]}) left/50% no-repeat, url(${flag[1]}) right/50% no-repeat`,
+        backgroundSize: '50% 100%'
+      }
+    : { backgroundImage: `url(${flag})` };
+
   return (
     <div ref={ref} className={`presencial-expert-card reveal ${inView ? 'active' : ''}`} style={{ transitionDelay: `${delay}s` }}>
-      <div className="flag-overlay-bg" style={{ backgroundImage: `url(${flag})` }}></div>
+      <div className="flag-overlay-bg" style={bgStyle}></div>
       <div className="presencial-head-area">
         <img src={img} alt={name} className="presencial-main-img" />
       </div>
@@ -166,9 +173,9 @@ const Nursing = () => {
     { src: "/assets/instructores/4db1ce3a-243f-4330-9f6c-c8114140c1c8.jpg", name: "Perf. Elkin Herney Peñaranda Pabón", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista", hospital: "Clínica Medical Duarte, Cúcuta" },
     { src: "/assets/instructores/8d969ec9-4374-4808-bc65-77bd8f39a5b5-scaled.jpg", name: "Mtro. Erick Paul Morales Vega", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Perfusionista clínico certificado, Especialista en cuidados intensivos y ECMO. Master en Educación enfocado a desarrollo de recursos humanos. Enfermería Especializada en Medicina Crítica. Miembro del Comité Científico. ECMO Especialista", hospital: "Hospital CIMA Hermosillo" },
     { src: "/assets/instructores/WhatsApp-Image-2025-06-26-at-20.38.16.jpeg", name: "Enf. María José Ayerbes Cerón", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Enfermera Especialista en Cuidados Intensivos y ECMO Especialista. Docente en la Universidad de la Sabana", hospital: "Fundación cardio infantil- LaCardio" },
-    { src: "/assets/instructores/WhatsApp-Image-2025-06-22-at-12.01.16-1.jpeg", name: "Lic. Ricardo Fernando Rosero", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Enfermero Especialista en Cuidados Críticos. ECMO Especialista", hospital: "Fundación Favaloro" },
-    { src: "/assets/instructores/WhatsApp-Image-2025-08-04-at-16.19.00.jpeg", name: "Lic. Fabio Salas Alvarez", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Coordinador de la Unidad de ECMO, Enfermero Especialista en Cuidados Críticos y ECMO Especialista", hospital: "Hospital Rafael Ángel Calderón Guardia" },
-    { src: "/assets/instructores/p-elianam.jpeg", name: "Mtra. Eliana Marilin Cerón López", country: "ECUADOR", flag: "https://flagcdn.com/w80/ec.png", role: "Perfusionista Clínico y ECMO Especialista", hospital: "Clínica Guayaquil, Ecuador" },
+    { src: "/assets/instructores/WhatsApp-Image-2025-06-22-at-12.01.16-1.jpeg", name: "Mtro. Ricardo Fernando Rosero", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Enfermero con Maestría en Especialista en Cuidados intensivos y ECMO. Instructor en Simulación Clínica y Profesor universitario.", hospital: "Hospital Favaloro" },
+    { src: "/assets/instructores/WhatsApp-Image-2025-08-04-at-16.19.00.jpeg", name: "Lic. Fabio Salas Alvarez", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Enfermero Especialista en Cuidados intensivos y ECMO.", hospital: "Hospital Calderón Guardia" },
+    { src: "/assets/instructores/p-elianam.jpeg", name: "Mtra. Eliana Marilin Cerón López", country: "ECUADOR / COLOMBIA", flag: ["https://flagcdn.com/w80/ec.png", "https://flagcdn.com/w80/co.png"], role: "Perfusionista Clínica y ECMO Especialista con Maestría en Perfusión.", hospital: "Clínica Guayaquil" },
   ];
 
   return (
@@ -241,6 +248,7 @@ const Nursing = () => {
               </div>
               <div className="n-intro-sidebar">
                 <div className="n-intro-card-box">
+                  <span className="section-badge badge-limited" style={{ fontSize: '0.65rem', padding: '0.35rem 0.9rem', marginBottom: '0.8rem', display: 'inline-flex' }}>CUPO LIMITADO</span>
                   <h4>Entrenamiento HCE</h4>
                   <p>Asegura tu lugar en el entrenamiento líder en el cuidado de enfermería en ECMO. Cupos limitados.</p>
                   <button className="n-btn n-btn-brand" onClick={() => navigate('/inscripciones-ecmo-nursing')}>
@@ -280,7 +288,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-sec-header center">
             <span className="n-sec-badge">METODOLOGÍA</span>
-            <h2 className="n-sec-title">Un método diseñado por enfermería, validado por la evidencia</h2>
+            <h2 className="n-sec-title">Un método diseñado por enfermería validado por la evidencia</h2>
             <p className="n-sec-subtitle">Estructura pedagógica optimizada para el Dominio del Soporte ECMO.</p>
           </div>
 
@@ -430,7 +438,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-sec-header center">
             <span className="n-sec-badge">FASES</span>
-            <h2 className="n-sec-title">Tu recorrido formativo, fase por fase</h2>
+            <h2 className="n-sec-title">Tu recorrido formativo fase por fase</h2>
             <p className="n-sec-subtitle">Un diseño curricular que combina la flexibilidad teórica con la rigurosidad práctica.</p>
           </div>
 
@@ -592,7 +600,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-sec-header center">
             <span className="n-sec-badge">EQUIPAMIENTO</span>
-            <h2 className="n-sec-title white">Entrenas con Tecnología real</h2>
+            <h2 className="n-sec-title white">Entrenamientos con tecnología real</h2>
             <p className="n-sec-subtitle white-muted">Acceso a dispositivos utilizados en la vida real.</p>
           </div>
 
@@ -641,7 +649,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-sec-header center">
             <span className="n-sec-badge">EVALUACIÓN</span>
-            <h2 className="n-sec-title">Tu progreso, medido en cada etapa</h2>
+            <h2 className="n-sec-title">Tu progreso medido en cada etapa</h2>
             <p className="n-sec-subtitle">Un sistema integral que asegura que integras los conocimientos de forma teórica y práctica.</p>
           </div>
 
@@ -699,7 +707,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-section-header">
             <span className="section-badge">FACULTAD CIENTÍFICA</span>
-            <h2 className="n-title">Profesores <span className="red-text">Internacionales.</span></h2>
+            <h2 className="n-title">Profesores <span className="red-text">Internacionales</span></h2>
             <p className="n-subtitle">18 expertos integrados en nuestra plataforma de aprendizaje virtual.</p>
           </div>
         </div>
@@ -728,18 +736,18 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-section-header">
             <span className="section-badge">EXPERIENCIA IN-SITU</span>
-            <h2 className="n-title">Facultad <span className="red-text">Presencial.</span></h2>
+            <h2 className="n-title">Facultad <span className="red-text">Presencial</span></h2>
             <p className="n-subtitle">Expertos internacionales que guiarán el entrenamiento práctico de alta fidelidad.</p>
           </div>
 
           <div className="n-presencial-grid">
             <PresencialCard 
               delay={0.1}
-              flag="https://flagcdn.com/w160/ec.png"
+              flag={["https://flagcdn.com/w160/ec.png", "https://flagcdn.com/w160/co.png"]}
               img="/assets/instructores/p-elianam.jpeg"
               name="Mtra. Eliana Cerón López"
-              country="ECUADOR"
-              bio="Perfusionista y Especialista en ECMO en la Clínica Guayaquil. Formada en centros de referencia de LATAM."
+              country="ECUADOR / COLOMBIA"
+              bio="Perfusionista Clínica y Especialista en ECMO en la Clínica Guayaquil. Formada en centros de referencia de LATAM."
             />
             <PresencialCard 
               delay={0.2}
@@ -802,8 +810,8 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-final-card">
             <div className="n-final-content">
-              <span className="section-badge">CUPO LIMITADO</span>
-              <h2>Empodera tu práctica. <span className="red-text">Salva más vidas.</span></h2>
+              <span className="section-badge badge-limited">CUPO LIMITADO</span>
+              <h2>Fortalece tu práctica. <span className="red-text">Salva más vidas.</span></h2>
               <p>Formación de alta especialidad en ECMO, liderada por enfermería, para enfermería.</p>
               <div className="n-final-actions">
                 <button className="btn-buy-final" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Reserva tu lugar <ArrowRight size={18} /></button>
@@ -835,8 +843,16 @@ const Nursing = () => {
               </span>
               <h3>Programa Avalado por FLECI</h3>
               <p>
-                Este entrenamiento cuenta con el aval y reconocimiento científico de la <strong>Federación Latinoamericana de Enfermería en Cuidado Intensivo</strong> (FLECI). Haz clic en el logo para visitar su sitio oficial.
+                Este entrenamiento cuenta con el aval y reconocimiento científico de la <strong>Federación Latinoamericana de Enfermería en Cuidado Intensivo</strong> (FLECI).
               </p>
+              <a 
+                href="https://www.facebook.com/FLECI2017/" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="n-fb-btn"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ fill: '#ffffff', stroke: 'none' }}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> Visitar Facebook de FLECI
+              </a>
             </div>
           </div>
         </div>

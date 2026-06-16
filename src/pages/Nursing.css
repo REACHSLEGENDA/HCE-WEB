@@ -1618,5 +1618,69 @@
   }
 }
 
+/* Facebook Button in FLECI Endorsement */
+.n-fb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #1877f2;
+  color: #ffffff !important;
+  padding: 0.7rem 1.4rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-top: 1.2rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 15px rgba(24, 119, 242, 0.25);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.n-fb-btn:hover {
+  background: #1565c0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(24, 119, 242, 0.4);
+}
+
+.n-fb-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.n-fb-btn:hover svg {
+  transform: scale(1.1);
+}
+
+/* Premium highlight badge for limited seats */
+.section-badge.badge-limited {
+  background: linear-gradient(135deg, #e31837 0%, #ff4b5a 100%);
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(227, 24, 55, 0.35);
+  font-weight: 800;
+  letter-spacing: 2px;
+  animation: pulse-limited 2.5s infinite ease-in-out;
+}
+
+.section-badge.badge-limited:hover {
+  border-color: transparent !important;
+  box-shadow: 0 6px 20px rgba(227, 24, 55, 0.5);
+}
+
+@keyframes pulse-limited {
+  0% {
+    box-shadow: 0 4px 15px rgba(227, 24, 55, 0.35);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 22px rgba(227, 24, 55, 0.55);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: 0 4px 15px rgba(227, 24, 55, 0.35);
+    transform: scale(1);
+  }
+}
+
 
 
