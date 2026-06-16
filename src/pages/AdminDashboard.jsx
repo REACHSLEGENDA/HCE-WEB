@@ -192,6 +192,36 @@ const AdminDashboard = () => {
   const [selectedFormEntry, setSelectedFormEntry] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [paymentTimePeriod, setPaymentTimePeriod] = useState('all');
+  const [stripePayments, setStripePayments] = useState([]);
+  const [loadingPayments, setLoadingPayments] = useState(true);
+  const [paymentsError, setPaymentsError] = useState(null);
+
+  const fetchRealStripePayments = async () => {
+    try {
+      setLoadingPayments(true);
+      const res = await fetch('/.netlify/functions/get-stripe-payments');
+      if (!res.ok) throw new Error('Failed to fetch from Netlify function');
+      const data = await res.json();
+      if (data.payments && data.payments.length > 0) {
+        setStripePayments(data.payments);
+      } else {
+        setStripePayments(mockStripePayments);
+      }
+      setPaymentsError(null);
+    } catch (err) {
+      console.warn('Could not load real Stripe payments, using mock data:', err.message);
+      setStripePayments(mockStripePayments);
+      setPaymentsError(err.message);
+    } finally {
+      setLoadingPayments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'payments') {
+      fetchRealStripePayments();
+    }
+  }, [activeTab, mockStripePayments]);
 
   // Generate stable mock payments and form entries based on Supabase profiles list (to keep them realistic and integrated)
   const mockStripePayments = React.useMemo(() => {
@@ -2199,7 +2229,7 @@ const AdminDashboard = () => {
           {/* VIEW: PAYMENTS & FORMS */}
           {activeTab === 'payments' && (() => {
             // Filter payments based on search and filters
-            const filteredPayments = mockStripePayments.filter(pay => {
+            const filteredPayments = stripePayments.filter(pay => {
               const matchesSearch = pay.studentName.toLowerCase().includes(paymentSearch.toLowerCase()) || 
                                     pay.studentEmail.toLowerCase().includes(paymentSearch.toLowerCase()) ||
                                     pay.id.toLowerCase().includes(paymentSearch.toLowerCase());
@@ -2327,21 +2357,42 @@ const AdminDashboard = () => {
             return (
               <div className="payments-view">
                 
-                {/* SUBTAB BAR */}
-                <div className="tab-menu-container" style={{ marginBottom: '24px' }}>
-                  <button 
-                    className={`tab-btn ${activePaymentsSubTab === 'stripe' ? 'active' : ''}`}
-                    onClick={() => setActivePaymentsSubTab('stripe')}
-                  >
-                    <CreditCard size={16} /> Pasarelas Stripe
-                  </button>
-                  <button 
-                    className={`tab-btn ${activePaymentsSubTab === 'formspree' ? 'active' : ''}`}
-                    onClick={() => setActivePaymentsSubTab('formspree')}
-                  >
-                    <Mail size={16} /> Formularios Formspree
-                  </button>
+                {/* SUBTAB BAR & REFRESH BUTTON */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div className="tab-menu-container" style={{ borderBottom: 'none', paddingBottom: 0, marginBottom: 0 }}>
+                    <button 
+                      className={`tab-btn ${activePaymentsSubTab === 'stripe' ? 'active' : ''}`}
+                      onClick={() => setActivePaymentsSubTab('stripe')}
+                    >
+                      <CreditCard size={16} /> Pasarelas Stripe
+                    </button>
+                    <button 
+                      className={`tab-btn ${activePaymentsSubTab === 'formspree' ? 'active' : ''}`}
+                      onClick={() => setActivePaymentsSubTab('formspree')}
+                    >
+                      <Mail size={16} /> Formularios Formspree
+                    </button>
+                  </div>
+                  
+                  {activePaymentsSubTab === 'stripe' && (
+                    <button 
+                      className="icon-action-btn secondary"
+                      onClick={fetchRealStripePayments}
+                      disabled={loadingPayments}
+                      style={{ height: '38px', gap: '6px', cursor: 'pointer' }}
+                    >
+                      <Clock size={14} className={loadingPayments ? 'spin-animation' : ''} />
+                      {loadingPayments ? 'Sincronizando...' : 'Sincronizar Stripe'}
+                    </button>
+                  )}
                 </div>
+
+                {paymentsError && activePaymentsSubTab === 'stripe' && (
+                  <div className="alert-message warning" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', borderRadius: '12px', border: '1px solid #fde047', backgroundColor: '#fef9c3', color: '#854d0e', fontSize: '0.85rem' }}>
+                    <AlertCircle size={16} />
+                    <span>Modo Simulación activo (Usando datos de prueba locales). Para sincronizar datos reales, configura la variable <strong>STRIPE_SECRET_KEY</strong> en la consola de Netlify.</span>
+                  </div>
+                )}
 
                 {/* KPI CARDS */}
                 <div className="kpi-row" style={{ marginBottom: '30px' }}>
