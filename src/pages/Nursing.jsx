@@ -295,8 +295,8 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-sec-header">
             <span className="n-sec-badge">RESULTADOS</span>
-            <h2 className="n-sec-title">Al finalizar el curso serás capaz de:</h2>
-            <p className="n-sec-subtitle">Competencias críticas que integrarás a tu práctica clínica diaria.</p>
+            <h2 className="n-sec-title">Competencias Clave que Integrarás a tu Práctica Clínica</h2>
+            <p className="n-sec-subtitle">Al finalizar el <strong>ECMO Nursing Care Course</strong>, habrás consolidado un perfil profesional de alta especialización en el cuidado de pacientes en ECMO structured en 6 ejes esenciales:</p>
           </div>
 
           <div className="n-outcomes-list-grid">
@@ -305,8 +305,8 @@ const Nursing = () => {
                 <CheckCircle size={16} strokeWidth={3} />
               </div>
               <div className="n-outcome-text">
-                <h4>Fisiología y Hemodinamia</h4>
-                <p>Comprender a profundidad la fisiología y hemodinamia de las modalidades V-V y V-A, diferenciando con precisión sus indicaciones clínicas.</p>
+                <h4>Fisiología y Hemodinamia Aplicada</h4>
+                <p>Comprenderás a profundidad el transporte de oxígeno celular y dominarás con precisión las indicaciones y repercusiones de las modalidades V-V, V-A (incluyendo poscardiotomía) y configuraciones híbridas.</p>
               </div>
             </div>
 
@@ -315,8 +315,8 @@ const Nursing = () => {
                 <CheckCircle size={16} strokeWidth={3} />
               </div>
               <div className="n-outcome-text">
-                <h4>Monitoreo del Circuito</h4>
-                <p>Ejecutar protocolos estandarizados de monitoreo de componentes (consola, bomba centrífuga y oxigenador) bajo lineamientos internacionales.</p>
+                <h4>Monitoreo Integral (Circuito y Paciente)</h4>
+                <p>Ejecutarás protocolos internacionales para supervisar flujos y presiones del sistema, integrándolos con la ventilación protectora, anticoagulación, gasometrías y sedación del paciente.</p>
               </div>
             </div>
 
@@ -325,8 +325,8 @@ const Nursing = () => {
                 <CheckCircle size={16} strokeWidth={3} />
               </div>
               <div className="n-outcome-text">
-                <h4>Detección de Complicaciones</h4>
-                <p>Detectar de forma precoz complicaciones clínicas (hemólisis, sangrados) y mecánicas (falla de bomba, embolismo aéreo, falla de oxigenador).</p>
+                <h4>Detección Precoz de Complicaciones</h4>
+                <p>Desarrollarás un enfoque preventivo para identificar oportunamente fallas clínicas (hemólisis, sangrado, isquemia) y mecánicas (falla de bomba, entrada de aire, decanulación accidental).</p>
               </div>
             </div>
 
@@ -335,8 +335,8 @@ const Nursing = () => {
                 <CheckCircle size={16} strokeWidth={3} />
               </div>
               <div className="n-outcome-text">
-                <h4>Resolución de Crisis</h4>
-                <p>Resolver situaciones críticas en equipo multidisciplinario, reduciendo al mínimo la latencia de respuesta ante emergencias.</p>
+                <h4>Gestión de Crisis (CRM) en Equipo</h4>
+                <p>Reducirás al mínimo el tiempo de respuesta ante emergencias (como alarmas críticas, RCP en ECMO o cambio de componentes) aplicando liderazgo y comunicación en bucle cerrado a pie de cama.</p>
               </div>
             </div>
 
@@ -345,8 +345,8 @@ const Nursing = () => {
                 <CheckCircle size={16} strokeWidth={3} />
               </div>
               <div className="n-outcome-text">
-                <h4>Gestión de Recursos en Crisis (CRM)</h4>
-                <p>Aplicar principios fundamentales de CRM, incluyendo liderazgo efectivo y comunicación en bucle cerrado a pie de cama.</p>
+                <h4>Juicio Clínico y Cuidados Avanzados</h4>
+                <p>Tomarás decisiones basadas en evidencia para guiar el destete, coordinar traslados seguros, integrar terapias como CRRT/hemoadsorción y aplicar ecografía clínica (POCUS).</p>
               </div>
             </div>
 
@@ -355,8 +355,8 @@ const Nursing = () => {
                 <CheckCircle size={16} strokeWidth={3} />
               </div>
               <div className="n-outcome-text">
-                <h4>Consolidación de Juicio Clínico</h4>
-                <p>Fortalecer la toma de decisiones y el criterio de vigilancia del paciente crítico de alta complejidad en soporte vital extracorpóreo.</p>
+                <h4>Liderazgo en el Rol de Enfermería</h4>
+                <p>Diseñarás planes de cuidado especializados (NANDA, NIC, NOC) enfocados en la persona, abarcando desde la movilización temprana hasta soportes avanzados como puente a trasplante o preservación de órganos.</p>
               </div>
             </div>
           </div>
