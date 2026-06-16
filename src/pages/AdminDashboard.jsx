@@ -193,13 +193,65 @@ const AdminDashboard = () => {
   const [selectedFormEntry, setSelectedFormEntry] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [paymentTimePeriod, setPaymentTimePeriod] = useState('all');
+  const getStandardGatewayCourse = (courseName = '') => {
+    const name = (courseName || '').toLowerCase();
+    if (name.includes('nurs')) {
+      return { id: 'ecmo_nursing', title: 'ECMO Nursing Care' };
+    }
+    if (name.includes('paris') || name.includes('parís')) {
+      return { id: 'ecmo_paris', title: 'ECMO París' };
+    }
+    return { id: 'ecmo_sim', title: 'ECMO Simulador Care' };
+  };
+
+  const filterMay2026Onwards = (list) => {
+    const limit = new Date('2026-05-01T00:00:00Z').getTime();
+    return list.filter(item => {
+      const t = new Date(item.date).getTime();
+      return !isNaN(t) && t >= limit;
+    });
+  };
+
+  const mapItemToGatewayCourse = (item, type = 'payment') => {
+    if (type === 'form') {
+      let formId = item.formId;
+      let formName = item.formName;
+      if (formId === 'ecmo_nursing') {
+        formId = 'xpqenabk';
+        formName = 'Inscripciones Nursing Care';
+      } else if (formId === 'ecmo_sim') {
+        formId = 'xredqyol';
+        formName = 'Registro Simulador ECMO';
+      } else if (formId === 'ecmo_paris') {
+        formId = 'mnjlvbpw';
+        formName = 'Inscripciones Curso Standard';
+      }
+      return {
+        ...item,
+        formId,
+        formName
+      };
+    }
+    const name = item.courseName;
+    const stdCourse = getStandardGatewayCourse(name);
+    return {
+      ...item,
+      courseId: stdCourse.id,
+      courseName: stdCourse.title
+    };
+  };
+
+  const processAndFilterList = (list, type = 'payment') => {
+    return filterMay2026Onwards(list).map(item => mapItemToGatewayCourse(item, type));
+  };
+
   const [stripePayments, setStripePayments] = useState(() => {
     const saved = localStorage.getItem('admin_imported_stripe_payments');
-    return saved ? JSON.parse(saved) : [];
+    return saved ? processAndFilterList(JSON.parse(saved), 'payment') : [];
   });
   const [formSubmissions, setFormSubmissions] = useState(() => {
     const saved = localStorage.getItem('admin_imported_form_submissions');
-    return saved ? JSON.parse(saved) : [];
+    return saved ? processAndFilterList(JSON.parse(saved), 'form') : [];
   });
   const [loadingPayments, setLoadingPayments] = useState(true);
   const [paymentsError, setPaymentsError] = useState(null);
@@ -247,13 +299,14 @@ const AdminDashboard = () => {
 
   const mapCSVToPayments = (rows) => {
     return rows.map((row, index) => {
+      const stdCourse = getStandardGatewayCourse(row['curso'] || row['coursename'] || 'Curso Genérico');
       return {
         id: row['id transaccion'] || row['id'] || `imported_stripe_${index}_${Math.random().toString(36).substring(2, 7)}`,
         studentName: row['alumno'] || row['studentname'] || 'Alumno Importado',
         studentEmail: row['email'] || row['studentemail'] || '',
         studentCountry: row['pais'] || row['studentcountry'] || 'Desconocido',
-        courseName: row['curso'] || row['coursename'] || 'Curso Genérico',
-        courseId: row['courseid'] || 'imported',
+        courseName: stdCourse.title,
+        courseId: stdCourse.id,
         amount: parseFloat(row['monto'] || row['amount'] || '0'),
         currency: row['moneda'] || row['currency'] || 'USD',
         status: row['estado'] || row['status'] || 'succeeded',
@@ -304,22 +357,25 @@ const AdminDashboard = () => {
           imported = mapCSVToPayments(parsedCSV);
         }
         
-        if (imported.length > 0) {
+        const filteredImported = processAndFilterList(imported, 'payment');
+        
+        if (filteredImported.length > 0) {
           const merged = [...stripePayments];
-          imported.forEach(item => {
+          filteredImported.forEach(item => {
             if (!merged.some(m => m.id === item.id)) {
               merged.unshift(item);
             }
           });
-          setStripePayments(merged);
-          localStorage.setItem('admin_imported_stripe_payments', JSON.stringify(merged));
-          showToast('success', `${imported.length} transacciones importadas correctamente`);
+          const processed = processAndFilterList(merged, 'payment');
+          setStripePayments(processed);
+          localStorage.setItem('admin_imported_stripe_payments', JSON.stringify(processed));
+          showToast('success', `${filteredImported.length} transacciones importadas correctamente (Posteriores a Mayo 2026)`);
         } else {
-          showToast('error', 'No se encontraron datos válidos para importar');
+          showToast('error', 'No se encontraron transacciones válidas posteriores a Mayo 2026');
         }
       } catch (err) {
         console.error('Import error:', err);
-        showToast('error', 'Error al leer el archivo de importación: ' + err.message);
+        showToast('error', 'Error al importar archivo: ' + err.message);
       }
     };
     reader.readAsText(file);
@@ -343,22 +399,25 @@ const AdminDashboard = () => {
           imported = mapCSVToForms(parsedCSV);
         }
         
-        if (imported.length > 0) {
+        const filteredImported = processAndFilterList(imported, 'form');
+        
+        if (filteredImported.length > 0) {
           const merged = [...formSubmissions];
-          imported.forEach(item => {
+          filteredImported.forEach(item => {
             if (!merged.some(m => m.id === item.id)) {
               merged.unshift(item);
             }
           });
-          setFormSubmissions(merged);
-          localStorage.setItem('admin_imported_form_submissions', JSON.stringify(merged));
-          showToast('success', `${imported.length} envíos de formularios importados correctamente`);
+          const processed = processAndFilterList(merged, 'form');
+          setFormSubmissions(processed);
+          localStorage.setItem('admin_imported_form_submissions', JSON.stringify(processed));
+          showToast('success', `${filteredImported.length} envíos de formularios importados correctamente (Posteriores a Mayo 2026)`);
         } else {
-          showToast('error', 'No se encontraron datos válidos para importar');
+          showToast('error', 'No se encontraron formularios válidos posteriores a Mayo 2026');
         }
       } catch (err) {
         console.error('Import error:', err);
-        showToast('error', 'Error al leer el archivo de importación: ' + err.message);
+        showToast('error', 'Error al importar archivo: ' + err.message);
       }
     };
     reader.readAsText(file);
@@ -371,20 +430,24 @@ const AdminDashboard = () => {
       const res = await fetch('/.netlify/functions/get-stripe-payments');
       if (!res.ok) throw new Error('Failed to fetch from Netlify function');
       const data = await res.json();
+      const merged = [...stripePayments];
       if (data.payments && data.payments.length > 0) {
-        const merged = [...stripePayments];
         data.payments.forEach(item => {
           if (!merged.some(m => m.id === item.id)) {
             merged.unshift(item);
           }
         });
-        setStripePayments(merged);
-        localStorage.setItem('admin_imported_stripe_payments', JSON.stringify(merged));
       }
+      const processed = processAndFilterList(merged, 'payment');
+      setStripePayments(processed);
+      localStorage.setItem('admin_imported_stripe_payments', JSON.stringify(processed));
       setPaymentsError(null);
     } catch (err) {
       console.warn('Could not load real Stripe payments:', err.message);
       setPaymentsError(err.message);
+      const processed = processAndFilterList(stripePayments, 'payment');
+      setStripePayments(processed);
+      localStorage.setItem('admin_imported_stripe_payments', JSON.stringify(processed));
     } finally {
       setLoadingPayments(false);
     }
@@ -395,6 +458,19 @@ const AdminDashboard = () => {
       fetchRealStripePayments();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const savedPayments = localStorage.getItem('admin_imported_stripe_payments');
+    if (savedPayments) {
+      const processed = processAndFilterList(JSON.parse(savedPayments), 'payment');
+      localStorage.setItem('admin_imported_stripe_payments', JSON.stringify(processed));
+    }
+    const savedForms = localStorage.getItem('admin_imported_form_submissions');
+    if (savedForms) {
+      const processed = processAndFilterList(JSON.parse(savedForms), 'form');
+      localStorage.setItem('admin_imported_form_submissions', JSON.stringify(processed));
+    }
+  }, []);
 
   const [newStudentForm, setNewStudentForm] = useState(() => {
     const saved = localStorage.getItem('adminNewStudentForm');
@@ -2253,15 +2329,10 @@ const AdminDashboard = () => {
 
           {/* VIEW: PAYMENTS & FORMS */}
           {activeTab === 'payments' && (() => {
-            const gatewayCourses = courses.length > 0 ? courses.filter(c => 
-              c.title.toLowerCase().includes('sim') || 
-              c.title.toLowerCase().includes('nurs') || 
-              c.title.toLowerCase().includes('paris') ||
-              c.title.toLowerCase().includes('parís')
-            ) : [
-              { id: 'c1', title: 'ECMO Simulador Care' },
-              { id: 'c2', title: 'ECMO Nursing Care' },
-              { id: 'c3', title: 'ECMO París' }
+            const gatewayCourses = [
+              { id: 'ecmo_sim', title: 'ECMO Simulador Care' },
+              { id: 'ecmo_nursing', title: 'ECMO Nursing Care' },
+              { id: 'ecmo_paris', title: 'ECMO París' }
             ];
 
             // Filter payments based on search and filters
