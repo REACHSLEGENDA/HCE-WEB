@@ -442,8 +442,8 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-sec-header center">
             <span className="n-sec-badge">EQUIPAMIENTO</span>
-            <h2 className="n-sec-title white">Entrenas con tecnología real, no con diapositivas</h2>
-            <p className="n-sec-subtitle white-muted">Acceso directo a los dispositivos estándar utilizados en las unidades de cuidados intensivos líderes.</p>
+            <h2 className="n-sec-title white">Entrenas con Tecnología real</h2>
+            <p className="n-sec-subtitle white-muted">Acceso a dispositivos utilizados en la vida real.</p>
           </div>
 
           <div className="n-equipment-grid">
@@ -453,7 +453,7 @@ const Nursing = () => {
                 <MonitorPlay size={24} />
               </div>
               <h3>Consolas ECMO</h3>
-              <p>Práctica directa en consolas clínicas reales de marcas de referencia mundial (Getinge, Medtronic, Sorin).</p>
+              <p>Práctica directa en consolas clínicas reales de marcas de referencia mundial.</p>
             </div>
 
             {/* Card 2 */}
@@ -483,8 +483,6 @@ const Nursing = () => {
               <p>Guiadas de manera personalizada por instructores certificados bajo estándares de cuidados intensivos.</p>
             </div>
           </div>
-
-          <p className="n-equipment-disclaimer">* Nota de acreditación: Equipamiento sujeto a disponibilidad por sede y taller práctico.</p>
         </div>
       </section>
 
