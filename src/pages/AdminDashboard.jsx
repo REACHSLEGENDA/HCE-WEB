@@ -196,33 +196,6 @@ const AdminDashboard = () => {
   const [loadingPayments, setLoadingPayments] = useState(true);
   const [paymentsError, setPaymentsError] = useState(null);
 
-  const fetchRealStripePayments = async () => {
-    try {
-      setLoadingPayments(true);
-      const res = await fetch('/.netlify/functions/get-stripe-payments');
-      if (!res.ok) throw new Error('Failed to fetch from Netlify function');
-      const data = await res.json();
-      if (data.payments && data.payments.length > 0) {
-        setStripePayments(data.payments);
-      } else {
-        setStripePayments(mockStripePayments);
-      }
-      setPaymentsError(null);
-    } catch (err) {
-      console.warn('Could not load real Stripe payments, using mock data:', err.message);
-      setStripePayments(mockStripePayments);
-      setPaymentsError(err.message);
-    } finally {
-      setLoadingPayments(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'payments') {
-      fetchRealStripePayments();
-    }
-  }, [activeTab, mockStripePayments]);
-
   // Generate stable mock payments and form entries based on Supabase profiles list (to keep them realistic and integrated)
   const mockStripePayments = React.useMemo(() => {
     const students = profiles.filter(p => p.rol === 'estudiante');
@@ -261,9 +234,13 @@ const AdminDashboard = () => {
       // Date spread over last 90 days
       const date = new Date(baseDate.getTime() - i * 1.8 * 24 * 60 * 60 * 1000);
       
+      const studentName = student.nombre_completo || 
+                          (student.nombres && student.apellidos ? `${student.nombres} ${student.apellidos}` : '') ||
+                          student.email || 'Alumno';
+
       payments.push({
         id: `ch_3M4t${Math.random().toString(36).substring(2, 12).toUpperCase()}`,
-        studentName: `${student.nombres} ${student.apellidos}`,
+        studentName,
         studentEmail: student.email,
         studentCountry: student.pais || 'Desconocido',
         courseName: course.title,
@@ -314,12 +291,16 @@ const AdminDashboard = () => {
       const form = formTypes[i % formTypes.length];
       const date = new Date(baseDate.getTime() - i * 1.3 * 24 * 60 * 60 * 1000);
       
+      const studentNombres = student.nombres || (student.nombre_completo ? student.nombre_completo.split(' ')[0] : 'Alumno');
+      const studentApellidos = student.apellidos || (student.nombre_completo ? student.nombre_completo.split(' ').slice(1).join(' ') : '');
+      const studentFullName = student.nombre_completo || `${studentNombres} ${studentApellidos}`.trim();
+
       // Customize payload depending on the form type
       let payload = {};
       if (form.id === 'xpqenabk') {
         payload = {
-          nombres: student.nombres,
-          apellidos: student.apellidos,
+          nombres: studentNombres,
+          apellidos: studentApellidos,
           email: student.email,
           telefono: student.tel || '+506 8888 8888',
           pais: student.pais || 'Ecuador',
@@ -330,7 +311,7 @@ const AdminDashboard = () => {
         };
       } else if (form.id === 'mreroozv') {
         payload = {
-          razon_social: `${student.nombres} S.A. de C.V.`,
+          razon_social: studentFullName + ' S.A. de C.V.',
           rfc_nit: `RFC-${Math.random().toString(36).substring(2, 10).toUpperCase()}-123`,
           direccion: 'Av. de las Ciencias 123, Col. Centro',
           ciudad: 'Ciudad de México',
@@ -340,15 +321,15 @@ const AdminDashboard = () => {
         };
       } else if (form.id === 'xnjlvzdq') {
         payload = {
-          nombre_contacto: `${student.nombres} ${student.apellidos}`,
+          nombre_contacto: studentFullName,
           email: student.email,
           asunto: 'Duda sobre el inicio de clases prácticas',
           mensaje: 'Hola, quería consultar qué días de la semana de julio se realizarán los talleres presenciales del simulador.'
         };
       } else {
         payload = {
-          nombres: student.nombres,
-          apellidos: student.apellidos,
+          nombres: studentNombres,
+          apellidos: studentApellidos,
           email: student.email,
           pais: student.pais || 'México',
           especialidad: student.especialidad || 'Cuidados Intensivos',
@@ -361,7 +342,7 @@ const AdminDashboard = () => {
         id: `form_${Math.random().toString(36).substring(2, 9)}`,
         formId: form.id,
         formName: form.name,
-        senderName: `${student.nombres} ${student.apellidos}`,
+        senderName: studentFullName,
         senderEmail: student.email,
         date: date.toISOString(),
         status: 'Enviado',
@@ -370,6 +351,33 @@ const AdminDashboard = () => {
     }
     return submissions;
   }, [profiles, courses]);
+
+  const fetchRealStripePayments = async () => {
+    try {
+      setLoadingPayments(true);
+      const res = await fetch('/.netlify/functions/get-stripe-payments');
+      if (!res.ok) throw new Error('Failed to fetch from Netlify function');
+      const data = await res.json();
+      if (data.payments && data.payments.length > 0) {
+        setStripePayments(data.payments);
+      } else {
+        setStripePayments(mockStripePayments);
+      }
+      setPaymentsError(null);
+    } catch (err) {
+      console.warn('Could not load real Stripe payments, using mock data:', err.message);
+      setStripePayments(mockStripePayments);
+      setPaymentsError(err.message);
+    } finally {
+      setLoadingPayments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'payments') {
+      fetchRealStripePayments();
+    }
+  }, [activeTab, mockStripePayments]);
 
   const [newStudentForm, setNewStudentForm] = useState(() => {
     const saved = localStorage.getItem('adminNewStudentForm');
