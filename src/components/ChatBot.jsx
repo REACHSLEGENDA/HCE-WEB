@@ -344,7 +344,7 @@ export default function ChatBot() {
       return;
     }
     if (btn.action === 'whatsapp') {
-      window.open('https://wa.me/5212221234567', '_blank');
+      window.open('https://wa.me/525659271906', '_blank');
       return;
     }
     if (btn.action === 'email') {

@@ -225,27 +225,57 @@ export default function Inscripciones() {
             marginBottom: '2rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '15px'
+            justifyContent: 'space-between',
+            gap: '15px',
+            flexWrap: 'wrap'
           }}>
-            <div style={{
-              background: '#e31837',
-              color: '#fff',
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              <Users size={20} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1, minWidth: '280px' }}>
+              <div style={{
+                background: '#e31837',
+                color: '#fff',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Users size={20} />
+              </div>
+              <div>
+                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--ins-dark)' }}>Inscripción para Grupos</h4>
+                <p style={{ margin: '3px 0 0 0', fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
+                  ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> para solicitar un descuento especial para grupos mayores de 6 personas.
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--ins-dark)' }}>Inscripción para Grupos</h4>
-              <p style={{ margin: '3px 0 0 0', fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
-                ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> para solicitar un descuento especial para grupos mayores de 6 personas.
-              </p>
-            </div>
+            <a 
+              href="https://wa.me/525659271906?text=Hola,%20quiero%20solicitar%20un%20descuento%20especial%20para%20un%20grupo%20en%20el%20Diploma%20de%20Par%C3%ADs%20ECMO."
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#25D366',
+                color: '#fff',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                textDecoration: 'none',
+                transition: 'background 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#128C7E'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#25D366'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.79-4.276l.41.243c1.554.922 3.19 1.409 4.854 1.41 5.518 0 10.007-4.48 10.01-9.997.001-2.672-1.037-5.187-2.924-7.075-1.888-1.887-4.397-2.925-7.073-2.926-5.524 0-10.014 4.482-10.017 9.999-.001 1.764.469 3.488 1.359 5.011l.269.465-1.006 3.676 3.764-.988z"/>
+              </svg>
+              WhatsApp
+            </a>
           </div>
 
           {/* STEP 1 — profile cards */}
