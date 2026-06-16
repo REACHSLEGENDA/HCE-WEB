@@ -62,18 +62,14 @@ export default function InscripcionesNursing() {
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
-    const hasSeen = sessionStorage.getItem('hce_group_popup_seen');
-    if (!hasSeen) {
-      const timer = setTimeout(() => {
-        setShowPopup(true);
-      }, 800);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => {
+      setShowPopup(true);
+    }, 800);
+    return () => clearTimeout(timer);
   }, []);
 
   const closePopup = () => {
     setShowPopup(false);
-    sessionStorage.setItem('hce_group_popup_seen', 'true');
   };
 
   const payStatus = searchParams.get('status'); // 'success' | 'cancel'
