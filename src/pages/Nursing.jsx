@@ -367,7 +367,7 @@ const Nursing = () => {
       <section className="n-sec-padding n-itinerary-section">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge">ITINERARIO</span>
+            <span className="n-sec-badge">FASES</span>
             <h2 className="n-sec-title">Tu recorrido formativo, fase por fase</h2>
             <p className="n-sec-subtitle">Un diseño curricular que combina la flexibilidad teórica con la rigurosidad práctica.</p>
           </div>
@@ -375,14 +375,14 @@ const Nursing = () => {
           <div className="n-timeline-container">
             {/* Step 1 */}
             <div className="n-card-base n-timeline-step">
-              <span className="n-timeline-badge">Semanas 1 a 7</span>
+              <span className="n-timeline-badge">2 Meses — Inicio: 20 de Julio, 2026 (Inscripciones Abiertas)</span>
               <h3>Fase teórica e híbrida</h3>
               <p>Aprendizaje combinado a través de nuestra plataforma virtual. Cubre de manera progresiva los fundamentos de la terapia, modalidades clínicas, monitoreo y prevención de complicaciones.</p>
             </div>
 
             {/* Step 2 */}
             <div className="n-card-base n-timeline-step">
-              <span className="n-timeline-badge">Semana 8</span>
+              <span className="n-timeline-badge">Fase Presencial (Fecha Pendiente / Por Definir)</span>
               <h3>Inmersión práctica intensiva</h3>
               <p>Sesiones presenciales intensivas enfocadas en simulación de alta fidelidad, talleres de destrezas operativas con circuitos reales de ECMO y sesiones estructuradas de debriefing.</p>
             </div>
@@ -390,11 +390,12 @@ const Nursing = () => {
 
           <div className="n-chips-header">Temas Centrales de Aprendizaje</div>
           <div className="n-chips-wrapper">
-            <span className="n-chip-tag">Fisiología y hemodinamia</span>
-            <span className="n-chip-tag">Modalidades V-V y V-A</span>
-            <span className="n-chip-tag">Monitoreo del circuito</span>
-            <span className="n-chip-tag">Detección de complicaciones</span>
-            <span className="n-chip-tag">Manejo de crisis (CRM)</span>
+            <span className="n-chip-tag">Fisiología y Hemodinamia Aplicada</span>
+            <span className="n-chip-tag">Monitoreo Integral (Circuito y Paciente)</span>
+            <span className="n-chip-tag">Detección Precoz de Complicaciones</span>
+            <span className="n-chip-tag">Gestión de Crisis (CRM) en Equipo</span>
+            <span className="n-chip-tag">Juicio Clínico y Cuidados Avanzados</span>
+            <span className="n-chip-tag">Liderazgo en el Rol de Enfermería</span>
           </div>
         </div>
       </section>
