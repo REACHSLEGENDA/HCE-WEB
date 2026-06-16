@@ -235,7 +235,7 @@ export default function Inscripciones() {
               height: '40px',
               display: 'flex',
               alignItems: 'center',
-              justify-content: 'center',
+              justifyContent: 'center',
               flexShrink: 0
             }}>
               <Users size={20} />
