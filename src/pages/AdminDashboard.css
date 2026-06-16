@@ -1202,3 +1202,18 @@
     transform: rotate(360deg);
   }
 }
+
+/* Pro Bar Chart Styling */
+.bar-hover-group:hover .bar-bg-highlight {
+  opacity: 1 !important;
+}
+
+.bar-hover-group:hover .main-bar {
+  filter: drop-shadow(0 6px 12px rgba(227, 24, 55, 0.4)) !important;
+  transform: translateY(-4px) !important;
+}
+
+.bar-hover-group .main-bar {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: bottom;
+}
