@@ -492,7 +492,7 @@ const Nursing = () => {
           <div className="n-sec-header center">
             <span className="n-sec-badge">EVALUACIÓN</span>
             <h2 className="n-sec-title">Tu progreso, medido en cada etapa</h2>
-            <p className="n-sec-subtitle">Un sistema integral que asegura que integras los conocimientos de forma teórica y procedimental.</p>
+            <p className="n-sec-subtitle">Un sistema integral que asegura que integras los conocimientos de forma teórica y práctica.</p>
           </div>
 
           <div className="n-evaluation-grid">
@@ -529,7 +529,7 @@ const Nursing = () => {
                 <span className="n-eval-step-num">Paso 3</span>
               </div>
               <h3>Desempeño práctico</h3>
-              <p>Aplicación de listas de cotejo de destrezas y rúbricas estructuradas ELSO en entornos de simulación clínica.</p>
+              <p>Aplicación de listas de cotejo de destrezas y rúbricas estructuradas en entornos de simulación clínica.</p>
             </div>
 
             {/* Step 4 */}
