@@ -549,8 +549,8 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-section-header">
             <span className="section-badge">FACULTAD CIENTÍFICA</span>
-            <h2 className="n-title">Expertos <span className="red-text">Virtuales.</span></h2>
-            <p className="n-subtitle">18 Referentes mundiales integrados en nuestra plataforma de aprendizaje.</p>
+            <h2 className="n-title">Profesores <span className="red-text">Internacionales.</span></h2>
+            <p className="n-subtitle">18 expertos integrados en nuestra plataforma de aprendizaje virtual.</p>
           </div>
         </div>
         
