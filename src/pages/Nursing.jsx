@@ -101,17 +101,17 @@ const Nursing = () => {
     { src: "/assets/instructores/p-gonzalom.jpeg", name: "Perf. Gonzalo Cartes", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Enfermero Intensivista" },
     { src: "/assets/instructores/a2e51cc5-9cb6-412c-b92e-7b9c9dcfc69e.jpg", name: "Enf. Lisbeth Ocaña Albites", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Líder Cardiovascular INCOR" },
     { src: "/assets/instructores/219e522e-5aff-409c-8ab3-7e3904b9f45d.jpg", name: "Perf. Hans Castro Rosero", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Especialista en Circulación" },
-    { src: "/assets/instructores/de5ae3a6-8be9-41fe-a8e0-aae691d2172e.jpg", name: "Perfu. Mario Alejandro Meza", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico" },
+    { src: "/assets/instructores/de5ae3a6-8be9-41fe-a8e0-aae691d2172e.jpg", name: "Perf. Mario Alejandro Meza Mier", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista, Clinaltec – Clínica Internacional de Alta Tecnología, Ibagué" },
     { src: "/assets/instructores/846fd848-ef66-4481-883a-ed3427059004.jpg", name: "Enf. Maira Rezende Girardi", country: "BRASIL", flag: "https://flagcdn.com/w80/br.png", role: "Hospital Israelita Albert Einstein" },
     { src: "/assets/instructores/17520b78-52ae-4256-be3d-eaf541a51961.jpg", name: "Enf. Patricia Villazón Alcón", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Experta en POCUS y ECMO" },
-    { src: "/assets/instructores/172c41c8-98cd-42d7-9ac6-774a6d8eb608.jpg", name: "Enf. Edwin Sánchez", country: "SALVADOR", flag: "https://flagcdn.com/w80/sv.png", role: "Especialista UCI Pediátrica" },
+    { src: "/assets/instructores/172c41c8-98cd-42d7-9ac6-774a6d8eb608.jpg", name: "Perf. Edwin Ernesto Sánchez Fuentes", country: "EL SALVADOR", flag: "https://flagcdn.com/w80/sv.png", role: "Perfusionista Clínico y ECMO Especialista, Hospital Nacional de Niños Benjamín Bloom" },
     { src: "/assets/instructores/1be2aa8d-0d0f-4a45-92d8-e24eb76fcb84.jpg", name: "Enf. Miguel Ángel Albino", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Gestión de Servicios de Salud" },
-    { src: "/assets/instructores/4db1ce3a-243f-4330-9f6c-c8114140c1c8.jpg", name: "Enf. Elkin Peñaranda", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínica Medical Duarte" },
+    { src: "/assets/instructores/4db1ce3a-243f-4330-9f6c-c8114140c1c8.jpg", name: "Perf. Elkin Herney Peñaranda Pabón", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista, Clínica Medical Duarte, Cúcuta" },
     { src: "/assets/instructores/8d969ec9-4374-4808-bc65-77bd8f39a5b5-scaled.jpg", name: "Perf. Erick Paul Morales Vega", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Especialista Hospital CIMA" },
-    { src: "/assets/instructores/WhatsApp-Image-2025-06-26-at-20.38.16.jpeg", name: "Enf. María José Ayerbes Ceron", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Fundación Cardio Infantil" },
+    { src: "/assets/instructores/WhatsApp-Image-2025-06-26-at-20.38.16.jpeg", name: "Perf. María José Ayerbes Cerón", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista, Fundación Cardioinfantil – LaCardio, Bogotá" },
     { src: "/assets/instructores/WhatsApp-Image-2025-06-22-at-12.01.16-1.jpeg", name: "Lic. Ricardo Fernando Rosero", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Fundación Favaloro" },
     { src: "/assets/instructores/WhatsApp-Image-2025-08-04-at-16.19.00.jpeg", name: "Lic. Fabio Salas Alvarez", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Coordinador Hospital Calderón Guardia" },
-    { src: "/assets/instructores/p-elianam.jpeg", name: "Perf. Eliana Cerón López", country: "ECUADOR", flag: "https://flagcdn.com/w80/ec.png", role: "Clínica Guayaquil" },
+    { src: "/assets/instructores/p-elianam.jpeg", name: "Perf. Eliana Marilin Cerón López", country: "ECUADOR", flag: "https://flagcdn.com/w80/ec.png", role: "Perfusionista Clínico y ECMO Especialista, Clínica Guayaquil, Ecuador" },
   ];
 
   return (
@@ -662,9 +662,9 @@ const Nursing = () => {
               delay={0.1}
               flag="https://flagcdn.com/w160/ec.png"
               img="/assets/instructores/p-elianam.jpeg"
-              name="Perf. Eliana Cerón López"
+              name="Perf. Eliana Marilin Cerón López"
               country="ECUADOR"
-              bio="Perfusionista y Especialista en ECMO en la Clínica Guayaquil. Formada en centros de referencia de LATAM."
+              bio="Perfusionista en Cirugía Cardiovascular y ECMO Especialista en Clínica Guayaquil, Ecuador. Licenciada en Enfermería por la Universidad Mariana (Colombia). Posgrado en Perfusión Cardiovascular, Instituto Universitario Hospital Italiano de Buenos Aires. Perfusionista Clínico Certificada (PCC #57) por el Board Latinoamericano de Perfusión Cardiovascular. Coordinadora del servicio de perfusión y miembro del Team ECMO. Especialista Clínica LivaNova desde 2024."
             />
             <PresencialCard 
               delay={0.2}
@@ -694,9 +694,9 @@ const Nursing = () => {
               delay={0.5}
               flag="https://flagcdn.com/w160/cr.png"
               img="/assets/instructores/p-eduardom.webp"
-              name="Enf. Eduardo Aguilar Rivera"
+              name="Perf. Eduardo Antonio Aguilar Rivera"
               country="COSTA RICA"
-              bio="Especialista en ECMO. Fue Coordinador del Programa de ECMO del Hospital Rafael Ángel Calderón Guardia."
+              bio="Licenciado en Enfermería, Universidad de Costa Rica. Maestría en Gestión del Riesgo en Desastres y Atención de Emergencias (UCR). Coordinador del Programa ECMO (ELSO Silver Center #431) del Hospital Rafael Ángel Calderón Guardia 2015–2021. Director del Centro Internacional de Simulación Clínica, Universidad Santa Paula. Docente universitario e instructor BLS/ACLS AHA. Ponente en congresos panamericanos de medicina intensiva y emergencias."
             />
             <PresencialCard 
               delay={0.6}
@@ -704,7 +704,7 @@ const Nursing = () => {
               img="/assets/instructores/tatiana-jaramillo.jpg"
               name="MBA. Tatiana Jaramillo"
               country="COLOMBIA"
-              bio="Especialista en Enf. en Críticos. Coordinadora del Programa de ECMO de la Clínica Shaio Centro GOLD ELSO."
+              bio="ECMO Educator, Speaker y MBA Project Manager con más de 15 años de experiencia en Soporte Vital Extracorpóreo (ECLS). Diseñadora y líder del Programa Educativo ECMO de la Fundación Clínica Shaio (Centro GOLD ELSO), alineado con estándares ELSO Platinum Center of Excellence. ELSO Faculty. Ha capacitado a más de 300 profesionales de salud en Latinoamérica. MBA en Gestión de Proyectos, EUDE European Business School, Madrid."
             />
             <PresencialCard 
               delay={0.7}
