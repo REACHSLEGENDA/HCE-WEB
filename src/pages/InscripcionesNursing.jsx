@@ -726,7 +726,13 @@ export function RegistrationForm() {
       const d = params.get('d');
       if (!d) return {};
       const b64 = d.replace(/-/g, '+').replace(/_/g, '/');
-      return JSON.parse(atob(b64));
+      const binStr = atob(b64);
+      const bytes = new Uint8Array(binStr.length);
+      for (let i = 0; i < binStr.length; i++) {
+        bytes[i] = binStr.charCodeAt(i);
+      }
+      const decoded = new TextDecoder('utf-8').decode(bytes);
+      return JSON.parse(decoded);
     } catch (err) { 
       console.error('Error decoding pay data:', err);
       return {}; 
