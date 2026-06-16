@@ -203,6 +203,8 @@ const AdminDashboard = () => {
   });
   const [loadingPayments, setLoadingPayments] = useState(true);
   const [paymentsError, setPaymentsError] = useState(null);
+  const [paymentSortOrder, setPaymentSortOrder] = useState('desc'); // 'desc' | 'asc'
+  const [formSortOrder, setFormSortOrder] = useState('desc'); // 'desc' | 'asc'
 
   // Simple CSV parser that handles double quotes
   const parseCSV = (text) => {
@@ -2251,11 +2253,23 @@ const AdminDashboard = () => {
 
           {/* VIEW: PAYMENTS & FORMS */}
           {activeTab === 'payments' && (() => {
+            const gatewayCourses = courses.length > 0 ? courses.filter(c => 
+              c.title.toLowerCase().includes('sim') || 
+              c.title.toLowerCase().includes('nurs') || 
+              c.title.toLowerCase().includes('paris') ||
+              c.title.toLowerCase().includes('parís')
+            ) : [
+              { id: 'c1', title: 'ECMO Simulador Care' },
+              { id: 'c2', title: 'ECMO Nursing Care' },
+              { id: 'c3', title: 'ECMO París' }
+            ];
+
             // Filter payments based on search and filters
             const filteredPayments = stripePayments.filter(pay => {
               const matchesSearch = pay.studentName.toLowerCase().includes(paymentSearch.toLowerCase()) || 
                                     pay.studentEmail.toLowerCase().includes(paymentSearch.toLowerCase()) ||
                                     pay.id.toLowerCase().includes(paymentSearch.toLowerCase());
+              // Match course, filter key matches database courses or gateway courses
               const matchesCourse = paymentFilterCourse === 'all' || pay.courseId === paymentFilterCourse;
               
               // Date filter
@@ -2280,6 +2294,20 @@ const AdminDashboard = () => {
                                     JSON.stringify(entry.payload).toLowerCase().includes(formSearch.toLowerCase());
               const matchesType = formFilterType === 'all' || entry.formId === formFilterType;
               return matchesSearch && matchesType;
+            });
+
+            // Sort payments dynamically (de arriba a abajo / de abajo a arriba)
+            const sortedPayments = [...filteredPayments].sort((a, b) => {
+              const dateA = new Date(a.date).getTime();
+              const dateB = new Date(b.date).getTime();
+              return paymentSortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+            });
+
+            // Sort forms dynamically (de arriba a abajo / de abajo a arriba)
+            const sortedForms = [...filteredForms].sort((a, b) => {
+              const dateA = new Date(a.date).getTime();
+              const dateB = new Date(b.date).getTime();
+              return formSortOrder === 'desc' ? dateB - dateA : dateA - dateB;
             });
 
             // Calculate KPIs dynamically
@@ -2625,8 +2653,8 @@ const AdminDashboard = () => {
                 {activePaymentsSubTab === 'stripe' ? (
                   <div className="sub-section-block">
                     <div className="table-actions-header" style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
-                        <div className="search-input-wrapper" style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
+                      <div style={{ display: 'flex', gap: '12px', flex: 1, flexWrap: 'wrap' }}>
+                        <div className="search-input-wrapper" style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '300px' }}>
                           <Search size={16} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                           <input 
                             type="text" 
@@ -2645,7 +2673,7 @@ const AdminDashboard = () => {
                           onChange={(e) => setPaymentFilterCourse(e.target.value)}
                         >
                           <option value="all">Todos los Cursos</option>
-                          {courses.map(c => (
+                          {gatewayCourses.map(c => (
                             <option key={c.id} value={c.id}>{c.title}</option>
                           ))}
                         </select>
@@ -2660,15 +2688,24 @@ const AdminDashboard = () => {
                           <option value="month">Últimos 30 días</option>
                           <option value="week">Última semana</option>
                         </select>
+
+                        <button 
+                          className="btn-crm-action outlined mini" 
+                          style={{ height: '40px', padding: '0 10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                          onClick={() => setPaymentSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                          title={paymentSortOrder === 'desc' ? 'Ver de más antiguos a más recientes' : 'Ver de más recientes a más antiguos'}
+                        >
+                          {paymentSortOrder === 'desc' ? 'Orden: De arriba a abajo' : 'Orden: De abajo a arriba'}
+                        </button>
                       </div>
 
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <label className="icon-action-btn secondary" style={{ cursor: 'pointer', margin: 0, height: '40px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <Upload size={16} /> Importar JSON/CSV
+                        <label className="btn-crm-action outlined mini" style={{ cursor: 'pointer', margin: 0, height: '40px' }}>
+                          <Upload size={14} /> Importar JSON/CSV
                           <input type="file" accept=".json,.csv" onChange={handleImportPayments} style={{ display: 'none' }} />
                         </label>
-                        <button className="icon-action-btn primary" onClick={handleExportPayments}>
-                          <FileSpreadsheet size={16} /> Exportar Excel/CSV
+                        <button className="btn-crm-action outlined mini" style={{ height: '40px' }} onClick={handleExportPayments}>
+                          <FileSpreadsheet size={14} /> Exportar Excel/CSV
                         </button>
                       </div>
                     </div>
@@ -2688,19 +2725,24 @@ const AdminDashboard = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredPayments.length === 0 ? (
+                          {sortedPayments.length === 0 ? (
                             <tr>
                               <td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>
                                 No se encontraron transacciones con los filtros seleccionados.
                               </td>
                             </tr>
                           ) : (
-                            filteredPayments.map((pay) => (
+                            sortedPayments.map((pay) => (
                               <tr key={pay.id}>
                                 <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{pay.id}</td>
                                 <td>
                                   <div style={{ fontWeight: '600', color: 'var(--text-dark)' }}>{pay.studentName}</div>
                                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{pay.studentEmail}</div>
+                                  {pay.promoCode && (
+                                    <span className="status-badge" style={{ marginTop: '4px', fontSize: '0.65rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'inline-flex', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
+                                      Cupón: {pay.promoCode}
+                                    </span>
+                                  )}
                                 </td>
                                 <td style={{ fontWeight: '500', color: 'var(--text-dark)' }}>{pay.courseName}</td>
                                 <td style={{ fontWeight: '700', color: '#10b981' }}>${pay.amount}.00 {pay.currency}</td>
@@ -2721,8 +2763,8 @@ const AdminDashboard = () => {
                 ) : (
                   <div className="sub-section-block">
                     <div className="table-actions-header" style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
-                        <div className="search-input-wrapper" style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
+                      <div style={{ display: 'flex', gap: '12px', flex: 1, flexWrap: 'wrap' }}>
+                        <div className="search-input-wrapper" style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '300px' }}>
                           <Search size={16} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                           <input 
                             type="text" 
@@ -2747,15 +2789,24 @@ const AdminDashboard = () => {
                           <option value="mreroozv">Solicitud de Facturación</option>
                           <option value="xnjlvzdq">Retroalimentación y Dudas</option>
                         </select>
+
+                        <button 
+                          className="btn-crm-action outlined mini" 
+                          style={{ height: '40px', padding: '0 10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                          onClick={() => setFormSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                          title={formSortOrder === 'desc' ? 'Ver de más antiguos a más recientes' : 'Ver de más recientes a más antiguos'}
+                        >
+                          {formSortOrder === 'desc' ? 'Orden: De arriba a abajo' : 'Orden: De abajo a arriba'}
+                        </button>
                       </div>
 
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <label className="icon-action-btn secondary" style={{ cursor: 'pointer', margin: 0, height: '40px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <Upload size={16} /> Importar JSON/CSV
+                        <label className="btn-crm-action outlined mini" style={{ cursor: 'pointer', margin: 0, height: '40px' }}>
+                          <Upload size={14} /> Importar JSON/CSV
                           <input type="file" accept=".json,.csv" onChange={handleImportForms} style={{ display: 'none' }} />
                         </label>
-                        <button className="icon-action-btn primary" onClick={handleExportForms}>
-                          <FileSpreadsheet size={16} /> Exportar Excel/CSV
+                        <button className="btn-crm-action outlined mini" style={{ height: '40px' }} onClick={handleExportForms}>
+                          <FileSpreadsheet size={14} /> Exportar Excel/CSV
                         </button>
                       </div>
                     </div>
@@ -2774,14 +2825,14 @@ const AdminDashboard = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredForms.length === 0 ? (
+                          {sortedForms.length === 0 ? (
                             <tr>
                               <td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>
                                 No se encontraron envíos de formularios.
                               </td>
                             </tr>
                           ) : (
-                            filteredForms.map((entry) => (
+                            sortedForms.map((entry) => (
                               <tr key={entry.id}>
                                 <td>
                                   <div style={{ fontWeight: '700', color: 'var(--text-dark)' }}>{entry.formName}</div>

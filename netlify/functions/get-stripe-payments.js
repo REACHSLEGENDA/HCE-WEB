@@ -16,10 +16,12 @@ export const handler = async (event) => {
 
   try {
     const stripe = new Stripe(stripeSecret);
+    const mayFirst2026 = Math.floor(new Date('2026-05-01T00:00:00Z').getTime() / 1000);
     
-    // Fetch payment intents representing transactions
+    // Fetch payment intents representing transactions from May 2026 onwards
     const paymentIntents = await stripe.paymentIntents.list({
       limit: 100,
+      created: { gte: mayFirst2026 }
     });
 
     const payments = paymentIntents.data
@@ -36,6 +38,7 @@ export const handler = async (event) => {
         
         const courseName = pi.metadata?.curso || pi.description || 'Inscripción HCE';
         const courseId = pi.metadata?.course_id || 'general';
+        const promoCode = pi.metadata?.promo_code || pi.metadata?.coupon || pi.metadata?.code || '';
         
         return {
           id: pi.id,
@@ -48,7 +51,8 @@ export const handler = async (event) => {
           currency: pi.currency.toUpperCase(),
           status: pi.status,
           date: new Date(pi.created * 1000).toISOString(),
-          method
+          method,
+          promoCode
         };
       });
 
