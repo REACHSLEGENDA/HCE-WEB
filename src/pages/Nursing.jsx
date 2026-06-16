@@ -331,6 +331,43 @@ const Nursing = () => {
         </div>
       </section>
 
+      {/* Sección Temario PDF */}
+      <section className="n-sec-padding n-syllabus-section">
+        <div className="hce-container">
+          <div className="n-sec-header center">
+            <span className="n-sec-badge">PLAN DE ESTUDIOS</span>
+            <h2 className="n-sec-title">Temario y Contenido Detallado</h2>
+            <p className="n-sec-subtitle">Consulte el programa completo de clases, módulos y contenidos del curso ECMO Nursing Care.</p>
+          </div>
+
+          <div className="n-syllabus-container">
+            <div className="n-syllabus-viewer-wrapper">
+              <iframe
+                src="/Programa_ECMO_Nursing_Virtual_clases_.pdf#toolbar=1"
+                title="Temario ECMO Nursing Care"
+                className="n-syllabus-iframe"
+                width="100%"
+                height="600px"
+              />
+            </div>
+            
+            <div className="n-syllabus-download-box">
+              <div className="n-syllabus-info">
+                <h3>¿Prefiere descargarlo?</h3>
+                <p>Descargue el documento PDF oficial con la programación detallada de clases, fechas de tutorías y contenidos prácticos.</p>
+              </div>
+              <a 
+                href="/Programa_ECMO_Nursing_Virtual_clases_.pdf" 
+                download="Programa_ECMO_Nursing_Virtual_clases_.pdf"
+                className="n-btn n-btn-secondary"
+              >
+                <Download size={18} /> Descargar PDF Completo
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 5. Recursos y equipamiento */}
       <section className="n-sec-padding n-equipment-section">
         <div className="hce-container">
@@ -544,7 +581,7 @@ const Nursing = () => {
               <p>Formación de alta especialidad en ECMO, liderada por enfermería, para enfermería.</p>
               <div className="n-final-actions">
                 <button className="btn-buy-final" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Reserva tu lugar <ArrowRight size={18} /></button>
-                <button className="btn-info-final" onClick={() => window.open('/assets/programa_ecmo_nursing_2026.pdf', '_blank')}>Ver Plan de Estudios</button>
+                <button className="btn-info-final" onClick={() => window.open('/Programa_ECMO_Nursing_Virtual_clases_.pdf', '_blank')}>Ver Plan de Estudios</button>
               </div>
             </div>
           </div>

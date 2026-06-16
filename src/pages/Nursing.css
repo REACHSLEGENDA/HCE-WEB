@@ -1389,3 +1389,89 @@
   }
 }
 
+/* Syllabus PDF Section */
+.n-syllabus-section {
+  background-color: var(--hce-off);
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.n-syllabus-container {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.n-syllabus-viewer-wrapper {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(24, 58, 103, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.n-syllabus-iframe {
+  display: block;
+  border: none;
+  background: #ffffff;
+}
+
+.n-syllabus-download-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  border-left: 5px solid var(--hce-red);
+  box-shadow: 0 10px 25px rgba(24, 58, 103, 0.04);
+  gap: 1.5rem;
+}
+
+.n-syllabus-info h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--hce-navy);
+  margin: 0 0 0.5rem 0;
+}
+
+.n-syllabus-info p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--hce-muted);
+  margin: 0;
+}
+
+.n-btn-secondary {
+  background: var(--hce-navy);
+  color: var(--hce-white) !important;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.n-btn-secondary:hover {
+  background: var(--hce-navy-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(24, 58, 103, 0.25);
+}
+
+@media (max-width: 768px) {
+  .n-syllabus-download-box {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  .n-btn-secondary {
+    justify-content: center;
+  }
+}
+
+
