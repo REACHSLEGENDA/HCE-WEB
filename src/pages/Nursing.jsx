@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send } from 'lucide-react';
@@ -66,6 +66,28 @@ const Nursing = () => {
 
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const targetDate = new Date('2026-07-20T00:00:00');
+    const updateTimer = () => {
+      const difference = targetDate.getTime() - new Date().getTime();
+      if (difference <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
+      setTimeLeft({ days, hours, minutes, seconds });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const virtualFaculty = [
     { src: "/assets/instructores/p-carlosm.jpeg", name: "Perf. Carlos García Camacho", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Senior" },
     { src: "/assets/instructores/p-juanm.jpeg", name: "Perf. Juan Blanco Morillo", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Coord. Terapias Extracorpóreas" },
@@ -97,13 +119,37 @@ const Nursing = () => {
         <div className="n-hero-overlay" />
         <div className="n-hero-banner-wrap hce-container">
           <div className="n-hero-text">
+            <span style={{ color: '#e31837', fontWeight: '800', letterSpacing: '2px', marginBottom: '0.8rem', fontSize: '1.1rem', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif" }}>
+              INICIAMOS EL 20 DE JULIO DE 2026
+            </span>
             <span className="section-badge">PROGRAMA DE ALTA ESPECIALIDAD</span>
             <h1 className="n-hero-title-text">
-              ¡Conviértete en un especialista en <span className="red-text">ECMO!</span>
+              Entrénate en el Cuidado de Enfermería en ECMO
             </h1>
             <p className="n-hero-subtitle-text">
-              Certifícate con la más alta tecnología de talla internacional.
+              Entrenamiento diseñado e impartido 100% por enfermería para enfermería.
             </p>
+
+            {/* Cronómetro de inicio */}
+            <div className="n-countdown-container" style={{ display: 'flex', gap: '15px', marginBottom: '2.5rem' }}>
+              <div className="n-countdown-item" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px', padding: '10px 15px', minWidth: '75px', textAlign: 'center' }}>
+                <div className="n-countdown-val" style={{ fontSize: '1.8rem', fontWeight: '900', color: '#ffffff', fontFamily: 'Outfit', lineHeight: '1.2' }}>{timeLeft.days}</div>
+                <div className="n-countdown-lbl" style={{ fontSize: '0.65rem', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Días</div>
+              </div>
+              <div className="n-countdown-item" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px', padding: '10px 15px', minWidth: '75px', textAlign: 'center' }}>
+                <div className="n-countdown-val" style={{ fontSize: '1.8rem', fontWeight: '900', color: '#ffffff', fontFamily: 'Outfit', lineHeight: '1.2' }}>{timeLeft.hours}</div>
+                <div className="n-countdown-lbl" style={{ fontSize: '0.65rem', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Horas</div>
+              </div>
+              <div className="n-countdown-item" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px', padding: '10px 15px', minWidth: '75px', textAlign: 'center' }}>
+                <div className="n-countdown-val" style={{ fontSize: '1.8rem', fontWeight: '900', color: '#ffffff', fontFamily: 'Outfit', lineHeight: '1.2' }}>{timeLeft.minutes}</div>
+                <div className="n-countdown-lbl" style={{ fontSize: '0.65rem', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Minutos</div>
+              </div>
+              <div className="n-countdown-item" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px', padding: '10px 15px', minWidth: '75px', textAlign: 'center' }}>
+                <div className="n-countdown-val" style={{ fontSize: '1.8rem', fontWeight: '900', color: '#e31837', fontFamily: 'Outfit', lineHeight: '1.2' }}>{timeLeft.seconds}</div>
+                <div className="n-countdown-lbl" style={{ fontSize: '0.65rem', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Segundos</div>
+              </div>
+            </div>
+
             <button 
               className="n-hero-cta-btn" 
               onClick={() => navigate('/inscripciones-ecmo-nursing')}
@@ -133,8 +179,8 @@ const Nursing = () => {
               </div>
               <div className="n-intro-sidebar">
                 <div className="n-intro-card-box">
-                  <h4>Certificación HCE</h4>
-                  <p>Asegura tu cupo en la certificación líder en cuidados críticos ECMO. Cupos limitados por cohorte.</p>
+                  <h4>Entrenamiento HCE</h4>
+                  <p>Asegura tu lugar en el entrenamiento líder en el cuidado de enfermería en ECMO. Cupos limitados.</p>
                   <button className="n-btn n-btn-brand" onClick={() => navigate('/inscripciones-ecmo-nursing')}>
                     Inscríbete Ahora <ArrowRight size={18} />
                   </button>
