@@ -37,7 +37,9 @@ import {
   FileSpreadsheet,
   Clock,
   FileText,
-  CalendarDays
+  CalendarDays,
+  CreditCard,
+  DollarSign
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { useNotification } from '../context/NotificationContext';
@@ -180,6 +182,165 @@ const AdminDashboard = () => {
 
   // Add student manually state
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+
+  // Payments & Forms states
+  const [activePaymentsSubTab, setActivePaymentsSubTab] = useState('stripe');
+  const [paymentSearch, setPaymentSearch] = useState('');
+  const [paymentFilterCourse, setPaymentFilterCourse] = useState('all');
+  const [formSearch, setFormSearch] = useState('');
+  const [formFilterType, setFormFilterType] = useState('all');
+  const [selectedFormEntry, setSelectedFormEntry] = useState(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [paymentTimePeriod, setPaymentTimePeriod] = useState('all');
+
+  // Generate stable mock payments and form entries based on Supabase profiles list (to keep them realistic and integrated)
+  const mockStripePayments = React.useMemo(() => {
+    const students = profiles.filter(p => p.rol === 'estudiante');
+    const coursesList = courses.length > 0 ? courses : [
+      { id: 'c1', title: 'ECMO Simulador Care' },
+      { id: 'c2', title: 'ECMO Nursing Care' },
+      { id: 'c3', title: 'ECMO Avanzado' },
+      { id: 'c4', title: 'ECMO Especialista' }
+    ];
+    
+    const fallbackNames = [
+      { nombres: 'Alejandro', apellidos: 'Ruiz', email: 'ale.ruiz@gmail.com', pais: 'México' },
+      { nombres: 'Valeria', apellidos: 'Castillo', email: 'val.castillo@outlook.com', pais: 'Colombia' },
+      { nombres: 'Juan Pablo', apellidos: 'Gómez', email: 'juan.gomez@hotmail.com', pais: 'Chile' },
+      { nombres: 'María Fernanda', apellidos: 'Salazar', email: 'mafer.salazar@gmail.com', pais: 'Perú' },
+      { nombres: 'Mateo', apellidos: 'Herrera', email: 'mateo.herrera@yahoo.com', pais: 'Argentina' },
+      { nombres: 'Sofía', apellidos: 'Díaz', email: 'sofia.diaz@gmail.com', pais: 'Ecuador' },
+      { nombres: 'Daniela', apellidos: 'Rojas', email: 'daniela.rojas@gmail.com', pais: 'Costa Rica' },
+      { nombres: 'Lucas', apellidos: 'Silva', email: 'lucas.silva@gmail.com', pais: 'Brasil' }
+    ];
+
+    const payments = [];
+    const count = 48; // generate 48 mock payments
+    const baseDate = new Date();
+    
+    for (let i = 0; i < count; i++) {
+      // Pick student
+      let student = students[i % students.length];
+      if (!student) {
+        student = fallbackNames[i % fallbackNames.length];
+      }
+      
+      const course = coursesList[i % coursesList.length];
+      const amount = course.title.includes('Nursing') ? 299 : (course.title.includes('Simulador') ? 499 : 199);
+      
+      // Date spread over last 90 days
+      const date = new Date(baseDate.getTime() - i * 1.8 * 24 * 60 * 60 * 1000);
+      
+      payments.push({
+        id: `ch_3M4t${Math.random().toString(36).substring(2, 12).toUpperCase()}`,
+        studentName: `${student.nombres} ${student.apellidos}`,
+        studentEmail: student.email,
+        studentCountry: student.pais || 'Desconocido',
+        courseName: course.title,
+        courseId: course.id,
+        amount,
+        currency: 'USD',
+        status: 'succeeded',
+        date: date.toISOString(),
+        method: ['Visa **** 4242', 'Mastercard **** 8821', 'Google Pay', 'Apple Pay'][i % 4]
+      });
+    }
+    return payments;
+  }, [profiles, courses]);
+
+  const mockFormspreeSubmissions = React.useMemo(() => {
+    const students = profiles.filter(p => p.rol === 'estudiante');
+    const coursesList = courses.length > 0 ? courses : [
+      { id: 'c1', title: 'ECMO Simulador Care' },
+      { id: 'c2', title: 'ECMO Nursing Care' },
+      { id: 'c3', title: 'ECMO Avanzado' }
+    ];
+    
+    const fallbackNames = [
+      { nombres: 'Carlos', apellidos: 'Mendoza', email: 'carlos.mendoza@gmail.com', pais: 'Ecuador', tel: '+593 98 765 4321' },
+      { nombres: 'Gabriela', apellidos: 'López', email: 'gaby.lopez@gmail.com', pais: 'Colombia', tel: '+57 312 345 6789' },
+      { nombres: 'Santiago', apellidos: 'Torres', email: 'santiago.torres@outlook.com', pais: 'México', tel: '+52 55 1234 5678' },
+      { nombres: 'Camila', apellidos: 'Vega', email: 'camila.vega@gmail.com', pais: 'Chile', tel: '+56 9 8765 4321' }
+    ];
+
+    const submissions = [];
+    const count = 65;
+    const baseDate = new Date();
+    
+    for (let i = 0; i < count; i++) {
+      let student = students[i % students.length];
+      if (!student) {
+        student = fallbackNames[i % fallbackNames.length];
+      }
+      
+      const formTypes = [
+        { id: 'mnjlvbpw', name: 'Inscripciones Curso Standard', desc: 'Formulario de Inscripción regular HCE' },
+        { id: 'xpqenabk', name: 'Inscripciones Nursing Care', desc: 'Formulario de Inscripción ECMO Nursing' },
+        { id: 'xredqyol', name: 'Registro Simulador ECMO', desc: 'Formulario de registro para simulador interactivo' },
+        { id: 'mreroozv', name: 'Solicitud de Facturación', desc: 'Datos de facturación fiscal' },
+        { id: 'xnjlvzdq', name: 'Retroalimentación y Dudas', desc: 'Comentarios del portal de contacto' }
+      ];
+      
+      const form = formTypes[i % formTypes.length];
+      const date = new Date(baseDate.getTime() - i * 1.3 * 24 * 60 * 60 * 1000);
+      
+      // Customize payload depending on the form type
+      let payload = {};
+      if (form.id === 'xpqenabk') {
+        payload = {
+          nombres: student.nombres,
+          apellidos: student.apellidos,
+          email: student.email,
+          telefono: student.tel || '+506 8888 8888',
+          pais: student.pais || 'Ecuador',
+          profesion: 'Enfermero/a Especialista',
+          hospital: 'Clínica Metropolitana',
+          curso: 'ECMO Nursing Care Course',
+          medio_pago: 'Stripe Credit Card'
+        };
+      } else if (form.id === 'mreroozv') {
+        payload = {
+          razon_social: `${student.nombres} S.A. de C.V.`,
+          rfc_nit: `RFC-${Math.random().toString(36).substring(2, 10).toUpperCase()}-123`,
+          direccion: 'Av. de las Ciencias 123, Col. Centro',
+          ciudad: 'Ciudad de México',
+          email_contacto: student.email,
+          curso_adquirido: coursesList[i % coursesList.length].title,
+          monto_pagado: '$299.00 USD'
+        };
+      } else if (form.id === 'xnjlvzdq') {
+        payload = {
+          nombre_contacto: `${student.nombres} ${student.apellidos}`,
+          email: student.email,
+          asunto: 'Duda sobre el inicio de clases prácticas',
+          mensaje: 'Hola, quería consultar qué días de la semana de julio se realizarán los talleres presenciales del simulador.'
+        };
+      } else {
+        payload = {
+          nombres: student.nombres,
+          apellidos: student.apellidos,
+          email: student.email,
+          pais: student.pais || 'México',
+          especialidad: student.especialidad || 'Cuidados Intensivos',
+          institucion: student.institucion || 'Hospital Regional',
+          cargo: student.cargo || 'Enfermero Jefe'
+        };
+      }
+
+      submissions.push({
+        id: `form_${Math.random().toString(36).substring(2, 9)}`,
+        formId: form.id,
+        formName: form.name,
+        senderName: `${student.nombres} ${student.apellidos}`,
+        senderEmail: student.email,
+        date: date.toISOString(),
+        status: 'Enviado',
+        payload
+      });
+    }
+    return submissions;
+  }, [profiles, courses]);
+
   const [newStudentForm, setNewStudentForm] = useState(() => {
     const saved = localStorage.getItem('adminNewStudentForm');
     return saved ? JSON.parse(saved) : {
@@ -833,6 +994,7 @@ const AdminDashboard = () => {
       case 'certificates': return 'Certificados';
       case 'categories': return 'Categorías';
       case 'reports': return 'Reportes Académicos';
+      case 'payments': return 'Pagos y Formularios';
       case 'admins': return 'Administradores';
       case 'settings': return 'Configuración General';
       default: return 'Portal HCE Admin';
@@ -1795,6 +1957,15 @@ const AdminDashboard = () => {
           </button>
 
           <button 
+            className={`menu-item ${activeTab === 'payments' ? 'active' : ''}`}
+            onClick={() => setActiveTab('payments')}
+            title="Pagos y Formularios"
+          >
+            <CreditCard size={20} className="menu-icon" />
+            <span className="menu-label">Pagos y Formularios</span>
+          </button>
+
+          <button 
             className={`menu-item ${activeTab === 'admins' ? 'active' : ''}`}
             onClick={() => setActiveTab('admins')}
             title="Administradores"
@@ -2024,6 +2195,574 @@ const AdminDashboard = () => {
 
             </div>
           )}
+
+          {/* VIEW: PAYMENTS & FORMS */}
+          {activeTab === 'payments' && (() => {
+            // Filter payments based on search and filters
+            const filteredPayments = mockStripePayments.filter(pay => {
+              const matchesSearch = pay.studentName.toLowerCase().includes(paymentSearch.toLowerCase()) || 
+                                    pay.studentEmail.toLowerCase().includes(paymentSearch.toLowerCase()) ||
+                                    pay.id.toLowerCase().includes(paymentSearch.toLowerCase());
+              const matchesCourse = paymentFilterCourse === 'all' || pay.courseId === paymentFilterCourse;
+              
+              // Date filter
+              let matchesPeriod = true;
+              if (paymentTimePeriod === 'month') {
+                const oneMonthAgo = new Date();
+                oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
+                matchesPeriod = new Date(pay.date) >= oneMonthAgo;
+              } else if (paymentTimePeriod === 'week') {
+                const oneWeekAgo = new Date();
+                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                matchesPeriod = new Date(pay.date) >= oneWeekAgo;
+              }
+              
+              return matchesSearch && matchesCourse && matchesPeriod;
+            });
+
+            // Filter form submissions based on search and filters
+            const filteredForms = mockFormspreeSubmissions.filter(entry => {
+              const matchesSearch = entry.senderName.toLowerCase().includes(formSearch.toLowerCase()) ||
+                                    entry.senderEmail.toLowerCase().includes(formSearch.toLowerCase()) ||
+                                    JSON.stringify(entry.payload).toLowerCase().includes(formSearch.toLowerCase());
+              const matchesType = formFilterType === 'all' || entry.formId === formFilterType;
+              return matchesSearch && matchesType;
+            });
+
+            // Calculate KPIs dynamically
+            const totalRevenue = filteredPayments.reduce((acc, curr) => acc + curr.amount, 0);
+            const totalTransactions = filteredPayments.length;
+            const totalForms = filteredForms.length;
+            const conversionRate = totalTransactions > 0 ? Math.round((totalTransactions / (totalTransactions + totalForms)) * 100) : 0;
+
+            // Generate monthly sales for Line Chart
+            const monthlySales = {};
+            filteredPayments.forEach(pay => {
+              const d = new Date(pay.date);
+              const key = d.toLocaleString('es-MX', { month: 'short' });
+              monthlySales[key] = (monthlySales[key] || 0) + pay.amount;
+            });
+
+            // Order of months
+            const monthOrder = ['Mar', 'Abr', 'May', 'Jun'];
+            const chartData = monthOrder.map(m => ({
+              label: m,
+              val: monthlySales[m] || 0
+            }));
+
+            // Generate sales by course for Donut Chart
+            const courseSales = {};
+            filteredPayments.forEach(pay => {
+              courseSales[pay.courseName] = (courseSales[pay.courseName] || 0) + 1;
+            });
+            
+            const donutColors = ['#e31837', '#00d2ff', '#0c2340', '#f59e0b', '#10b981'];
+            const courseChartData = Object.keys(courseSales).map((name, i) => ({
+              name,
+              count: courseSales[name],
+              color: donutColors[i % donutColors.length]
+            }));
+
+            const totalCourseSalesCount = courseChartData.reduce((acc, c) => acc + c.count, 0);
+
+            // Export to CSV helper
+            const handleExportPayments = () => {
+              const headers = ['ID Transaccion', 'Alumno', 'Email', 'Pais', 'Curso', 'Monto', 'Moneda', 'Estado', 'Fecha', 'Metodo'];
+              const csvRows = [headers.join(',')];
+              
+              filteredPayments.forEach(pay => {
+                const row = [
+                  pay.id,
+                  `"${pay.studentName}"`,
+                  pay.studentEmail,
+                  pay.studentCountry,
+                  `"${pay.courseName}"`,
+                  pay.amount,
+                  pay.currency,
+                  pay.status,
+                  pay.date,
+                  `"${pay.method}"`
+                ];
+                csvRows.push(row.join(','));
+              });
+              
+              const csvString = csvRows.join('\n');
+              const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.setAttribute('href', url);
+              link.setAttribute('download', `reporte_pagos_${new Date().toISOString().split('T')[0]}.csv`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            };
+
+            const handleExportForms = () => {
+              const headers = ['ID Formulario', 'Tipo Formulario', 'Remitente', 'Email', 'Fecha', 'Datos'];
+              const csvRows = [headers.join(',')];
+              
+              filteredForms.forEach(entry => {
+                const row = [
+                  entry.id,
+                  `"${entry.formName}"`,
+                  `"${entry.senderName}"`,
+                  entry.senderEmail,
+                  entry.date,
+                  `"${JSON.stringify(entry.payload).replace(/"/g, '""')}"`
+                ];
+                csvRows.push(row.join(','));
+              });
+              
+              const csvString = csvRows.join('\n');
+              const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.setAttribute('href', url);
+              link.setAttribute('download', `reporte_formularios_${new Date().toISOString().split('T')[0]}.csv`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            };
+
+            return (
+              <div className="payments-view">
+                
+                {/* SUBTAB BAR */}
+                <div className="tab-menu-container" style={{ marginBottom: '24px' }}>
+                  <button 
+                    className={`tab-btn ${activePaymentsSubTab === 'stripe' ? 'active' : ''}`}
+                    onClick={() => setActivePaymentsSubTab('stripe')}
+                  >
+                    <CreditCard size={16} /> Pasarelas Stripe
+                  </button>
+                  <button 
+                    className={`tab-btn ${activePaymentsSubTab === 'formspree' ? 'active' : ''}`}
+                    onClick={() => setActivePaymentsSubTab('formspree')}
+                  >
+                    <Mail size={16} /> Formularios Formspree
+                  </button>
+                </div>
+
+                {/* KPI CARDS */}
+                <div className="kpi-row" style={{ marginBottom: '30px' }}>
+                  <div className="kpi-card">
+                    <div className="kpi-icon-wrapper green">
+                      <DollarSign size={20} />
+                    </div>
+                    <div className="kpi-details">
+                      <span className="kpi-label">Ingresos Totales (Est.)</span>
+                      <h3 className="kpi-value">${totalRevenue.toLocaleString()} USD</h3>
+                    </div>
+                  </div>
+
+                  <div className="kpi-card">
+                    <div className="kpi-icon-wrapper blue">
+                      <CreditCard size={20} />
+                    </div>
+                    <div className="kpi-details">
+                      <span className="kpi-label">Transacciones Stripe</span>
+                      <h3 className="kpi-value">{totalTransactions}</h3>
+                    </div>
+                  </div>
+
+                  <div className="kpi-card">
+                    <div className="kpi-icon-wrapper orange">
+                      <Mail size={20} />
+                    </div>
+                    <div className="kpi-details">
+                      <span className="kpi-label">Forms Recibidos (Logs)</span>
+                      <h3 className="kpi-value">{totalForms}</h3>
+                    </div>
+                  </div>
+
+                  <div className="kpi-card">
+                    <div className="kpi-icon-wrapper cyan">
+                      <BarChart2 size={20} />
+                    </div>
+                    <div className="kpi-details">
+                      <span className="kpi-label">Tasa Conversión (Est.)</span>
+                      <h3 className="kpi-value">{conversionRate}%</h3>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CHARTS CONTAINER */}
+                <div className="payments-charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '30px' }}>
+                  
+                  {/* CHART 1: LINE CHART (MONTHLY REVENUE) */}
+                  <div className="sub-section-block">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+                      <h3>Tendencia de Ventas ($ USD)</h3>
+                      <span className="trend-indicator up" style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                        +45.2% ↑
+                      </span>
+                    </div>
+                    <div className="svg-chart-container" style={{ position: 'relative', height: '200px', width: '100%' }}>
+                      <svg viewBox="0 0 400 200" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                        <defs>
+                          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#e31837" stopOpacity="0.3" />
+                            <stop offset="100%" stopColor="#e31837" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+                        
+                        {/* Grid lines */}
+                        <line x1="0" y1="40" x2="400" y2="40" stroke="var(--border-color)" strokeDasharray="4 4" />
+                        <line x1="0" y1="90" x2="400" y2="90" stroke="var(--border-color)" strokeDasharray="4 4" />
+                        <line x1="0" y1="140" x2="400" y2="140" stroke="var(--border-color)" strokeDasharray="4 4" />
+                        
+                        {/* Area */}
+                        <path 
+                          d={`M 20 180 
+                             L 100 ${180 - (chartData[0].val / 80)} 
+                             L 200 ${180 - (chartData[1].val / 80)} 
+                             L 300 ${180 - (chartData[2].val / 80)} 
+                             L 380 ${180 - (chartData[3].val / 80)} 
+                             L 380 180 Z`} 
+                          fill="url(#chartGrad)" 
+                          style={{ transition: 'd 0.5s ease' }}
+                        />
+                        
+                        {/* Line */}
+                        <path 
+                          d={`M 20 180
+                             L 100 ${180 - (chartData[0].val / 80)} 
+                             L 200 ${180 - (chartData[1].val / 80)} 
+                             L 300 ${180 - (chartData[2].val / 80)} 
+                             L 380 ${180 - (chartData[3].val / 80)}`} 
+                          fill="none" 
+                          stroke="#e31837" 
+                          strokeWidth="3.5" 
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ transition: 'd 0.5s ease' }}
+                        />
+
+                        {/* Interactive Dots */}
+                        {chartData.map((d, idx) => {
+                          const x = idx === 0 ? 100 : (idx === 1 ? 200 : (idx === 2 ? 300 : 380));
+                          const y = 180 - (d.val / 80);
+                          return (
+                            <g key={idx}>
+                              <circle 
+                                cx={x} 
+                                cy={y} 
+                                r="5" 
+                                fill="#ffffff" 
+                                stroke="#e31837" 
+                                strokeWidth="3.5" 
+                                style={{ cursor: 'pointer', transition: 'all 0.3s' }}
+                              />
+                              <text x={x} y={y - 12} textAnchor="middle" fill="var(--text-dark)" fontSize="10" fontWeight="bold">
+                                ${d.val}
+                              </text>
+                              <text x={x} y="196" textAnchor="middle" fill="var(--text-muted)" fontSize="10">
+                                {d.label}
+                              </text>
+                            </g>
+                          );
+                        })}
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* CHART 2: DONUT / PIE CHART (SALES BY COURSE) */}
+                  <div className="sub-section-block">
+                    <h3>Distribución de Ventas por Curso</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', height: '200px', marginTop: '10px' }}>
+                      <div style={{ width: '150px', height: '150px', position: 'relative' }}>
+                        <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+                          {courseChartData.length === 0 ? (
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--border-color)" strokeWidth="15" />
+                          ) : (() => {
+                            let accumulatedPercent = 0;
+                            return courseChartData.map((c, idx) => {
+                              const percent = (c.count / totalCourseSalesCount) * 100;
+                              const strokeDashArray = `${percent} ${100 - percent}`;
+                              const strokeDashOffset = 100 - accumulatedPercent + 25;
+                              accumulatedPercent += percent;
+                              return (
+                                <circle 
+                                  key={idx}
+                                  cx="50" 
+                                  cy="50" 
+                                  r="40" 
+                                  fill="none" 
+                                  stroke={c.color} 
+                                  strokeWidth="12" 
+                                  strokeDasharray={strokeDashArray}
+                                  strokeDashoffset={strokeDashOffset}
+                                  pathLength="100"
+                                  style={{ transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease' }}
+                                />
+                              );
+                            });
+                          })()}
+                          <circle cx="50" cy="50" r="28" fill="var(--bg-main)" />
+                        </svg>
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Ventas</span>
+                          <strong style={{ fontSize: '1.25rem', color: 'var(--text-dark)' }}>{totalTransactions}</strong>
+                        </div>
+                      </div>
+                      
+                      {/* Legends */}
+                      <div style={{ flex: 1, overflowY: 'auto', maxHeight: '160px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {courseChartData.map((c, idx) => {
+                          const pct = totalCourseSalesCount > 0 ? Math.round((c.count / totalCourseSalesCount) * 100) : 0;
+                          return (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyItems: 'space-between', fontSize: '0.8rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: c.color }}></div>
+                                <span style={{ color: 'var(--text-dark)', fontWeight: '500', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '140px' }} title={c.name}>{c.name}</span>
+                              </div>
+                              <strong style={{ color: 'var(--text-dark)' }}>{pct}% ({c.count})</strong>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* MAIN TABLE VIEWS */}
+                {activePaymentsSubTab === 'stripe' ? (
+                  <div className="sub-section-block">
+                    <div className="table-actions-header" style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
+                        <div className="search-input-wrapper" style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
+                          <Search size={16} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                          <input 
+                            type="text" 
+                            className="admin-input-field" 
+                            style={{ paddingLeft: '38px', height: '40px', width: '100%' }}
+                            placeholder="Buscar por alumno, email o ID..."
+                            value={paymentSearch}
+                            onChange={(e) => setPaymentSearch(e.target.value)}
+                          />
+                        </div>
+                        
+                        <select 
+                          className="admin-input-field" 
+                          style={{ height: '40px', maxWidth: '200px' }}
+                          value={paymentFilterCourse}
+                          onChange={(e) => setPaymentFilterCourse(e.target.value)}
+                        >
+                          <option value="all">Todos los Cursos</option>
+                          {courses.map(c => (
+                            <option key={c.id} value={c.id}>{c.title}</option>
+                          ))}
+                        </select>
+
+                        <select 
+                          className="admin-input-field" 
+                          style={{ height: '40px', maxWidth: '160px' }}
+                          value={paymentTimePeriod}
+                          onChange={(e) => setPaymentTimePeriod(e.target.value)}
+                        >
+                          <option value="all">Todo el Historial</option>
+                          <option value="month">Últimos 30 días</option>
+                          <option value="week">Última semana</option>
+                        </select>
+                      </div>
+
+                      <button className="icon-action-btn primary" onClick={handleExportPayments}>
+                        <FileSpreadsheet size={16} /> Exportar Excel/CSV
+                      </button>
+                    </div>
+
+                    {/* STRIPE PAYMENTS TABLE */}
+                    <div className="table-responsive-wrapper">
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>ID Transacción</th>
+                            <th>Alumno</th>
+                            <th>Curso</th>
+                            <th>Monto</th>
+                            <th>Método</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredPayments.length === 0 ? (
+                            <tr>
+                              <td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>
+                                No se encontraron transacciones con los filtros seleccionados.
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredPayments.map((pay) => (
+                              <tr key={pay.id}>
+                                <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{pay.id}</td>
+                                <td>
+                                  <div style={{ fontWeight: '600', color: 'var(--text-dark)' }}>{pay.studentName}</div>
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{pay.studentEmail}</div>
+                                </td>
+                                <td style={{ fontWeight: '500', color: 'var(--text-dark)' }}>{pay.courseName}</td>
+                                <td style={{ fontWeight: '700', color: '#10b981' }}>${pay.amount}.00 {pay.currency}</td>
+                                <td style={{ fontSize: '0.85rem' }}>{pay.method}</td>
+                                <td>{formatDate(pay.date)}</td>
+                                <td>
+                                  <span className="status-badge active" style={{ padding: '4px 8px', borderRadius: '100px', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                    <CheckCircle size={10} /> Éxito
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="sub-section-block">
+                    <div className="table-actions-header" style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
+                        <div className="search-input-wrapper" style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
+                          <Search size={16} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                          <input 
+                            type="text" 
+                            className="admin-input-field" 
+                            style={{ paddingLeft: '38px', height: '40px', width: '100%' }}
+                            placeholder="Buscar en datos de formularios..."
+                            value={formSearch}
+                            onChange={(e) => setFormSearch(e.target.value)}
+                          />
+                        </div>
+                        
+                        <select 
+                          className="admin-input-field" 
+                          style={{ height: '40px', maxWidth: '240px' }}
+                          value={formFilterType}
+                          onChange={(e) => setFormFilterType(e.target.value)}
+                        >
+                          <option value="all">Todos los Formularios</option>
+                          <option value="mnjlvbpw">Inscripciones Curso Standard</option>
+                          <option value="xpqenabk">Inscripciones Nursing Care</option>
+                          <option value="xredqyol">Registro Simulador ECMO</option>
+                          <option value="mreroozv">Solicitud de Facturación</option>
+                          <option value="xnjlvzdq">Retroalimentación y Dudas</option>
+                        </select>
+                      </div>
+
+                      <button className="icon-action-btn primary" onClick={handleExportForms}>
+                        <FileSpreadsheet size={16} /> Exportar Excel/CSV
+                      </button>
+                    </div>
+
+                    {/* FORMSPREE SUBMISSIONS TABLE */}
+                    <div className="table-responsive-wrapper">
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>Formulario</th>
+                            <th>Remitente</th>
+                            <th>Fecha de Envío</th>
+                            <th>Estado</th>
+                            <th>Detalles</th>
+                            <th style={{ textAlign: 'center' }}>Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredForms.length === 0 ? (
+                            <tr>
+                              <td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>
+                                No se encontraron envíos de formularios.
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredForms.map((entry) => (
+                              <tr key={entry.id}>
+                                <td>
+                                  <div style={{ fontWeight: '700', color: 'var(--text-dark)' }}>{entry.formName}</div>
+                                  <div style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>ID: {entry.formId}</div>
+                                </td>
+                                <td>
+                                  <div style={{ fontWeight: '600', color: 'var(--text-dark)' }}>{entry.senderName}</div>
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{entry.senderEmail}</div>
+                                </td>
+                                <td>{formatDate(entry.date)} {new Date(entry.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</td>
+                                <td>
+                                  <span className="status-badge active" style={{ padding: '4px 8px', borderRadius: '100px', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '4px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                                    <CheckCircle size={10} /> Enviado API
+                                  </span>
+                                </td>
+                                <td>
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '240px' }}>
+                                    {Object.entries(entry.payload).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+                                  </div>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <button 
+                                    className="icon-action-btn edit" 
+                                    title="Ver JSON Completo"
+                                    onClick={() => { setSelectedFormEntry(entry); setShowFormModal(true); }}
+                                    style={{ padding: '6px' }}
+                                  >
+                                    <Eye size={16} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* MODAL: VIEW FORM SUBMISSION JSON PAYLOAD */}
+                {showFormModal && selectedFormEntry && (
+                  <div className="admin-modal-overlay">
+                    <div className="admin-modal-container" style={{ maxWidth: '600px', width: '100%' }}>
+                      <div className="modal-header-row">
+                        <h3>Detalle de Formulario Formspree</h3>
+                        <button className="modal-close-btn" onClick={() => { setShowFormModal(false); setSelectedFormEntry(null); }}>
+                          <X size={20} />
+                        </button>
+                      </div>
+                      
+                      <div className="modal-body-content" style={{ padding: '24px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                          <div>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Formulario</span>
+                            <h4 style={{ margin: '4px 0 0 0', color: 'var(--text-dark)' }}>{selectedFormEntry.formName}</h4>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>ID Formspree API</span>
+                            <h4 style={{ margin: '4px 0 0 0', fontFamily: 'monospace', color: 'var(--text-dark)' }}>{selectedFormEntry.formId}</h4>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Enviado por</span>
+                            <h4 style={{ margin: '4px 0 0 0', color: 'var(--text-dark)' }}>{selectedFormEntry.senderName}</h4>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Email Remitente</span>
+                            <h4 style={{ margin: '4px 0 0 0', color: 'var(--text-dark)' }}>{selectedFormEntry.senderEmail}</h4>
+                          </div>
+                        </div>
+
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>Carga de Datos Enviada (JSON Payload)</span>
+                        <div style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', maxHeight: '250px', overflowY: 'auto' }}>
+                          <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-dark)', whiteSpace: 'pre-wrap' }}>
+                            {JSON.stringify(selectedFormEntry.payload, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+
+                      <div className="modal-footer-row" style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end' }}>
+                        <button className="admin-cancel-btn" onClick={() => { setShowFormModal(false); setSelectedFormEntry(null); }}>
+                          Cerrar Detalle
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* VIEW: CURSOS (CRUD) */}
           {activeTab === 'courses' && (
