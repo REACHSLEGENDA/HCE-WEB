@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
-import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send } from 'lucide-react';
+import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send, ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './Nursing.css';
@@ -68,6 +68,51 @@ const Nursing = () => {
 
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [activeModule, setActiveModule] = useState(null);
+  const facultyTrackRef = React.useRef(null);
+
+  const handleScroll = (direction) => {
+    if (facultyTrackRef.current) {
+      const scrollAmount = 300;
+      facultyTrackRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  useEffect(() => {
+    let interval;
+    const track = facultyTrackRef.current;
+    if (track) {
+      const autoScroll = () => {
+        if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 10) {
+          track.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          track.scrollBy({ left: 300, behavior: 'smooth' });
+        }
+      };
+      interval = setInterval(autoScroll, 4000);
+      
+      const pause = () => clearInterval(interval);
+      const resume = () => {
+        clearInterval(interval);
+        interval = setInterval(autoScroll, 4000);
+      };
+      
+      track.addEventListener('mouseenter', pause);
+      track.addEventListener('mouseleave', resume);
+      track.addEventListener('touchstart', pause);
+      
+      return () => {
+        clearInterval(interval);
+        if (track) {
+          track.removeEventListener('mouseenter', pause);
+          track.removeEventListener('mouseleave', resume);
+          track.removeEventListener('touchstart', pause);
+        }
+      };
+    }
+  }, []);
 
   const toggleModule = (index) => {
     setActiveModule(activeModule === index ? null : index);
@@ -639,11 +684,20 @@ const Nursing = () => {
         </div>
         
         <div className="n-faculty-marquee">
-          <div className="n-faculty-track">
-            {[...virtualFaculty, ...virtualFaculty].map((f, i) => (
+          <div className="n-faculty-track" ref={facultyTrackRef}>
+            {virtualFaculty.map((f, i) => (
               <FacultyCard key={i} {...f} delay={0} />
             ))}
           </div>
+        </div>
+
+        <div className="n-faculty-controls">
+          <button onClick={() => handleScroll('left')} className="n-ctrl-btn" aria-label="Anterior">
+            <ChevronLeft size={24} />
+          </button>
+          <button onClick={() => handleScroll('right')} className="n-ctrl-btn" aria-label="Siguiente">
+            <ChevronRight size={24} />
+          </button>
         </div>
       </section>
 
