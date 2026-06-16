@@ -694,9 +694,9 @@ const Nursing = () => {
               delay={0.5}
               flag="https://flagcdn.com/w160/cr.png"
               img="/assets/instructores/p-eduardom.webp"
-              name="Perf. Eduardo Antonio Aguilar Rivera"
+              name="Enf. Eduardo Aguilar Rivera"
               country="COSTA RICA"
-              bio="Licenciado en Enfermería, Universidad de Costa Rica. Maestría en Gestión del Riesgo en Desastres y Atención de Emergencias (UCR). Coordinador del Programa ECMO (ELSO Silver Center #431) del Hospital Rafael Ángel Calderón Guardia 2015–2021. Director del Centro Internacional de Simulación Clínica, Universidad Santa Paula. Docente universitario e instructor BLS/ACLS AHA. Ponente en congresos panamericanos de medicina intensiva y emergencias."
+              bio="Especialista en ECMO. Fue Coordinador del Programa de ECMO del Hospital Rafael Ángel Calderón Guardia."
             />
             <PresencialCard 
               delay={0.6}
