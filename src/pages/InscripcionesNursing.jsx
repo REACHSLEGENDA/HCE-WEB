@@ -762,7 +762,7 @@ export function RegistrationForm() {
 
       await Promise.all([
         // Formspree
-        fetch('https://formspree.io/f/mnjlvbpw', {
+        fetch('https://formspree.io/f/xpqenabk', {
           method: 'POST',
           headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
