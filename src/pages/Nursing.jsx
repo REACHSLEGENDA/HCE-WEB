@@ -662,9 +662,9 @@ const Nursing = () => {
               delay={0.1}
               flag="https://flagcdn.com/w160/ec.png"
               img="/assets/instructores/p-elianam.jpeg"
-              name="Perf. Eliana Marilin Cerón López"
+              name="Perf. Eliana Cerón López"
               country="ECUADOR"
-              bio="Perfusionista en Cirugía Cardiovascular y ECMO Especialista en Clínica Guayaquil, Ecuador. Licenciada en Enfermería por la Universidad Mariana (Colombia). Posgrado en Perfusión Cardiovascular, Instituto Universitario Hospital Italiano de Buenos Aires. Perfusionista Clínico Certificada (PCC #57) por el Board Latinoamericano de Perfusión Cardiovascular. Coordinadora del servicio de perfusión y miembro del Team ECMO. Especialista Clínica LivaNova desde 2024."
+              bio="Perfusionista y Especialista en ECMO en la Clínica Guayaquil. Formada en centros de referencia de LATAM."
             />
             <PresencialCard 
               delay={0.2}
@@ -704,7 +704,7 @@ const Nursing = () => {
               img="/assets/instructores/tatiana-jaramillo.jpg"
               name="MBA. Tatiana Jaramillo"
               country="COLOMBIA"
-              bio="ECMO Educator, Speaker y MBA Project Manager con más de 15 años de experiencia en Soporte Vital Extracorpóreo (ECLS). Diseñadora y líder del Programa Educativo ECMO de la Fundación Clínica Shaio (Centro GOLD ELSO), alineado con estándares ELSO Platinum Center of Excellence. ELSO Faculty. Ha capacitado a más de 300 profesionales de salud en Latinoamérica. MBA en Gestión de Proyectos, EUDE European Business School, Madrid."
+              bio="Especialista en Enf. en Críticos. Coordinadora del Programa de ECMO de la Clínica Shaio Centro GOLD ELSO."
             />
             <PresencialCard 
               delay={0.7}
