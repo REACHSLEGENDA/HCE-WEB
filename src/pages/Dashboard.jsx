@@ -353,8 +353,6 @@ const Dashboard = () => {
       description: 'El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo.',
       image: '/assets/componentes/expnur.png',
       link: '/ecmo-nursing-care',
-      badge: 'PRÓXIMAMENTE',
-      badgeClass: 'badge-info',
       icon: Stethoscope
     },
     {
