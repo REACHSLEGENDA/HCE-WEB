@@ -9,18 +9,11 @@ const NurseCap = ({ size = 24, ...props }) => (
     width={size}
     height={size}
     viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
     {...props}
   >
-    <path d="M2 19c2-2 5-3 10-3s8 1 10 3" />
-    <path d="M3 18c0-5 3-7 9-7s9 2 9 7" />
-    <path d="M5 10c0-3 3-5 7-5s7 2 7 5" />
-    <path d="M12 6v4" />
-    <path d="M10 8h4" />
+    <path d="m0 8.853 2.886 10.115c2.738-.403 5.899-.633 9.113-.633s6.375.23 9.467.675l-.353-.042 2.886-10.115c-9.502-4.225-15.141-4.448-23.999 0zm14.918 4.276h-2.071v2.071h-1.686v-2.071h-2.071v-1.686h2.071v-2.072h1.686v2.072h2.071z" />
   </svg>
 );
 
