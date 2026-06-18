@@ -44,6 +44,26 @@ import {
 import './Dashboard.css';
 import '../components/Experiences.css';
 
+const NurseCap = ({ size = 24, ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M2 19c2-2 5-3 10-3s8 1 10 3" />
+    <path d="M3 18c0-5 3-7 9-7s9 2 9 7" />
+    <path d="M5 10c0-3 3-5 7-5s7 2 7 5" />
+    <path d="M12 6v4" />
+    <path d="M10 8h4" />
+  </svg>
+);
+
 import { COUNTRIES as ALL_COUNTRIES, getFlagUrl } from '../data/countries';
 
 const Dashboard = () => {
@@ -353,7 +373,7 @@ const Dashboard = () => {
       description: 'El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo.',
       image: '/assets/componentes/expnur.png',
       link: '/ecmo-nursing-care',
-      icon: Stethoscope
+      icon: NurseCap
     },
     {
       id: 3,
@@ -361,7 +381,7 @@ const Dashboard = () => {
       description: 'La especialización de mayor prestigio global en ECMO. Desarrolla competencias críticas para liderar equipos de soporte extracorpóreo al más alto nivel clínico.',
       image: '/assets/componentes/expparis.png',
       link: '/paris-diploma-ecmo',
-      icon: HeartPulse
+      icon: Award
     },
     {
       id: 4,

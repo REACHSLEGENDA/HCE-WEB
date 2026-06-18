@@ -1,7 +1,27 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Star, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, Heart, Stethoscope, Activity, Gamepad2, HeartPulse } from 'lucide-react';
+import { Star, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, Heart, Stethoscope, Activity, Gamepad2, HeartPulse, Award } from 'lucide-react';
 import './Experiences.css';
+
+const NurseCap = ({ size = 24, ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M2 19c2-2 5-3 10-3s8 1 10 3" />
+    <path d="M3 18c0-5 3-7 9-7s9 2 9 7" />
+    <path d="M5 10c0-3 3-5 7-5s7 2 7 5" />
+    <path d="M12 6v4" />
+    <path d="M10 8h4" />
+  </svg>
+);
 
 const ExperienceCard = ({ title, description, link, img, imgClass, containerClass, badge, badgeClass, delay, icon: Icon }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
@@ -60,7 +80,7 @@ const Experiences = () => {
           />
           <ExperienceCard
             delay={0.2}
-            icon={Stethoscope}
+            icon={NurseCap}
             title="ECMO Nursing Care Course"
             description="El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo."
             link="/ecmo-nursing-care"
@@ -68,7 +88,7 @@ const Experiences = () => {
           />
           <ExperienceCard
             delay={0.3}
-            icon={HeartPulse}
+            icon={Award}
             title="Paris International Diploma in ECMO"
             description="La especialización de mayor prestigio global en ECMO. Desarrolla competencias críticas para liderar equipos de soporte extracorpóreo al más alto nivel clínico."
             link="/paris-diploma-ecmo"

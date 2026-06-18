@@ -28,12 +28,32 @@ import { supabase } from '../lib/supabase';
 import { getFlagUrl } from '../data/countries';
 import './Comunidad.css';
 
+const NurseCap = ({ size = 24, ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M2 19c2-2 5-3 10-3s8 1 10 3" />
+    <path d="M3 18c0-5 3-7 9-7s9 2 9 7" />
+    <path d="M5 10c0-3 3-5 7-5s7 2 7 5" />
+    <path d="M12 6v4" />
+    <path d="M10 8h4" />
+  </svg>
+);
+
 const DEFAULT_TESTIMONIALS = [];
 
 const FORUM_CATEGORIES = [
   { id: 'Insuficiencia Cardiaca', label: 'Manejo de Avanzada en Insuficiencia Cardíaca', icon: Heart, desc: 'Soporte e insuficiencia cardíaca avanzada' },
-  { id: 'ECMO Nursing Care', label: 'ECMO Nursing Care', icon: Stethoscope, desc: 'Cuidado crítico de enfermería en ECMO' },
-  { id: 'Paris Diploma ECMO', label: 'Paris International Diploma in ECMO', icon: HeartPulse, desc: 'Diploma internacional de París en ECMO' },
+  { id: 'ECMO Nursing Care', label: 'ECMO Nursing Care', icon: NurseCap, desc: 'Cuidado crítico de enfermería en ECMO' },
+  { id: 'Paris Diploma ECMO', label: 'Paris International Diploma in ECMO', icon: Award, desc: 'Diploma internacional de París en ECMO' },
   { id: 'ECMO SIM', label: 'Simulador ECMO SIM', icon: Gamepad2, desc: 'Entrenamiento interactivo y simulador clínico' },
   { id: 'Experiencia Docente', label: 'Comentarios Docentes / Instructores', icon: Award, desc: 'Experiencias de nuestros profesores y facilitadores clínicos' },
   { id: 'Conferencias Virtuales', label: 'Conferencias Virtuales Académicas para Instituciones y Grupos Hospitalarios', icon: Video, desc: 'Ponencias y conferencias virtuales especializadas' },

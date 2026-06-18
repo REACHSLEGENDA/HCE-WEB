@@ -4,6 +4,26 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
+const NurseCap = ({ size = 24, ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M2 19c2-2 5-3 10-3s8 1 10 3" />
+    <path d="M3 18c0-5 3-7 9-7s9 2 9 7" />
+    <path d="M5 10c0-3 3-5 7-5s7 2 7 5" />
+    <path d="M12 6v4" />
+    <path d="M10 8h4" />
+  </svg>
+);
+
 const Navbar = () => {
   const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
@@ -139,7 +159,7 @@ const Navbar = () => {
                 </a>
               </li>
               {/* <li><Link to="/insuficiencia-cardiaca" onClick={() => toggleNav(false)}><Heart size={18} /> Insuficiencia Cardiaca</Link></li> */}
-              <li><Link to="/ecmo-nursing-care" onClick={() => toggleNav(false)}><Activity size={18} /> ECMO Nursing Care</Link></li>
+              <li><Link to="/ecmo-nursing-care" onClick={() => toggleNav(false)}><NurseCap size={18} /> ECMO Nursing Care</Link></li>
               <li><Link to="/paris-diploma-ecmo" onClick={() => toggleNav(false)}><Award size={18} /> Paris Diploma ECMO</Link></li>
             </ul>
           </div>
