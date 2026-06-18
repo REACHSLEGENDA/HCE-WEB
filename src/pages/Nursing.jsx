@@ -88,49 +88,66 @@ const Nursing = () => {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [activeModule, setActiveModule] = useState(null);
   const facultyTrackRef = React.useRef(null);
+  const lastInteractionRef = React.useRef(0);
 
   const handleScroll = (direction) => {
     if (facultyTrackRef.current) {
+      lastInteractionRef.current = Date.now();
       const scrollAmount = 300;
+      facultyTrackRef.current.style.scrollBehavior = 'smooth';
       facultyTrackRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
+        left: direction === 'left' ? -scrollAmount : scrollAmount
       });
+      setTimeout(() => {
+        if (facultyTrackRef.current) {
+          facultyTrackRef.current.style.scrollBehavior = 'auto';
+        }
+      }, 500);
     }
   };
 
   useEffect(() => {
-    let interval;
     const track = facultyTrackRef.current;
-    if (track) {
-      const autoScroll = () => {
-        if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 10) {
-          track.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          track.scrollBy({ left: 300, behavior: 'smooth' });
+    if (!track) return;
+    track.style.scrollBehavior = 'auto';
+
+    let requestId;
+    let isPaused = false;
+    let currentScroll = track.scrollLeft;
+    const speed = 0.7; // pixels per frame
+
+    const scroll = () => {
+      const now = Date.now();
+      if (!isPaused && now - lastInteractionRef.current > 1500) {
+        currentScroll += speed;
+        const half = track.scrollWidth / 2;
+        if (currentScroll >= half) {
+          currentScroll -= half;
         }
-      };
-      interval = setInterval(autoScroll, 4000);
-      
-      const pause = () => clearInterval(interval);
-      const resume = () => {
-        clearInterval(interval);
-        interval = setInterval(autoScroll, 4000);
-      };
-      
-      track.addEventListener('mouseenter', pause);
-      track.addEventListener('mouseleave', resume);
-      track.addEventListener('touchstart', pause);
-      
-      return () => {
-        clearInterval(interval);
-        if (track) {
-          track.removeEventListener('mouseenter', pause);
-          track.removeEventListener('mouseleave', resume);
-          track.removeEventListener('touchstart', pause);
-        }
-      };
-    }
+        track.scrollLeft = Math.round(currentScroll);
+      } else {
+        currentScroll = track.scrollLeft;
+      }
+      requestId = requestAnimationFrame(scroll);
+    };
+
+    requestId = requestAnimationFrame(scroll);
+
+    const pause = () => { isPaused = true; };
+    const resume = () => { isPaused = false; };
+
+    track.addEventListener('mouseenter', pause);
+    track.addEventListener('mouseleave', resume);
+    track.addEventListener('touchstart', pause);
+    track.addEventListener('touchend', resume);
+
+    return () => {
+      cancelAnimationFrame(requestId);
+      track.removeEventListener('mouseenter', pause);
+      track.removeEventListener('mouseleave', resume);
+      track.removeEventListener('touchstart', pause);
+      track.removeEventListener('touchend', resume);
+    };
   }, []);
 
   const toggleModule = (index) => {
@@ -176,6 +193,7 @@ const Nursing = () => {
     { src: "/assets/instructores/WhatsApp-Image-2025-06-22-at-12.01.16-1.jpeg", name: "Mtro. Ricardo Fernando Rosero", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Enfermero con Maestría en Especialista en Cuidados intensivos y ECMO. Instructor en Simulación Clínica y Profesor universitario.", hospital: "Hospital Favaloro" },
     { src: "/assets/instructores/WhatsApp-Image-2025-08-04-at-16.19.00.jpeg", name: "Lic. Fabio Salas Alvarez", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Enfermero Especialista en Cuidados intensivos y ECMO.", hospital: "Hospital Calderón Guardia" },
     { src: "/assets/instructores/p-elianam.jpeg", name: "Mtra. Eliana Marilin Cerón López", country: "ECUADOR / COLOMBIA", flag: ["https://flagcdn.com/w80/ec.png", "https://flagcdn.com/w80/co.png"], role: "Perfusionista Clínica y ECMO Especialista con Maestría en Perfusión.", hospital: "Clínica Guayaquil" },
+    { src: "/assets/instructores/diego-huerta.jpg", name: "EE. Diego Huerta Guarneros", country: "M\u00C9XICO", flag: "https://flagcdn.com/w80/mx.png", role: "Consultor Cl\u00EDnico en Terapias Extracorp\u00F3reas y Soportes Multiorg\u00E1nicos para LATAM. Coordinador del Comit\u00E9 de Enfermer\u00EDa de la Sociedad Latinoamericana de Nefrolog\u00EDa e Hipertensi\u00F3n (SLANH)", hospital: "Sociedad Latinoamericana de Nefrolog\u00EDa e Hipertensi\u00F3n" },
   ];
 
   return (
@@ -708,13 +726,13 @@ const Nursing = () => {
           <div className="n-section-header">
             <span className="section-badge">FACULTAD CIENTÍFICA</span>
             <h2 className="n-title">Profesores <span className="red-text">Internacionales</span></h2>
-            <p className="n-subtitle">18 expertos integrados en nuestra plataforma de aprendizaje virtual.</p>
+            <p className="n-subtitle">19 expertos integrados en nuestra plataforma de aprendizaje virtual.</p>
           </div>
         </div>
         
         <div className="n-faculty-marquee">
           <div className="n-faculty-track" ref={facultyTrackRef}>
-            {virtualFaculty.map((f, i) => (
+            {[...virtualFaculty, ...virtualFaculty].map((f, i) => (
               <FacultyCard key={i} {...f} delay={0} />
             ))}
           </div>
@@ -796,6 +814,14 @@ const Nursing = () => {
               name="Perf. Moisés Espitia"
               country="MÉXICO"
               bio="Jefe de Enfermería y Perfusión de ECMO Heart Team Mx. Más de 12 años de experiencia como docente."
+            />
+            <PresencialCard 
+              delay={0.8}
+              flag="https://flagcdn.com/w160/mx.png"
+              img="/assets/instructores/diego-huerta.jpg"
+              name="EE. Diego Huerta Guarneros"
+              country="M\u00C9XICO"
+              bio="Consultor Cl\u00EDnico en Terapias Extracorp\u00F3reas y Soportes Multiorg\u00E1nicos para LATAM. Coordinador del Comit\u00E9 de Enfermer\u00EDa de la SLANH."
             />
           </div>
           
