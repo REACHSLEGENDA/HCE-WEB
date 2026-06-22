@@ -248,6 +248,7 @@ const Nursing = () => {
       </section>
 
       {/* Hero content moved below the banner */}
+      {/* Hero content moved below the banner */}
       <section className="n-intro-section">
         <div className="hce-container">
           <div ref={heroRef} className={`n-intro-content reveal ${heroInView ? 'active' : ''}`}>
@@ -258,17 +259,17 @@ const Nursing = () => {
             <div className="n-intro-body">
               <div className="n-intro-text">
                 <p>
-                  Nuestro compromiso es consolidar un programa de capacitación de alta especialidad que te empodere como profesional de enfermería. A través de un modelo educativo de vanguardia, transformamos el cuidado del paciente con soporte ECMO en una práctica segura, técnica y profundamente humana.
+                  Nuestro compromiso es consolidar un programa de alta especialización que empodere tu práctica profesional. A través de un modelo educativo de vanguardia, transformamos el cuidado del paciente en soporte ECMO en una experiencia segura, científica y profundamente humana.
                 </p>
                 <p>
-                  <strong>Nadie comprende mejor tu labor que quien la vive a diario.</strong> Por eso, nuestro entrenamiento está diseñado y liderado por enfermería para enfermería. Entendemos tus retos y la precisión que exige cada segundo al pie de cama del paciente crítico en ECMO.
+                  <strong>Nadie comprende mejor tu labor que quien la vive a diario.</strong> Por eso, este entrenamiento ha sido diseñado y es liderado por y para enfermería. Entendemos tus retos, tu realidad y la absoluta precisión que exige cada segundo al pie de cama del paciente crítico en ECMO.
                 </p>
               </div>
               <div className="n-intro-sidebar">
                 <div className="n-intro-card-box">
                   <span className="section-badge badge-limited" style={{ fontSize: '0.65rem', padding: '0.35rem 0.9rem', marginBottom: '0.8rem', display: 'inline-flex' }}>CUPO LIMITADO</span>
-                  <h4>Entrenamiento HCE</h4>
-                  <p>Asegura tu lugar en el entrenamiento líder en el cuidado de enfermería en ECMO. Cupos limitados.</p>
+                  <h4>ECMO Nursing Care Course</h4>
+                  <p>Asegura tu lugar en el programa líder de alta especialización en cuidado de enfermería en ECMO.</p>
                   <button className="n-btn n-btn-brand" onClick={() => navigate('/inscripciones-ecmo-nursing')}>
                     Inscríbete Ahora <ArrowRight size={18} />
                   </button>
@@ -305,46 +306,56 @@ const Nursing = () => {
       <section className="n-sec-padding n-methodology-section">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge">METODOLOGÍA</span>
+            <span className="section-badge">METODOLOGÍA</span>
             <h2 className="n-sec-title">Un método diseñado por enfermería validado por la evidencia</h2>
-            <p className="n-sec-subtitle">Estructura pedagógica optimizada para el Dominio del Soporte ECMO.</p>
+            <p className="n-sec-subtitle">Estructura pedagógica optimizada para el dominio del cuidado de pacientes en soporte ECMO.</p>
           </div>
 
           <div className="n-methodology-grid">
-            {/* Card 1 */}
+            {/* Card 1 — 100% Virtual */}
             <div className="n-card-base n-phase-card">
               <div className="n-phase-top">
-                <div className="n-circle-icon">
-                  <BookOpen size={26} />
+                <div className="n-circle-icon" style={{ display: 'flex', gap: '6px', background: 'transparent', width: 'auto', padding: 0 }}>
+                  <div className="n-circle-icon"><BookOpen size={20} /></div>
+                  <div className="n-circle-icon"><UsersRound size={20} /></div>
                 </div>
                 <span className="n-phase-num">01</span>
               </div>
-              <h3>Fase asincrónica</h3>
-              <p><strong>"Aprende a tu ritmo"</strong>: Plataforma flexible que respeta tus turnos de trabajo, con acceso completo a clases pregrabadas, biblioteca de artículos científicos y guías ELSO.</p>
+              <span className="section-badge" style={{ background: 'rgba(0, 210, 255, 0.1)', color: '#00d2ff', border: '1px solid rgba(0, 210, 255, 0.3)', marginBottom: '0.8rem', display: 'inline-flex', padding: '3px 10px', fontSize: '0.7rem' }}>100% Virtual</span>
+              <h3>100% Virtual</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
+                <div>
+                  <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Aprendizaje Asincrónico</span>
+                  <p><strong>"Aprende a tu ritmo"</strong>: Flexibilidad total que respeta tus jornadas laborales. Avanza a tu propio paso con acceso 24/7 a clases grabadas, literatura científica y normativas <strong>ELSO</strong>.</p>
+                </div>
+                <div>
+                  <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Aprendizaje Sincrónico</span>
+                  <p><strong>"Consolida con expertos"</strong>: Sesiones interactivas en vivo enfocadas en la resolución de dudas, análisis exhaustivo de casos clínicos y <em>insights</em> prácticos directamente de la práctica al pie de cama.</p>
+                </div>
+              </div>
             </div>
 
-            {/* Card 2 */}
+            {/* Card 2 — 100% Presencial */}
             <div className="n-card-base n-phase-card">
               <div className="n-phase-top">
-                <div className="n-circle-icon">
-                  <UsersRound size={26} />
+                <div className="n-circle-icon" style={{ display: 'flex', gap: '6px', background: 'transparent', width: 'auto', padding: 0 }}>
+                  <div className="n-circle-icon"><Award size={20} /></div>
+                  <div className="n-circle-icon"><BrainCircuit size={20} /></div>
                 </div>
                 <span className="n-phase-num">02</span>
               </div>
-              <h3>Sesiones en vivo</h3>
-              <p><strong>"Consolida con expertos"</strong>: Tutorías en tiempo real dirigidas a la resolución de dudas, análisis exhaustivo de casos clínicos y clave de especialistas de ECMO con amplia experiencia.</p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="n-card-base n-phase-card">
-              <div className="n-phase-top">
-                <div className="n-circle-icon">
-                  <BrainCircuit size={26} />
+              <span className="section-badge" style={{ background: 'rgba(227, 24, 55, 0.1)', color: '#e31837', border: '1px solid rgba(227, 24, 55, 0.3)', marginBottom: '0.8rem', display: 'inline-flex', padding: '3px 10px', fontSize: '0.7rem' }}>100% Presencial</span>
+              <h3>100% Presencial</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
+                <div>
+                  <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Ponencias Magistrales</span>
+                  <p><strong>"Inspiración y Evidencia"</strong>: Espacios presenciales exclusivos con enfermeros especialistas de renombre global, quienes compartirán los últimos avances y tendencias en soporte vital extracorpóreo.</p>
                 </div>
-                <span className="n-phase-num">03</span>
+                <div>
+                  <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Simulación Clínica</span>
+                  <p><strong>"Practica sin riesgo"</strong>: Entrenamiento práctico y deliberado con fidelidad progresiva. Enfrenta fallas mecánicas y clínicas críticas en un entorno seguro y de la mano de instructores internacionales.</p>
+                </div>
               </div>
-              <h3>Simulación clínica</h3>
-              <p><strong>"Practica sin riesgo"</strong>: Práctica deliberada con simulaciones de fidelidad progresiva, donde resolverás complicaciones mecánicas y clínicas reales en un entorno controlado y seguro.</p>
             </div>
           </div>
 
