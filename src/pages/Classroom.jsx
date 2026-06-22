@@ -19,6 +19,33 @@ import {
 import { useNotification } from '../context/NotificationContext';
 import './Classroom.css';
 
+const safeNewDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  if (typeof dateStr === 'string') {
+    const formatted = dateStr.trim().replace(/\s+/, 'T');
+    const d = new Date(formatted);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? new Date() : d;
+};
+
+const formatDateSafeShort = (dateStr) => {
+  if (!dateStr) return '';
+  try {
+    const d = safeNewDate(dateStr);
+    return d.toLocaleDateString('es-MX', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (e) {
+    console.error('Error formatting date:', e);
+    return '';
+  }
+};
+
 const Classroom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -374,7 +401,7 @@ const Classroom = () => {
     if (comment) {
       const isOwnComment = user && comment.user_id === user.id;
       const isAdmin = profile && profile.rol === 'admin';
-      const isWithin5Minutes = comment.created_at ? (new Date().getTime() - new Date(comment.created_at).getTime()) / (1000 * 60) <= 5 : true;
+      const isWithin5Minutes = comment.created_at ? (new Date().getTime() - safeNewDate(comment.created_at).getTime()) / (1000 * 60) <= 5 : true;
       
       if (!isAdmin && (!isOwnComment || !isWithin5Minutes)) {
         showToast('Solo puedes eliminar comentarios creados en los últimos 5 minutos', 'error');
@@ -1248,7 +1275,7 @@ const Classroom = () => {
                       const isQAuthorAdmin = qAuthorRol === 'admin';
                       const isQAuthorInstructor = qAuthorRol === 'instructor';
                       
-                      const isWithin5MinutesQ = q.created_at ? (new Date().getTime() - new Date(q.created_at).getTime()) / (1000 * 60) <= 5 : true;
+                      const isWithin5MinutesQ = q.created_at ? (safeNewDate().getTime() - safeNewDate(q.created_at).getTime()) / (1000 * 60) <= 5 : true;
                       const canDeleteQ = user && ((q.user_id === user.id && isWithin5MinutesQ) || (profile && profile.rol === 'admin'));
 
                       // Get replies for this comment
@@ -1293,9 +1320,7 @@ const Classroom = () => {
                             </div>
                             <div className="comment-footer">
                               <span className="comment-date">
-                                {new Date(q.created_at).toLocaleDateString('es-MX', {
-                                  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                                })}
+                                {formatDateSafeShort(q.created_at)}
                               </span>
                               <button 
                                 onClick={() => setActiveReplyBox(activeReplyBox === q.id ? null : q.id)}
@@ -1320,7 +1345,7 @@ const Classroom = () => {
                                 const isRAuthorAdmin = rAuthorRol === 'admin';
                                 const isRAuthorInstructor = rAuthorRol === 'instructor';
                                 
-                                const isWithin5MinutesR = r.created_at ? (new Date().getTime() - new Date(r.created_at).getTime()) / (1000 * 60) <= 5 : true;
+                                const isWithin5MinutesR = r.created_at ? (new Date().getTime() - safeNewDate(r.created_at).getTime()) / (1000 * 60) <= 5 : true;
                                 const canDeleteR = user && ((r.user_id === user.id && isWithin5MinutesR) || (profile && profile.rol === 'admin'));
 
                                 return (
@@ -1362,9 +1387,7 @@ const Classroom = () => {
                                       </div>
                                       <div className="comment-footer">
                                         <span className="comment-date">
-                                          {new Date(r.created_at).toLocaleDateString('es-MX', {
-                                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                                          })}
+                                          {formatDateSafeShort(r.created_at)}
                                         </span>
                                       </div>
                                     </div>

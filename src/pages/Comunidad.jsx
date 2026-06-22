@@ -43,6 +43,34 @@ const NurseCap = ({ size = 24, ...props }) => (
 
 const DEFAULT_TESTIMONIALS = [];
 
+const safeNewDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  if (typeof dateStr === 'string') {
+    const formatted = dateStr.trim().replace(/\s+/, 'T');
+    const d = new Date(formatted);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? new Date() : d;
+};
+
+const formatDateSafe = (dateStr) => {
+  if (!dateStr) return '';
+  try {
+    const d = safeNewDate(dateStr);
+    return d.toLocaleDateString('es-MX', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (e) {
+    console.error('Error formatting date:', e);
+    return '';
+  }
+};
+
 const FORUM_CATEGORIES = [
   { id: 'Insuficiencia Cardiaca', label: 'Manejo de Avanzada en Insuficiencia Cardíaca', icon: Heart, desc: 'Soporte e insuficiencia cardíaca avanzada' },
   { id: 'ECMO Nursing Care', label: 'ECMO Nursing Care', icon: NurseCap, desc: 'Cuidado crítico de enfermería en ECMO' },
@@ -283,7 +311,7 @@ const Comunidad = () => {
     if (comment) {
       const isOwnComment = user && comment.user_id === user.id;
       const isAdmin = profile && profile.rol === 'admin';
-      const isWithin5Minutes = comment.created_at ? (new Date().getTime() - new Date(comment.created_at).getTime()) / (1000 * 60) <= 5 : true;
+      const isWithin5Minutes = comment.created_at ? (new Date().getTime() - safeNewDate(comment.created_at).getTime()) / (1000 * 60) <= 5 : true;
       
       if (!isAdmin && (!isOwnComment || !isWithin5Minutes)) {
         showToast('Solo puedes eliminar comentarios creados en los últimos 5 minutos', 'error');
@@ -405,7 +433,7 @@ const Comunidad = () => {
                       // Authors can delete their own comments only within 5 minutes of creation. Admins can delete any comment anytime.
                       const isOwnComment = user && item.user_id === user.id;
                       const isAdmin = profile && profile.rol === 'admin';
-                      const isWithin5Minutes = item.created_at ? (new Date().getTime() - new Date(item.created_at).getTime()) / (1000 * 60) <= 5 : true;
+                      const isWithin5Minutes = item.created_at ? (new Date().getTime() - safeNewDate(item.created_at).getTime()) / (1000 * 60) <= 5 : true;
                       const canDelete = (isOwnComment && isWithin5Minutes) || isAdmin;
 
                       return (
@@ -523,13 +551,7 @@ const Comunidad = () => {
                               );
                             })()}
                             <span className="forum-comment-date">
-                              {new Date(item.created_at).toLocaleDateString('es-MX', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
+                              {formatDateSafe(item.created_at)}
                             </span>
                           </div>
                         </div>
