@@ -233,7 +233,7 @@
   margin-bottom: 1.5rem;
   line-height: 0.9;
   text-transform: uppercase;
-  letter-spacing: -3px;
+  letter-spacing: -1.5px;
 }
 
 .sim-subtitle {
@@ -571,7 +571,7 @@
   position: relative;
   display: inline-block;
   margin-bottom: 2rem;
-  letter-spacing: -3px;
+  letter-spacing: -1.5px;
 }
 
 .sim-final-box h3 {
