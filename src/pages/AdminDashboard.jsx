@@ -255,6 +255,8 @@ const AdminDashboard = () => {
   });
   const [loadingPayments, setLoadingPayments] = useState(true);
   const [paymentsError, setPaymentsError] = useState(null);
+  const [loadingForms, setLoadingForms] = useState(true);
+  const [formsError, setFormsError] = useState(null);
   const [paymentSortOrder, setPaymentSortOrder] = useState('desc'); // 'desc' | 'asc'
   const [formSortOrder, setFormSortOrder] = useState('desc'); // 'desc' | 'asc'
 
@@ -457,9 +459,57 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchRealFormSubmissions = async () => {
+    try {
+      setLoadingForms(true);
+      const { data, error } = await supabase
+        .from('form_submissions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const merged = [...formSubmissions];
+      if (data && data.length > 0) {
+        data.forEach(dbItem => {
+          const item = {
+            id: dbItem.id,
+            formId: dbItem.form_id,
+            formName: dbItem.form_name,
+            senderName: dbItem.sender_name,
+            senderEmail: dbItem.sender_email,
+            date: dbItem.created_at,
+            payload: dbItem.payload,
+            status: 'procesado'
+          };
+          const idx = merged.findIndex(m => m.id === item.id);
+          if (idx !== -1) {
+            merged[idx] = { ...merged[idx], ...item };
+          } else {
+            merged.unshift(item);
+          }
+        });
+      }
+
+      const processed = processAndFilterList(merged, 'form');
+      setFormSubmissions(processed);
+      localStorage.setItem('admin_imported_form_submissions', JSON.stringify(processed));
+      setFormsError(null);
+    } catch (err) {
+      console.warn('Could not load real form submissions:', err.message);
+      setFormsError(err.message);
+      const processed = processAndFilterList(formSubmissions, 'form');
+      setFormSubmissions(processed);
+      localStorage.setItem('admin_imported_form_submissions', JSON.stringify(processed));
+    } finally {
+      setLoadingForms(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'payments') {
       fetchRealStripePayments();
+      fetchRealFormSubmissions();
     }
   }, [activeTab]);
 
@@ -2511,7 +2561,7 @@ const AdminDashboard = () => {
                       className={`tab-btn ${activePaymentsSubTab === 'formspree' ? 'active' : ''}`}
                       onClick={() => setActivePaymentsSubTab('formspree')}
                     >
-                      <Mail size={16} /> Formularios Formspree
+                      <Mail size={16} /> Formularios
                     </button>
                   </div>
                   
@@ -2524,6 +2574,18 @@ const AdminDashboard = () => {
                     >
                       <Clock size={14} className={loadingPayments ? 'spin-animation' : ''} />
                       {loadingPayments ? 'Sincronizando...' : 'Sincronizar Stripe'}
+                    </button>
+                  )}
+
+                  {activePaymentsSubTab === 'formspree' && (
+                    <button 
+                      className="icon-action-btn secondary"
+                      onClick={fetchRealFormSubmissions}
+                      disabled={loadingForms}
+                      style={{ height: '38px', gap: '6px', cursor: 'pointer' }}
+                    >
+                      <Clock size={14} className={loadingForms ? 'spin-animation' : ''} />
+                      {loadingForms ? 'Sincronizando...' : 'Sincronizar Formularios'}
                     </button>
                   )}
                 </div>

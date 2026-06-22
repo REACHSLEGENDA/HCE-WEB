@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin, Users } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './Inscripciones.css';
@@ -795,6 +796,18 @@ export function RegistrationForm() {
       };
 
       await Promise.all([
+        // Supabase — automatización del registro
+        supabase
+          .from('form_submissions')
+          .insert([{
+            form_id: 'mnjlvbpw',
+            form_name: 'Inscripciones Curso Standard',
+            sender_name: `${form.nombres || ''} ${form.apellidos || ''}`.trim() || 'Alumno',
+            sender_email: form.email || '',
+            payload: payload
+          }])
+          .then(({ error }) => { if (error) console.error('Error saving to Supabase:', error.message); }),
+
         // Formspree — notificación por email
         fetch('https://formspree.io/f/mnjlvbpw', {
           method: 'POST',

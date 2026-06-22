@@ -478,3 +478,31 @@ ALTER TABLE public.student_activity ADD COLUMN IF NOT EXISTS browser TEXT;
 ALTER TABLE public.student_activity ADD COLUMN IF NOT EXISTS device TEXT;
 ALTER TABLE public.student_activity ADD COLUMN IF NOT EXISTS ip_address TEXT;
 
+-- Form Submissions Table for Automating Guest Registration Forms
+CREATE TABLE IF NOT EXISTS public.form_submissions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  form_id TEXT NOT NULL,
+  form_name TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_email TEXT NOT NULL,
+  payload JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.form_submissions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir insercion publica" ON public.form_submissions;
+CREATE POLICY "Permitir insercion publica" 
+ON public.form_submissions 
+FOR INSERT 
+TO anon, authenticated 
+WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Permitir lectura a autenticados" ON public.form_submissions;
+CREATE POLICY "Permitir lectura a autenticados" 
+ON public.form_submissions 
+FOR SELECT 
+TO authenticated 
+USING (true);
+
+

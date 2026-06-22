@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Gamepad2, PlayCircle, Trophy, Users, Zap, ShieldAlert, MonitorPlay, ChevronRight, Activity } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './EcmoSim.css';
@@ -148,32 +149,55 @@ const EcmoSim = () => {
     formData.append('Plan Adquirido', successInfo.plan === '4m' ? 'Plan 4 Meses ($250 USD)' : 'Plan 12 Meses ($700 USD)');
 
     try {
-      const res = await fetch('https://formspree.io/f/xredqyol', {
-        method: 'POST',
-        body: formData,
-        headers: { Accept: 'application/json' },
-      });
-      if (res.ok) {
-        // Enriquecer datos en Mailchimp de manera asíncrona
-        fetch('/.netlify/functions/sim-register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: successFormData.email.trim(),
-            planId: successInfo.plan,
-            nombres: successFormData.nombres.trim(),
-            apellidos: successFormData.apellidos.trim(),
-            telefono: successFormData.telefono.trim(),
-            profesion: successFormData.profesion.trim(),
-            institucion: successFormData.institucion.trim(),
-            pais: successFormData.pais.trim()
-          }),
-        }).catch(err => console.error('Error enriching Mailchimp:', err));
+      const payload = {
+        nombres: successFormData.nombres.trim(),
+        apellidos: successFormData.apellidos.trim(),
+        email: successFormData.email.trim(),
+        telefono: successFormData.telefono.trim(),
+        profesion: successFormData.profesion.trim(),
+        institucion: successFormData.institucion.trim(),
+        pais: successFormData.pais.trim(),
+        plan: successInfo.plan === '4m' ? 'Plan 4 Meses ($250 USD)' : 'Plan 12 Meses ($700 USD)'
+      };
 
-        setIsSuccessFormSubmitted(true);
-      } else {
-        setSuccessFormError('Ocurrió un error al enviar el formulario. Intenta nuevamente.');
-      }
+      await Promise.all([
+        // Supabase — automatización del registro
+        supabase
+          .from('form_submissions')
+          .insert([{
+            form_id: 'xredqyol',
+            form_name: 'Registro Simulador ECMO',
+            sender_name: `${payload.nombres} ${payload.apellidos}`.trim() || 'Alumno',
+            sender_email: payload.email,
+            payload: payload
+          }])
+          .then(({ error }) => { if (error) console.error('Error saving to Supabase:', error.message); }),
+
+        // Formspree
+        fetch('https://formspree.io/f/xredqyol', {
+          method: 'POST',
+          body: formData,
+          headers: { Accept: 'application/json' },
+        })
+      ]);
+
+      setIsSuccessFormSubmitted(true);
+
+      // Enriquecer datos en Mailchimp de manera asíncrona
+      fetch('/.netlify/functions/sim-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: payload.email,
+          planId: successInfo.plan,
+          nombres: payload.nombres,
+          apellidos: payload.apellidos,
+          telefono: payload.telefono,
+          profesion: payload.profesion,
+          institucion: payload.institucion,
+          pais: payload.pais
+        }),
+      }).catch(err => console.error('Error enriching Mailchimp:', err));
     } catch (err) {
       setSuccessFormError('Error de red. Por favor revisa tu conexión.');
     } finally {
