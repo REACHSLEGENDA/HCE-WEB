@@ -5,6 +5,21 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './Inscripciones.css';
 
+function NurseCap({ size = 24, className = "" }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="currentColor" 
+      className={className} 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="m0 8.853 2.886 10.115c2.738-.403 5.899-.633 9.113-.633s6.375.23 9.467.675l-.353-.042 2.886-10.115c-9.502-4.225-15.141-4.448-23.999 0zm14.918 4.276h-2.071v2.071h-1.686v-2.071h-2.071v-1.686h2.071v-2.072h1.686v2.072h2.071z" />
+    </svg>
+  );
+}
+
 const USD_RATE = 17.5;
 
 const EXTRA_CATALOG = {
@@ -17,18 +32,28 @@ const EXTRA_CATALOG = {
 };
 
 const PROFILES = {
-  especialista: {
-    label: 'Médico(a) Especialista',
-    price: 5000,
-    extras: ['ecmo_sim'],
-  },
-  residente: {
-    label: 'Médico(a) Residente',
-    price: 5000,
-    extras: ['ecmo_sim'],
-  },
   enfermero: {
-    label: 'Enfermero(a) / Otro Profesional',
+    label: 'Enfermero(a)',
+    price: 5000,
+    extras: ['ecmo_sim'],
+  },
+  fisioterapeuta: {
+    label: 'Fisioterapeuta',
+    price: 5000,
+    extras: ['ecmo_sim'],
+  },
+  kinesiologo: {
+    label: 'Kinesiólogo',
+    price: 5000,
+    extras: ['ecmo_sim'],
+  },
+  terapeuta_respiratorio: {
+    label: 'Terapeuta respiratorio',
+    price: 5000,
+    extras: ['ecmo_sim'],
+  },
+  otro: {
+    label: 'Otro profesional de la salud',
     price: 5000,
     extras: ['ecmo_sim'],
   },
@@ -48,8 +73,9 @@ export default function InscripcionesNursing() {
   });
 
   const [searchParams] = useSearchParams();
-  const [cardSel, setCardSel] = useState(null);   // 'especialista' | 'otros'
-  const [subRole, setSubRole] = useState(null);    // 'residente' | 'enfermero'
+  const [cardSel, setCardSel] = useState(null);   // 'enfermero' | 'otros'
+  const [subRole, setSubRole] = useState(null);    // 'fisioterapeuta' | 'kinesiologo' | 'terapeuta_respiratorio' | 'otro'
+  const [customOtro, setCustomOtro] = useState('');
   const [extras, setExtras] = useState(new Set());
   const [moneda, setMoneda] = useState('mxn');
   const [email, setEmail] = useState('');
@@ -78,12 +104,14 @@ export default function InscripcionesNursing() {
   const selectCard = (card) => {
     setCardSel(card);
     setSubRole(null);
+    setCustomOtro('');
     setExtras(new Set());
     setApiError('');
   };
 
   const selectSubRole = (role) => {
     setSubRole(role);
+    setCustomOtro('');
     setExtras(new Set());
   };
 
@@ -122,7 +150,7 @@ export default function InscripcionesNursing() {
   const cur = moneda.toUpperCase();
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const canPay = !!perfil && emailValid && consentPrimary;
+  const canPay = !!perfil && emailValid && consentPrimary && (perfil !== 'otro' || customOtro.trim().length > 0);
 
   const handlePay = async () => {
     if (!canPay) return;
@@ -137,7 +165,8 @@ export default function InscripcionesNursing() {
           extras: [...extras], 
           moneda, 
           email: email.trim(),
-          promoCode: appliedPromo?.code || null
+          promoCode: appliedPromo?.code || null,
+          customOtro: perfil === 'otro' ? customOtro.trim() : null
         }),
       });
       const data = await res.json();
@@ -273,21 +302,21 @@ export default function InscripcionesNursing() {
             </div>
 
             <div className="ins-cards">
-              {/* Card 1 — Especialista */}
+              {/* Card 1 — Enfermeros */}
               <button
                 type="button"
-                className={`ins-card ${cardSel === 'especialista' ? 'ins-card--active' : ''}`}
-                onClick={() => selectCard('especialista')}
+                className={`ins-card ${cardSel === 'enfermero' ? 'ins-card--active' : ''}`}
+                onClick={() => selectCard('enfermero')}
               >
                 <div className="ins-card-visual ins-card-visual--blue">
-                  <Stethoscope size={40} strokeWidth={1.5} />
+                  <NurseCap size={40} />
                 </div>
                 <div className="ins-card-body">
                   <div className="ins-card-top">
                     <span className="ins-card-tag">Perfil A</span>
-                    {cardSel === 'especialista' && <CheckCircle2 size={20} className="ins-card-check" />}
+                    {cardSel === 'enfermero' && <CheckCircle2 size={20} className="ins-card-check" />}
                   </div>
-                  <h3 className="ins-card-title">Médico(a) Especialista</h3>
+                  <h3 className="ins-card-title">Enfermeros</h3>
                 </div>
               </button>
 
@@ -305,7 +334,7 @@ export default function InscripcionesNursing() {
                     <span className="ins-card-tag">Perfil B</span>
                     {cardSel === 'otros' && <CheckCircle2 size={20} className="ins-card-check" />}
                   </div>
-                  <h3 className="ins-card-title">Residente, Enfermero(a) y Otros</h3>
+                  <h3 className="ins-card-title">Otros profesionales</h3>
                 </div>
               </button>
             </div>
@@ -322,21 +351,47 @@ export default function InscripcionesNursing() {
               </div>
               <div className="ins-role-grid">
                 {[
-                  { id: 'residente', label: 'Médico(a) Residente', desc: 'Actualmente en programa de residencia médica' },
-                  { id: 'enfermero', label: 'Enfermero(a) / Otro Profesional', desc: 'Enfermero, terapeuta respiratorio, perfusionista, u otro' },
+                  { id: 'fisioterapeuta', label: 'Fisioterapeutas' },
+                  { id: 'kinesiologo', label: 'Kinesiólogos' },
+                  { id: 'terapeuta_respiratorio', label: 'Terapeutas respiratorios' },
+                  { id: 'otro', label: 'Otro (especificar)' },
                 ].map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    className={`ins-role-btn ${subRole === r.id ? 'ins-role-btn--active' : ''}`}
-                    onClick={() => selectSubRole(r.id)}
-                  >
-                    <Shield size={18} />
-                    <div>
-                      <span className="ins-role-label">{r.label}</span>
-                    </div>
-                    {subRole === r.id && <CheckCircle2 size={18} className="ins-role-check" />}
-                  </button>
+                  <div key={r.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      className={`ins-role-btn ${subRole === r.id ? 'ins-role-btn--active' : ''}`}
+                      onClick={() => selectSubRole(r.id)}
+                      style={{ width: '100%' }}
+                    >
+                      <Shield size={18} />
+                      <div>
+                        <span className="ins-role-label">{r.label}</span>
+                      </div>
+                      {subRole === r.id && <CheckCircle2 size={18} className="ins-role-check" />}
+                    </button>
+                    {r.id === 'otro' && subRole === 'otro' && (
+                      <input
+                        type="text"
+                        placeholder="Especifica tu profesión..."
+                        value={customOtro}
+                        onChange={(e) => setCustomOtro(e.target.value)}
+                        style={{
+                          padding: '0.8rem 1rem',
+                          borderRadius: '12px',
+                          border: '2px solid var(--ins-border)',
+                          fontSize: '0.9rem',
+                          outline: 'none',
+                          color: 'var(--ins-dark)',
+                          background: 'var(--ins-bg)',
+                          transition: 'border-color 0.2s',
+                          width: '100%',
+                          boxSizing: 'border-box'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = 'var(--ins-blue)'}
+                        onBlur={(e) => e.target.style.borderColor = 'var(--ins-border)'}
+                      />
+                    )}
+                  </div>
                 ))}
               </div>
             </section>
@@ -408,7 +463,7 @@ export default function InscripcionesNursing() {
               {perfil ? (
                 <>
                   <div className="ins-summary-line">
-                    <span>{PROFILES[perfil].label}</span>
+                    <span>{perfil === 'otro' && customOtro ? `Otro: ${customOtro}` : PROFILES[perfil].label}</span>
                     <span>{fmt(displayBase, cur)}</span>
                   </div>
                   {[...extras].map((id) => {
@@ -912,11 +967,12 @@ export function RegistrationForm() {
               <label>Grado académico / Profesión *</label>
               <select value={form.grado} onChange={set('grado')} required>
                 <option value="">Selecciona...</option>
-                <option>Médico Especialista</option>
-                <option>Médico Residente</option>
                 <option>Enfermero/a</option>
                 <option>Terapeuta Respiratorio</option>
                 <option>Fisioterapeuta</option>
+                <option>Kinesiólogo</option>
+                <option>Médico Especialista</option>
+                <option>Médico Residente</option>
                 <option>Estudiante</option>
                 <option>Otro</option>
               </select>

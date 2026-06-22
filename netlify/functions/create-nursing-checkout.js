@@ -50,12 +50,20 @@ async function addMailchimpTag(email, perfilLabel, extrasLabel) {
 const PRICES_MXN = {
   especialista:  5000,
   enfermero:     5000,
+  fisioterapeuta: 5000,
+  kinesiologo:   5000,
+  terapeuta_respiratorio: 5000,
+  otro:          5000,
   ecmo_sim:      3500,
 };
 
 const PROFILE_LABELS = {
   especialista: 'Médicos (Especialista/Residente)',
-  enfermero:    'Enfermeros y Otros Profesionales',
+  enfermero:    'Enfermero(a)',
+  fisioterapeuta: 'Fisioterapeuta',
+  kinesiologo:   'Kinesiólogo',
+  terapeuta_respiratorio: 'Terapeuta Respiratorio',
+  otro:          'Otro Profesional de la Salud',
 };
 
 const EXTRA_LABELS = {
@@ -65,6 +73,10 @@ const EXTRA_LABELS = {
 const ALLOWED_EXTRAS = {
   especialista: ['ecmo_sim'],
   enfermero:    ['ecmo_sim'],
+  fisioterapeuta: ['ecmo_sim'],
+  kinesiologo:   ['ecmo_sim'],
+  terapeuta_respiratorio: ['ecmo_sim'],
+  otro:          ['ecmo_sim'],
 };
 
 export const handler = async (event) => {
@@ -73,13 +85,14 @@ export const handler = async (event) => {
   }
 
   try {
-    const { perfil, extras = [], moneda = 'mxn', email = '', promoCode = null } = JSON.parse(event.body);
+    const { perfil, extras = [], moneda = 'mxn', email = '', promoCode = null, customOtro = null } = JSON.parse(event.body);
 
     if (!PRICES_MXN[perfil]) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Perfil inválido' }) };
     }
 
     const currency = moneda === 'usd' ? 'usd' : 'mxn';
+    const activeProfileLabel = (perfil === 'otro' && customOtro) ? `Otro: ${customOtro}` : PROFILE_LABELS[perfil];
 
     const mxnToUnit = (mxn, isBase = false) => {
       let finalMXN = mxn;
@@ -104,7 +117,7 @@ export const handler = async (event) => {
         price_data: {
           currency,
           product_data: {
-            name: `Curso ECMO Nursing Care — ${PROFILE_LABELS[perfil]}`,
+            name: `Curso ECMO Nursing Care — ${activeProfileLabel}`,
             description: `Healthcare Training Experience · Curso especializado en cuidados de enfermería ECMO. ${LEGAL_TEXT}`,
           },
           unit_amount: mxnToUnit(PRICES_MXN[perfil], true),
@@ -141,7 +154,7 @@ export const handler = async (event) => {
 
     const payData = Buffer.from(JSON.stringify({
       email,
-      perfilLabel: PROFILE_LABELS[perfil],
+      perfilLabel: activeProfileLabel,
       extrasLabel: validExtras.map((e) => EXTRA_LABELS[e]).join(', ') || 'Ninguno',
       moneda: currency,
       total_mxn: totalMXN,
@@ -185,7 +198,7 @@ export const handler = async (event) => {
 
     // Mailchimp: registrar carrito abandonado (no bloqueante)
     const extrasLabel = validExtras.map((e) => EXTRA_LABELS[e]).join(', ');
-    addMailchimpTag(email, PROFILE_LABELS[perfil], extrasLabel).catch((err) =>
+    addMailchimpTag(email, activeProfileLabel, extrasLabel).catch((err) =>
       console.error('Mailchimp tag error:', err.message)
     );
 
