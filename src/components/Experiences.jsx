@@ -64,8 +64,8 @@ const Experiences = () => {
           <ExperienceCard 
             delay={0.1}
             icon={Heart}
-            title="Manejo de avanzada en insuficiencia cardiaca"
-            description="Domina los criterios de selección para asistencia ventricular y trasplante con simulación HARVI de alta precisión."
+            title="Diplomado de Manejo de Avanzada en Insuficiencia Cardiaca"
+            description="Domina la trayectoria completa de la insuficiencia cardíaca avanzada: desde la optimización farmacológica y la indicación de soportes circulatorios mecánicos, hasta el trasplante cardíaco. Todo integrado mediante un aprendizaje interactivo y dinámico con HARVI."
             link="/insuficiencia-cardiaca"
             img="/assets/componentes/exopins.png"
             badge="PRÓXIMAMENTE"
@@ -75,25 +75,27 @@ const Experiences = () => {
             delay={0.2}
             icon={NurseCap}
             title="ECMO Nursing Care Course"
-            description="El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo."
+            description="El primer entrenamiento diseñado por y para enfermería. Lidera con seguridad y criterio clínico el cuidado integral del paciente crítico en soporte ECMO."
             link="/ecmo-nursing-care"
             img="/assets/componentes/expnur.png"
             badge="INSCRIPCIONES ABIERTAS"
-            badgeClass="badge-success"
+            badgeClass="badge-danger"
           />
           <ExperienceCard
             delay={0.3}
             icon={Award}
             title="Paris International Diploma in ECMO"
-            description="La especialización de mayor prestigio global en ECMO. Desarrolla competencias críticas para liderar equipos de soporte extracorpóreo al más alto nivel clínico."
+            description="Certifícate en el programa de mayor prestigio global en ECMO, liderado por los profesores Alain Combes (ex Presidente de EuroELSO) y Matthieu Schmidt (Presidente de EuroELSO actual), máximos referentes globales e investigadores de ECMO del Hospital la Pitié-Salpêtrière. Accede a la experiencia del centro ECMO más grande del mundo, directo de París a Latinoamérica."
             link="/paris-diploma-ecmo"
             img="/assets/componentes/expparis.png"
+            badge="INSCRIPCIONES ABIERTAS"
+            badgeClass="badge-danger"
           />
           <ExperienceCard
             delay={0.4}
             icon={Gamepad2}
             title="ECMO SIM: Realidad Clínica"
-            description="Simulación de alta fidelidad con tecnología inmersiva de vanguardia. Domina el manejo de escenarios críticos en un entorno clínico interactivo y seguro."
+            description="Sumérgete en una experiencia de alta fidelidad. Toma decisiones críticas y domina el soporte ECMO V-V y V-A en un entorno virtual interactivo, intuitivo y seguro, diseñado para acelerar tu curva de aprendizaje y el de tu equipo multidisciplinario."
             link="/simulador-ecmo-sim"
             img="/assets/componentes/expsim.png"
             badge="SIMULADOR"

@@ -352,8 +352,8 @@ const Dashboard = () => {
   const premiumSponsorCourses = [
     {
       id: 1,
-      title: 'Manejo de avanzada en insuficiencia cardiaca',
-      description: 'Domina los criterios de selección para asistencia ventricular y trasplante con simulación HARVI de alta precisión.',
+      title: 'Diplomado de Manejo de Avanzada en Insuficiencia Cardiaca',
+      description: 'Domina la trayectoria completa de la insuficiencia cardíaca avanzada: desde la optimización farmacológica y la indicación de soportes circulatorios mecánicos, hasta el trasplante cardíaco. Todo integrado mediante un aprendizaje interactivo y dinámico con HARVI.',
       image: '/assets/componentes/exopins.png',
       link: '/insuficiencia-cardiaca',
       badge: 'PRÓXIMAMENTE',
@@ -363,23 +363,27 @@ const Dashboard = () => {
     {
       id: 2,
       title: 'ECMO Nursing Care Course',
-      description: 'El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo.',
+      description: 'El primer entrenamiento diseñado por y para enfermería. Lidera con seguridad y criterio clínico el cuidado integral del paciente crítico en soporte ECMO.',
       image: '/assets/componentes/expnur.png',
       link: '/ecmo-nursing-care',
+      badge: 'INSCRIPCIONES ABIERTAS',
+      badgeClass: 'badge-danger',
       icon: NurseCap
     },
     {
       id: 3,
       title: 'Paris International Diploma in ECMO',
-      description: 'La especialización de mayor prestigio global en ECMO. Desarrolla competencias críticas para liderar equipos de soporte extracorpóreo al más alto nivel clínico.',
+      description: 'Certifícate en el programa de mayor prestigio global en ECMO, liderado por los profesores Alain Combes (ex Presidente de EuroELSO) y Matthieu Schmidt (Presidente de EuroELSO actual), máximos referentes globales e investigadores de ECMO del Hospital la Pitié-Salpêtrière. Accede a la experiencia del centro ECMO más grande del mundo, directo de París a Latinoamérica.',
       image: '/assets/componentes/expparis.png',
       link: '/paris-diploma-ecmo',
+      badge: 'INSCRIPCIONES ABIERTAS',
+      badgeClass: 'badge-danger',
       icon: Award
     },
     {
       id: 4,
       title: 'ECMO SIM: Realidad Clínica',
-      description: 'Simulación de alta fidelidad con tecnología inmersiva de vanguardia. Domina el manejo de escenarios críticos en un entorno clínico interactivo y seguro.',
+      description: 'Sumérgete en una experiencia de alta fidelidad. Toma decisiones críticas y domina el soporte ECMO V-V y V-A en un entorno virtual interactivo, intuitivo y seguro, diseñado para acelerar tu curva de aprendizaje y el de tu equipo multidisciplinario.',
       image: '/assets/componentes/expsim.png',
       link: '/simulador-ecmo-sim',
       badge: 'SIMULADOR',
