@@ -533,6 +533,60 @@ const ParisNewDesign = () => {
                 </div>
             </section>
 
+            {/* Benefit banner for Nurses */}
+            <section style={{ padding: '0 2rem 4rem 2rem', background: '#0a192f' }}>
+                <div className="reveal" style={{
+                    maxWidth: '1000px',
+                    margin: '0 auto',
+                    background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(14, 165, 233, 0.05) 100%)',
+                    border: '1px solid rgba(14, 165, 233, 0.2)',
+                    borderRadius: '20px',
+                    padding: '2.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2rem',
+                    flexWrap: 'wrap'
+                }}>
+                    <div style={{
+                        background: 'rgba(37, 99, 235, 0.2)',
+                        color: '#00e5ff',
+                        width: '70px',
+                        height: '70px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                    }}>
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="m0 8.853 2.886 10.115c2.738-.403 5.899-.633 9.113-.633s6.375.23 9.467.675l-.353-.042 2.886-10.115c-9.502-4.225-15.141-4.448-23.999 0zm14.918 4.276h-2.071v2.071h-1.686v-2.071h-2.071v-1.686h2.071v-2.072h1.686v2.072h2.071z" />
+                        </svg>
+                    </div>
+                    <div style={{ flex: 1, minWidth: '280px', textAlign: 'left' }}>
+                        <span style={{
+                            background: 'rgba(0, 229, 255, 0.1)',
+                            color: '#00e5ff',
+                            padding: '4px 12px',
+                            borderRadius: '20px',
+                            fontSize: '0.78rem',
+                            fontWeight: '800',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            display: 'inline-block',
+                            marginBottom: '0.8rem'
+                        }}>
+                            Beneficio Especial de Enfermería
+                        </span>
+                        <h4 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800', color: '#ffffff', marginBottom: '0.5rem' }}>
+                            Agrega ECMO Nursing con 30% de Descuento
+                        </h4>
+                        <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.6' }}>
+                            Si eres enfermero(a), puedes complementar tu inscripción al Diploma Internacional con el <strong>ECMO Nursing Care Course</strong> con un <strong>30% de descuento</strong>. Fecha de inicio: <strong>20 de Julio</strong> — ideal como preparación teórica y práctica antes de la certificación en París en Octubre.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
             {/* SECTION 8: CERTIFICATION (PRESTIGE REDESIGN) */}
             <section className="certification-prestige">
                 <div className="container container-sm" style={{ maxWidth: '1000px', margin: '0 auto' }}>

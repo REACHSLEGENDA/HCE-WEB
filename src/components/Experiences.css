@@ -198,6 +198,7 @@
 }
 
 .badge-danger { background: #ff4757; }
+.badge-success { background: #2ed573; }
 .badge-info { background: #2f3542; }
 .badge-warning { background: var(--accent); color: var(--primary); }
 

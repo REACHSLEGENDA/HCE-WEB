@@ -78,6 +78,8 @@ const Experiences = () => {
             description="El primer entrenamiento 100% enfermería para enfermería. Lidera el cuidado crítico del paciente en soporte extracorpóreo."
             link="/ecmo-nursing-care"
             img="/assets/componentes/expnur.png"
+            badge="INSCRIPCIONES ABIERTAS"
+            badgeClass="badge-success"
           />
           <ExperienceCard
             delay={0.3}
