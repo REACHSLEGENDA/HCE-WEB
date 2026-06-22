@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import {
   Home,
   BookOpen,
+  Calendar,
   Award,
   User as UserIcon,
   Settings,
@@ -368,7 +369,8 @@ const Dashboard = () => {
       link: '/ecmo-nursing-care',
       badge: 'INSCRIPCIONES ABIERTAS',
       badgeClass: 'badge-danger',
-      icon: NurseCap
+      icon: NurseCap,
+      startDate: 'Inicio: 20 de Julio, 2026'
     },
     {
       id: 3,
@@ -378,7 +380,8 @@ const Dashboard = () => {
       link: '/paris-diploma-ecmo',
       badge: 'INSCRIPCIONES ABIERTAS',
       badgeClass: 'badge-danger',
-      icon: Award
+      icon: Award,
+      startDate: 'Inicio: 27 de Octubre, 2026'
     },
     {
       id: 4,
@@ -986,6 +989,12 @@ const Dashboard = () => {
                           <div className="img-overlay-gradient"></div>
                         </div>
                         <div className="exp-content-body">
+                          {course.startDate && (
+                            <div className="exp-start-date">
+                              <Calendar size={14} className="calendar-icon" />
+                              <span>{course.startDate}</span>
+                            </div>
+                          )}
                           <h3 className="exp-title-premium">{course.title}</h3>
                         </div>
                       </Link>
@@ -1186,6 +1195,12 @@ const Dashboard = () => {
                           {Icon && <div className="card-floating-icon"><Icon size={24} /></div>}
                         </div>
                         <div className="exp-content-body">
+                          {course.startDate && (
+                            <div className="exp-start-date">
+                              <Calendar size={14} className="calendar-icon" />
+                              <span>{course.startDate}</span>
+                            </div>
+                          )}
                           <h3 className="exp-title-premium">{course.title}</h3>
                           <p className="exp-desc-premium">{course.description}</p>
                           <div className="exp-footer-premium">

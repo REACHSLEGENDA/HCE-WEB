@@ -279,9 +279,13 @@
   .experiences-grid-premium { gap: 1.5rem; grid-template-columns: repeat(2, 1fr); }
 }
 
+@media (max-width: 768px) {
+  .experiences-grid-premium { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+
 @media (max-width: 480px) {
   .title-3d { font-size: 1.9rem; }
-  .experiences-grid-premium { grid-template-columns: 1fr; gap: 1rem; }
+  .experiences-grid-premium { gap: 1rem; }
 }
 
 /* Title gradient override */
@@ -290,4 +294,23 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.exp-start-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ff4757;
+  background-color: rgba(255, 71, 87, 0.08);
+  border: 1px solid rgba(255, 71, 87, 0.15);
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 0.8rem;
+  width: fit-content;
+}
+
+.exp-start-date .calendar-icon {
+  flex-shrink: 0;
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Star, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, Heart, Stethoscope, Activity, Gamepad2, HeartPulse, Award } from 'lucide-react';
+import { Star, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, Heart, Stethoscope, Activity, Gamepad2, HeartPulse, Award, Calendar } from 'lucide-react';
 import './Experiences.css';
 
 const NurseCap = ({ size = 24, ...props }) => (
@@ -16,7 +16,7 @@ const NurseCap = ({ size = 24, ...props }) => (
   </svg>
 );
 
-const ExperienceCard = ({ title, description, link, img, imgClass, containerClass, badge, badgeClass, delay, icon: Icon }) => {
+const ExperienceCard = ({ title, description, link, img, imgClass, containerClass, badge, badgeClass, delay, icon: Icon, startDate }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   
   return (
@@ -30,6 +30,12 @@ const ExperienceCard = ({ title, description, link, img, imgClass, containerClas
       </div>
       
       <div className="exp-content-body">
+        {startDate && (
+          <div className="exp-start-date">
+            <Calendar size={14} className="calendar-icon" />
+            <span>{startDate}</span>
+          </div>
+        )}
         <h3 className="exp-title-premium">{title}</h3>
         <p className="exp-desc-premium">{description}</p>
         <div className="exp-footer-premium">
@@ -80,6 +86,7 @@ const Experiences = () => {
             img="/assets/componentes/expnur.png"
             badge="INSCRIPCIONES ABIERTAS"
             badgeClass="badge-danger"
+            startDate="Inicio: 20 de Julio, 2026"
           />
           <ExperienceCard
             delay={0.3}
@@ -90,6 +97,7 @@ const Experiences = () => {
             img="/assets/componentes/expparis.png"
             badge="INSCRIPCIONES ABIERTAS"
             badgeClass="badge-danger"
+            startDate="Inicio: 27 de Octubre, 2026"
           />
           <ExperienceCard
             delay={0.4}
