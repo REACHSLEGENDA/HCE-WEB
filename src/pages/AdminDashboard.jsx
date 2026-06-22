@@ -196,12 +196,12 @@ const AdminDashboard = () => {
   const getStandardGatewayCourse = (courseName = '') => {
     const name = (courseName || '').toLowerCase();
     if (name.includes('nurs')) {
-      return { id: 'ecmo_nursing', title: 'ECMO Nursing Care' };
+      return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
     }
     if (name.includes('paris') || name.includes('parís')) {
-      return { id: 'ecmo_paris', title: 'ECMO París' };
+      return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
     }
-    return { id: 'ecmo_sim', title: 'ECMO Simulador Care' };
+    return { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' };
   };
 
   const filterMay2026Onwards = (list) => {
@@ -2334,9 +2334,9 @@ const AdminDashboard = () => {
           {/* VIEW: PAYMENTS & FORMS */}
           {activeTab === 'payments' && (() => {
             const gatewayCourses = [
-              { id: 'ecmo_sim', title: 'ECMO Simulador Care' },
-              { id: 'ecmo_nursing', title: 'ECMO Nursing Care' },
-              { id: 'ecmo_paris', title: 'ECMO París' }
+              { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' },
+              { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' },
+              { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' }
             ];
 
             // Filter payments based on search and filters

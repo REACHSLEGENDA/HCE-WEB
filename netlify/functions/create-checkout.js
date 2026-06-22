@@ -186,7 +186,7 @@ export const handler = async (event) => {
         extras: validExtras.join(','),
         moneda: currency,
         mailchimp_tag: MAILCHIMP_TAG,
-        curso: 'ECMO París',
+        curso: 'Paris International Diploma in ECMO',
       },
     };
 

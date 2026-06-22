@@ -42,11 +42,11 @@ export const handler = async (event) => {
         if (courseName === 'Inscripción HCE' || !courseName) {
           const tag = pi.metadata?.mailchimp_tag;
           if (tag === 'CANCELPARIS') {
-            courseName = 'ECMO París';
+            courseName = 'Paris International Diploma in ECMO';
           } else if (tag === 'CANCELNURSING') {
-            courseName = 'ECMO Nursing Care';
+            courseName = 'ECMO Nursing Care Course';
           } else if (pi.metadata?.plan) {
-            courseName = 'ECMO Simulador Care';
+            courseName = 'ECMO SIM: Realidad Clínica';
           }
         }
 
