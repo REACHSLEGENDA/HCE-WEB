@@ -433,7 +433,11 @@ const AdminDashboard = () => {
       const merged = [...stripePayments];
       if (data.payments && data.payments.length > 0) {
         data.payments.forEach(item => {
-          if (!merged.some(m => m.id === item.id)) {
+          const idx = merged.findIndex(m => m.id === item.id);
+          if (idx !== -1) {
+            // Update existing item with new data from API (in case courseName was corrected)
+            merged[idx] = { ...merged[idx], ...item };
+          } else {
             merged.unshift(item);
           }
         });

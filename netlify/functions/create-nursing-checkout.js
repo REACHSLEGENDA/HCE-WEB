@@ -179,6 +179,7 @@ export const handler = async (event) => {
         extras: validExtras.join(','),
         moneda: currency,
         mailchimp_tag: MAILCHIMP_TAG,
+        curso: 'ECMO Nursing Care',
       },
     };
 

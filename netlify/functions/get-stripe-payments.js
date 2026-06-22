@@ -36,7 +36,20 @@ export const handler = async (event) => {
         const last4 = pi.charges?.data?.[0]?.payment_method_details?.card?.last4 || '';
         const method = last4 ? `${brand.charAt(0).toUpperCase() + brand.slice(1)} **** ${last4}` : brand;
         
-        const courseName = pi.metadata?.curso || pi.description || 'Inscripción HCE';
+        let courseName = pi.metadata?.curso || pi.description || 'Inscripción HCE';
+        
+        // Fallback for older transactions using mailchimp_tag or plan metadata
+        if (courseName === 'Inscripción HCE' || !courseName) {
+          const tag = pi.metadata?.mailchimp_tag;
+          if (tag === 'CANCELPARIS') {
+            courseName = 'ECMO París';
+          } else if (tag === 'CANCELNURSING') {
+            courseName = 'ECMO Nursing Care';
+          } else if (pi.metadata?.plan) {
+            courseName = 'ECMO Simulador Care';
+          }
+        }
+
         const courseId = pi.metadata?.course_id || 'general';
         const promoCode = pi.metadata?.promo_code || pi.metadata?.coupon || pi.metadata?.code || '';
         

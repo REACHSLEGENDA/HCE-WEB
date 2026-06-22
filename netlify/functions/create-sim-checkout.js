@@ -131,6 +131,7 @@ export const handler = async (event) => {
         usd_final: baseUsd.toString(),
         promo_applied: discountApplied ? 'EXPSIM26' : 'none',
         total_mxn: finalMXN.toString(),
+        curso: 'ECMO Simulador Care',
       },
     };
 
