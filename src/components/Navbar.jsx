@@ -83,21 +83,21 @@ const Navbar = () => {
           ) : (
             <Link to="/login" className="btn-portal login-style">
               <LogIn size={16} />
-              <span className="btn-portal-text">Acceso Alumnos</span>
+              <span className="btn-portal-text">Portal HCE</span>
             </Link>
           )}
         </div>
       </header>
-
+ 
       {/* Overlay Navigation */}
       <nav className={`nav-overlay ${navOpen ? 'open' : ''}`} id="navOverlay">
         {/* Botón de Cerrar dentro del menú */}
         <div className="close-menu" id="closeMenu" title="Cerrar Menú" onClick={() => toggleNav(false)}>
           <X size={24} />
         </div>
-
+ 
         <div className="nav-grid">
-          
+           
           {/* Home Link dentro del menú */}
           <div className="nav-logo-overlay">
             <Link to="/" onClick={() => toggleNav(false)} className="nav-logo-link">
@@ -108,22 +108,31 @@ const Navbar = () => {
                   <HomeIcon size={20} /> Inicio
                </Link>
                {user ? (
-                 <>
-                   <Link to="/dashboard" onClick={() => toggleNav(false)} className="nav-home-item">
-                     <User size={20} /> Mi Portal
-                   </Link>
-                   <a href="#" onClick={(e) => { e.preventDefault(); logout(); toggleNav(false); }} className="nav-home-item" style={{ color: '#ff7675' }}>
-                     <LogOut size={20} /> Cerrar Sesión
-                   </a>
-                 </>
+                 <Link to="/dashboard" onClick={() => toggleNav(false)} className="nav-home-item">
+                   <User size={20} /> Mi Portal
+                 </Link>
                ) : (
                  <Link to="/login" onClick={() => toggleNav(false)} className="nav-home-item">
-                   <LogIn size={20} /> Acceso Alumnos
+                   <LogIn size={20} /> Portal HCE
                  </Link>
+               )}
+               <a
+                 href="https://campus.healthcareexp.com/plus/login"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="nav-home-item"
+                 onClick={() => toggleNav(false)}
+               >
+                 <PlayCircle size={20} /> Campus Virtual <ExternalLink size={13} style={{ marginLeft: '4px' }} />
+               </a>
+               {user && (
+                 <a href="#" onClick={(e) => { e.preventDefault(); logout(); toggleNav(false); }} className="nav-home-item" style={{ color: '#ff7675' }}>
+                   <LogOut size={20} /> Cerrar Sesión
+                 </a>
                )}
             </div>
           </div>
-
+ 
           {/* Nosotros */}
           <div className="menu-section">
             <h3>Nosotros</h3>
@@ -133,30 +142,17 @@ const Navbar = () => {
               <li><Link to="/comunidad" onClick={() => toggleNav(false)}><MessageSquare size={18} /> Testimonios y Foro</Link></li>
             </ul>
           </div>
-
+ 
           {/* Experiencias */}
           <div className="menu-section">
             <h3>Experiencias</h3>
             <ul className="menu-list">
-              <li>
-                <a
-                  href="https://campus.healthcareexp.com/plus/login"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="menu-campus-link"
-                  onClick={() => toggleNav(false)}
-                >
-                  <PlayCircle size={18} />
-                  Campus Virtual
-                  <ExternalLink size={13} className="menu-campus-ext" />
-                </a>
-              </li>
               {/* <li><Link to="/insuficiencia-cardiaca" onClick={() => toggleNav(false)}><Heart size={18} /> Insuficiencia Cardiaca</Link></li> */}
               <li><Link to="/ecmo-nursing-care" onClick={() => toggleNav(false)}><NurseCap size={18} /> ECMO Nursing Care</Link></li>
               <li><Link to="/paris-diploma-ecmo" onClick={() => toggleNav(false)}><Award size={18} /> Paris Diploma ECMO</Link></li>
             </ul>
           </div>
-
+ 
           {/* Simulador */}
           <div className="menu-section">
             <h3>Simulador</h3>

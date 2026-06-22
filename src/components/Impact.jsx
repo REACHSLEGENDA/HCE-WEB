@@ -93,7 +93,7 @@ const Impact = () => {
             icon={<GraduationCap size={32} />}
             target={100}
             title="Docentes internacionales"
-            desc="Expertos de <strong>centros ECMO líderes</strong> en Europa, EE. UU. y LATAM."
+            desc="Expertos de <strong>centros líderes</strong> en Europa, EE. UU. y LATAM."
             delay={0.3}
             triggerAnim={inView}
           />
@@ -101,7 +101,7 @@ const Impact = () => {
             icon={<Laptop2 size={32} />}
             target={50}
             title="Clases magistrales"
-            desc="Contenido premium disponible 24/7 en nuestra <strong>Biblioteca Científica</strong>."
+            desc="Contenido premium disponible 24/7 en nuestro <strong>Portal Científico</strong>."
             delay={0.4}
             triggerAnim={inView}
           />

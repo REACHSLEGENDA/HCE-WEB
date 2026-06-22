@@ -11,6 +11,8 @@ const logos = [
   { src: "/assets/componentes/56.webp",         alt: "Institución 7" },
   { src: "/assets/componentes/SS.webp",         alt: "Institución 8" },
   { src: "/assets/componentes/images.webp",     alt: "Institución 9" },
+  { src: "/assets/componentes/fleci.jpeg",      alt: "FLECI" },
+  { src: "/assets/componentes/alat.png",        alt: "ALAT" },
 ];
 
 const Partners = () => (
