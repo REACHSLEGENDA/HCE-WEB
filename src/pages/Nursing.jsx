@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
-import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send, ChevronLeft, ChevronRight, Gamepad2, Cpu, Activity, Gauge, Sparkles, Hospital } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+
+
 import './Nursing.css';
 
 const FacultyCard = ({ src, role, name, country, flag, hospital, delay }) => {
@@ -40,8 +42,12 @@ const FacultyCard = ({ src, role, name, country, flag, hospital, delay }) => {
         ) : (
           <div className="n-mini-flag-fallback"><Award size={14} color="#e31837" /></div>
         )}
+        {hospital && (
+          <p className="n-hospital" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', justifyContent: 'center', margin: '0.4rem auto 0.6rem', width: '100%' }}>
+            <Hospital size={14} style={{ color: '#00d2ff', flexShrink: 0 }} /> {hospital}
+          </p>
+        )}
         <p className="n-role">{role}</p>
-        {hospital && <p className="n-hospital">{hospital}</p>}
       </div>
     </div>
   );
@@ -179,7 +185,7 @@ const Nursing = () => {
     { src: "/assets/instructores/p-juanm.jpeg", name: "Dr. Juan Blanco Morillo", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Clínico y ECMO Especialista. Doctor en Ciencias de la Salud. Máster en Gestión del Riesgo Cardiovascular. Miembro Ejecutivo del Comité de ICEBP", hospital: "Hospital Universitario Virgen de la Arrixaca" },
     { src: "/assets/instructores/p-eduardom.webp", name: "Mtro. Eduardo Aguilar Rivera", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Enfermero Especialista en Cuidados Intensivos. Maestría Académica en Educación con Énfasis en Docencia Universitaria. Maestría Profesional en Gestión del Riesgo en Desastres y Atención de Emergencias. Docente de la Universidad de Costa Rica. ECMO Especialista", hospital: "Caja Costarricense" },
     { src: "/assets/instructores/p-moisem.png", name: "Perf. Moisés Espitia Victoria", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Perfusionista Clínico y Especialista Cardiovascular, Cuidados Intensivos y ECMO Especialista", hospital: "Centro Médico Nacional Siglo XXI y ECMO Heart Team CDMX" },
-    { src: "/assets/instructores/p-gonzalom.jpeg", name: "Gonzalo Cartes Cartes", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Enfermero Perfusionista, Especialista en Cuidados Intensivos, ECMO Especialista", hospital: "Hospital Regional de Concepción" },
+    { src: "/assets/instructores/p-gonzalom.jpeg", name: "Perf. Gonzalo Cartes Cartes", country: "CHILE", flag: "https://flagcdn.com/w80/cl.png", role: "Enfermero Perfusionista, Especialista en Cuidados Intensivos, ECMO Especialista", hospital: "Hospital Regional de Concepción" },
     { src: "/assets/instructores/a2e51cc5-9cb6-412c-b92e-7b9c9dcfc69e.jpg", name: "Mtra. Lisbeth Ocaña Albites", country: "PERÚ", flag: "https://flagcdn.com/w80/pe.png", role: "Enfermera Especialista en Cuidados Intensivos y Cardiovascular. Maestría en gerencia en salud. Miembro del programa de trasplante cardíaco y asistencia circulatoria mecánica (ECMO y asistencia ventricular)", hospital: "INCOR EsSalud" },
     { src: "/assets/instructores/219e522e-5aff-409c-8ab3-7e3904b9f45d.jpg", name: "Perf. Hans Castro Rosero", country: "CHILE / COLOMBIA", flag: ["https://flagcdn.com/w80/cl.png", "https://flagcdn.com/w80/co.png"], role: "Perfusionista Clínico y Especialista en Cuidados Intensivos y Cuidado Intermedio. ECMO Especialista", hospital: "Hospital Dr. Hernán Henríquez Aravena de Temuco" },
     { src: "/assets/instructores/de5ae3a6-8be9-41fe-a8e0-aae691d2172e.jpg", name: "Perf. Mario Alejandro Meza Mier", country: "COLOMBIA", flag: "https://flagcdn.com/w80/co.png", role: "Perfusionista Clínico y ECMO Especialista", hospital: "Clinaltec – Clínica Internacional de Alta Tecnología, Ibagué" },
@@ -193,7 +199,7 @@ const Nursing = () => {
     { src: "/assets/instructores/WhatsApp-Image-2025-06-22-at-12.01.16-1.jpeg", name: "Mtro. Ricardo Fernando Rosero", country: "ARGENTINA", flag: "https://flagcdn.com/w80/ar.png", role: "Enfermero con Maestría en Especialista en Cuidados intensivos y ECMO. Instructor en Simulación Clínica y Profesor universitario.", hospital: "Hospital Favaloro" },
     { src: "/assets/instructores/WhatsApp-Image-2025-08-04-at-16.19.00.jpeg", name: "Lic. Fabio Salas Alvarez", country: "COSTA RICA", flag: "https://flagcdn.com/w80/cr.png", role: "Enfermero Especialista en Cuidados intensivos y ECMO.", hospital: "Hospital Calderón Guardia" },
     { src: "/assets/instructores/p-elianam.jpeg", name: "Mtra. Eliana Marilin Cerón López", country: "ECUADOR / COLOMBIA", flag: ["https://flagcdn.com/w80/ec.png", "https://flagcdn.com/w80/co.png"], role: "Perfusionista Clínica y ECMO Especialista con Maestría en Perfusión.", hospital: "Clínica Guayaquil" },
-    { src: "/assets/instructores/diego-huerta.jpg", name: "EE. Diego Huerta Guarneros", country: "M\u00C9XICO", flag: "https://flagcdn.com/w80/mx.png", role: "Consultor Cl\u00EDnico en Terapias Extracorp\u00F3reas y Soportes Multiorg\u00E1nicos para LATAM. Coordinador del Comit\u00E9 de Enfermer\u00EDa de la Sociedad Latinoamericana de Nefrolog\u00EDa e Hipertensi\u00F3n (SLANH)", hospital: "Sociedad Latinoamericana de Nefrolog\u00EDa e Hipertensi\u00F3n" },
+    { src: "/assets/instructores/diego-huerta.jpg", name: "EE. Diego Huerta Guarneros", country: "MÉXICO", flag: "https://flagcdn.com/w80/mx.png", role: "Consultor Clínico en Terapias Extracorpóreas y Soportes Multiorgánicos para LATAM. Coordinador del Comité de Enfermería de la Sociedad Latinoamericana de Nefrología e Hipertensión (SLANH)", hospital: "Sociedad Latinoamericana de Nefrología e Hipertensión" },
   ];
 
   return (
@@ -209,7 +215,7 @@ const Nursing = () => {
             <span style={{ color: '#e31837', fontWeight: '800', letterSpacing: '2px', marginBottom: '0.8rem', fontSize: '1.1rem', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif" }}>
               INICIAMOS EL 20 DE JULIO DE 2026
             </span>
-            <span className="section-badge">PROGRAMA DE ALTA ESPECIALIDAD</span>
+            <span className="n-sec-badge"><Sparkles size={14} /> PROGRAMA DE ALTA ESPECIALIDAD</span>
             <h1 className="n-hero-title-text">
               Entrénate en el Cuidado de Enfermería en ECMO
             </h1>
@@ -252,7 +258,7 @@ const Nursing = () => {
       <section className="n-intro-section">
         <div className="hce-container">
           <div ref={heroRef} className={`n-intro-content reveal ${heroInView ? 'active' : ''}`}>
-            <span className="section-badge">PROGRAMA DE ALTA ESPECIALIDAD</span>
+            <span className="n-sec-badge"><Sparkles size={14} /> PROGRAMA DE ALTA ESPECIALIDAD</span>
             <h1 className="n-intro-title">
               Formación por y para <span className="red-text">Profesionales de Enfermería</span>
             </h1>
@@ -290,8 +296,8 @@ const Nursing = () => {
               className="n-endorsement-img"
             />
             <div className="n-endorsement-text">
-              <span className="section-badge" style={{ marginBottom: '0.8rem', display: 'inline-block' }}>
-                AVAL ACADÉMICO INTERNACIONAL
+              <span className="n-sec-badge" style={{ marginBottom: '0.8rem', display: 'inline-flex' }}>
+                <Sparkles size={14} /> AVAL ACADÉMICO INTERNACIONAL
               </span>
               <h3>Programa Avalado por FLECI</h3>
               <p>
@@ -306,7 +312,7 @@ const Nursing = () => {
       <section className="n-sec-padding n-methodology-section">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="section-badge">METODOLOGÍA</span>
+            <span className="n-sec-badge"><Sparkles size={14} /> METODOLOGÍA</span>
             <h2 className="n-sec-title">Un método diseñado por enfermería validado por la evidencia</h2>
             <p className="n-sec-subtitle">Estructura pedagógica optimizada para el dominio del cuidado de pacientes en soporte ECMO.</p>
           </div>
@@ -319,20 +325,23 @@ const Nursing = () => {
                   <div className="n-circle-icon"><BookOpen size={20} /></div>
                   <div className="n-circle-icon"><UsersRound size={20} /></div>
                 </div>
-                <span className="n-phase-num">01</span>
+                <span className="n-phase-num">FASE 01</span>
               </div>
-              <span className="section-badge" style={{ background: 'rgba(0, 210, 255, 0.1)', color: '#00d2ff', border: '1px solid rgba(0, 210, 255, 0.3)', marginBottom: '0.8rem', display: 'inline-flex', padding: '3px 10px', fontSize: '0.7rem' }}>100% Virtual</span>
-              <h3>100% Virtual</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
-                <div>
-                  <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Aprendizaje Asincrónico</span>
-                  <p><strong>"Aprende a tu ritmo"</strong>: Flexibilidad total que respeta tus jornadas laborales. Avanza a tu propio paso con acceso 24/7 a clases grabadas, literatura científica y normativas <strong>ELSO</strong>.</p>
-                </div>
-                <div>
-                  <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Aprendizaje Sincrónico</span>
-                  <p><strong>"Consolida con expertos"</strong>: Sesiones interactivas en vivo enfocadas en la resolución de dudas, análisis exhaustivo de casos clínicos y <em>insights</em> prácticos directamente de la práctica al pie de cama.</p>
+              <div className="n-phase-content">
+                <span className="section-badge" style={{ background: 'rgba(0, 210, 255, 0.1)', color: '#00d2ff', border: '1px solid rgba(0, 210, 255, 0.3)', marginBottom: '0.8rem', display: 'inline-flex', padding: '3px 10px', fontSize: '0.7rem' }}>100% Virtual</span>
+                <h3>100% Virtual</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
+                  <div>
+                    <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Aprendizaje Asincrónico</span>
+                    <p><strong>"Aprende a tu ritmo"</strong>: Flexibilidad total que respeta tus jornadas laborales. Avanza a tu propio paso con acceso 24/7 a clases grabadas, literatura científica y normativas <strong>ELSO</strong>.</p>
+                  </div>
+                  <div>
+                    <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Aprendizaje Sincrónico</span>
+                    <p><strong>"Consolida con expertos"</strong>: Sesiones interactivas en vivo enfocadas en la resolución de dudas, análisis exhaustivo de casos clínicos y <em>insights</em> prácticos directamente de la práctica al pie de cama.</p>
+                  </div>
                 </div>
               </div>
+              <button className="n-phase-btn-red" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscripciones Abiertas</button>
             </div>
 
             {/* Card 2 — 100% Presencial */}
@@ -342,20 +351,23 @@ const Nursing = () => {
                   <div className="n-circle-icon"><Award size={20} /></div>
                   <div className="n-circle-icon"><BrainCircuit size={20} /></div>
                 </div>
-                <span className="n-phase-num">02</span>
+                <span className="n-phase-num">FASE 02</span>
               </div>
-              <span className="section-badge" style={{ background: 'rgba(227, 24, 55, 0.1)', color: '#e31837', border: '1px solid rgba(227, 24, 55, 0.3)', marginBottom: '0.8rem', display: 'inline-flex', padding: '3px 10px', fontSize: '0.7rem' }}>100% Presencial</span>
-              <h3>100% Presencial</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
-                <div>
-                  <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Ponencias Magistrales</span>
-                  <p><strong>"Inspiración y Evidencia"</strong>: Espacios presenciales exclusivos con enfermeros especialistas de renombre global, quienes compartirán los últimos avances y tendencias en soporte vital extracorpóreo.</p>
-                </div>
-                <div>
-                  <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Simulación Clínica</span>
-                  <p><strong>"Practica sin riesgo"</strong>: Entrenamiento práctico y deliberado con fidelidad progresiva. Enfrenta fallas mecánicas y clínicas críticas en un entorno seguro y de la mano de instructores internacionales.</p>
+              <div className="n-phase-content">
+                <span className="section-badge" style={{ background: 'rgba(227, 24, 55, 0.1)', color: '#e31837', border: '1px solid rgba(227, 24, 55, 0.3)', marginBottom: '0.8rem', display: 'inline-flex', padding: '3px 10px', fontSize: '0.7rem' }}>100% Presencial</span>
+                <h3>100% Presencial</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
+                  <div>
+                    <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Ponencias Magistrales</span>
+                    <p><strong>"Inspiración y Evidencia"</strong>: Espacios presenciales exclusivos con enfermeros especialistas de renombre global, quienes compartirán los últimos avances y tendencias en soporte vital extracorpóreo.</p>
+                  </div>
+                  <div>
+                    <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Simulación Clínica</span>
+                    <p><strong>"Practica sin riesgo"</strong>: Entrenamiento práctico y deliberado con fidelidad progresiva. Enfrenta fallas mecánicas y clínicas críticas en un entorno seguro y de la mano de instructores internacionales.</p>
+                  </div>
                 </div>
               </div>
+              <button className="n-phase-btn-blue">Inscripciones Próximamente</button>
             </div>
           </div>
 
@@ -393,9 +405,9 @@ const Nursing = () => {
       <section className="n-sec-padding">
         <div className="hce-container">
           <div className="n-sec-header">
-            <span className="n-sec-badge">RESULTADOS</span>
-            <h2 className="n-sec-title">Competencias Clave que Integrarás a tu Práctica Clínica</h2>
-            <p className="n-sec-subtitle">Al finalizar el <strong>ECMO Nursing Care Course</strong>, habrás consolidado un perfil profesional de alta especialización en el cuidado de pacientes en ECMO structured en 6 ejes esenciales:</p>
+            <span className="n-sec-badge"><Sparkles size={14} /> RESULTADOS</span>
+            <h2 className="n-sec-title">Conocimiento y Competencias Clave para tu Práctica Clínica</h2>
+            <p className="n-sec-subtitle">Al finalizar el <strong>ECMO Nursing Care Course</strong>, habrás consolidado un perfil profesional de élite, estructurado en <strong>6 ejes esenciales</strong> para el cuidado avanzado del paciente crítico:</p>
           </div>
 
           <div className="n-outcomes-list-grid">
@@ -405,7 +417,7 @@ const Nursing = () => {
               </div>
               <div className="n-outcome-text">
                 <h4>Fisiología y Hemodinamia Aplicada</h4>
-                <p>Comprenderás a profundidad el transporte de oxígeno celular y dominarás con precisión las indicaciones y repercusiones de las modalidades V-V, V-A (incluyendo poscardiotomía) y configuraciones híbridas.</p>
+                <p>Comprenderás a profundidad el transporte de oxígeno celular y dominarás con precisión los criterios de selección, indicaciones y complicaciones de las modalidades V-V, V-A y configuraciones híbridas.</p>
               </div>
             </div>
 
@@ -414,8 +426,8 @@ const Nursing = () => {
                 <CheckCircle size={16} strokeWidth={3} />
               </div>
               <div className="n-outcome-text">
-                <h4>Monitoreo Integral (Circuito y Paciente)</h4>
-                <p>Ejecutarás protocolos internacionales para supervisar flujos y presiones del sistema, integrándolos con la ventilación protectora, anticoagulación, gasometrías y sedación del paciente.</p>
+                <h4>Monitoreo Integral del Binomio Paciente-Circuito</h4>
+                <p>Ejecutarás protocolos internacionales para supervisar flujos y presiones del sistema, integrándolos con estrategias de ventilación protectora, control estricto de la anticoagulación y optimización de la sedoanalgesia.</p>
               </div>
             </div>
 
@@ -425,7 +437,7 @@ const Nursing = () => {
               </div>
               <div className="n-outcome-text">
                 <h4>Detección Precoz de Complicaciones</h4>
-                <p>Desarrollarás un enfoque preventivo para identificar oportunamente fallas clínicas (hemólisis, sangrado, isquemia) y mecánicas (falla de bomba, entrada de aire, decanulación accidental).</p>
+                <p>Desarrollarás un enfoque preventivo de alta agudeza visual y clínica para identificar oportunamente complicaciones clínicas (hemólisis, sangrado, isquemia) y mecánicas (falla de bomba, embolismo aéreo, disfunción del oxigenador, insuficiencia del drenaje entre otros).</p>
               </div>
             </div>
 
@@ -434,8 +446,8 @@ const Nursing = () => {
                 <CheckCircle size={16} strokeWidth={3} />
               </div>
               <div className="n-outcome-text">
-                <h4>Gestión de Crisis (CRM) en Equipo</h4>
-                <p>Reducirás al mínimo el tiempo de respuesta ante emergencias (como alarmas críticas, RCP en ECMO o cambio de componentes) aplicando liderazgo y comunicación en bucle cerrado a pie de cama.</p>
+                <h4>Gestión de Crisis en Equipo (CRM)</h4>
+                <p>Reducirás al mínimo los tiempos de respuesta ante emergencias extremas, como alarmas críticas, aplicando liderazgo efectivo y comunicación en bucle cerrado al pie de cama.</p>
               </div>
             </div>
 
@@ -445,7 +457,7 @@ const Nursing = () => {
               </div>
               <div className="n-outcome-text">
                 <h4>Juicio Clínico y Cuidados Avanzados</h4>
-                <p>Tomarás decisiones basadas en evidencia para guiar el destete, coordinar traslados seguros, integrar terapias como CRRT/hemoadsorción y aplicar ecografía clínica (POCUS).</p>
+                <p>Conocerás como se toman decisiones multidisciplinarias basadas en la evidencia para guiar el destete (<em>weaning</em>), coordinar traslados seguros, integrar terapias de reemplazo renal continuo (CRRT/hemoadsorción) y aplicar ecografía clínica (POCUS) a pie de cama.</p>
               </div>
             </div>
 
@@ -454,8 +466,8 @@ const Nursing = () => {
                 <CheckCircle size={16} strokeWidth={3} />
               </div>
               <div className="n-outcome-text">
-                <h4>Liderazgo en el Rol de Enfermería</h4>
-                <p>Diseñarás planes de cuidado especializados (NANDA, NIC, NOC) enfocados en la persona, abarcando desde la movilización temprana hasta soportes avanzados como puente a trasplante o preservación de órganos.</p>
+                <h4>Liderazgo y Autonomía en Enfermería</h4>
+                <p>Revisarás la importancia de protocolos de enfermería aplicados a ECMO (NANDA, NIC, NOC) con enfoque humano y de seguridad, abarcando desde la movilización temprana hasta escenarios de soporte como puente al trasplante o preservación de órganos.</p>
               </div>
             </div>
           </div>
@@ -466,7 +478,7 @@ const Nursing = () => {
       <section className="n-sec-padding n-itinerary-section">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge">FASES</span>
+            <span className="n-sec-badge"><Sparkles size={14} /> FASES</span>
             <h2 className="n-sec-title">Tu recorrido formativo fase por fase</h2>
             <p className="n-sec-subtitle">Un diseño curricular que combina la flexibilidad teórica con la rigurosidad práctica.</p>
           </div>
@@ -474,7 +486,7 @@ const Nursing = () => {
           <div className="n-timeline-container">
             {/* Step 1 */}
             <div className="n-card-base n-timeline-step">
-              <span className="n-timeline-badge">2 Meses — Inicio: 20 de Julio, 2026 (Inscripciones Abiertas)</span>
+              <span className="n-timeline-badge active">2 Meses — Inicio: 20 de Julio, 2026 (Inscripciones Abiertas)</span>
               <h3>Fase teórica e híbrida</h3>
               <p>Aprendizaje combinado a través de nuestra plataforma virtual. Cubre de manera progresiva los fundamentos de la terapia, modalidades clínicas, monitoreo y prevención de complicaciones.</p>
               <div style={{ marginTop: '1.2rem', textAlign: 'left' }}>
@@ -490,20 +502,20 @@ const Nursing = () => {
 
             {/* Step 2 */}
             <div className="n-card-base n-timeline-step">
-              <span className="n-timeline-badge">Fase Presencial (Fecha Pendiente / Por Definir)</span>
+              <span className="n-timeline-badge pending">Fase Presencial (Fecha Pendiente / Por Definir)</span>
               <h3>Inmersión práctica intensiva</h3>
               <p>Sesiones presenciales intensivas enfocadas en simulación de alta fidelidad, talleres de destrezas operativas con circuitos reales de ECMO y sesiones estructuradas de debriefing.</p>
             </div>
           </div>
 
-          <div className="n-chips-header">Temas Centrales de Aprendizaje</div>
+          <div className="n-chips-header">Ejes Centrales de Aprendizaje</div>
           <div className="n-chips-wrapper">
             <span className="n-chip-tag">Fisiología y Hemodinamia Aplicada</span>
-            <span className="n-chip-tag">Monitoreo Integral (Circuito y Paciente)</span>
+            <span className="n-chip-tag">Monitoreo Integral del Binomio Paciente-Circuito</span>
             <span className="n-chip-tag">Detección Precoz de Complicaciones</span>
-            <span className="n-chip-tag">Gestión de Crisis (CRM) en Equipo</span>
+            <span className="n-chip-tag">Gestión de Crisis en Equipo (CRM)</span>
             <span className="n-chip-tag">Juicio Clínico y Cuidados Avanzados</span>
-            <span className="n-chip-tag">Liderazgo en el Rol de Enfermería</span>
+            <span className="n-chip-tag">Liderazgo y Autonomía en Enfermería</span>
           </div>
         </div>
       </section>
@@ -512,8 +524,8 @@ const Nursing = () => {
       <section className="n-sec-padding n-syllabus-section" id="temario-section">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge">PLAN DE ESTUDIOS</span>
-            <h2 className="n-sec-title">Temario y Contenido Detallado</h2>
+            <span className="n-sec-badge"><Sparkles size={14} /> PLAN DE ESTUDIOS</span>
+            <h2 className="n-sec-title">Programa Detallado de ECMO Nursing Care Course</h2>
             <p className="n-sec-subtitle">Haz clic en cada módulo para desplegar el programa completo de clases y objetivos de aprendizaje.</p>
           </div>
 
@@ -628,7 +640,7 @@ const Nursing = () => {
       <section className="n-sec-padding n-equipment-section">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge">EQUIPAMIENTO</span>
+            <span className="n-sec-badge"><Sparkles size={14} /> EQUIPAMIENTO</span>
             <h2 className="n-sec-title white">Entrenamientos con tecnología real</h2>
             <p className="n-sec-subtitle white-muted">Acceso a dispositivos utilizados en la vida real.</p>
           </div>
@@ -637,19 +649,22 @@ const Nursing = () => {
             {/* Card 1 */}
             <div className="n-equipment-card">
               <div className="n-circle-icon accent">
-                <MonitorPlay size={24} />
+                <Gauge size={24} />
               </div>
               <h3>Consolas ECMO</h3>
-              <p>Práctica directa en consolas clínicas reales de marcas de referencia mundial.</p>
+              <p>Práctica directamente en consolas de ECMO reales utilizadas a nivel internacional.</p>
             </div>
 
             {/* Card 2 */}
             <div className="n-equipment-card">
               <div className="n-circle-icon accent">
-                <BrainCircuit size={24} />
+                <Gamepad2 size={24} />
               </div>
               <h3>Simulador ECMO SIM</h3>
               <p>Integración de simuladores clínicos interactivos especializados para escenarios críticos y de alta fidelidad.</p>
+              <button className="n-eq-btn-yellow" onClick={() => navigate('/simulador-ecmo-sim')}>
+                Más info
+              </button>
             </div>
 
             {/* Card 3 */}
@@ -658,7 +673,7 @@ const Nursing = () => {
                 <Layers size={24} />
               </div>
               <h3>Circuitos Reales</h3>
-              <p>Práctica deliberada en cebado, purgado y manipulación directa de líneas y circuitos reales de soporte vital.</p>
+              <p>Práctica deliberada en cebado, purgado y manipulación directa de líneas y circuitos reales de ECMO.</p>
             </div>
 
             {/* Card 4 */}
@@ -667,17 +682,16 @@ const Nursing = () => {
                 <GraduationCap size={24} />
               </div>
               <h3>Estaciones de Destreza</h3>
-              <p>Guiadas de manera personalizada por instructores certificados bajo estándares de cuidados intensivos.</p>
+              <p>Guiadas de forma personalizada por especialistas en ECMO reconocidos a nivel internacional y con una sólida experiencia en el área.</p>
             </div>
           </div>
         </div>
       </section>
-
       {/* 6. "Cómo se evalúa tu aprendizaje" */}
       <section className="n-sec-padding">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge">EVALUACIÓN</span>
+            <span className="n-sec-badge"><Sparkles size={14} /> EVALUACIÓN</span>
             <h2 className="n-sec-title">Tu progreso medido en cada etapa</h2>
             <p className="n-sec-subtitle">Un sistema integral que asegura que integras los conocimientos de forma teórica y práctica.</p>
           </div>
@@ -715,17 +729,8 @@ const Nursing = () => {
                 </div>
                 <span className="n-eval-step-num">Paso 3</span>
               </div>
-              <h3>Desempeño práctico</h3>
-              <p>Aplicación de listas de cotejo de destrezas y rúbricas estructuradas en entornos de simulación clínica.</p>
-            </div>
-
-            {/* Step 4 */}
-            <div className="n-card-base n-eval-card">
-              <div className="n-circle-icon">
-                <UsersRound size={22} />
-              </div>
-              <h3>Debriefing estructurado</h3>
-              <p>Retroalimentación enfocada en la toma de decisiones, la comunicación en crisis y el análisis constructivo de los casos.</p>
+              <h3>Desempeño práctico y debriefing</h3>
+              <p>Aplicación de listas de cotejo de destrezas y rúbricas estructuradas en simulación clínica, complementada con debriefing estructurado enfocado en la toma de decisiones y comunicación en crisis.</p>
             </div>
           </div>
         </div>
@@ -735,7 +740,7 @@ const Nursing = () => {
       <section className="n-virtual-faculty">
         <div className="hce-container">
           <div className="n-section-header">
-            <span className="section-badge">FACULTAD CIENTÍFICA</span>
+            <span className="n-sec-badge"><Sparkles size={14} /> FACULTAD CIENTÍFICA</span>
             <h2 className="n-title">Profesores <span className="red-text">Internacionales</span></h2>
             <p className="n-subtitle">19 expertos integrados en nuestra plataforma de aprendizaje virtual.</p>
           </div>
@@ -764,7 +769,7 @@ const Nursing = () => {
         <div className="n-presencial-bg-glow"></div>
         <div className="hce-container">
           <div className="n-section-header">
-            <span className="section-badge">EXPERIENCIA IN-SITU</span>
+            <span className="n-sec-badge"><Sparkles size={14} /> EXPERIENCIA IN-SITU</span>
             <h2 className="n-title">Facultad <span className="red-text">Presencial</span></h2>
             <p className="n-subtitle">Expertos internacionales que guiarán el entrenamiento práctico de alta fidelidad.</p>
           </div>
@@ -831,8 +836,8 @@ const Nursing = () => {
               flag="https://flagcdn.com/w160/mx.png"
               img="/assets/instructores/diego-huerta.jpg"
               name="EE. Diego Huerta Guarneros"
-              country="M\u00C9XICO"
-              bio="Consultor Cl\u00EDnico en Terapias Extracorp\u00F3reas y Soportes Multiorg\u00E1nicos para LATAM. Coordinador del Comit\u00E9 de Enfermer\u00EDa de la SLANH."
+              country="MÉXICO"
+              bio="Consultor Clínico en Terapias Extracorpóreas y Soportes Multiorgánicos para LATAM. Coordinador del Comité de Enfermería de la SLANH."
             />
           </div>
           
@@ -875,8 +880,8 @@ const Nursing = () => {
               />
             </a>
             <div className="n-endorsement-text">
-              <span className="section-badge" style={{ marginBottom: '0.8rem', display: 'inline-block' }}>
-                AVAL ACADÉMICO INTERNACIONAL
+              <span className="n-sec-badge" style={{ marginBottom: '0.8rem', display: 'inline-flex' }}>
+                <Sparkles size={14} /> AVAL ACADÉMICO INTERNACIONAL
               </span>
               <h3>Programa Avalado por FLECI</h3>
               <p>
@@ -887,8 +892,10 @@ const Nursing = () => {
                 target="_blank" 
                 rel="noreferrer" 
                 className="n-fb-btn"
+                style={{ width: '38px', height: '38px', padding: 0, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                aria-label="Facebook de FLECI"
               >
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ fill: '#ffffff', stroke: 'none' }}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> Visitar Facebook de FLECI
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ fill: '#ffffff', stroke: 'none' }}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
               </a>
             </div>
           </div>

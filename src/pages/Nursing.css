@@ -1019,20 +1019,26 @@
   margin-right: auto;
   text-align: center;
 }
-
 .n-sec-badge {
-  display: inline-block;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--hce-blue-mid);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  background: rgba(46, 106, 149, 0.08);
-  border: 1px solid rgba(46, 106, 149, 0.2);
-  padding: 0.35rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(0, 210, 255, 0.06);
+  color: #008ab5;
+  padding: 0.45rem 1.2rem;
   border-radius: 100px;
-  margin-bottom: 0.9rem;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-weight: 750;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid rgba(0, 210, 255, 0.35);
+  box-shadow: 0 2px 10px rgba(0, 210, 255, 0.04);
+  margin-bottom: 1.2rem;
+  transition: all 0.3s ease;
+  width: fit-content;
 }
+
 
 .n-sec-title {
   font-family: 'Outfit', 'Poppins', sans-serif;
@@ -1108,7 +1114,64 @@
 
 .n-phase-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
+
+.n-phase-content {
+  flex-grow: 1;
+}
+
+.n-phase-btn-red {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 0.9rem 1.5rem;
+  background: var(--hce-red);
+  color: var(--hce-white) !important;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 2rem;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(221, 36, 50, 0.15);
+}
+
+.n-phase-btn-red:hover {
+  background: #be1c28;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(221, 36, 50, 0.25);
+}
+
+.n-phase-btn-blue {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 0.9rem 1.5rem;
+  background: #0090d0;
+  color: var(--hce-white) !important;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: none;
+  cursor: default;
+  transition: all 0.3s ease;
+  margin-top: 2rem;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(0, 144, 208, 0.15);
+}
+
+.n-phase-btn-blue:hover {
+  background: #007cb4;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 144, 208, 0.25);
+}
+
 
 .n-phase-top {
   display: flex;
@@ -1250,14 +1313,28 @@
 
 .n-timeline-badge {
   display: inline-block;
-  background: var(--hce-navy);
-  color: var(--hce-white);
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 0.35rem 0.8rem;
-  border-radius: 4px;
-  margin-bottom: 0.9rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 750;
+  padding: 0.45rem 1.1rem;
+  border-radius: 100px;
+  letter-spacing: 0.5px;
+  margin-bottom: 1.1rem;
 }
+
+.n-timeline-badge.active {
+  background: rgba(0, 210, 255, 0.08);
+  color: #00d2ff;
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.08);
+}
+
+.n-timeline-badge.pending {
+  background: rgba(90, 113, 132, 0.08);
+  color: var(--hce-muted);
+  border: 1px solid rgba(90, 113, 132, 0.25);
+}
+
 
 .n-timeline-step h3 {
   font-family: 'Outfit', sans-serif;
@@ -1296,19 +1373,22 @@
 
 .n-chip-tag {
   background: var(--hce-white);
-  border: 1px solid rgba(24, 58, 103, 0.12);
+  border: 1px solid rgba(0, 210, 255, 0.35);
   color: var(--hce-navy);
   font-size: 0.88rem;
   font-weight: 600;
   padding: 0.5rem 1.1rem;
   border-radius: 50px;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 210, 255, 0.04);
 }
 
 .n-chip-tag:hover {
-  background: var(--hce-navy);
+  background: #00d2ff;
   color: var(--hce-white);
-  border-color: var(--hce-navy);
+  border-color: #00d2ff;
+  box-shadow: 0 4px 12px rgba(0, 210, 255, 0.25);
+  transform: translateY(-1px);
 }
 
 /* 5. Recursos y equipamiento */
@@ -1348,6 +1428,32 @@
   margin: 0;
 }
 
+
+.n-eq-btn-yellow {
+  display: inline-block;
+  background: #fbc531;
+  color: #00203F !important;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.55rem 1.3rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: auto;
+  padding-top: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(251, 197, 49, 0.2);
+}
+
+.n-eq-btn-yellow:hover {
+  background: #f1b01c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(251, 197, 49, 0.35);
+}
+
 .n-equipment-disclaimer {
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.4);
@@ -1358,9 +1464,10 @@
 /* 6. Evaluación */
 .n-evaluation-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.8rem;
 }
+
 
 .n-eval-card {
   position: relative;
@@ -1456,8 +1563,8 @@
 }
 
 .n-syllabus-item.active {
-  border-color: var(--hce-navy);
-  box-shadow: 0 10px 35px rgba(24, 58, 103, 0.08);
+  border-color: #00d2ff;
+  box-shadow: 0 10px 35px rgba(0, 210, 255, 0.08);
 }
 
 .n-syllabus-trigger {
@@ -1471,19 +1578,35 @@
   text-align: left;
   cursor: pointer;
   gap: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.n-syllabus-item.active .n-syllabus-trigger {
+  background: rgba(0, 210, 255, 0.02);
 }
 
 .n-syllabus-mod-num {
   font-family: 'Outfit', sans-serif;
   font-size: 0.8rem;
   font-weight: 800;
-  color: var(--hce-red);
-  background: rgba(227, 24, 55, 0.08);
-  padding: 4px 10px;
+  color: #008ab5;
+  background: rgba(0, 210, 255, 0.08);
+  padding: 4px 12px;
   border-radius: 50px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.n-syllabus-item.active .n-syllabus-mod-num {
+  background: #00d2ff;
+  color: #ffffff;
+}
+
+.n-syllabus-item.active .n-syllabus-icon {
+  color: #00d2ff;
+  font-weight: 700;
 }
 
 .n-syllabus-trigger h3 {
@@ -1539,16 +1662,32 @@
   line-height: 1.55;
   color: var(--hce-ink);
   position: relative;
-  padding-left: 1.5rem;
+  padding-left: 1.8rem;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+}
+
+.n-syllabus-list li:hover {
+  background: rgba(0, 210, 255, 0.04);
+  padding-left: 2.1rem;
+  color: var(--hce-navy);
 }
 
 .n-syllabus-list li::before {
-  content: "•";
-  color: var(--hce-red);
-  font-size: 1.4rem;
+  content: "✦";
+  color: #00d2ff;
+  font-size: 0.85rem;
   position: absolute;
-  left: 0.3rem;
-  top: -0.15rem;
+  left: 0.5rem;
+  top: 0.7rem;
+  transition: all 0.25s ease;
+}
+
+.n-syllabus-list li:hover::before {
+  left: 0.8rem;
+  color: #00b0d6;
 }
 
 /* Bottom FLECI Clickable Logo */
