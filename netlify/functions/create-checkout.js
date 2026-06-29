@@ -170,6 +170,7 @@ export const handler = async (event) => {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     const sessionOptions = {
+      payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
       success_url: `${origin}/inscripciones-diploma-paris-ecmo?status=success&d=${payData}`,
@@ -191,19 +192,14 @@ export const handler = async (event) => {
 
     const enableInstallments = promoCode === 'HCEMS' || promoCode === 'HCEMESES' || promoCode === 'HCE10MSI' || promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15';
 
-    if (currency === 'mxn') {
-      sessionOptions.payment_method_types = ['card'];
-      if (enableInstallments) {
-        sessionOptions.payment_method_options = {
-          card: {
-            installments: {
-              enabled: true
-            }
+    if (currency === 'mxn' && enableInstallments) {
+      sessionOptions.payment_method_options = {
+        card: {
+          installments: {
+            enabled: true
           }
-        };
-      }
-    } else {
-      sessionOptions.automatic_payment_methods = { enabled: true };
+        }
+      };
     }
 
     if (email) sessionOptions.customer_email = email;
