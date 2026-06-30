@@ -29,6 +29,7 @@ const EXTRA_CATALOG = {
     subhint: 'Suscripción por 4 meses',
     desc: 'Taller de simulación avanzada en ECMO con maniquí de alta fidelidad',
     price: 3500,
+    originalPrice: 6000,
   },
 };
 
@@ -427,9 +428,17 @@ export default function InscripcionesNursing() {
                       <span className="ins-extra-label">{ex.label}</span>
                       {ex.subhint && <span style={{ fontSize: '0.75rem', opacity: 0.7, display: 'block', marginTop: '2px' }}>{ex.subhint}</span>}
                     </div>
-                    <div className="ins-extra-price">
-                      +{fmt(ex.price, 'mxn')}
-                      {moneda === 'usd' && <small>≈ +{fmt(Math.ceil(ex.price / USD_RATE), 'usd')}</small>}
+                    <div className="ins-extra-price" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
+                      {ex.originalPrice && (
+                        <span style={{ textDecoration: 'line-through', opacity: 0.5, fontSize: '0.8rem', color: '#ef4444', fontWeight: 'normal', display: 'block', marginBottom: '2px' }}>
+                          +{fmt(ex.originalPrice, 'mxn')}
+                          {moneda === 'usd' && <small style={{ display: 'block', fontSize: '0.7rem', textDecoration: 'line-through' }}>≈ +{fmt(Math.ceil(ex.originalPrice / USD_RATE), 'usd')}</small>}
+                        </span>
+                      )}
+                      <span style={{ fontWeight: '700', fontSize: '1.05rem', color: '#10b981', display: 'block' }}>
+                        +{fmt(ex.price, 'mxn')}
+                        {moneda === 'usd' && <small style={{ display: 'block', fontSize: '0.75rem', fontWeight: 'normal', color: '#6b7280', marginTop: '2px' }}>≈ +{fmt(Math.ceil(ex.price / USD_RATE), 'usd')}</small>}
+                      </span>
                     </div>
                   </label>
                 ))}

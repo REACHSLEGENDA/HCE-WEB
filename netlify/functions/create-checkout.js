@@ -52,7 +52,7 @@ const PRICES_MXN = {
   residente:     37000,
   enfermero:     37000,
   ecmo_sim:       3500,
-  ecmo_nursing:   3500,
+  ecmo_nursing:   4000,
 };
 
 const PROFILE_LABELS = {

@@ -578,10 +578,10 @@ const ParisNewDesign = () => {
                             Beneficio Especial de Enfermería
                         </span>
                         <h4 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800', color: '#ffffff', marginBottom: '0.5rem' }}>
-                            Agrega ECMO Nursing con 30% de Descuento
+                            Agrega ECMO Nursing con 20% de Descuento
                         </h4>
                         <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.6' }}>
-                            Si eres enfermero(a), puedes complementar tu inscripción al Diploma Internacional con el <strong>ECMO Nursing Care Course</strong> con un <strong>30% de descuento</strong>. Fecha de inicio: <strong>20 de Julio</strong> — ideal como preparación teórica y práctica antes de la certificación en París en Octubre.
+                            Si eres enfermero(a), puedes complementar tu inscripción al Diploma Internacional con el <strong>ECMO Nursing Care Course</strong> con un <strong>20% de descuento</strong>. Fecha de inicio: <strong>20 de Julio</strong> — ideal como preparación teórica y práctica antes de la certificación en París en Octubre.
                         </p>
                     </div>
                 </div>
@@ -592,14 +592,29 @@ const ParisNewDesign = () => {
                 <div className="container container-sm" style={{ maxWidth: '1000px', margin: '0 auto' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <div style={{ flex: 1, minWidth: '300px', textAlign: 'left' }}>
-                            <div className="h2-style" style={{ fontSize: '2.5rem', lineHeight: '1.1', marginBottom: '1.5rem', color: 'white', fontWeight: 700 }}>Certificación <br /><span className="gradient-text">Avalada por ELSO</span></div>
+                            <div className="h2-style" style={{ fontSize: '2.5rem', lineHeight: '1.1', marginBottom: '1.5rem', color: 'white', fontWeight: 700 }}>Certificación <br /><span className="gradient-text">Avalada Internacionalmente</span></div>
                             <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', marginBottom: 0 }}>
-                                El Diploma Internacional de Paris en ECMO cuenta con el máximo reconocimiento internacional, cumpliendo con los estándares de excelencia de la <strong>Extracorporeal Life Support Organization (ELSO)</strong>. Un sello de calidad que impulsa tu carrera profesional a nivel global.
+                                El Diploma Internacional de Paris en ECMO cuenta con el máximo reconocimiento internacional, cumpliendo con los estándares de excelencia de la <strong>Extracorporeal Life Support Organization (ELSO)</strong>, la <strong>Sociedad Mexicana de Neumología y Cirugía de Tórax</strong> y la <strong>Asociación Latinoamericana de Tórax (ALAT)</strong>. Un sello de calidad que impulsa tu carrera profesional a nivel global.
                             </p>
                         </div>
                         <div style={{ flex: '0 0 auto' }}>
-                            <div style={{ background: 'white', padding: '2.5rem', borderRadius: '20px', boxShadow: '0 20px 50px rgba(0,229,255,0.2)', transition: 'transform 0.3s ease' }}>
-                                <img src="/assets/componentes/logo.webp" alt="ELSO Certification" style={{ maxHeight: '120px', width: 'auto', filter: 'contrast(1.1)' }} />
+                            <div style={{ 
+                                background: 'white', 
+                                padding: '2rem 2.5rem', 
+                                borderRadius: '20px', 
+                                boxShadow: '0 20px 50px rgba(0,229,255,0.2)', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '2.5rem',
+                                flexWrap: 'wrap',
+                                justifyContent: 'center',
+                                transition: 'transform 0.3s ease'
+                            }}>
+                                <img src="/assets/componentes/logo.webp" alt="ELSO Certification" style={{ maxHeight: '90px', width: 'auto', filter: 'contrast(1.1)' }} />
+                                <div style={{ width: '1px', height: '60px', background: 'rgba(0, 0, 0, 0.1)', flexShrink: 0 }}></div>
+                                <img src="/assets/componentes/SS.webp" alt="Sociedad Mexicana de Neumología y Cirugía de Tórax" style={{ maxHeight: '90px', width: 'auto' }} />
+                                <div style={{ width: '1px', height: '60px', background: 'rgba(0, 0, 0, 0.1)', flexShrink: 0 }}></div>
+                                <img src="/assets/componentes/alat.png" alt="Asociación Latinoamericana de Tórax" style={{ maxHeight: '40px', width: 'auto' }} />
                             </div>
                         </div>
                     </div>
