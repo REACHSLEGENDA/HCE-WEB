@@ -251,6 +251,145 @@ const ParisNewDesign = () => {
                 </div>
             </section>
 
+            {/* TOP HANGING ENDORSEMENT TABS */}
+            <div style={{ 
+                background: '#ffffff', 
+                borderTop: '1px solid rgba(0, 0, 0, 0.05)',
+                padding: '0 0 3.5rem 0',
+                position: 'relative',
+                zindex: 10
+            }}>
+                <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap', padding: '0 1rem' }}>
+                    
+                    {/* TAB 1: ELSO */}
+                    <div style={{
+                        width: '210px',
+                        background: '#ffffff',
+                        borderRadius: '0 0 24px 24px',
+                        boxShadow: '0 20px 45px rgba(15, 23, 42, 0.15)',
+                        padding: '1.5rem 1.25rem 2rem 1.25rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        height: '240px',
+                        borderTop: '4px solid #00d2ff',
+                        transition: 'transform 0.3s ease',
+                        marginTop: '-1px'
+                    }}
+                    className="hanging-tab"
+                    >
+                        <div style={{
+                            fontFamily: 'Outfit',
+                            fontSize: '0.8rem',
+                            fontWeight: '900',
+                            color: '#0a192f',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px',
+                            textAlign: 'center',
+                            lineHeight: '1.3',
+                            marginBottom: '1rem'
+                        }}>
+                            PROGRAMA<br />AVALADO POR
+                        </div>
+                        <div style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '100%'
+                        }}>
+                            <img src="/assets/componentes/logo.webp" alt="ELSO" style={{ maxHeight: '85px', maxWidth: '100%', objectFit: 'contain' }} />
+                        </div>
+                    </div>
+
+                    {/* TAB 2: ALAT */}
+                    <div style={{
+                        width: '210px',
+                        background: '#ffffff',
+                        borderRadius: '0 0 24px 24px',
+                        boxShadow: '0 20px 45px rgba(15, 23, 42, 0.15)',
+                        padding: '1.5rem 1.25rem 2rem 1.25rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        height: '240px',
+                        borderTop: '4px solid #10b981',
+                        transition: 'transform 0.3s ease',
+                        marginTop: '-1px'
+                    }}
+                    className="hanging-tab"
+                    >
+                        <div style={{
+                            fontFamily: 'Outfit',
+                            fontSize: '0.8rem',
+                            fontWeight: '900',
+                            color: '#0a192f',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px',
+                            textAlign: 'center',
+                            lineHeight: '1.3',
+                            marginBottom: '1rem'
+                        }}>
+                            PROGRAMA<br />AVALADO POR
+                        </div>
+                        <div style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '100%'
+                        }}>
+                            <img src="/assets/componentes/alat.png" alt="ALAT" style={{ maxHeight: '42px', maxWidth: '100%', objectFit: 'contain' }} />
+                        </div>
+                    </div>
+
+                    {/* TAB 3: SMNYCT */}
+                    <div style={{
+                        width: '210px',
+                        background: '#ffffff',
+                        borderRadius: '0 0 24px 24px',
+                        boxShadow: '0 20px 45px rgba(15, 23, 42, 0.15)',
+                        padding: '1.5rem 1.25rem 2rem 1.25rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        height: '240px',
+                        borderTop: '4px solid #fbc531',
+                        transition: 'transform 0.3s ease',
+                        marginTop: '-1px'
+                    }}
+                    className="hanging-tab"
+                    >
+                        <div style={{
+                            fontFamily: 'Outfit',
+                            fontSize: '0.8rem',
+                            fontWeight: '900',
+                            color: '#0a192f',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px',
+                            textAlign: 'center',
+                            lineHeight: '1.3',
+                            marginBottom: '1rem'
+                        }}>
+                            PROGRAMA<br />AVALADO POR
+                        </div>
+                        <div style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '100%'
+                        }}>
+                            <img src="/assets/componentes/SS.webp" alt="SMNYCT" style={{ maxHeight: '85px', maxWidth: '100%', objectFit: 'contain' }} />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
             {/* SECTION 1: WELCOME & CAROUSEL */}
             <section id="welcome" className="section-padding">
                 <div className="container">
@@ -290,53 +429,6 @@ const ParisNewDesign = () => {
                     </div>
                     <div style={{ textAlign: 'center', marginTop: '3rem', position: 'relative', zIndex: 3 }}>
                         <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Certifícate</Link>
-                    </div>
-                </div>
-            </section>
-
-            {/* LOGOS ENDORSEMENT CARD IN THE MIDDLE */}
-            <section style={{ padding: '0 0 5rem 0', background: 'transparent', position: 'relative', zIndex: 10 }}>
-                <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1rem' }}>
-                    <div className="n-endorsement-card-white">
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '1.5rem', 
-                            flexWrap: 'wrap',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                            background: '#f8fafc',
-                            padding: '1.5rem 2rem',
-                            borderRadius: '20px',
-                            border: '1px solid #cbd5e1'
-                        }}>
-                            <img src="/assets/componentes/logo.webp" alt="ELSO" style={{ maxHeight: '55px', width: 'auto' }} />
-                            <div style={{ width: '1px', height: '40px', background: '#cbd5e1' }}></div>
-                            <img src="/assets/componentes/SS.webp" alt="SMNYCT" style={{ maxHeight: '55px', width: 'auto' }} />
-                            <div style={{ width: '1px', height: '40px', background: '#cbd5e1' }}></div>
-                            <img src="/assets/componentes/alat.png" alt="ALAT" style={{ maxHeight: '25px', width: 'auto' }} />
-                        </div>
-                        <div className="n-endorsement-text">
-                            <span style={{ 
-                                background: 'rgba(0, 229, 255, 0.1)', 
-                                color: '#00b4cc', 
-                                padding: '4px 12px', 
-                                borderRadius: '20px', 
-                                fontSize: '0.78rem', 
-                                fontWeight: '800', 
-                                display: 'inline-flex',
-                                marginBottom: '0.6rem',
-                                letterSpacing: '0.05em'
-                            }}>
-                                AVAL ACADÉMICO Y CIENTÍFICO
-                            </span>
-                            <h3 style={{ fontFamily: 'Outfit', fontSize: '1.75rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.5px' }}>
-                                Programa Avalado Internacionalmente
-                            </h3>
-                            <p style={{ fontSize: '1.1rem', color: '#475569', lineHeight: '1.6', margin: 0 }}>
-                                Este entrenamiento de alta especialidad cuenta con el respaldo y aval científico de la <strong>Extracorporeal Life Support Organization (ELSO)</strong>, la <strong>Sociedad Mexicana de Neumología y Cirugía de Tórax</strong> y la <strong>Asociación Latinoamericana de Tórax (ALAT)</strong>.
-                            </p>
-                        </div>
                     </div>
                 </div>
             </section>
