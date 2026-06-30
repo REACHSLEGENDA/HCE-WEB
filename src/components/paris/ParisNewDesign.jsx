@@ -610,41 +610,130 @@ const ParisNewDesign = () => {
                 </div>
             </section>
 
-            {/* SECTION 8: CERTIFICATION (PRESTIGE REDESIGN) */}
-            <section className="certification-prestige">
-                <div className="container container-sm" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <div style={{ flex: 1, minWidth: '300px', textAlign: 'left' }}>
-                            <div className="h2-style" style={{ fontSize: '2.5rem', lineHeight: '1.1', marginBottom: '1.5rem', color: 'white', fontWeight: 700 }}>Certificación <br /><span className="gradient-text">Avalada Internacionalmente</span></div>
-                            <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', marginBottom: 0 }}>
-                                El Diploma Internacional de Paris en ECMO cuenta con el máximo reconocimiento internacional, cumpliendo con los estándares de excelencia de la <strong>Extracorporeal Life Support Organization (ELSO)</strong>, la <strong>Sociedad Mexicana de Neumología y Cirugía de Tórax</strong> y la <strong>Asociación Latinoamericana de Tórax (ALAT)</strong>. Un sello de calidad que impulsa tu carrera profesional a nivel global.
-                            </p>
+            {/* SECTION 8: CERTIFICATIONS (NURSING-STYLE ENDORSEMENTS) */}
+            <section className="certification-prestige" style={{ padding: '6rem 0' }}>
+                <div className="container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+                        <div className="h2-style" style={{ fontSize: '2.5rem', marginBottom: '1rem', color: 'white', fontWeight: 700 }}>
+                            Avales y <span className="gradient-text">Certificaciones</span>
                         </div>
-                        <div style={{ flex: '0 0 auto' }}>
+                        <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.7)', maxWidth: '700px', margin: '0 auto' }}>
+                            El Diploma Internacional de Paris en ECMO cuenta con el máximo reconocimiento internacional, respaldado por las organizaciones líderes en soporte vital y salud respiratoria.
+                        </p>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                        {/* CARD 1: ELSO */}
+                        <div className="n-endorsement-card">
                             <div style={{ 
                                 background: 'white', 
-                                padding: '2.5rem 3rem', 
-                                borderRadius: '24px', 
-                                boxShadow: '0 20px 50px rgba(0,229,255,0.15)', 
+                                padding: '1rem', 
+                                borderRadius: '16px', 
+                                width: '150px', 
+                                height: '150px', 
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 justifyContent: 'center',
-                                gap: '3rem',
-                                flexWrap: 'wrap',
-                                maxWidth: '100%',
-                                transition: 'transform 0.3s ease'
+                                flexShrink: 0
                             }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px', width: '120px' }}>
-                                    <img src="/assets/componentes/logo.webp" alt="ELSO" style={{ maxHeight: '95px', maxWidth: '100%', objectFit: 'contain', filter: 'contrast(1.05)' }} />
-                                </div>
-                                <div style={{ width: '1px', height: '50px', background: 'rgba(0, 0, 0, 0.08)', flexShrink: 0 }}></div>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px', width: '120px' }}>
-                                    <img src="/assets/componentes/SS.webp" alt="SS" style={{ maxHeight: '85px', maxWidth: '100%', objectFit: 'contain' }} />
-                                </div>
-                                <div style={{ width: '1px', height: '50px', background: 'rgba(0, 0, 0, 0.08)', flexShrink: 0 }}></div>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px', width: '120px' }}>
-                                    <img src="/assets/componentes/alat.png" alt="ALAT" style={{ maxHeight: '45px', maxWidth: '100%', objectFit: 'contain' }} />
-                                </div>
+                                <img src="/assets/componentes/logo.webp" alt="ELSO" style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} />
+                            </div>
+                            <div className="n-endorsement-text">
+                                <span style={{ 
+                                    background: 'rgba(0, 210, 255, 0.1)', 
+                                    color: '#00d2ff', 
+                                    padding: '4px 12px', 
+                                    borderRadius: '20px', 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: '800', 
+                                    display: 'inline-flex',
+                                    marginBottom: '0.6rem',
+                                    letterSpacing: '0.05em'
+                                }}>
+                                    AVAL INTERNACIONAL
+                                </span>
+                                <h3 style={{ fontFamily: 'Outfit', fontSize: '1.6rem', fontWeight: '800', color: '#ffffff', margin: '0 0 0.5rem 0' }}>
+                                    Extracorporeal Life Support Organization (ELSO)
+                                </h3>
+                                <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', margin: 0 }}>
+                                    El programa cumple rigurosamente con los estándares y lineamientos internacionales de la <strong>ELSO</strong> para la educación y entrenamiento en soporte vital extracorpóreo, garantizando una formación de nivel mundial.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* CARD 2: SOCIEDAD MEXICANA */}
+                        <div className="n-endorsement-card" style={{ borderLeftColor: '#fbc531' }}>
+                            <div style={{ 
+                                background: 'white', 
+                                padding: '1rem', 
+                                borderRadius: '16px', 
+                                width: '150px', 
+                                height: '150px', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                <img src="/assets/componentes/SS.webp" alt="Sociedad Mexicana de Neumología y Cirugía de Tórax" style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} />
+                            </div>
+                            <div className="n-endorsement-text">
+                                <span style={{ 
+                                    background: 'rgba(251, 197, 49, 0.1)', 
+                                    color: '#fbc531', 
+                                    padding: '4px 12px', 
+                                    borderRadius: '20px', 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: '800', 
+                                    display: 'inline-flex',
+                                    marginBottom: '0.6rem',
+                                    letterSpacing: '0.05em'
+                                }}>
+                                    AVAL NACIONAL (MÉXICO)
+                                </span>
+                                <h3 style={{ fontFamily: 'Outfit', fontSize: '1.6rem', fontWeight: '800', color: '#ffffff', margin: '0 0 0.5rem 0' }}>
+                                    Sociedad Mexicana de Neumología y Cirugía de Tórax (SMNYCT)
+                                </h3>
+                                <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', margin: 0 }}>
+                                    Cuenta con el aval académico oficial de la sociedad líder de neumología en el país, impulsando y certificando la excelencia científica en la práctica de la medicina respiratoria en México.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* CARD 3: ALAT */}
+                        <div className="n-endorsement-card" style={{ borderLeftColor: '#10b981' }}>
+                            <div style={{ 
+                                background: 'white', 
+                                padding: '1rem', 
+                                borderRadius: '16px', 
+                                width: '150px', 
+                                height: '150px', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                <img src="/assets/componentes/alat.png" alt="Asociación Latinoamericana de Tórax" style={{ maxHeight: '55px', maxWidth: '100%', objectFit: 'contain' }} />
+                            </div>
+                            <div className="n-endorsement-text">
+                                <span style={{ 
+                                    background: 'rgba(16, 185, 129, 0.1)', 
+                                    color: '#10b981', 
+                                    padding: '4px 12px', 
+                                    borderRadius: '20px', 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: '800', 
+                                    display: 'inline-flex',
+                                    marginBottom: '0.6rem',
+                                    letterSpacing: '0.05em'
+                                }}>
+                                    AVAL REGIONAL (LATINOAMÉRICA)
+                                </span>
+                                <h3 style={{ fontFamily: 'Outfit', fontSize: '1.6rem', fontWeight: '800', color: '#ffffff', margin: '0 0 0.5rem 0' }}>
+                                    Asociación Latinoamericana de Tórax (ALAT)
+                                </h3>
+                                <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', margin: 0 }}>
+                                    Respaldado científicamente por la asociación de referencia en salud pulmonar y cuidados respiratorios para toda la comunidad médica de América Latina.
+                                </p>
                             </div>
                         </div>
                     </div>
