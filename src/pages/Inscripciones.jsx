@@ -20,7 +20,7 @@ const EXTRA_CATALOG = {
     label: 'ECMO Nursing Care Course',
     subhint: 'Experiencia virtual',
     desc: 'Módulo especializado de ECMO para cuidados de enfermería intensiva',
-    price: 4000,
+    price: 3500,
     originalPrice: 5000,
   },
 };
