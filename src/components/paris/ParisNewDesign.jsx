@@ -251,6 +251,29 @@ const ParisNewDesign = () => {
                 </div>
             </section>
 
+            {/* LOGOS TRUST BAR */}
+            <div style={{ 
+                background: 'rgba(10, 25, 47, 0.4)', 
+                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                padding: '1.25rem 0',
+                backdropFilter: 'blur(10px)',
+                width: '100%'
+            }}>
+                <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2.5rem', flexWrap: 'wrap', padding: '0 1.5rem' }}>
+                    <span style={{ fontFamily: 'Outfit', color: 'rgba(255, 255, 255, 0.45)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.8rem', fontWeight: 700, flexShrink: 0 }}>
+                        Avalado y Respaldado por:
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <img src="/assets/componentes/logo.webp" alt="ELSO" style={{ maxHeight: '42px', width: 'auto', filter: 'brightness(0.95) contrast(1.05)' }} />
+                        <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.1)', flexShrink: 0 }}></div>
+                        <img src="/assets/componentes/SS.webp" alt="Sociedad Mexicana de Neumología" style={{ maxHeight: '42px', width: 'auto', filter: 'brightness(0.95)' }} />
+                        <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.1)', flexShrink: 0 }}></div>
+                        <img src="/assets/componentes/alat.png" alt="ALAT" style={{ maxHeight: '22px', width: 'auto', filter: 'brightness(0.95)' }} />
+                    </div>
+                </div>
+            </div>
+
             {/* SECTION 1: WELCOME & CAROUSEL */}
             <section id="welcome" className="section-padding">
                 <div className="container">
@@ -600,28 +623,34 @@ const ParisNewDesign = () => {
                         <div style={{ flex: '0 0 auto' }}>
                             <div style={{ 
                                 background: 'white', 
-                                padding: '2rem 2.5rem', 
-                                borderRadius: '20px', 
-                                boxShadow: '0 20px 50px rgba(0,229,255,0.2)', 
+                                padding: '2.5rem 3rem', 
+                                borderRadius: '24px', 
+                                boxShadow: '0 20px 50px rgba(0,229,255,0.15)', 
                                 display: 'flex', 
                                 alignItems: 'center', 
-                                gap: '2.5rem',
-                                flexWrap: 'wrap',
                                 justifyContent: 'center',
+                                gap: '3rem',
+                                flexWrap: 'wrap',
+                                maxWidth: '100%',
                                 transition: 'transform 0.3s ease'
                             }}>
-                                <img src="/assets/componentes/logo.webp" alt="ELSO Certification" style={{ maxHeight: '90px', width: 'auto', filter: 'contrast(1.1)' }} />
-                                <div style={{ width: '1px', height: '60px', background: 'rgba(0, 0, 0, 0.1)', flexShrink: 0 }}></div>
-                                <img src="/assets/componentes/SS.webp" alt="Sociedad Mexicana de Neumología y Cirugía de Tórax" style={{ maxHeight: '90px', width: 'auto' }} />
-                                <div style={{ width: '1px', height: '60px', background: 'rgba(0, 0, 0, 0.1)', flexShrink: 0 }}></div>
-                                <img src="/assets/componentes/alat.png" alt="Asociación Latinoamericana de Tórax" style={{ maxHeight: '40px', width: 'auto' }} />
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px', width: '120px' }}>
+                                    <img src="/assets/componentes/logo.webp" alt="ELSO" style={{ maxHeight: '95px', maxWidth: '100%', objectFit: 'contain', filter: 'contrast(1.05)' }} />
+                                </div>
+                                <div style={{ width: '1px', height: '50px', background: 'rgba(0, 0, 0, 0.08)', flexShrink: 0 }}></div>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px', width: '120px' }}>
+                                    <img src="/assets/componentes/SS.webp" alt="SS" style={{ maxHeight: '85px', maxWidth: '100%', objectFit: 'contain' }} />
+                                </div>
+                                <div style={{ width: '1px', height: '50px', background: 'rgba(0, 0, 0, 0.08)', flexShrink: 0 }}></div>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px', width: '120px' }}>
+                                    <img src="/assets/componentes/alat.png" alt="ALAT" style={{ maxHeight: '45px', maxWidth: '100%', objectFit: 'contain' }} />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
         </div>
-        
         <Footer />
       </div>
     );
