@@ -251,8 +251,51 @@ const ParisNewDesign = () => {
                 </div>
             </section>
 
-            {/* TOP AVAL CARD (NURSING-STYLE ALL-IN-ONE) */}
-            <section style={{ padding: '4rem 0 2rem 0', background: '#050E1A' }}>
+            {/* SECTION 1: WELCOME & CAROUSEL */}
+            <section id="welcome" className="section-padding">
+                <div className="container">
+                    <div style={{ textAlign: 'center', maxWidth: '900px', margin: '0 auto 4rem' }}>
+                        <div className="section-title">
+                            <span className="gradient-text">Paris International Diploma in ECMO &amp; Simulation Course</span> en Latinoamérica.
+                        </div>
+                        <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', lineHeight: '1.8' }}>
+                            Vive la experiencia teórico-práctica liderada por expertos mundiales y certifícate como un profesional en soporte ECMO.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="carousel-container">
+                    <div style={{ textAlign: 'center', marginBottom: '2rem', fontFamily: 'Outfit', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem', fontWeight: 700 }}>Dirigido a especialistas en:</div>
+                    <div className="carousel-track">
+                        {/* First set of tags */}
+                        <span className="tag">Intensivistas</span>
+                        <span className="tag">Cardiólogos</span>
+                        <span className="tag">Neumólogos</span>
+                        <span className="tag">Cirujanos</span>
+                        <span className="tag">Anestesiólogos</span>
+                        <span className="tag">Médicos de Urgencias</span>
+                        <span className="tag">Enfermeras/os</span>
+                        <span className="tag">Perfusionistas</span>
+                        <span className="tag">Terapeutas Respiratorios</span>
+                        {/* Duplicate set for infinite effect */}
+                        <span className="tag">Intensivistas</span>
+                        <span className="tag">Cardiólogos</span>
+                        <span className="tag">Neumólogos</span>
+                        <span className="tag">Cirujanos</span>
+                        <span className="tag">Anestesiólogos</span>
+                        <span className="tag">Médicos de Urgencias</span>
+                        <span className="tag">Enfermeras/os</span>
+                        <span className="tag">Perfusionistas</span>
+                        <span className="tag">Terapeutas Respiratorios</span>
+                    </div>
+                    <div style={{ textAlign: 'center', marginTop: '3rem', position: 'relative', zIndex: 3 }}>
+                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Certifícate</Link>
+                    </div>
+                </div>
+            </section>
+
+            {/* LOGOS ENDORSEMENT CARD IN THE MIDDLE */}
+            <section style={{ padding: '0 0 5rem 0', background: 'transparent', position: 'relative', zIndex: 10 }}>
                 <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1rem' }}>
                     <div className="n-endorsement-card-white">
                         <div style={{ 
@@ -294,49 +337,6 @@ const ParisNewDesign = () => {
                                 Este entrenamiento de alta especialidad cuenta con el respaldo y aval científico de la <strong>Extracorporeal Life Support Organization (ELSO)</strong>, la <strong>Sociedad Mexicana de Neumología y Cirugía de Tórax</strong> y la <strong>Asociación Latinoamericana de Tórax (ALAT)</strong>.
                             </p>
                         </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* SECTION 1: WELCOME & CAROUSEL */}
-            <section id="welcome" className="section-padding">
-                <div className="container">
-                    <div style={{ textAlign: 'center', maxWidth: '900px', margin: '0 auto 4rem' }}>
-                        <div className="section-title">
-                            <span className="gradient-text">Paris International Diploma in ECMO &amp; Simulation Course</span> en Latinoamérica.
-                        </div>
-                        <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', lineHeight: '1.8' }}>
-                            Vive la experiencia teórico-práctica liderada por expertos mundiales y certifícate como un profesional en soporte ECMO.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="carousel-container">
-                    <div style={{ textAlign: 'center', marginBottom: '2rem', fontFamily: 'Outfit', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem', fontWeight: 700 }}>Dirigido a especialistas en:</div>
-                    <div className="carousel-track">
-                        {/* First set of tags */}
-                        <span className="tag">Intensivistas</span>
-                        <span className="tag">Cardiólogos</span>
-                        <span className="tag">Neumólogos</span>
-                        <span className="tag">Cirujanos</span>
-                        <span className="tag">Anestesiólogos</span>
-                        <span className="tag">Médicos de Urgencias</span>
-                        <span className="tag">Enfermeras/os</span>
-                        <span className="tag">Perfusionistas</span>
-                        <span className="tag">Terapeutas Respiratorios</span>
-                        {/* Duplicate set for infinite effect */}
-                        <span className="tag">Intensivistas</span>
-                        <span className="tag">Cardiólogos</span>
-                        <span className="tag">Neumólogos</span>
-                        <span className="tag">Cirujanos</span>
-                        <span className="tag">Anestesiólogos</span>
-                        <span className="tag">Médicos de Urgencias</span>
-                        <span className="tag">Enfermeras/os</span>
-                        <span className="tag">Perfusionistas</span>
-                        <span className="tag">Terapeutas Respiratorios</span>
-                    </div>
-                    <div style={{ textAlign: 'center', marginTop: '3rem', position: 'relative', zIndex: 3 }}>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Certifícate</Link>
                     </div>
                 </div>
             </section>
