@@ -1265,3 +1265,40 @@
   }
 }
 
+/* White endorsement card */
+.paris-redesign .n-endorsement-card-white {
+  display: flex;
+  align-items: center;
+  gap: 3.5rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 6px solid #00d2ff;
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.05);
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3.5rem 4rem;
+  border-radius: 24px;
+  transition: all 0.3s ease;
+}
+
+.paris-redesign .n-endorsement-card-white:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+}
+
+@media (max-width: 768px) {
+  .paris-redesign .n-endorsement-card-white {
+    flex-direction: column;
+    text-align: center;
+    padding: 2.5rem 2rem;
+    gap: 1.8rem;
+    border-left: 1px solid #e2e8f0;
+    border-top: 6px solid #00d2ff;
+  }
+  .paris-redesign .n-endorsement-card-white > div:first-child {
+    width: 100% !important;
+    max-width: 320px;
+  }
+}
+
+

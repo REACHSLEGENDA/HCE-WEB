@@ -251,28 +251,52 @@ const ParisNewDesign = () => {
                 </div>
             </section>
 
-            {/* LOGOS TRUST BAR */}
-            <div style={{ 
-                background: 'rgba(10, 25, 47, 0.4)', 
-                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-                padding: '1.25rem 0',
-                backdropFilter: 'blur(10px)',
-                width: '100%'
-            }}>
-                <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2.5rem', flexWrap: 'wrap', padding: '0 1.5rem' }}>
-                    <span style={{ fontFamily: 'Outfit', color: 'rgba(255, 255, 255, 0.45)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.8rem', fontWeight: 700, flexShrink: 0 }}>
-                        Avalado y Respaldado por:
-                    </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <img src="/assets/componentes/logo.webp" alt="ELSO" style={{ maxHeight: '42px', width: 'auto', filter: 'brightness(0.95) contrast(1.05)' }} />
-                        <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.1)', flexShrink: 0 }}></div>
-                        <img src="/assets/componentes/SS.webp" alt="Sociedad Mexicana de Neumología" style={{ maxHeight: '42px', width: 'auto', filter: 'brightness(0.95)' }} />
-                        <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.1)', flexShrink: 0 }}></div>
-                        <img src="/assets/componentes/alat.png" alt="ALAT" style={{ maxHeight: '22px', width: 'auto', filter: 'brightness(0.95)' }} />
+            {/* TOP AVAL CARD (NURSING-STYLE ALL-IN-ONE) */}
+            <section style={{ padding: '4rem 0 2rem 0', background: '#050E1A' }}>
+                <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1rem' }}>
+                    <div className="n-endorsement-card-white">
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '1.5rem', 
+                            flexWrap: 'wrap',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            background: '#f8fafc',
+                            padding: '1.5rem 2rem',
+                            borderRadius: '20px',
+                            border: '1px solid #cbd5e1'
+                        }}>
+                            <img src="/assets/componentes/logo.webp" alt="ELSO" style={{ maxHeight: '55px', width: 'auto' }} />
+                            <div style={{ width: '1px', height: '40px', background: '#cbd5e1' }}></div>
+                            <img src="/assets/componentes/SS.webp" alt="SMNYCT" style={{ maxHeight: '55px', width: 'auto' }} />
+                            <div style={{ width: '1px', height: '40px', background: '#cbd5e1' }}></div>
+                            <img src="/assets/componentes/alat.png" alt="ALAT" style={{ maxHeight: '25px', width: 'auto' }} />
+                        </div>
+                        <div className="n-endorsement-text">
+                            <span style={{ 
+                                background: 'rgba(0, 229, 255, 0.1)', 
+                                color: '#00b4cc', 
+                                padding: '4px 12px', 
+                                borderRadius: '20px', 
+                                fontSize: '0.78rem', 
+                                fontWeight: '800', 
+                                display: 'inline-flex',
+                                marginBottom: '0.6rem',
+                                letterSpacing: '0.05em'
+                            }}>
+                                AVAL ACADÉMICO Y CIENTÍFICO
+                            </span>
+                            <h3 style={{ fontFamily: 'Outfit', fontSize: '1.75rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.5px' }}>
+                                Programa Avalado Internacionalmente
+                            </h3>
+                            <p style={{ fontSize: '1.1rem', color: '#475569', lineHeight: '1.6', margin: 0 }}>
+                                Este entrenamiento de alta especialidad cuenta con el respaldo y aval científico de la <strong>Extracorporeal Life Support Organization (ELSO)</strong>, la <strong>Sociedad Mexicana de Neumología y Cirugía de Tórax</strong> y la <strong>Asociación Latinoamericana de Tórax (ALAT)</strong>.
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             {/* SECTION 1: WELCOME & CAROUSEL */}
             <section id="welcome" className="section-padding">
