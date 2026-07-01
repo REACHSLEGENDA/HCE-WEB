@@ -241,7 +241,29 @@ const ParisNewDesign = () => {
                                 <span className="time-label">Seg</span>
                             </div>
                         </div>
-                        <div className="hero-venue-info">
+
+                        {/* Dates and Schedules */}
+                        <div className="countdown-schedule-info" style={{
+                            marginTop: '1.2rem',
+                            paddingTop: '1rem',
+                            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: '1.5rem',
+                            fontSize: '0.85rem',
+                            color: '#ffffff'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Calendar size={14} style={{ color: '#00d2ff' }} />
+                                <span><strong>28 al 31 de Octubre, 2026</strong></span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Clock size={14} style={{ color: '#00d2ff' }} />
+                                <span><strong>8 AM a 6 PM</strong></span>
+                            </div>
+                        </div>
+
+                        <div className="hero-venue-info" style={{ marginTop: '1rem' }}>
                             <MapPin size={12} /> 
                             <a href="https://share.google/sHSrTC0wdg5BJAodK" target="_blank" rel="noopener noreferrer" className="hero-venue-link">
                                 Sede: INER, Ciudad de México
@@ -535,7 +557,7 @@ const ParisNewDesign = () => {
                                 <span className="faculty-role-tag">Director del Programa</span>
                                 <div className="faculty-name">Prof. Alain Combes</div>
                                 <div className="faculty-bio">
-                                    Jefe de la UCI del Hosp. Pitié-Salpêtrière, Paris. Investigador principal de EOLIA. +372 publicaciones.
+                                    ExPresidente de EuroELSO. Jefe de la UCI del Hosp. Pitié-Salpêtrière, Paris. Investigador principal de EOLIA. +372 publicaciones.
                                 </div>
                             </div>
                         </div>
@@ -548,7 +570,7 @@ const ParisNewDesign = () => {
                                 <span className="faculty-role-tag">Presidente Científico</span>
                                 <div className="faculty-name">Prof. Matthieu Schmidt</div>
                                 <div className="faculty-bio">
-                                    Médico de la UCI del Hosp. Pitié-Salpêtrière. Presidente del Comité Científico de EuroELSO (2018-2022).
+                                    Presidente actual de EuroELSO. Presidente del Comité Científico de EuroELSO (2018-2022). Médico de la UCI del Hosp. Pitié-Salpêtrière.
                                 </div>
                             </div>
                         </div>
@@ -594,8 +616,8 @@ const ParisNewDesign = () => {
                         <div className="video-mockup-side reveal">
                             <div className="phone-frame">
                                 <div className="phone-screen">
-                                    <video controls poster="https://raw.githubusercontent.com/REACHSLEGENDA/Imagenes/refs/heads/main/Generated%20Image%20April%2015%2C%202026%20-%201_42AM.jpg">
-                                        <source src="/assets/paris/WhatsApp-Video-2024-04-02-at-7.24.03-AM.mp4" type="video/mp4" />
+                                    <video controls preload="auto" playsInline>
+                                        <source src="/assets/paris/WhatsApp-Video-2024-04-02-at-7.24.03-AM.mp4#t=0.001" type="video/mp4" />
                                     </video>
                                 </div>
                                 <div className="phone-button"></div>
@@ -636,6 +658,29 @@ const ParisNewDesign = () => {
                             <h2 className="sede-v2-big-title">SEDE Octubre 2026</h2>
                             <h3 className="sede-v2-title">Instituto Nacional de Enfermedades Respiratorias</h3>
                             <p className="sede-v2-abbr">(INER)</p>
+                            
+                            <div className="sede-v2-schedule" style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.6rem',
+                                marginBottom: '1.2rem',
+                                marginTop: '1.2rem',
+                                padding: '1rem',
+                                background: 'rgba(0, 71, 255, 0.03)',
+                                borderLeft: '4px solid #0047ff',
+                                borderRadius: '4px 8px 8px 4px',
+                                width: 'fit-content'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem', color: 'var(--primary)' }}>
+                                    <Calendar size={16} style={{ color: '#0047ff' }} />
+                                    <span><strong>Fechas:</strong> 28 al 31 de Octubre 2026</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem', color: 'var(--primary)' }}>
+                                    <Clock size={16} style={{ color: '#0047ff' }} />
+                                    <span><strong>Horario:</strong> 8:00 AM a 6:00 PM (Todos los días)</span>
+                                </div>
+                            </div>
+
                             <div className="sede-v2-addr">
                                 <MapPin size={16} />
                                 <span>Calz. de Tlalpan 4502, Belisario Domínguez Secc 16, Tlalpan, 14080 CDMX</span>
@@ -719,9 +764,24 @@ const ParisNewDesign = () => {
                         <h4 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800', color: '#ffffff', marginBottom: '0.5rem' }}>
                             Agrega ECMO Nursing con 20% de Descuento
                         </h4>
-                        <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.6' }}>
+                        <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.6', marginBottom: '1.2rem' }}>
                             Si eres enfermero(a), puedes complementar tu inscripción al Diploma Internacional con el <strong>ECMO Nursing Care Course</strong> con un <strong>20% de descuento</strong>. Fecha de inicio: <strong>20 de Julio</strong> — ideal como preparación teórica y práctica antes de la certificación en París en Octubre.
                         </p>
+                        <Link 
+                            to="/inscripciones-diploma-paris-ecmo" 
+                            className="btn btn-primary"
+                            style={{ 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '8px', 
+                                padding: '0.55rem 1.4rem', 
+                                fontSize: '0.85rem',
+                                fontWeight: '750',
+                                borderRadius: '30px'
+                            }}
+                        >
+                            ¡Inscríbete ya!
+                        </Link>
                     </div>
                 </div>
             </section>

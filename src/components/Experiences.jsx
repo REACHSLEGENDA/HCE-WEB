@@ -30,14 +30,14 @@ const ExperienceCard = ({ title, description, link, img, imgClass, containerClas
       </div>
       
       <div className="exp-content-body">
+        <h3 className="exp-title-premium">{title}</h3>
+        <p className="exp-desc-premium">{description}</p>
         {startDate && (
-          <div className="exp-start-date">
+          <div className="exp-start-date" style={{ marginTop: '0.5rem', marginBottom: '0.8rem' }}>
             <Calendar size={14} className="calendar-icon" />
             <span>{startDate}</span>
           </div>
         )}
-        <h3 className="exp-title-premium">{title}</h3>
-        <p className="exp-desc-premium">{description}</p>
         <div className="exp-footer-premium">
             <span className="exp-link-action">
                 <span>{badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'Próximamente' : 'Ver programa'}</span>

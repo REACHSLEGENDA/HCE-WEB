@@ -581,16 +581,16 @@
 
 .btn-portal.login-style {
   background: transparent;
-  color: var(--primary) !important;
-  border: 2px solid var(--primary);
+  color: #0047ff !important;
+  border: 2px solid #0047ff;
   box-shadow: none;
 }
 
 .btn-portal.login-style:hover {
-  background: var(--primary);
+  background: #0047ff;
   color: white !important;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 4px 15px rgba(0, 71, 255, 0.3);
 }
 
 @media (max-width: 768px) {

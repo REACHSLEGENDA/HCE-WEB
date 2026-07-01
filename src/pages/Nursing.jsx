@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
-import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send, ChevronLeft, ChevronRight, Gamepad2, Cpu, Activity, Gauge, Sparkles, Hospital } from 'lucide-react';
+import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send, ChevronLeft, ChevronRight, Gamepad2, Cpu, Activity, Gauge, Sparkles, Hospital, Calendar } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -93,8 +93,13 @@ const Nursing = () => {
 
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [activeModule, setActiveModule] = useState(null);
+  const [activeFaq, setActiveFaq] = useState(null);
   const facultyTrackRef = React.useRef(null);
   const lastInteractionRef = React.useRef(0);
+
+  const toggleFaq = (index) => {
+    setActiveFaq(activeFaq === index ? null : index);
+  };
 
   const handleScroll = (direction) => {
     if (facultyTrackRef.current) {
@@ -328,8 +333,25 @@ const Nursing = () => {
                 <span className="n-phase-num">FASE 01</span>
               </div>
               <div className="n-phase-content">
-                <span className="section-badge" style={{ background: 'rgba(0, 210, 255, 0.1)', color: '#00d2ff', border: '1px solid rgba(0, 210, 255, 0.3)', marginBottom: '0.8rem', display: 'inline-flex', padding: '3px 10px', fontSize: '0.7rem' }}>100% Virtual</span>
-                <h3>100% Virtual</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start', marginBottom: '1.2rem' }}>
+                  <span className="section-badge" style={{ background: 'rgba(0, 210, 255, 0.1)', color: '#00d2ff', border: '1px solid rgba(0, 210, 255, 0.3)', display: 'inline-flex', padding: '3px 10px', fontSize: '0.7rem', margin: 0 }}>100% Virtual</span>
+                  
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    color: '#ff4757',
+                    backgroundColor: 'rgba(255, 71, 87, 0.08)',
+                    border: '1px solid rgba(255, 71, 87, 0.15)',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                  }}>
+                    <Calendar size={13} />
+                    <span>Inicio: 20 de Julio, 2026</span>
+                  </div>
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
                   <div>
                     <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Aprendizaje Asincrónico</span>
@@ -354,8 +376,9 @@ const Nursing = () => {
                 <span className="n-phase-num">FASE 02</span>
               </div>
               <div className="n-phase-content">
-                <span className="section-badge" style={{ background: 'rgba(227, 24, 55, 0.1)', color: '#e31837', border: '1px solid rgba(227, 24, 55, 0.3)', marginBottom: '0.8rem', display: 'inline-flex', padding: '3px 10px', fontSize: '0.7rem' }}>100% Presencial</span>
-                <h3>100% Presencial</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start', marginBottom: '1.2rem' }}>
+                  <span className="section-badge" style={{ background: 'rgba(227, 24, 55, 0.1)', color: '#e31837', border: '1px solid rgba(227, 24, 55, 0.3)', display: 'inline-flex', padding: '3px 10px', fontSize: '0.7rem', margin: 0 }}>100% Presencial</span>
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
                   <div>
                     <span style={{ fontWeight: 'bold', color: 'var(--hce-navy)', display: 'block', marginBottom: '0.3rem', fontSize: '0.95rem' }}>• Ponencias Magistrales</span>
@@ -486,9 +509,9 @@ const Nursing = () => {
           <div className="n-timeline-container">
             {/* Step 1 */}
             <div className="n-card-base n-timeline-step">
-              <span className="n-timeline-badge active">2 Meses — Inicio: 20 de Julio, 2026 (Inscripciones Abiertas)</span>
-              <h3>Fase teórica e híbrida</h3>
-              <p>Aprendizaje combinado a través de nuestra plataforma virtual. Cubre de manera progresiva los fundamentos de la terapia, modalidades clínicas, monitoreo y prevención de complicaciones.</p>
+              <span className="n-timeline-badge active">Fase Virtual: 2 Meses, inicio 20 de Julio 2026.</span>
+              <h3>Entrenamiento Teórico (Aprendizaje Híbrido)</h3>
+              <p>Aprendizaje sincrónico y asincrónico a través de nuestra plataforma virtual. Cubre de manera progresiva los fundamentos del soporte ECMO, Fisiología y Hemodinamia Aplicada, Monitoreo Integral del Binomio Paciente-Circuito, Detección Precoz de Complicaciones.</p>
               <div style={{ marginTop: '1.2rem', textAlign: 'left' }}>
                 <button 
                   className="n-btn n-btn-brand" 
@@ -649,7 +672,33 @@ const Nursing = () => {
             {/* Card 1 */}
             <div className="n-equipment-card">
               <div className="n-circle-icon accent">
-                <Gauge size={24} />
+                <svg
+                  width={24}
+                  height={24}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ display: 'block' }}
+                >
+                  {/* Left Monitor */}
+                  <rect x="2" y="5" width="7" height="5" rx="1" />
+                  <path d="M9 7.5h3" />
+                  
+                  {/* Main Vertical Structure */}
+                  <path d="M12 3v16" />
+                  
+                  {/* Console Unit (Middle right) */}
+                  <rect x="12" y="6" width="8" height="8" rx="1" />
+                  <circle cx="16" cy="10" r="1.5" />
+                  
+                  {/* Bottom base and wheels */}
+                  <path d="M8 19h8" />
+                  <circle cx="9" cy="21" r="1.2" />
+                  <circle cx="15" cy="21" r="1.2" />
+                </svg>
               </div>
               <h3>Consolas ECMO</h3>
               <p>Práctica directamente en consolas de ECMO reales utilizadas a nivel internacional.</p>
@@ -662,9 +711,23 @@ const Nursing = () => {
               </div>
               <h3>Simulador ECMO SIM</h3>
               <p>Integración de simuladores clínicos interactivos especializados para escenarios críticos y de alta fidelidad.</p>
-              <button className="n-eq-btn-yellow" onClick={() => navigate('/simulador-ecmo-sim')}>
-                Más info
-              </button>
+              <div style={{ marginTop: 'auto', paddingTop: '0.8rem' }}>
+                <a 
+                  href="/simulador-ecmo-sim"
+                  onClick={(e) => { e.preventDefault(); navigate('/simulador-ecmo-sim'); }}
+                  style={{ 
+                    color: '#00d2ff', 
+                    textDecoration: 'underline', 
+                    fontSize: '0.85rem', 
+                    fontWeight: '800',
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                    display: 'inline-block' 
+                  }}
+                >
+                  Más info
+                </a>
+              </div>
             </div>
 
             {/* Card 3 */}
@@ -693,7 +756,7 @@ const Nursing = () => {
           <div className="n-sec-header center">
             <span className="n-sec-badge"><Sparkles size={14} /> EVALUACIÓN</span>
             <h2 className="n-sec-title">Tu progreso medido en cada etapa</h2>
-            <p className="n-sec-subtitle">Un sistema integral que asegura que integras los conocimientos de forma teórica y práctica.</p>
+            <p className="n-sec-subtitle">Un sistema integral de evaluación que asegura que <strong>integrarás</strong> los conocimientos teóricos y habilidades prácticas necesarios para el cuidado de pacientes en ECMO.</p>
           </div>
 
           <div className="n-evaluation-grid">
@@ -843,6 +906,135 @@ const Nursing = () => {
           
           <div className="n-section-cta">
             <button className="n-sales-btn large" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscribirme al Curso Ahora <ArrowRight size={20} /></button>
+          </div>
+        </div>
+      </section>
+      {/* FAQ SECTION */}
+      <section className="n-sec-padding n-faq-section" id="faq-section">
+        <div className="n-faq-glow"></div>
+        <div className="hce-container">
+          <div className="n-sec-header center">
+            <span className="n-sec-badge"><Sparkles size={14} /> RESPUESTAS</span>
+            <h2 className="n-sec-title">Preguntas Frecuentes (FAQ)</h2>
+            <p className="n-sec-subtitle">Todo lo que necesitas saber sobre el ECMO Nursing Care Course.</p>
+          </div>
+
+          <div className="n-faq-list">
+            {[
+              {
+                q: "¿Qué es el curso ECMO Nursing Care?",
+                a: "Es el primer programa de entrenamiento de alta especialidad en Latinoamérica y el mundo diseñado por y para profesionales de enfermería. Su objetivo es brindar las herramientas teóricas y prácticas necesarias para liderar con total seguridad, criterio clínico y autonomía el cuidado integral y el monitoreo del paciente en soporte ECMO."
+              },
+              {
+                q: "¿A quién está dirigido este entrenamiento?",
+                a: (
+                  <>
+                    Este curso está diseñado específicamente para profesionales a la cabecera del paciente crítico:
+                    <ul style={{ marginTop: '0.6rem', paddingLeft: '1.2rem', display: 'flex', flexDirection: 'column', gap: '5px', listStyleType: 'disc' }}>
+                      <li>Licenciados/as en Enfermería General.</li>
+                      <li>Enfermeros/as Especialistas en Cuidados Críticos, Intensivos o Cardiovasculares.</li>
+                      <li>Enfermeros/as de unidades coronarias, urgencias y quirófano.</li>
+                      <li>Perfusionistas interesados en el cuidado continuo.</li>
+                    </ul>
+                  </>
+                )
+              },
+              {
+                q: "¿Cuál es el principal enfoque del programa?",
+                a: "ECMO Nursing Care se centra por completo en el día a día al pie de la cama del paciente. Aprenderás a realizar un monitoreo adecuado del binomio circuito-paciente, evaluar el sitio de canulación, prevenir y resolver de inmediato escenarios de crisis, manejar las complicaciones en ECMO, vigilar la anticoagulación segura y comprender la transferencia de gases."
+              },
+              {
+                q: "¿Qué avales y certificaciones otorga este curso?",
+                a: "Al concluir y aprobar satisfactoriamente todas las evaluaciones, recibirás una Certificación Oficial emitida por Healthcare Training Experience (HTE) con el prestigioso aval de la FLECI (Federación Latinoamericana de Enfermería de Cuidados Intensivos). Esta credencial acredita tus competencias avanzadas en el cuidado de enfermería en ECMO, respaldada por un cuerpo docente experto y tecnología de simulación de vanguardia."
+              },
+              {
+                q: "¿Cuál es la modalidad del entrenamiento y cómo está estructurado?",
+                a: (
+                  <>
+                    El curso cuenta con un formato híbrido y optimizado para profesionales en activo, diseñado para equilibrar tus jornadas laborales con una práctica inmersiva de alto impacto:
+                    <div style={{ marginTop: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                      <div>
+                        <strong>• Fase Teórica-Virtual (Plataforma HTE):</strong>
+                        <ul style={{ paddingLeft: '1.2rem', marginTop: '0.3rem', listStyleType: 'circle', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <li><strong>Aprendizaje Asincrónico ("Aprende a tu ritmo"):</strong> Flexibilidad total con acceso 24/7 a clases grabadas, literatura científica y normativas ELSO para avanzar a tu propio paso.</li>
+                          <li><strong>Aprendizaje Sincrónico ("Consolida con expertos"):</strong> Sesiones interactivas en vivo enfocadas en la resolución de dudas, análisis exhaustivo de casos clínicos e insights prácticos directo de la práctica al pie de cama.</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <strong>• Fase Práctica Presencial:</strong>
+                        <ul style={{ paddingLeft: '1.2rem', marginTop: '0.3rem', listStyleType: 'circle', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <li><strong>Ponencias Magistrales ("Inspiración y Evidencia"):</strong> Espacios presenciales exclusivos con enfermeros especialistas de renombre global, quienes compartirán los últimos avances y tendencias en soporte vital extracorpóreo.</li>
+                          <li><strong>Simulación Clínica ("Practica sin riesgo"):</strong> Entrenamiento práctico y deliberado con fidelidad progresiva. Enfrenta fallas mecánicas y clínicas críticas en un entorno seguro de la mano de instructores internacionales.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </>
+                )
+              },
+              {
+                q: "¿Cuáles son los requisitos de inscripción?",
+                a: (
+                  <ul style={{ paddingLeft: '1.2rem', listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <li>Contar con título o cédula profesional de enfermería (o equivalente en tu país de origen).</li>
+                    <li>Desempeñarse o tener experiencia previa en unidades de cuidados críticos, intermedios, urgencias o quirófano.</li>
+                    <li>Interés por especializarse en terapias de soporte vital avanzado.</li>
+                  </ul>
+                )
+              },
+              {
+                q: "¿Cuáles son los métodos de pago y opciones de financiamiento?",
+                a: (
+                  <>
+                    Buscamos darte todas las facilidades para tu crecimiento profesional:
+                    <ul style={{ paddingLeft: '1.2rem', marginTop: '0.6rem', listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      <li>Pago en línea 100% seguro con tarjeta de crédito o débito directamente en nuestro portal web.</li>
+                      <li>Transferencias bancarias directas.</li>
+                      <li>Planes de financiamiento en parcialidades mensuales (disponibles para participantes en México).</li>
+                      <li><strong>Precios especiales para grupos:</strong> Ofrecemos tarifas preferenciales para instituciones, hospitales o grupos de colegas. Consulta los detalles con nuestro equipo.</li>
+                    </ul>
+                  </>
+                )
+              },
+              {
+                q: "¿Por qué el cupo es estrictamente limitado?",
+                a: "Debido a que el éxito del profesional de enfermería en ECMO depende enteramente de la destreza manual y de la rápida toma de decisiones, los talleres de simulación clínica se realizan en grupos pequeños. Esto garantiza que pases el máximo tiempo interactuando con el circuito y recibas retroalimentación personalizada de los instructores internacionales."
+              },
+              {
+                q: "¿Cómo puedo inscribirme?",
+                a: (
+                  <>
+                    ¡Es muy sencillo! Puedes asegurar tu lugar de inmediato haciendo{' '}
+                    <a 
+                      href="/inscripciones-ecmo-nursing" 
+                      onClick={(e) => { e.preventDefault(); navigate('/inscripciones-ecmo-nursing'); }} 
+                      style={{ color: '#00d2ff', textDecoration: 'underline', fontWeight: 'bold' }}
+                    >
+                      clic aquí
+                    </a>{' '}
+                    para acceder directamente a nuestro formulario de registro y pasarela de pago seguro.
+                  </>
+                )
+              }
+            ].map((faq, idx) => (
+              <div className={`n-faq-item ${activeFaq === idx ? 'active' : ''}`} key={idx}>
+                <button className="n-faq-trigger" onClick={() => toggleFaq(idx)}>
+                  <h3>{faq.q}</h3>
+                  <span className="n-faq-icon">
+                    {activeFaq === idx ? '−' : '+'}
+                  </span>
+                </button>
+                <div className="n-faq-content" style={{ maxHeight: activeFaq === idx ? '1000px' : '0' }}>
+                  <div className="n-faq-inner">
+                    {faq.a}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="n-faq-footer">
+            📩 ¿Tienes alguna otra duda? Si tu pregunta no está en esta lista, haz clic en el botón de WhatsApp o escríbenos directamente a{' '}
+            <a href="mailto:info@healthcareexp.com">info@healthcareexp.com</a>. ¡Nuestro equipo de admisiones te atenderá de inmediato!
           </div>
         </div>
       </section>

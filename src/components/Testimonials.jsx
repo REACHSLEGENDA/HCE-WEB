@@ -1,6 +1,6 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
-import { MessageSquare, Quote, Star, CheckCircle } from 'lucide-react';
+import { MessageSquare, Quote, Star, CheckCircle, Stethoscope } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './Testimonials.css';
 
@@ -10,7 +10,22 @@ const TestimonialCard = ({ img, name, role, text, delay }) => {
       <div className="testi-glass-blur"></div>
       <div className="testi-avatar-group">
         <div className="avatar-ring">
-          <img src={img} alt={name} onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`; }} />
+          {img ? (
+            <img src={img} alt={name} onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`; }} />
+          ) : (
+            <div style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0, 71, 255, 0.1)',
+              color: '#0047ff',
+              borderRadius: '50%'
+            }}>
+              <Stethoscope size={20} />
+            </div>
+          )}
           <div className="verified-badge"><CheckCircle size={12} fill="var(--cyan-bright)" color="white" /></div>
         </div>
         <div className="testi-user-meta">
@@ -35,6 +50,31 @@ const Testimonials = () => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   const testimonials = [
+    {
+      name: "Dr. Mario B. García Saavedra",
+      role: "Médico Cardiólogo - Perú",
+      text: "Un gran curso, de mucho nivel académico teórico y práctico. Lo que más destaco fue el acompañamiento personalizado en cada taller semanal y la práctica con el simulador HARVI."
+    },
+    {
+      name: "Dr. Matias Valdebenito S.",
+      role: "Médico Especialista Staff - Chile",
+      text: "Excelente experiencia con grandes profesores! Muy recomendable! Ellos son los creadores de los conocimientos en ECMO."
+    },
+    {
+      name: "Dra. Mádelyn R. Valle Ramos",
+      role: "Médico Residente - Guatemala",
+      text: "Muchas gracias a todos los maestros del curso de Manejo de Avanzada de Insuficiencia Cardíaca, todos increíblemente profesionales y capacitados."
+    },
+    {
+      name: "Dr. Julio C. Matute Miranda",
+      role: "Médico de Cuidados Intensivos - Chile",
+      text: "Excelente curso! Recomendable para quienes trabajan en Unidades de cuidados intensivos y más si ven pacientes de cardiología crítica y soporte extracorpóreo. Un curso 10 de 10."
+    },
+    {
+      name: "Dr. Zilbert H. Tafur Herrera",
+      role: "Médico Cardiólogo - Perú",
+      text: "Es un excelente diplomado, que me ha permitido conocer más a profundidad el manejo avanzado, lo he pasado genial durante cada sesión, y los docentes han sido muy didácticos."
+    },
     {
       img: "/assets/componentes/aasd.png",
       name: "Dr. Carlos Durán",

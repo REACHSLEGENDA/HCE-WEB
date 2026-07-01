@@ -41,7 +41,8 @@ const EcmoSim = () => {
         if (res.ok) {
           const data = await res.json();
           if (data && data.rates && data.rates.MXN) {
-            setUsdRate(data.rates.MXN);
+            // Keep rate fixed at 18.0 as requested to maintain clean prices (4,500 / 12,600 MXN)
+            // setUsdRate(data.rates.MXN);
           }
         }
       } catch (err) {
@@ -470,7 +471,7 @@ const EcmoSim = () => {
                       ${appliedPromo ? '200' : '250'} USD
                     </span>
                     <span className="sim-price-mxn">
-                      ~ ${Math.round((appliedPromo ? 200 : 250) * usdRate).toLocaleString()} MXN
+                      ${Math.round((appliedPromo ? 200 : 250) * usdRate).toLocaleString()} MXN
                     </span>
                   </div>
                   <p className="sim-plan-desc">Entrenamiento intensivo de mediano plazo.</p>
@@ -485,7 +486,7 @@ const EcmoSim = () => {
                   <div className="sim-plan-meta">
                     <span className="sim-plan-duration">12 MESES</span>
                     <span className="sim-plan-badge-simple">
-                      AHORRA
+                      AHORRA EL 7%
                     </span>
                   </div>
                   <div className="sim-plan-pricing">
@@ -493,7 +494,7 @@ const EcmoSim = () => {
                       ${appliedPromo ? '650' : '700'} USD
                     </span>
                     <span className="sim-price-mxn">
-                      ~ ${Math.round((appliedPromo ? 650 : 700) * usdRate).toLocaleString()} MXN
+                      ${Math.round((appliedPromo ? 650 : 700) * usdRate).toLocaleString()} MXN
                     </span>
                   </div>
                   <p className="sim-plan-desc">Entrenamiento continuo para excelencia clínica.</p>

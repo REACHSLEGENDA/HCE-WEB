@@ -14,14 +14,14 @@ const EXTRA_CATALOG = {
     subhint: 'Suscripción por 4 meses',
     desc: 'Taller de simulación avanzada en ECMO con maniquí de alta fidelidad',
     price: 3500,
-    originalPrice: 6000,
+    originalPrice: 4500,
   },
   ecmo_nursing: {
     label: 'ECMO Nursing Care Course',
     subhint: 'Experiencia virtual',
     desc: 'Módulo especializado de ECMO para cuidados de enfermería intensiva',
     price: 3500,
-    originalPrice: 5000,
+    originalPrice: 4500,
   },
 };
 
@@ -399,8 +399,22 @@ export default function Inscripciones() {
                       {extras.has(ex.id) && <CheckCircle2 size={16} />}
                     </div>
                     <div className="ins-extra-info">
-                      <span className="ins-extra-label">{ex.label}</span>
-                      {ex.subhint && <span style={{ fontSize: '0.75rem', opacity: 0.7, display: 'block', marginTop: '2px' }}>{ex.subhint}</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span className="ins-extra-label">{ex.label}</span>
+                        <span style={{
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          color: '#ef4444',
+                          border: '1px solid rgba(239, 68, 68, 0.25)',
+                          padding: '2px 8px',
+                          borderRadius: '100px',
+                          fontSize: '0.7rem',
+                          fontWeight: '800',
+                          letterSpacing: '0.5px'
+                        }}>
+                          20% DCTO
+                        </span>
+                      </div>
+                      {ex.subhint && <span style={{ fontSize: '0.75rem', opacity: 0.7, display: 'block', marginTop: '4px' }}>{ex.subhint}</span>}
                     </div>
                     <div className="ins-extra-price" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
                       {ex.originalPrice && (

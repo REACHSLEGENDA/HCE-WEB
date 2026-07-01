@@ -101,7 +101,7 @@ const Impact = () => {
             icon={<Laptop2 size={32} />}
             target={50}
             title="Clases magistrales"
-            desc="Contenido premium disponible 24/7 en nuestro <strong>Portal Científico</strong>."
+            desc="Contenido premium disponible 24/7 en nuestro <a href='/login' style='color: #00e5ff; text-decoration: underline; font-weight: bold;'>Portal Científico</a>."
             delay={0.4}
             triggerAnim={inView}
           />
