@@ -3020,7 +3020,7 @@ const AdminDashboard = () => {
                         </button>
                       </div>
                       
-                      <div className="modal-body-content" style={{ padding: '24px' }}>
+                      <div className="modal-body-content" style={{ padding: '24px', maxHeight: '70vh', overflowY: 'auto' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
                           <div>
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Formulario</span>
