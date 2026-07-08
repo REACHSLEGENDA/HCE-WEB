@@ -133,6 +133,10 @@ export default function InscripcionesNursing() {
     } else if (code === 'HCEGRUPOS' || code === 'HCEGRUPOS15') {
       setAppliedPromo({ code, discount: 0.15, type: 'mixed' });
       setApiError('');
+    } else if (code === 'BECAPARIS26' || code === 'BECANURSING26' || code === 'TRANSFER2026' || code === 'BECAINER26') {
+      // Beca 100% / pago por transferencia — omite pasarela de pago
+      setAppliedPromo({ code, discount: 1.0, type: 'free' });
+      setApiError('');
     } else {
       setAppliedPromo(null);
       if (promoInput.trim()) setApiError('Código no válido');
@@ -141,10 +145,11 @@ export default function InscripcionesNursing() {
 
   const availableExtras = perfil ? PROFILES[perfil].extras.map((id) => ({ id, ...EXTRA_CATALOG[id] })) : [];
   const rawBase = perfil ? PROFILES[perfil].price : 0;
-  const baseDiscount = (perfil && appliedPromo) ? Math.floor(rawBase * appliedPromo.discount) : 0;
-  const baseMXN = rawBase - baseDiscount;
+  const isFree = appliedPromo?.type === 'free';
+  const baseDiscount = (perfil && appliedPromo && !isFree) ? Math.floor(rawBase * appliedPromo.discount) : 0;
+  const baseMXN = isFree ? 0 : rawBase - baseDiscount;
   
-  const extrasMXN = [...extras].reduce((s, id) => s + EXTRA_CATALOG[id].price, 0);
+  const extrasMXN = isFree ? 0 : [...extras].reduce((s, id) => s + EXTRA_CATALOG[id].price, 0);
   const totalMXN = baseMXN + extrasMXN;
   const displayBase = moneda === 'usd' ? Math.ceil(baseMXN / USD_RATE) : baseMXN;
   const displayExtras = moneda === 'usd' ? Math.ceil(extrasMXN / USD_RATE) : extrasMXN;
@@ -154,8 +159,32 @@ export default function InscripcionesNursing() {
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const canPay = !!perfil && emailValid && consentPrimary && (perfil !== 'otro' || customOtro.trim().length > 0);
 
+  // Para becas/transferencias: construye el mismo payload que el webhook de Stripe
+  // y redirige directo al formulario de registro sin pasar por pasarela.
+  const handleFreeRegister = () => {
+    if (!canPay) return;
+    const resolvedPerfil = perfil === 'otro' ? (customOtro.trim() || 'Otro') : (PROFILES[perfil]?.label || perfil);
+    const extrasLabel = [...extras].map((id) => EXTRA_CATALOG[id]?.label).filter(Boolean).join(', ') || 'Ninguno';
+    const payload = {
+      email: email.trim(),
+      perfilLabel: resolvedPerfil,
+      extrasLabel,
+      moneda,
+      total_mxn: 0,
+      promoCode: appliedPromo?.code || '',
+    };
+    const json = JSON.stringify(payload);
+    const bytes = new TextEncoder().encode(json);
+    let binary = '';
+    bytes.forEach((b) => { binary += String.fromCharCode(b); });
+    const b64url = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    window.location.href = `/inscripciones-ecmo-nursing?status=success&d=${b64url}`;
+  };
+
   const handlePay = async () => {
     if (!canPay) return;
+    // Si es beca/transferencia, omitir pasarela
+    if (isFree) { handleFreeRegister(); return; }
     setLoading(true);
     setApiError('');
     try {
@@ -512,7 +541,14 @@ export default function InscripcionesNursing() {
             {perfil && (
               <div className="ins-summary-total">
                 <span>Inversión total</span>
-                <strong>{fmt(displayTotal, cur)}</strong>
+                {isFree ? (
+                  <strong style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                    <span style={{ color: '#10b981', fontSize: '1.1rem' }}>Beca 100% ✓</span>
+                    <small style={{ fontWeight: 500, fontSize: '0.72rem', color: '#64748b' }}>Pago confirmado por transferencia</small>
+                  </strong>
+                ) : (
+                  <strong>{fmt(displayTotal, cur)}</strong>
+                )}
               </div>
             )}
 
@@ -537,9 +573,12 @@ export default function InscripcionesNursing() {
                     </button>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(16,185,129,0.1)', padding: '0.6rem 0.8rem', borderRadius: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: appliedPromo.type === 'free' ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.1)', padding: '0.6rem 0.8rem', borderRadius: '10px', border: appliedPromo.type === 'free' ? '1px solid rgba(16,185,129,0.3)' : 'none' }}>
                     <div style={{ fontSize: '0.8rem', color: '#065f46', fontWeight: 600 }}>
-                      ✓ {appliedPromo.code} {appliedPromo.type === 'mixed' ? `(-${appliedPromo.discount * 100}% + 3 MSI)` : `(-${appliedPromo.discount * 100}%)`}
+                      {appliedPromo.type === 'free'
+                        ? `🎓 ${appliedPromo.code} — Beca / Transferencia aplicada`
+                        : `✓ ${appliedPromo.code} ${appliedPromo.type === 'mixed' ? `(-${appliedPromo.discount * 100}% + 3 MSI)` : `(-${appliedPromo.discount * 100}%)`}`
+                      }
                     </div>
                     <button 
                       onClick={() => { setAppliedPromo(null); setPromoInput(''); setApiError(''); }}
@@ -591,15 +630,20 @@ export default function InscripcionesNursing() {
               className="ins-btn ins-btn--primary ins-btn--full"
               disabled={!canPay || loading}
               onClick={handlePay}
+              style={isFree ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
             >
               {loading
-                ? <><Loader2 size={18} className="ins-spin" /> Procesando inversión...</>
-                : <><span>Invertir en inscripción</span><ChevronRight size={18} /></>
+                ? <><Loader2 size={18} className="ins-spin" /> Procesando...</>
+                : isFree
+                  ? <><span>Completar registro sin cargo</span><ChevronRight size={18} /></>
+                  : <><span>Invertir en inscripción</span><ChevronRight size={18} /></>
               }
             </button>
 
             <p className="ins-summary-secure">
-              <Shield size={13} /> Inversión segura con Stripe · SSL cifrado
+              {isFree
+                ? <><Shield size={13} /> Registro seguro — pago confirmado por transferencia</>  
+                : <><Shield size={13} /> Inversión segura con Stripe · SSL cifrado</>}
             </p>
           </div>
         </aside>
