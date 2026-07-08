@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send, ChevronLeft, ChevronRight, Gamepad2, Cpu, Activity, Gauge, Sparkles, Hospital, Calendar } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { FAQNursing } from '../components/FAQSection';
 
 
 import './Nursing.css';
@@ -1093,6 +1094,8 @@ const Nursing = () => {
           </div>
         </div>
       </section>
+
+      <FAQNursing />
 
       <Footer />
     </div>

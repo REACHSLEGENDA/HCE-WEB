@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import './ParisNewDesign.css';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
+import { FAQParis } from '../FAQSection';
 
 const syllabusData = [
     { title: "Circuito de ECMO: Componentes esenciales", desc: "Comprender la estructura y funcionamiento del circuito ECMO (bomba sanguínea, oxigenador y recubrimientos) para su correcta aplicación clínica." },
@@ -916,6 +917,7 @@ const ParisNewDesign = () => {
                 </div>
             </section>
         </div>
+        <FAQParis />
         <Footer />
       </div>
     );

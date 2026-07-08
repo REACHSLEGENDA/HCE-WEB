@@ -9,6 +9,7 @@ import Instructors from '../components/Instructors';
 import Testimonials from '../components/Testimonials';
 import Partners from '../components/Partners';
 import Footer from '../components/Footer';
+import { FAQHome } from '../components/FAQSection';
 import { useSEO } from '../hooks/useSEO';
 
 const Home = () => {
@@ -29,6 +30,7 @@ const Home = () => {
       <Impact />
       <Testimonials />
       <Webinars />
+      <FAQHome />
       <Footer />
     </>
   );
