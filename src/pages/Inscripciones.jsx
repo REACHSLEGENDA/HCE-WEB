@@ -110,8 +110,8 @@ export default function Inscripciones() {
     // Validar PERFUWEEK del 6 al 10 de Mayo 2026 (Zona horaria MX -06:00 aproximada)
     const isPerfuweekValid = now >= new Date('2026-05-06T00:00:00-06:00') && now <= new Date('2026-05-10T23:59:59-06:00');
 
-    if (code === 'HCE-INERPARIS2026') {
-      setAppliedPromo({ code: 'HCE-INERPARIS2026', discount: 0.3, type: 'discount' });
+    if (code === 'HCE-INERPARIS2026' || code === 'INER30') {
+      setAppliedPromo({ code, discount: 0.3, type: 'discount' });
       setApiError('');
     } else if (code === 'HCEMS' || code === 'HCEMESES') {
       setAppliedPromo({ code, discount: 0, type: 'installments' });
