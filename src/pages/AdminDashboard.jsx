@@ -3014,7 +3014,7 @@ const AdminDashboard = () => {
                   <div className="admin-modal-overlay">
                     <div className="admin-modal-container" style={{ maxWidth: '600px', width: '100%' }}>
                       <div className="modal-header-row">
-                        <h3>Detalle de Formulario Formspree</h3>
+                        <h3>Detalle de Registro</h3>
                         <button className="modal-close-btn" onClick={() => { setShowFormModal(false); setSelectedFormEntry(null); }}>
                           <X size={20} />
                         </button>
@@ -3027,30 +3027,67 @@ const AdminDashboard = () => {
                             <h4 style={{ margin: '4px 0 0 0', color: 'var(--text-dark)' }}>{selectedFormEntry.formName}</h4>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>ID Formspree API</span>
-                            <h4 style={{ margin: '4px 0 0 0', fontFamily: 'monospace', color: 'var(--text-dark)' }}>{selectedFormEntry.formId}</h4>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>ID</span>
+                            <h4 style={{ margin: '4px 0 0 0', fontFamily: 'monospace', color: 'var(--text-dark)', fontSize: '0.85rem' }}>{selectedFormEntry.formId}</h4>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Enviado por</span>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Alumno</span>
                             <h4 style={{ margin: '4px 0 0 0', color: 'var(--text-dark)' }}>{selectedFormEntry.senderName}</h4>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Email Remitente</span>
-                            <h4 style={{ margin: '4px 0 0 0', color: 'var(--text-dark)' }}>{selectedFormEntry.senderEmail}</h4>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Email</span>
+                            <h4 style={{ margin: '4px 0 0 0', color: 'var(--text-dark)', wordBreak: 'break-all' }}>{selectedFormEntry.senderEmail}</h4>
                           </div>
                         </div>
 
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>Carga de Datos Enviada (JSON Payload)</span>
-                        <div style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', maxHeight: '250px', overflowY: 'auto' }}>
-                          <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-dark)', whiteSpace: 'pre-wrap' }}>
-                            {JSON.stringify(selectedFormEntry.payload, null, 2)}
-                          </pre>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '12px', fontWeight: 600 }}>Datos del Registro</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+                          {(() => {
+                            const p = selectedFormEntry.payload || {};
+                            const FIELD_LABELS = {
+                              nombres: 'Nombre(s)', apellidos: 'Apellidos', email: 'Email',
+                              telefono: 'Teléfono', pais: 'País', estado: 'Estado/Ciudad',
+                              grado: 'Grado Académico', especialidad: 'Especialidad',
+                              institucion: 'Institución', cargo: 'Cargo',
+                              perfil: 'Perfil', extras: 'Extras', moneda: 'Moneda',
+                              total_mxn: 'Total MXN', tag: 'Programa', promoCode: 'Cupón',
+                            };
+                            const SKIP = new Set(['lada', '_wpcf7', '__redirect']);
+                            const PRIORITY = ['nombres','apellidos','email','telefono','pais','estado','grado','especialidad','institucion','cargo','perfil','extras','moneda','total_mxn','tag','promoCode'];
+                            const shown = new Set();
+                            const items = [];
+                            for (const key of PRIORITY) {
+                              if (p[key] !== undefined && p[key] !== '') { items.push([key, p[key]]); shown.add(key); }
+                            }
+                            for (const [k, v] of Object.entries(p)) {
+                              if (!shown.has(k) && !SKIP.has(k) && String(v).trim() !== '') items.push([k, v]);
+                            }
+                            return items.map(([k, v]) => (
+                              <div key={k} style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '10px 12px' }}>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>
+                                  {FIELD_LABELS[k] || k}
+                                </div>
+                                <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-dark)', wordBreak: 'break-word' }}>
+                                  {k === 'total_mxn' ? `$${Number(v).toLocaleString('es-MX')} MXN` : String(v)}
+                                </div>
+                              </div>
+                            ));
+                          })()}
                         </div>
+
+                        <details style={{ marginTop: '8px' }}>
+                          <summary style={{ cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-muted)', userSelect: 'none' }}>Ver JSON completo</summary>
+                          <div style={{ background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px', maxHeight: '200px', overflowY: 'auto', marginTop: '8px' }}>
+                            <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-dark)', whiteSpace: 'pre-wrap' }}>
+                              {JSON.stringify(selectedFormEntry.payload, null, 2)}
+                            </pre>
+                          </div>
+                        </details>
                       </div>
 
                       <div className="modal-footer-row" style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end' }}>
                         <button className="admin-cancel-btn" onClick={() => { setShowFormModal(false); setSelectedFormEntry(null); }}>
-                          Cerrar Detalle
+                          Cerrar
                         </button>
                       </div>
                     </div>
