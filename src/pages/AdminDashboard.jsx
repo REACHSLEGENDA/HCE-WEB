@@ -193,12 +193,18 @@ const AdminDashboard = () => {
   const [selectedFormEntry, setSelectedFormEntry] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [paymentTimePeriod, setPaymentTimePeriod] = useState('all');
-  const getStandardGatewayCourse = (courseName = '') => {
+  const getStandardGatewayCourse = (courseName = '', amount = 0) => {
     const name = (courseName || '').toLowerCase();
+    
+    // Amount-based detection as safeguard for Paris diploma
+    if (amount >= 15000) {
+      return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
+    }
+    
     if (name.includes('nurs')) {
       return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
     }
-    if (name.includes('paris') || name.includes('parís')) {
+    if (name.includes('paris') || name.includes('parís') || name.includes('inscripción hce') || name.includes('inscripcion') || name.includes('step 1')) {
       return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
     }
     return { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' };
@@ -233,7 +239,7 @@ const AdminDashboard = () => {
       };
     }
     const name = item.courseName;
-    const stdCourse = getStandardGatewayCourse(name);
+    const stdCourse = getStandardGatewayCourse(name, item.amount);
     return {
       ...item,
       courseId: stdCourse.id,

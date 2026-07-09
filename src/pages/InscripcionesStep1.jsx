@@ -1,0 +1,1076 @@
+import { useState, useEffect, useRef } from 'react';
+import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin, Users } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import './Inscripciones.css';
+
+const USD_RATE = 17.5;
+
+const EXTRA_CATALOG = {
+  ecmo_sim: {
+    label: 'Simulador ECMO SIM',
+    subhint: 'Suscripción por 4 meses',
+    desc: 'Taller de simulación avanzada en ECMO con maniquí de alta fidelidad',
+    price: 3500,
+    originalPrice: 4500,
+  },
+  ecmo_nursing: {
+    label: 'ECMO Nursing Care Course',
+    subhint: 'Experiencia virtual',
+    desc: 'Módulo especializado de ECMO para cuidados de enfermería intensiva',
+    price: 3500,
+    originalPrice: 4500,
+  },
+};
+
+const PROFILES = {
+  especialista: {
+    label: 'Médico(a) Especialista',
+    price: 19500,
+    extras: ['ecmo_sim'],
+  },
+  residente: {
+    label: 'Médico(a) Residente',
+    price: 18500,
+    extras: ['ecmo_sim'],
+  },
+  enfermero: {
+    label: 'Enfermero(a) / Otro Profesional',
+    price: 18500,
+    extras: ['ecmo_sim', 'ecmo_nursing'],
+  },
+};
+
+const fmt = (n, cur) =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: cur.toUpperCase(), maximumFractionDigits: 0 }).format(n);
+
+import { useSEO } from '../hooks/useSEO';
+import { COUNTRIES as ALL_COUNTRIES, getFlagUrl } from '../data/countries';
+
+export default function Inscripciones() {
+  useSEO({
+    title: 'Inscripciones',
+    description: 'Asegura tu lugar en nuestros programas educativos y certificaciones internacionales. Selecciona tu perfil e inscríbete de manera segura.',
+    keywords: 'inscripciones HCE, inscripción médica, diplomado ECMO, registrarse HCE, precios cursos médicos'
+  });
+
+  const [searchParams] = useSearchParams();
+  const [cardSel, setCardSel] = useState(null);   // 'especialista' | 'otros'
+  const [subRole, setSubRole] = useState(null);    // 'residente' | 'enfermero'
+  const [extras, setExtras] = useState(new Set());
+  const [moneda, setMoneda] = useState('mxn');
+  const [email, setEmail] = useState('');
+  const [consentPrimary, setConsentPrimary] = useState(false);
+  const [consentSecondary, setConsentSecondary] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null); // { code: string, discount: number }
+  const [showPopup, setShowPopup] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowPopup(true);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+
+  const payStatus = searchParams.get('status'); // 'success' | 'cancel'
+  const perfil = cardSel === 'otros' ? subRole : cardSel;
+
+  const selectCard = (card) => {
+    setCardSel(card);
+    setSubRole(null);
+    setExtras(new Set());
+    setApiError('');
+  };
+
+  const selectSubRole = (role) => {
+    setSubRole(role);
+    setExtras(new Set());
+  };
+
+  const toggleExtra = (id) => {
+    setExtras((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const applyPromo = () => {
+    const code = promoInput.trim().toUpperCase();
+    const now = new Date();
+    // Validar PERFUWEEK del 6 al 10 de Mayo 2026 (Zona horaria MX -06:00 aproximada)
+    const isPerfuweekValid = now >= new Date('2026-05-06T00:00:00-06:00') && now <= new Date('2026-05-10T23:59:59-06:00');
+
+    if (code === 'HCE-INERPARIS2026' || code === 'INER30') {
+      setAppliedPromo({ code, discount: 0.3, type: 'discount' });
+      setApiError('');
+    } else if (code === 'HCEMS' || code === 'HCEMESES') {
+      setAppliedPromo({ code, discount: 0, type: 'installments' });
+      setApiError('');
+    } else if (code === 'HCE10MSI') {
+      setAppliedPromo({ code, discount: 0.1, type: 'mixed' });
+      setApiError('');
+    } else if (code === 'HCEGRUPOS' || code === 'HCEGRUPOS15') {
+      setAppliedPromo({ code, discount: 0.15, type: 'mixed' });
+      setApiError('');
+    } else if (code === 'PERFUWEEK') {
+      if (isPerfuweekValid) {
+        setAppliedPromo({ code, discount: 0.15, type: 'discount' });
+        setApiError('');
+      } else {
+        setAppliedPromo(null);
+        setApiError('El código PERFUWEEK solo es válido del 6 al 10 de Mayo.');
+      }
+    } else if (code === 'HCEPRACTICA26') {
+      setAppliedPromo({ code, discount: 0, type: 'fixed_price', fixedPrice: 18500 });
+      setApiError('');
+    } else if (code === 'STEP1EARLY') {
+      setAppliedPromo({ code, discount: 0.5, type: 'discount' });
+      setApiError('');
+    } else if (code === 'BECAPARIS26' || code === 'BECANURSING26' || code === 'TRANSFER2026' || code === 'BECAINER26') {
+      // Beca 100% / pago por transferencia — omite pasarela de pago
+      setAppliedPromo({ code, discount: 1.0, type: 'free' });
+      setApiError('');
+    } else {
+      setAppliedPromo(null);
+      if (promoInput.trim()) setApiError('Código no válido');
+    }
+  };
+
+  const availableExtras = perfil ? PROFILES[perfil].extras.map((id) => ({ id, ...EXTRA_CATALOG[id] })) : [];
+  const rawBase = perfil ? PROFILES[perfil].price : 0;
+  const isFree = appliedPromo?.type === 'free';
+  const baseDiscount = (perfil && appliedPromo && !isFree) ? Math.floor(rawBase * appliedPromo.discount) : 0;
+  const baseMXN = isFree ? 0 : (appliedPromo?.type === 'fixed_price' ? appliedPromo.fixedPrice : rawBase - baseDiscount);
+  
+  const extrasMXN = isFree ? 0 : [...extras].reduce((s, id) => s + EXTRA_CATALOG[id].price, 0);
+  const totalMXN = baseMXN + extrasMXN;
+  const displayBase = moneda === 'usd' ? Math.ceil(baseMXN / USD_RATE) : baseMXN;
+  const displayExtras = moneda === 'usd' ? Math.ceil(extrasMXN / USD_RATE) : extrasMXN;
+  const displayTotal = moneda === 'usd' ? Math.ceil(totalMXN / USD_RATE) : totalMXN;
+  const cur = moneda.toUpperCase();
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const canPay = !!perfil && emailValid && consentPrimary;
+
+  // Para becas/transferencias: construye el mismo payload que el webhook de Stripe
+  // y redirige directo al formulario de registro sin pasar por pasarela.
+  const handleFreeRegister = () => {
+    if (!canPay) return;
+    const perfilLabel = PROFILES[perfil]?.label || perfil;
+    const extrasLabel = [...extras].map((id) => EXTRA_CATALOG[id]?.label).filter(Boolean).join(', ') || 'Ninguno';
+    const payload = {
+      email: email.trim(),
+      perfilLabel,
+      extrasLabel,
+      moneda,
+      total_mxn: 0,
+      promoCode: appliedPromo?.code || '',
+    };
+    // Codifica igual que el webhook de Stripe para que RegistrationForm lo decodifique igual
+    const json = JSON.stringify(payload);
+    const bytes = new TextEncoder().encode(json);
+    let binary = '';
+    bytes.forEach((b) => { binary += String.fromCharCode(b); });
+    const b64url = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    window.location.href = `/inscripciones-step1?status=success&d=${b64url}`;
+  };
+
+  const handlePay = async () => {
+    if (!canPay) return;
+    // Si es beca/transferencia, omitir pasarela
+    if (isFree) { handleFreeRegister(); return; }
+    setLoading(true);
+    setApiError('');
+    try {
+      const res = await fetch('/.netlify/functions/create-step1-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          perfil, 
+          extras: [...extras], 
+          moneda, 
+          email: email.trim(),
+          promoCode: appliedPromo?.code || null
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'No se pudo iniciar la inversión');
+      }
+    } catch (err) {
+      setApiError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (payStatus === 'success') {
+    return (
+      <div className="ins-page">
+        <Navbar />
+        <RegistrationForm />
+        <Footer />
+      </div>
+    );
+  }
+
+  if (payStatus === 'cancel') {
+    return (
+      <div className="ins-page">
+        <Navbar />
+        <div className="ins-result-wrap">
+          <div className="ins-result-card">
+            <div className="ins-result-icon ins-result-icon--cancel">✕</div>
+            <h2>Inversión cancelada</h2>
+            <p>No se realizó ningún cargo.</p>
+            <a href="/inscripciones-step1" className="ins-btn ins-btn--primary">Intentar de nuevo</a>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="ins-page">
+      <Navbar />
+
+      {/* HERO */}
+      <div className="ins-hero">
+        <div className="ins-hero-inner hce-container">
+          <span className="section-badge">PROGRAMAS 2026</span>
+          <h1 className="ins-hero-title">Step 1 Teórico del Diploma de París en ECMO (28 y 29 CDMX)</h1>
+          <p className="ins-hero-sub">
+            Asegura tu lugar en el paso inicial de la certificación. Selecciona tu perfil y finaliza tu inversión de forma segura.
+          </p>
+        </div>
+      </div>
+
+      {/* CONTENT */}
+      <div className="ins-layout hce-container">
+
+        {/* ── LEFT: selection flow ── */}
+        <div className="ins-main">
+
+          {/* Announcement Banner */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(227, 24, 55, 0.05) 0%, rgba(227, 24, 55, 0.02) 100%)',
+            border: '1px solid rgba(227, 24, 55, 0.15)',
+            borderRadius: '12px',
+            padding: '1.2rem 1.5rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '15px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1, minWidth: '280px' }}>
+              <div style={{
+                background: '#e31837',
+                color: '#fff',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Users size={20} />
+              </div>
+              <div>
+                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--ins-dark)' }}>Inscripción para Grupos</h4>
+                <p style={{ margin: '3px 0 0 0', fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
+                  ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> para solicitar un descuento especial para grupos mayores de 6 personas.
+                </p>
+              </div>
+            </div>
+            <a 
+              href="https://wa.me/525659271906?text=Hola,%20quiero%20solicitar%20un%20descuento%20especial%20para%20un%20grupo%20en%20el%20Diploma%20de%20Par%C3%ADs%20ECMO."
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#25D366',
+                color: '#fff',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                textDecoration: 'none',
+                transition: 'background 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#128C7E'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#25D366'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.79-4.276l.41.243c1.554.922 3.19 1.409 4.854 1.41 5.518 0 10.007-4.48 10.01-9.997.001-2.672-1.037-5.187-2.924-7.075-1.888-1.887-4.397-2.925-7.073-2.926-5.524 0-10.014 4.482-10.017 9.999-.001 1.764.469 3.488 1.359 5.011l.269.465-1.006 3.676 3.764-.988z"/>
+              </svg>
+              WhatsApp
+            </a>
+          </div>
+
+          {/* STEP 1 — profile cards */}
+          <section className="ins-section">
+            <div className="ins-step-header">
+              <span className="ins-step-num">1</span>
+              <div>
+                <h2 className="ins-step-title">Selecciona tu perfil</h2>
+              </div>
+            </div>
+
+            <div className="ins-cards">
+              {/* Card 1 — Especialista */}
+              <button
+                type="button"
+                className={`ins-card ${cardSel === 'especialista' ? 'ins-card--active' : ''}`}
+                onClick={() => selectCard('especialista')}
+              >
+                <div className="ins-card-visual ins-card-visual--blue">
+                  <Stethoscope size={40} strokeWidth={1.5} />
+                </div>
+                <div className="ins-card-body">
+                  <div className="ins-card-top">
+                    <span className="ins-card-tag">Perfil A</span>
+                    {cardSel === 'especialista' && <CheckCircle2 size={20} className="ins-card-check" />}
+                  </div>
+                  <h3 className="ins-card-title">Médico(a) Especialista</h3>
+                </div>
+              </button>
+
+              {/* Card 2 — Otros */}
+              <button
+                type="button"
+                className={`ins-card ${cardSel === 'otros' ? 'ins-card--active' : ''}`}
+                onClick={() => selectCard('otros')}
+              >
+                <div className="ins-card-visual ins-card-visual--cyan">
+                  <Heart size={40} strokeWidth={1.5} />
+                </div>
+                <div className="ins-card-body">
+                  <div className="ins-card-top">
+                    <span className="ins-card-tag">Perfil B</span>
+                    {cardSel === 'otros' && <CheckCircle2 size={20} className="ins-card-check" />}
+                  </div>
+                  <h3 className="ins-card-title">Residente, Enfermero(a) y Otros</h3>
+                </div>
+              </button>
+
+            </div>
+          </section>
+
+          {/* STEP 2 — sub-role (only card 'otros') */}
+          {cardSel === 'otros' && (
+            <section className="ins-section ins-section--animate">
+              <div className="ins-step-header">
+                <span className="ins-step-num">2</span>
+                <div>
+                  <h2 className="ins-step-title">¿Cuál es tu rol?</h2>
+                </div>
+              </div>
+              <div className="ins-role-grid">
+                {[
+                  { id: 'residente', label: 'Médico(a) Residente', desc: 'Actualmente en programa de residencia médica' },
+                  { id: 'enfermero', label: 'Enfermero(a) / Otro Profesional', desc: 'Enfermero, terapeuta respiratorio, fisioterapeuta, u otro' },
+                ].map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className={`ins-role-btn ${subRole === r.id ? 'ins-role-btn--active' : ''}`}
+                    onClick={() => selectSubRole(r.id)}
+                  >
+                    <Shield size={18} />
+                    <div>
+                      <span className="ins-role-label">{r.label}</span>
+                    </div>
+                    {subRole === r.id && <CheckCircle2 size={18} className="ins-role-check" />}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* STEP 3 — extras */}
+          {availableExtras.length > 0 && (
+            <section className="ins-section ins-section--animate">
+              <div className="ins-step-header">
+                <span className="ins-step-num">{cardSel === 'otros' ? '3' : '2'}</span>
+                <div>
+                  <h2 className="ins-step-title">Potencia tu formación</h2>
+                  <p className="ins-step-sub" style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Añade un curso ¡Promoción especial por tiempo limitado!</p>
+                </div>
+              </div>
+              <div className="ins-extras">
+                {availableExtras.map((ex) => (
+                  <label
+                    key={ex.id}
+                    className={`ins-extra-card ${extras.has(ex.id) ? 'ins-extra-card--active' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={extras.has(ex.id)}
+                      onChange={() => toggleExtra(ex.id)}
+                      className="ins-extra-input"
+                    />
+                    <div className="ins-extra-check">
+                      {extras.has(ex.id) && <CheckCircle2 size={16} />}
+                    </div>
+                    <div className="ins-extra-info">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span className="ins-extra-label">{ex.label}</span>
+                        <span style={{
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          color: '#ef4444',
+                          border: '1px solid rgba(239, 68, 68, 0.25)',
+                          padding: '2px 8px',
+                          borderRadius: '100px',
+                          fontSize: '0.7rem',
+                          fontWeight: '800',
+                          letterSpacing: '0.5px'
+                        }}>
+                          20% DCTO
+                        </span>
+                      </div>
+                      {ex.subhint && <span style={{ fontSize: '0.75rem', opacity: 0.7, display: 'block', marginTop: '4px' }}>{ex.subhint}</span>}
+                    </div>
+                    <div className="ins-extra-price" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
+                      {ex.originalPrice && (
+                        <span style={{ textDecoration: 'line-through', opacity: 0.5, fontSize: '0.8rem', color: '#ef4444', fontWeight: 'normal', display: 'block', marginBottom: '2px' }}>
+                          +{fmt(ex.originalPrice, 'mxn')}
+                          {moneda === 'usd' && <small style={{ display: 'block', fontSize: '0.7rem', textDecoration: 'line-through' }}>≈ +{fmt(Math.ceil(ex.originalPrice / USD_RATE), 'usd')}</small>}
+                        </span>
+                      )}
+                      <span style={{ fontWeight: '700', fontSize: '1.05rem', color: '#10b981', display: 'block' }}>
+                        +{fmt(ex.price, 'mxn')}
+                        {moneda === 'usd' && <small style={{ display: 'block', fontSize: '0.75rem', fontWeight: 'normal', color: '#6b7280', marginTop: '2px' }}>≈ +{fmt(Math.ceil(ex.price / USD_RATE), 'usd')}</small>}
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </section>
+          )}
+
+        </div>
+
+        {/* ── RIGHT: sticky order summary ── */}
+        <aside className="ins-sidebar">
+          <div className="ins-summary">
+            <h3 className="ins-summary-title">Resumen de inscripción</h3>
+
+            {/* Currency toggle */}
+            <div className="ins-currency">
+              <span className="ins-currency-label">Moneda</span>
+              <div className="ins-currency-toggle">
+                {['mxn', 'usd'].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`ins-currency-btn ${moneda === c ? 'ins-currency-btn--active' : ''}`}
+                    onClick={() => setMoneda(c)}
+                  >
+                    {c.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="ins-summary-lines">
+              {perfil ? (
+                <>
+                  <div className="ins-summary-line">
+                    <span>{PROFILES[perfil].label}</span>
+                    <span>{fmt(displayBase, cur)}</span>
+                  </div>
+                  {[...extras].map((id) => {
+                    const ex = EXTRA_CATALOG[id];
+                    const price = moneda === 'usd' ? Math.ceil(ex.price / USD_RATE) : ex.price;
+                    return (
+                      <div key={id} className="ins-summary-line ins-summary-line--extra" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                          <span>+ {ex.label}</span>
+                          <span>{fmt(price, cur)}</span>
+                        </div>
+                        {ex.subhint && <small style={{ fontSize: '0.7rem', opacity: 0.6, marginTop: '-2px' }}>{ex.subhint}</small>}
+                      </div>
+                    );
+                  })}
+                </>
+              ) : (
+                <p className="ins-summary-empty">Selecciona un perfil para ver el desglose.</p>
+              )}
+            </div>
+
+            {perfil && (
+              <div className="ins-summary-total">
+                <span>Inversión total</span>
+                {isFree ? (
+                  <strong style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                    <span style={{ color: '#10b981', fontSize: '1.1rem' }}>Beca 100% ✓</span>
+                    <small style={{ fontWeight: 500, fontSize: '0.72rem', color: '#64748b' }}>Pago confirmado por transferencia</small>
+                  </strong>
+                ) : (
+                  <strong>{fmt(displayTotal, cur)}</strong>
+                )}
+              </div>
+            )}
+
+            {/* Promo code field */}
+            {perfil && (
+              <div className="ins-promo-wrap" style={{ marginTop: '1rem', borderTop: '1px dashed var(--ins-border)', paddingTop: '1rem' }}>
+                {!appliedPromo ? (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Código de descuento" 
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value)}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--ins-border)', fontSize: '0.8rem' }}
+                    />
+                    <button 
+                      onClick={applyPromo}
+                      className="ins-btn" 
+                      style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', background: 'var(--ins-dark)', color: '#fff' }}
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: appliedPromo.type === 'free' ? 'rgba(16,185,129,0.12)' : (appliedPromo.type === 'installments' || appliedPromo.type === 'mixed') ? 'rgba(59,130,246,0.1)' : 'rgba(16,185,129,0.1)', padding: '0.6rem 0.8rem', borderRadius: '10px', border: appliedPromo.type === 'free' ? '1px solid rgba(16,185,129,0.3)' : 'none' }}>
+                    <div style={{ fontSize: '0.8rem', color: appliedPromo.type === 'free' ? '#065f46' : (appliedPromo.type === 'installments' || appliedPromo.type === 'mixed') ? '#1d4ed8' : '#065f46', fontWeight: 600 }}>
+                      {appliedPromo.type === 'free'
+                        ? `🎓 ${appliedPromo.code} — Beca / Transferencia aplicada`
+                        : `✓ ${appliedPromo.code} ${appliedPromo.type === 'installments' ? '(Pagos a meses desbloqueado)' : appliedPromo.type === 'mixed' ? `(-${appliedPromo.discount * 100}% + Meses sin intereses)` : `(-${appliedPromo.discount * 100}%)`}`
+                      }
+                    </div>
+                    <button 
+                      onClick={() => { setAppliedPromo(null); setPromoInput(''); setApiError(''); }}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {moneda === 'usd' && perfil && (
+              <p className="ins-summary-note">Tipo de cambio referencial: 1 USD = {USD_RATE} MXN</p>
+            )}
+
+            <div className="ins-email-field">
+              <label className="ins-email-label" htmlFor="ins-email">
+                Correo electrónico *
+              </label>
+              <input
+                id="ins-email"
+                type="email"
+                className="ins-email-input"
+                placeholder="tu@correo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="ins-privacy-block">
+              <p className="ins-privacy-text">
+                *Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.
+              </p>
+              <label className="ins-consent-row">
+                <input type="checkbox" checked={consentPrimary} onChange={(e) => setConsentPrimary(e.target.checked)} />
+                <span>Consiento y autorizo expresamente que los datos personales aquí señalados sean tratados conforme al Aviso de Privacidad.</span>
+              </label>
+              <label className="ins-consent-row">
+                <input type="checkbox" checked={consentSecondary} onChange={(e) => setConsentSecondary(e.target.checked)} />
+                <span>Consiento y autorizo expresamente que mis datos personales sean tratados para finalidades secundarias, como publicidad sobre futuros entrenamientos, mismas que no son necesarias para tu acceso.</span>
+              </label>
+            </div>
+
+            {apiError && <p className="ins-error">{apiError}</p>}
+
+            <button
+              type="button"
+              className="ins-btn ins-btn--primary ins-btn--full"
+              disabled={!canPay || loading}
+              onClick={handlePay}
+              style={isFree ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
+            >
+              {loading
+                ? <><Loader2 size={18} className="ins-spin" /> Procesando...</>
+                : isFree
+                  ? <><span>Completar registro sin cargo</span><ChevronRight size={18} /></>
+                  : <><span>Invertir en inscripción</span><ChevronRight size={18} /></>
+              }
+            </button>
+
+            <p className="ins-summary-secure">
+              {isFree
+                ? <><Shield size={13} /> Registro seguro — pago confirmado por transferencia</>  
+                : <><Shield size={13} /> Inversión segura con Stripe · SSL cifrado</>}
+            </p>
+          </div>
+        </aside>
+      </div>
+
+      {showPopup && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(10, 26, 47, 0.6)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 100000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          fontFamily: 'Inter, sans-serif'
+        }} onClick={closePopup}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '450px',
+            padding: '2rem',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            position: 'relative',
+            border: '1px solid rgba(227, 24, 55, 0.1)',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1.2rem',
+            animation: 'ins-popup-in 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={closePopup}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                border: 'none',
+                background: 'transparent',
+                fontSize: '1.2rem',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                transition: 'color 0.2s',
+                padding: '4px'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#e31837'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+            >
+              ✕
+            </button>
+
+            <div style={{
+              background: 'rgba(227, 24, 55, 0.1)',
+              color: '#e31837',
+              borderRadius: '50%',
+              width: '60px',
+              height: '60px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Users size={30} />
+            </div>
+
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: 'var(--ins-dark)', letterSpacing: '-0.025em' }}>
+                Inscripción para Grupos
+              </h3>
+              <p style={{ margin: '8px 0 0 0', fontSize: '0.88rem', color: '#64748b', lineHeight: '1.5' }}>
+                ¿Te inscribes con tu equipo? Ofrecemos descuentos especiales y facilidades de pago para grupos mayores de 6 personas.
+              </p>
+            </div>
+
+            <a 
+              href="https://wa.me/525659271906?text=Hola,%20quiero%20solicitar%20un%20descuento%20especial%20para%20un%20grupo%20en%20el%20Diploma%20de%20Par%C3%ADs%20ECMO."
+              target="_blank"
+              rel="noreferrer"
+              onClick={closePopup}
+              style={{
+                width: '100%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                background: '#25D366',
+                color: '#fff',
+                padding: '0.8rem 1.5rem',
+                borderRadius: '10px',
+                fontSize: '0.9rem',
+                fontWeight: '700',
+                textDecoration: 'none',
+                transition: 'background 0.2s',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(37, 211, 102, 0.2)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#128C7E'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#25D366'}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.79-4.276l.41.243c1.554.922 3.19 1.409 4.854 1.41 5.518 0 10.007-4.48 10.01-9.997.001-2.672-1.037-5.187-2.924-7.075-1.888-1.887-4.397-2.925-7.073-2.926-5.524 0-10.014 4.482-10.017 9.999-.001 1.764.469 3.488 1.359 5.011l.269.465-1.006 3.676 3.764-.988z"/>
+              </svg>
+              Preguntar por WhatsApp
+            </a>
+
+            <button 
+              onClick={closePopup}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#64748b',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              Continuar con registro individual
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Footer />
+    </div>
+  );
+}
+
+const COUNTRIES = [
+  { code: '+52',  iso: 'mx', label: 'MX' },
+  { code: '+1',   iso: 'us', label: 'US' },
+  { code: '+57',  iso: 'co', label: 'CO' },
+  { code: '+54',  iso: 'ar', label: 'AR' },
+  { code: '+56',  iso: 'cl', label: 'CL' },
+  { code: '+51',  iso: 'pe', label: 'PE' },
+  { code: '+593', iso: 'ec', label: 'EC' },
+  { code: '+502', iso: 'gt', label: 'GT' },
+  { code: '+506', iso: 'cr', label: 'CR' },
+  { code: '+503', iso: 'sv', label: 'SV' },
+  { code: '+504', iso: 'hn', label: 'HN' },
+  { code: '+505', iso: 'ni', label: 'NI' },
+  { code: '+58',  iso: 've', label: 'VE' },
+  { code: '+591', iso: 'bo', label: 'BO' },
+  { code: '+595', iso: 'py', label: 'PY' },
+  { code: '+598', iso: 'uy', label: 'UY' },
+  { code: '+507', iso: 'pa', label: 'PA' },
+  { code: '+1787', iso: 'pr', label: 'PR' },
+  { code: '+1809', iso: 'do', label: 'DO' },
+  { code: '+53',   iso: 'cu', label: 'CU' },
+  { code: '+509',  iso: 'ht', label: 'HT' },
+  { code: '+55',   iso: 'br', label: 'BR' },
+  { code: '+34',   iso: 'es', label: 'ES' },
+  { code: '+33',  iso: 'fr', label: 'FR' },
+];
+
+
+
+function PhoneSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = COUNTRIES.find(c => c.code === value) || COUNTRIES[0];
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div className="phone-select" ref={ref}>
+      <button type="button" className="phone-select__trigger" onClick={() => setOpen(v => !v)}>
+        <img src={`https://flagcdn.com/w40/${selected.iso}.png`} alt={selected.label} className="phone-select__flag" />
+        <span>{selected.code}</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round"/></svg>
+      </button>
+      {open && (
+        <div className="phone-select__dropdown">
+          {COUNTRIES.map(c => (
+            <button
+              key={c.code}
+              type="button"
+              className={`phone-select__option ${c.code === value ? 'active' : ''}`}
+              onClick={() => { onChange(c.code); setOpen(false); }}
+            >
+              <img src={`https://flagcdn.com/w40/${c.iso}.png`} alt={c.label} className="phone-select__flag" />
+              <span>{c.label}</span>
+              <span className="phone-select__dial">{c.code}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function RegistrationForm() {
+  const [params] = useSearchParams();
+  const stored = (() => {
+    try {
+      const d = params.get('d');
+      if (!d) return {};
+      // Revertir base64url a base64 estándar y decodificar
+      const b64 = d.replace(/-/g, '+').replace(/_/g, '/');
+      const binStr = atob(b64);
+      const bytes = new Uint8Array(binStr.length);
+      for (let i = 0; i < binStr.length; i++) {
+        bytes[i] = binStr.charCodeAt(i);
+      }
+      const decoded = new TextDecoder('utf-8').decode(bytes);
+      return JSON.parse(decoded);
+    } catch (err) { 
+      console.error('Error decoding pay data:', err);
+      return {}; 
+    }
+  })();
+
+  const [form, setForm] = useState({
+    nombres: '', apellidos: '', email: stored.email || '', telefono: '', lada: '+52',
+    pais: '', estado: '', grado: '', especialidad: '', institucion: '', cargo: '',
+  });
+  const [status, setStatus] = useState('idle');
+  const [showCountrySuggestions, setShowCountrySuggestions] = useState(false);
+
+  const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    try {
+      const payload = {
+        ...form,
+        telefono:    `${form.lada} ${form.telefono}`,
+        perfil:      stored.perfilLabel || '',
+        extras:      stored.extrasLabel || '',
+        moneda:      stored.moneda || '',
+        total_mxn:   stored.total_mxn || '',
+        tag:         'ECMOParisStep12026',
+      };
+
+      await Promise.all([
+        // Supabase — automatización del registro
+        supabase
+          .from('form_submissions')
+          .insert([{
+            form_id: 'mnjlvbpw',
+            form_name: 'Inscripciones Curso Standard',
+            sender_name: `${form.nombres || ''} ${form.apellidos || ''}`.trim() || 'Alumno',
+            sender_email: form.email || '',
+            payload: payload
+          }])
+          .then(({ error }) => { if (error) console.error('Error saving to Supabase:', error.message); }),
+
+        // Formspree — notificación por email
+        fetch('https://formspree.io/f/mnjlvbpw', {
+          method: 'POST',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }).catch(() => {}),
+
+        // Mailchimp — alta del contacto + tag + flujo de bienvenida
+        fetch('/.netlify/functions/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }),
+      ]);
+
+      localStorage.removeItem('hce_pago');
+      setStatus('done');
+    } catch {
+      setStatus('error');
+    }
+  };
+
+  if (status === 'done') {
+    return (
+      <div className="ins-result-wrap">
+        <div className="ins-result-card">
+          <CheckCircle2 size={60} className="ins-result-icon ins-result-icon--ok" />
+          <h2>¡Registro completado!</h2>
+          <p>Tu inscripción está confirmada. En breve recibirás un correo de bienvenida con todos los detalles del programa.</p>
+          <a href="/" className="ins-btn ins-btn--primary">Volver al inicio</a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="reg-wrap hce-container">
+      {/* Banner inversión exitosa */}
+      <div className="reg-paid-banner">
+        <CheckCircle2 size={20} />
+        <span>¡Inversión procesada con éxito! Completa tu registro para confirmar tu lugar.</span>
+      </div>
+
+      <div className="reg-layout">
+        {/* Resumen del pago */}
+        <aside className="reg-summary-card">
+          <h3 className="reg-summary-title">Resumen de tu inversión</h3>
+          <div className="reg-summary-row"><span>Perfil</span><strong>{stored.perfilLabel || '—'}</strong></div>
+          <div className="reg-summary-row"><span>Extras</span><strong>{stored.extrasLabel || 'Ninguno'}</strong></div>
+          <div className="reg-summary-row"><span>Moneda</span><strong>{(stored.moneda || 'mxn').toUpperCase()}</strong></div>
+          <div className="reg-summary-row reg-summary-row--total">
+            <span>Inversión realizada</span>
+            <strong>${(stored.total_mxn || 0).toLocaleString('es-MX')} MXN</strong>
+          </div>
+        </aside>
+
+        {/* Formulario */}
+        <form className="reg-form" onSubmit={handleSubmit}>
+          <h2 className="reg-form-title">Completa tu inscripción</h2>
+          <p className="reg-form-sub">Una vez enviado este formulario, recibirás en tu correo electrónico la confirmación oficial y los detalles de acceso nuestro programa.</p>
+
+          <div className="reg-grid">
+            <div className="reg-field">
+              <label>Nombre(s) *</label>
+              <input type="text" value={form.nombres} onChange={set('nombres')} required />
+            </div>
+            <div className="reg-field">
+              <label>Apellido(s) *</label>
+              <input type="text" value={form.apellidos} onChange={set('apellidos')} required />
+            </div>
+            <div className="reg-field">
+              <label>Correo electrónico *</label>
+              <input type="email" value={form.email} onChange={set('email')} required />
+            </div>
+            <div className="reg-field">
+              <label>Teléfono *</label>
+              <div className="tel-group">
+                <PhoneSelect value={form.lada} onChange={(v) => setForm(f => ({ ...f, lada: v }))} />
+                <input type="tel" value={form.telefono} onChange={set('telefono')} required placeholder="10 dígitos" />
+              </div>
+            </div>
+            <div className="reg-field" style={{ position: 'relative' }}>
+              <label>País *</label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input 
+                  type="text" 
+                  value={form.pais} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setForm(f => ({ ...f, pais: val }));
+                    setShowCountrySuggestions(true);
+                  }}
+                  onFocus={() => setShowCountrySuggestions(true)}
+                  onBlur={() => {
+                    setTimeout(() => setShowCountrySuggestions(false), 250);
+                  }}
+                  required 
+                  style={{ paddingRight: getFlagUrl(form.pais) ? '45px' : '12px', width: '100%' }}
+                  placeholder="Escribe tu país..."
+                  autoComplete="off"
+                />
+                {getFlagUrl(form.pais) && (
+                  <img 
+                    src={getFlagUrl(form.pais)} 
+                    alt="Bandera" 
+                    style={{ 
+                      position: 'absolute', 
+                      right: '12px', 
+                      height: '18px', 
+                      width: 'auto', 
+                      borderRadius: '3px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                      pointerEvents: 'none'
+                    }} 
+                  />
+                )}
+              </div>
+
+              {showCountrySuggestions && form.pais.trim().length > 0 && (
+                <div className="country-autocomplete-dropdown">
+                  {ALL_COUNTRIES.filter(c => {
+                    const cleanName = c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const cleanInput = form.pais.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    return cleanName.includes(cleanInput);
+                  }).slice(0, 5).map(c => (
+                    <div 
+                      key={c.code} 
+                      className="country-suggestion-item"
+                      onMouseDown={() => {
+                        setForm(f => ({ ...f, pais: c.name }));
+                        setShowCountrySuggestions(false);
+                      }}
+                    >
+                      <img 
+                        src={`https://flagcdn.com/w40/${c.code}.png`} 
+                        alt={c.name} 
+                        className="suggestion-flag" 
+                      />
+                      <span>{c.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="reg-field">
+              <label>Estado / Ciudad *</label>
+              <input type="text" value={form.estado} onChange={set('estado')} required />
+            </div>
+            <div className="reg-field">
+              <label>Grado académico / Profesión *</label>
+              <select value={form.grado} onChange={set('grado')} required>
+                <option value="">Selecciona...</option>
+                <option>Médico Especialista</option>
+                <option>Médico Residente</option>
+                <option>Enfermero/a</option>
+                <option>Terapeuta Respiratorio</option>
+                <option>Fisioterapeuta</option>
+                <option>Estudiante</option>
+                <option>Otro</option>
+              </select>
+            </div>
+            <div className="reg-field">
+              <label>Especialidad * <span className="reg-hint">(escribe "no aplica" si no tienes)</span></label>
+              <input type="text" value={form.especialidad} onChange={set('especialidad')} required />
+            </div>
+            <div className="reg-field">
+              <label>Institución / Hospital *</label>
+              <input type="text" value={form.institucion} onChange={set('institucion')} required />
+            </div>
+            <div className="reg-field">
+              <label>Cargo / Puesto *</label>
+              <input type="text" value={form.cargo} onChange={set('cargo')} required />
+            </div>
+          </div>
+
+          {status === 'error' && (
+            <p className="ins-error">Ocurrió un error al enviar. Intenta de nuevo.</p>
+          )}
+
+          <button
+            type="submit"
+            className="ins-btn ins-btn--primary reg-submit"
+            disabled={status === 'loading'}
+          >
+            {status === 'loading'
+              ? <><Loader2 size={18} className="ins-spin" /> Enviando...</>
+              : 'Concluir registro'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+

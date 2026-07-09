@@ -11,6 +11,7 @@ import InsuficienciaCardiaca from './pages/InsuficienciaCardiaca';
 import Instructores from './pages/Instructores';
 import Retroalimentacion from './pages/Retroalimentacion';
 import Inscripciones from './pages/Inscripciones';
+import InscripcionesStep1 from './pages/InscripcionesStep1';
 import SecretPreview from './pages/SecretPreview';
 import InscripcionesNursing from './pages/InscripcionesNursing';
 import SecretNursingPreview from './pages/SecretNursingPreview';
@@ -83,6 +84,7 @@ function App() {
             <Route path="/instructores" element={<Instructores />} />
             <Route path="/retroalimentacion" element={<Retroalimentacion />} />
             <Route path="/inscripciones-diploma-paris-ecmo" element={<Inscripciones />} />
+            <Route path="/inscripciones-step1" element={<InscripcionesStep1 />} />
             <Route path="/debug-checkout-preview-2026" element={<SecretPreview />} />
             <Route path="/inscripciones-ecmo-nursing" element={<InscripcionesNursing />} />
             <Route path="/debug-checkout-nursing-preview-2026" element={<SecretNursingPreview />} />
