@@ -200,6 +200,10 @@ const AdminDashboard = () => {
     if (amount >= 15000) {
       return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
     }
+    // Amount-based detection for Nursing
+    if (amount >= 5000 && amount < 15000) {
+      return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
+    }
     
     if (name.includes('nurs')) {
       return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
@@ -240,10 +244,24 @@ const AdminDashboard = () => {
     }
     const name = item.courseName;
     const stdCourse = getStandardGatewayCourse(name, item.amount);
+
+    let finalTitle = stdCourse.title;
+    if (item.extras) {
+      const extArr = item.extras.split(',').map(e => e.trim());
+      const extLabels = extArr.map(e => {
+        if (e === 'ecmo_sim') return 'ECMO SIM';
+        if (e === 'ecmo_nursing') return 'Nursing';
+        return e;
+      }).filter(Boolean).join(' + ');
+      if (extLabels) {
+        finalTitle += ` (+ ${extLabels})`;
+      }
+    }
+
     return {
       ...item,
       courseId: stdCourse.id,
-      courseName: stdCourse.title
+      courseName: finalTitle
     };
   };
 

@@ -79,6 +79,7 @@ export const handler = async (event) => {
 
         const courseId   = pi.metadata?.course_id || 'general';
         const promoCode  = pi.metadata?.promo_code || pi.metadata?.promo_applied || pi.metadata?.coupon || pi.metadata?.code || '';
+        const extras     = pi.metadata?.extras || '';
         const amount     = pi.amount / 100;
 
         return {
@@ -88,6 +89,7 @@ export const handler = async (event) => {
           studentCountry: country || 'MX',
           courseName,
           courseId,
+          extras,
           amount,
           currency: pi.currency.toUpperCase(),
           status: pi.status,
