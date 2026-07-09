@@ -194,32 +194,34 @@ const AdminDashboard = () => {
   const [showFormModal, setShowFormModal] = useState(false);
   const [paymentTimePeriod, setPaymentTimePeriod] = useState('all');
   const getStandardGatewayCourse = (courseName = '', amount = 0) => {
-    const name = (courseName || '').toLowerCase();
+    const name = (courseName || '').toLowerCase().trim();
     
+    // Explicit string matches first
     if (name.includes('nurs') || name.includes('enfermería') || name.includes('enfermeria')) {
       return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
-    }
-    if (name.includes('paris') || name.includes('parís') || name.includes('inscripción hce') || name.includes('inscripcion') || name.includes('step 1') || name.includes('diploma') || name.includes('hce')) {
-      return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
     }
     if (name.includes('sim') || name.includes('realidad')) {
       return { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' };
     }
-    
-    // Amount-based fallback ONLY if the name gave us nothing
-    if (amount >= 15000) {
+    // Explicit Paris matches (excluding the generic 'inscripcion hce')
+    if (name.includes('paris') || name.includes('parís') || name.includes('step 1') || name.includes('diploma internacional')) {
       return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
     }
-    if (amount >= 5000 && amount < 15000) {
-      // It's really hard to tell between discounted Paris and Nursing, but Nursing is usually 9500-10500, Paris is >12k unless heavily discounted.
-      // We will leave this fallback, but it's very unlikely to hit now.
-      if (amount > 11000) {
-         return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
+
+    // If it's the generic fallback 'inscripción hce' or similar, rely on amount
+    if (amount > 0) {
+      if (amount < 5000) {
+        return { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' };
       }
-      return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
+      if (amount >= 5000 && amount <= 11000) {
+        return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
+      }
+      if (amount > 11000) {
+        return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
+      }
     }
     
-    return { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' };
+    return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
   };
 
   const filterMay2026Onwards = (list) => {
