@@ -196,21 +196,29 @@ const AdminDashboard = () => {
   const getStandardGatewayCourse = (courseName = '', amount = 0) => {
     const name = (courseName || '').toLowerCase();
     
-    // Amount-based detection as safeguard for Paris diploma
+    if (name.includes('nurs') || name.includes('enfermería') || name.includes('enfermeria')) {
+      return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
+    }
+    if (name.includes('paris') || name.includes('parís') || name.includes('inscripción hce') || name.includes('inscripcion') || name.includes('step 1') || name.includes('diploma') || name.includes('hce')) {
+      return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
+    }
+    if (name.includes('sim') || name.includes('realidad')) {
+      return { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' };
+    }
+    
+    // Amount-based fallback ONLY if the name gave us nothing
     if (amount >= 15000) {
       return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
     }
-    // Amount-based detection for Nursing
     if (amount >= 5000 && amount < 15000) {
+      // It's really hard to tell between discounted Paris and Nursing, but Nursing is usually 9500-10500, Paris is >12k unless heavily discounted.
+      // We will leave this fallback, but it's very unlikely to hit now.
+      if (amount > 11000) {
+         return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
+      }
       return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
     }
     
-    if (name.includes('nurs')) {
-      return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
-    }
-    if (name.includes('paris') || name.includes('parís') || name.includes('inscripción hce') || name.includes('inscripcion') || name.includes('step 1')) {
-      return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
-    }
     return { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' };
   };
 

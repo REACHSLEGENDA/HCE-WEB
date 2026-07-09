@@ -156,7 +156,7 @@ const FLOWS = {
 
   // ── Fundadora ────────────────────────────────────────────────────────────────
   fundadora: {
-    text: 'HCE fue fundada en 2024 por la **Dra. Jenifer Trejo Guerra**, médica especialista en Medicina Interna y Medicina Crítica con más de 8 años de experiencia en la UCI.\n\nRealizó su posgrado internacional en ECMO en el Hospital Pitié-Salpêtrière de París, uno de los centros de referencia mundial en soporte vital extracorpóreo.',
+    text: 'HCE fue fundada en 2024 por la **Dra. Jenifer Trejo Guerra**, Médico con entrenamiento especializado en ECMO y tecnologías avanzadas de soporte circulatorio.\n\nCuenta con más de 5 años de experiencia como especialista clínico y formadora en Latinoamérica, con certificaciones internacionales por ELSO y formación en el Hôpital Pitié-Salpêtrière de París.',
     buttons: [
       { label: 'Ver programas',   next: 'programas' },
       { label: 'Inicio',          next: 'home_portal' },
