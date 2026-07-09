@@ -131,11 +131,11 @@ const AboutUs = () => {
             <div className="au-man-right">
               <div className="au-man-card au-man-card--1">
                 <span className="au-man-card-num">2,000<sup>+</sup></span>
-                <p>Alumnos profesionales entrenados en Latinoamérica</p>
+                <p>Profesionales de Salud entrenados en Latinoamérica</p>
               </div>
               <div className="au-man-card au-man-card--2">
                 <span className="au-man-card-num">15<sup>+</sup></span>
-                <p>Alumnos de más de 15 Países de Latinoamérica</p>
+                <p>Países impactados en Latinoamérica</p>
               </div>
               <div className="au-man-card au-man-card--3">
                 <Globe size={26} />
@@ -187,7 +187,7 @@ const AboutUs = () => {
                   <div className="au-tl-content">
                     <span className="au-tl-year">2023</span>
                     <h4>Alianza Internacional</h4>
-                    <p>Alianza internacional Prático Santé creadores de ECMO Sim. Dra. Jenifer Trejo Embajada de ECMO Sim para todo Latinoamérica.</p>
+                    <p>Alianza internacional Prático Santé creadores de ECMO Sim.<br />La Dra. Jenifer Trejo se convierte en Embajadora de ECMO SIM para todo Latinoamérica.</p>
                   </div>
                 </div>
                 <div className="au-tl-item">
@@ -211,7 +211,7 @@ const AboutUs = () => {
                   <div className="au-tl-content">
                     <span className="au-tl-year">2025</span>
                     <h4>Expansión a Chile</h4>
-                    <p>Lanzamiento del Diploma Internacional de Paris en ECMO en Chile.</p>
+                    <p>Lanzamiento del Diploma Internacional de Paris en ECMO en Santiago de Chile.</p>
                   </div>
                 </div>
                 <div className="au-tl-item">
@@ -240,7 +240,9 @@ const AboutUs = () => {
                 Dra. Jenifer <span className="au-gradient-text">Trejo Guerra</span>
               </h2>
               <p className="au-founder-lead">
-                Médica por la Universidad Panamericana, CEO de la Academia Healthcare Training Experience y Embajadora para Latinoamérica de ECMO SIM de Pratico Santé.
+                Médico Cirujano por la Universidad Panamericana.<br/>
+                CEO de la Academia Healthcare Training Experience.<br/>
+                <a href="https://www.pratico-sante.com/en/serious-game-pratico-sim-ecmo-sim-en/" target="_blank" rel="noreferrer" style={{color: 'inherit', textDecoration: 'underline'}}>Embajadora de ECMO SIM de Prático Santé para todo Latinoamérica.</a>
               </p>
               <p className="au-founder-body">
                 Desde su rol impulsa la formación especializada de profesionales de la salud en temas de cuidados críticos como ECMO en Latinoamérica, con una visión de impacto regional y estándares internacionales.
@@ -252,8 +254,10 @@ const AboutUs = () => {
               <div className="au-founder-creds">
                 {[
                   'Certificación ECMO avalada por ELSO, EuroELSO y ELSO Norteamérica',
-                  'Certificación europea en simulación clínica (EuSim)',
-                  'Formación en debriefing — Penn State Ross and Carol Nese College of Nursing',
+                  'Diplomado en ECMO por el Hôpital Pitié-Salpêtrière (París, Francia)',
+                  'Certificación europea en simulación clínica (EuSim Level 1)',
+                  'Diplomado en Educación de Profesionales de la Salud (UAQ y FLASIC)',
+                  'Formación en Debriefing (Penn State College of Nursing) y modelo RCDP',
                 ].map((c, i) => (
                   <div key={i} className="au-founder-cred-item">
                     <CheckCircle size={16} className="au-founder-cred-icon" />
