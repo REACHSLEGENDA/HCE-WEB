@@ -193,7 +193,7 @@ const AdminDashboard = () => {
   const [selectedFormEntry, setSelectedFormEntry] = useState(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [paymentTimePeriod, setPaymentTimePeriod] = useState('all');
-  const getStandardGatewayCourse = (courseName = '', amount = 0) => {
+  const getStandardGatewayCourse = (courseName = '', amount = 0, currency = 'mxn') => {
     const name = (courseName || '').toLowerCase().trim();
     
     // Explicit string matches first
@@ -208,16 +208,35 @@ const AdminDashboard = () => {
       return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
     }
 
-    // If it's the generic fallback 'inscripción hce' or similar, rely on amount
+    // If it's the generic fallback 'inscripción hce' or similar, rely on amount & currency
+    const isUsd = currency.toLowerCase() === 'usd';
     if (amount > 0) {
-      if (amount < 5000) {
-        return { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' };
-      }
-      if (amount >= 5000 && amount <= 11000) {
-        return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
-      }
-      if (amount > 11000) {
-        return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
+      if (isUsd) {
+        // Nursing USD exact amounts (e.g. $5000 MXN / 17.5 = 285.71, $4250 MXN / 17.5 = 242.86)
+        if (Math.abs(amount - 285.71) < 1 || Math.abs(amount - 242.86) < 1 || Math.abs(amount - 286) < 1) {
+          return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
+        }
+        // Sim USD exact amounts
+        if (Math.abs(amount - 250) < 1 || Math.abs(amount - 200) < 1 || Math.abs(amount - 700) < 1) {
+          return { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' };
+        }
+      } else {
+        // MXN logic
+        if (amount === 4250 || amount === 4500 || amount === 5000) {
+          // It's really hard to tell between ECMO Sim and Nursing for 4250/4500 MXN.
+          // But most generic 4250/5000 MXN lately are Nursing because of the group discounts and active campaign.
+          // Let's default these exact amounts to Nursing to fix the recent issues.
+          return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
+        }
+        if (amount < 5000) {
+          return { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' };
+        }
+        if (amount >= 5000 && amount <= 11000) {
+          return { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' };
+        }
+        if (amount > 11000) {
+          return { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' };
+        }
       }
     }
     
@@ -253,7 +272,7 @@ const AdminDashboard = () => {
       };
     }
     const name = item.courseName;
-    const stdCourse = getStandardGatewayCourse(name, item.amount);
+    const stdCourse = getStandardGatewayCourse(name, item.amount, item.currency);
 
     let finalTitle = stdCourse.title;
     if (item.extras) {

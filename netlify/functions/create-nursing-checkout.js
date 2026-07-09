@@ -175,12 +175,25 @@ export const handler = async (event) => {
         }
       },
       metadata: {
-        perfil,
-        extras: validExtras.join(','),
-        moneda: currency,
-        mailchimp_tag: MAILCHIMP_TAG,
         curso: 'ECMO Nursing Care Course',
+        perfil: activeProfileLabel,
+        extras: validExtras.join(', '),
+        email,
+        promo_applied: promoCode || 'none',
+        total_mxn: totalMXN.toString(),
+        mailchimp_tag: MAILCHIMP_TAG,
       },
+      payment_intent_data: {
+        metadata: {
+          curso: 'ECMO Nursing Care Course',
+          perfil: activeProfileLabel,
+          extras: validExtras.join(', '),
+          email,
+          promo_applied: promoCode || 'none',
+          total_mxn: totalMXN.toString(),
+          mailchimp_tag: MAILCHIMP_TAG,
+        }
+      }
     };
 
     const enableInstallments = promoCode === 'HCE10MSI' || promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15';
