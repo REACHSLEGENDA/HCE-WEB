@@ -40,7 +40,8 @@ import {
   CalendarDays,
   CreditCard,
   DollarSign,
-  Upload
+  Upload,
+  Send
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { useNotification } from '../context/NotificationContext';
@@ -2598,6 +2599,40 @@ const AdminDashboard = () => {
               document.body.removeChild(link);
             };
 
+            const handleResendToFormspree = async (entry) => {
+              if (!entry.formId) {
+                showToast('No se puede reenviar: ID de formulario desconocido.', 'error');
+                return;
+              }
+              
+              if (window.confirm('¿Estás seguro de que deseas reenviar este registro a Formspree?')) {
+                try {
+                  const formspreeUrl = `https://formspree.io/f/${entry.formId}`;
+                  const response = await fetch(formspreeUrl, {
+                    method: 'POST',
+                    headers: {
+                      'Accept': 'application/json',
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      ...entry.payload,
+                      _resent_from_dashboard: true,
+                      _original_date: entry.date
+                    })
+                  });
+
+                  if (response.ok) {
+                    showToast('Datos reenviados a Formspree exitosamente.', 'success');
+                  } else {
+                    showToast('Error al reenviar a Formspree.', 'error');
+                  }
+                } catch (err) {
+                  console.error('Error resending to Formspree:', err);
+                  showToast('Error de conexión al reenviar a Formspree.', 'error');
+                }
+              }
+            };
+
             return (
               <div className="payments-view">
                 
@@ -3043,7 +3078,7 @@ const AdminDashboard = () => {
                                     {Object.entries(entry.payload).map(([k, v]) => `${k}: ${v}`).join(' | ')}
                                   </div>
                                 </td>
-                                <td style={{ textAlign: 'center' }}>
+                                <td style={{ textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
                                   <button 
                                     className="icon-action-btn edit" 
                                     title="Ver JSON Completo"
@@ -3051,6 +3086,14 @@ const AdminDashboard = () => {
                                     style={{ padding: '6px' }}
                                   >
                                     <Eye size={16} />
+                                  </button>
+                                  <button 
+                                    className="icon-action-btn delete" 
+                                    title="Reenviar a Formspree"
+                                    onClick={() => handleResendToFormspree(entry)}
+                                    style={{ padding: '6px', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.2)' }}
+                                  >
+                                    <Send size={16} />
                                   </button>
                                 </td>
                               </tr>
