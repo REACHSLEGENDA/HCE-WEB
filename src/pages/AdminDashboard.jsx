@@ -4586,7 +4586,6 @@ const AdminDashboard = () => {
               { id: 'monitoreo_vivo', label: 'Monitoreo en Vivo', icon: Users },
               { id: 'rendimiento', label: 'Rendimiento Académico', icon: GraduationCap },
               { id: 'certificaciones', label: 'Certificaciones', icon: Award },
-              { id: 'webinars', label: 'Webinars', icon: CalendarDays },
               { id: 'uso_plataforma', label: 'Uso de Plataforma', icon: Monitor },
               { id: 'alertas', label: 'Alertas y Cumplimiento', icon: AlertCircle },
               { id: 'rankings', label: 'Rankings y Retención', icon: Clock }
@@ -5385,61 +5384,6 @@ const AdminDashboard = () => {
                   </div>
                 )}
 
-                {/* SUBTAB CONTENT: 5. WEBINARS */}
-                {reportsSubTab === 'webinars' && (
-                  <div>
-                    {/* Simulated details for webinars catalog */}
-                    <div className="table-hce-container">
-                      <div className="table-hce-title">
-                        <span>📹 Reporte Detallado de Webinars de Especialización</span>
-                      </div>
-                      <div className="crm-table-wrapper" style={{ overflowX: 'auto' }}>
-                        <table className="table-hce">
-                          <thead>
-                            <tr>
-                              <th>Webinar</th>
-                              <th>Registrados</th>
-                              <th>Presentes</th>
-                              <th>Ausentes</th>
-                              <th>Permanencia Promedio</th>
-                              <th>Preguntas / Participación</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {webinars.length === 0 ? (
-                              <tr>
-                                <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
-                                  No hay webinars registrados en la plataforma.
-                                </td>
-                              </tr>
-                            ) : (
-                              webinars.map((w, idx) => {
-                                const reg = 120 + (idx * 24) + (w.title.charCodeAt(0) % 20);
-                                const pres = Math.round(reg * 0.78);
-                                const aus = reg - pres;
-                                const perm = 45 + (idx * 3) % 20;
-                                const pregs = Math.round(pres * 0.15);
-                                return (
-                                  <tr key={w.id}>
-                                    <td style={{ fontWeight: 700 }}>
-                                      {w.title}
-                                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{w.date || 'Sin fecha'} • {w.activo ? '🟢 Activo' : '🔴 Inactivo'}</div>
-                                    </td>
-                                    <td><strong>{reg}</strong></td>
-                                    <td><span className="badge-hce green">{pres}</span></td>
-                                    <td><span className="badge-hce red">{aus}</span></td>
-                                    <td><strong>{perm} minutos</strong> ({(Math.round((perm/90)*100))}% de duración)</td>
-                                    <td>{pregs} preguntas realizadas / {Math.round(pres * 0.6)} respuestas</td>
-                                  </tr>
-                                );
-                              })
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* SUBTAB CONTENT: 6. USO DE PLATAFORMA */}
                 {reportsSubTab === 'uso_plataforma' && (
