@@ -42,8 +42,15 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 -- ver nombres o instructores), pero solo el propio dueño de la cuenta puede
 -- actualizar su información personal (nombre y teléfono).
 DROP POLICY IF EXISTS "Cualquiera puede leer perfiles" ON public.profiles;
-CREATE POLICY "Cualquiera puede leer perfiles" ON public.profiles
-  FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Usuarios leen su propio perfil o admin lee todos" ON public.profiles;
+CREATE POLICY "Usuarios leen su propio perfil o admin lee todos" ON public.profiles
+  FOR SELECT USING (
+    auth.uid() = id OR
+    EXISTS (
+      SELECT 1 FROM public.profiles p2
+      WHERE p2.id = auth.uid() AND p2.rol = 'admin'
+    )
+  );
 
 DROP POLICY IF EXISTS "Los usuarios pueden actualizar su propio perfil" ON public.profiles;
 CREATE POLICY "Los usuarios pueden actualizar su propio perfil" ON public.profiles
@@ -445,8 +452,15 @@ CREATE TABLE IF NOT EXISTS public.student_progress (
 ALTER TABLE public.student_progress ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Lectura pública de progreso" ON public.student_progress;
-CREATE POLICY "Lectura pública de progreso" ON public.student_progress
-  FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Usuarios leen su propio progreso o admin lee todos" ON public.student_progress;
+CREATE POLICY "Usuarios leen su propio progreso o admin lee todos" ON public.student_progress
+  FOR SELECT USING (
+    auth.uid() = user_id OR
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND rol = 'admin'
+    )
+  );
 
 DROP POLICY IF EXISTS "Usuarios modifican su propio progreso" ON public.student_progress;
 CREATE POLICY "Usuarios modifican su propio progreso" ON public.student_progress
@@ -465,8 +479,15 @@ CREATE TABLE IF NOT EXISTS public.student_activity (
 ALTER TABLE public.student_activity ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Lectura pública de actividad" ON public.student_activity;
-CREATE POLICY "Lectura pública de actividad" ON public.student_activity
-  FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Usuarios leen su propia actividad o admin lee todas" ON public.student_activity;
+CREATE POLICY "Usuarios leen su propia actividad o admin lee todas" ON public.student_activity
+  FOR SELECT USING (
+    auth.uid() = user_id OR
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND rol = 'admin'
+    )
+  );
 
 DROP POLICY IF EXISTS "Usuarios modifican su propia actividad" ON public.student_activity;
 CREATE POLICY "Usuarios modifican su propia actividad" ON public.student_activity
@@ -499,10 +520,16 @@ TO anon, authenticated
 WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Permitir lectura a autenticados" ON public.form_submissions;
-CREATE POLICY "Permitir lectura a autenticados" 
+DROP POLICY IF EXISTS "Solo admins leen form submissions" ON public.form_submissions;
+CREATE POLICY "Solo admins leen form submissions" 
 ON public.form_submissions 
 FOR SELECT 
 TO authenticated 
-USING (true);
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND rol = 'admin'
+  )
+);
 
 
