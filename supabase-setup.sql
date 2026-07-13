@@ -41,15 +41,22 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 -- Permitimos que cualquiera pueda consultar los perfiles (por ejemplo, para 
 -- ver nombres o instructores), pero solo el propio dueño de la cuenta puede
 -- actualizar su información personal (nombre y teléfono).
+-- Función para verificar si el usuario es administrador sin causar recursión
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND rol = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 DROP POLICY IF EXISTS "Cualquiera puede leer perfiles" ON public.profiles;
 DROP POLICY IF EXISTS "Usuarios leen su propio perfil o admin lee todos" ON public.profiles;
 CREATE POLICY "Usuarios leen su propio perfil o admin lee todos" ON public.profiles
   FOR SELECT USING (
-    auth.uid() = id OR
-    EXISTS (
-      SELECT 1 FROM public.profiles p2
-      WHERE p2.id = auth.uid() AND p2.rol = 'admin'
-    )
+    auth.uid() = id OR public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Los usuarios pueden actualizar su propio perfil" ON public.profiles;
@@ -455,11 +462,7 @@ DROP POLICY IF EXISTS "Lectura pública de progreso" ON public.student_progress;
 DROP POLICY IF EXISTS "Usuarios leen su propio progreso o admin lee todos" ON public.student_progress;
 CREATE POLICY "Usuarios leen su propio progreso o admin lee todos" ON public.student_progress
   FOR SELECT USING (
-    auth.uid() = user_id OR
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
+    auth.uid() = user_id OR public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Usuarios modifican su propio progreso" ON public.student_progress;
@@ -482,11 +485,7 @@ DROP POLICY IF EXISTS "Lectura pública de actividad" ON public.student_activity
 DROP POLICY IF EXISTS "Usuarios leen su propia actividad o admin lee todas" ON public.student_activity;
 CREATE POLICY "Usuarios leen su propia actividad o admin lee todas" ON public.student_activity
   FOR SELECT USING (
-    auth.uid() = user_id OR
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
+    auth.uid() = user_id OR public.is_admin()
   );
 
 DROP POLICY IF EXISTS "Usuarios modifican su propia actividad" ON public.student_activity;
@@ -525,11 +524,6 @@ CREATE POLICY "Solo admins leen form submissions"
 ON public.form_submissions 
 FOR SELECT 
 TO authenticated 
-USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid() AND rol = 'admin'
-  )
-);
+USING ( public.is_admin() );
 
 
