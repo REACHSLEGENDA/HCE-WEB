@@ -3078,23 +3078,25 @@ const AdminDashboard = () => {
                                     {Object.entries(entry.payload).map(([k, v]) => `${k}: ${v}`).join(' | ')}
                                   </div>
                                 </td>
-                                <td style={{ textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                  <button 
-                                    className="icon-action-btn edit" 
-                                    title="Ver JSON Completo"
-                                    onClick={() => { setSelectedFormEntry(entry); setShowFormModal(true); }}
-                                    style={{ padding: '6px' }}
-                                  >
-                                    <Eye size={16} />
-                                  </button>
-                                  <button 
-                                    className="icon-action-btn delete" 
-                                    title="Reenviar a Formspree"
-                                    onClick={() => handleResendToFormspree(entry)}
-                                    style={{ padding: '6px', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.2)' }}
-                                  >
-                                    <Send size={16} />
-                                  </button>
+                                <td style={{ textAlign: 'center' }}>
+                                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+                                    <button 
+                                      className="icon-action-btn edit" 
+                                      title="Ver JSON Completo"
+                                      onClick={() => { setSelectedFormEntry(entry); setShowFormModal(true); }}
+                                      style={{ padding: '6px' }}
+                                    >
+                                      <Eye size={16} />
+                                    </button>
+                                    <button 
+                                      className="icon-action-btn delete" 
+                                      title="Reenviar a Formspree"
+                                      onClick={() => handleResendToFormspree(entry)}
+                                      style={{ padding: '6px', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.2)' }}
+                                    >
+                                      <Send size={16} />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))
