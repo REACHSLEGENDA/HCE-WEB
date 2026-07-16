@@ -256,7 +256,9 @@ export function FAQHome() {
     <section className="faq-home-section" id="faq">
       <div className="faq-inner">
         <div className="faq-header">
-          <span className="faq-badge" style={{ color: '#0047ff', background: 'rgba(0, 71, 255, 0.1)', border: '1px solid rgba(0, 71, 255, 0.3)' }}>PREGUNTAS FRECUENTES</span>
+          <span className="faq-badge" style={{ color: '#00d2ff', background: 'rgba(0, 210, 255, 0.1)', border: '1px solid rgba(0, 210, 255, 0.3)' }}>
+            PREGUNTAS FRECUENTES
+          </span>
           <h2 className="faq-title">¿Tienes dudas sobre <span className="text-gradient">nuestras experiencias</span>?</h2>
           <p className="faq-subtitle">Selecciona la experiencia sobre la que quieres saber más.</p>
         </div>
