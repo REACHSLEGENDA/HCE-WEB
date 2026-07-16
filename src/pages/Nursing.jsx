@@ -257,9 +257,9 @@ const Nursing = () => {
 
             </div>
 
-            <div style={{ background: 'rgba(227, 24, 55, 0.15)', border: '1px solid rgba(227, 24, 55, 0.4)', borderRadius: '8px', padding: '12px', marginBottom: '2rem', display: 'inline-block' }}>
-              <span style={{ color: '#ffb3b3', fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Calendar size={18} color="#ffffff" /> 3 DE AGOSTO DE 2026 | EXTENDIMOS INSCRIPCIONES POR ALTA DEMANDA. ¡AÚN ESTÁS A TIEMPO!
+            <div style={{ background: 'rgba(227, 24, 55, 0.15)', border: '1px solid rgba(227, 24, 55, 0.4)', borderRadius: '6px', padding: '6px 12px', marginTop: '1.5rem', marginBottom: '2rem', display: 'inline-block' }}>
+              <span style={{ color: '#ffb3b3', fontWeight: 'bold', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Calendar size={14} color="#ffffff" /> 3 DE AGOSTO DE 2026 | EXTENDIMOS INSCRIPCIONES POR ALTA DEMANDA. ¡AÚN ESTÁS A TIEMPO!
               </span>
             </div>
 
