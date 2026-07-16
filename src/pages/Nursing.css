@@ -1989,3 +1989,91 @@
 
 
 
+
+/* --- Hero Countdown (from Paris) --- */
+.nursing-page .hero-countdown {
+    margin-top: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.5rem 2.5rem;
+    border-radius: 24px;
+    display: inline-block;
+}
+
+.nursing-page .countdown-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Outfit', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 1.2rem;
+}
+
+.nursing-page .countdown-timer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.nursing-page .time-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.nursing-page .time-value {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #ffffff;
+    font-family: 'Outfit', sans-serif;
+    line-height: 1;
+}
+
+.nursing-page .time-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #e31837;
+    margin-top: 0.5rem;
+    font-weight: 700;
+}
+
+.nursing-page .time-sep {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.2);
+    margin-top: -15px;
+}
+
+.nursing-page .hero-venue-info {
+    margin-top: 1.2rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.5px;
+}
+
+.nursing-page .hero-venue-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    transition: 0.3s;
+}
+
+.nursing-page .hero-venue-link:hover {
+    color: #e31837;
+}
+
+.nursing-page .hero-venue-info svg {
+    color: #e31837;
+}

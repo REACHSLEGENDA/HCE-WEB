@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
-import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send, ChevronLeft, ChevronRight, Gamepad2, Cpu, Activity, Gauge, Sparkles, Hospital, Calendar, MessageCircle } from 'lucide-react';
+import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send, ChevronLeft, ChevronRight, Gamepad2, Cpu, Activity, Gauge, Sparkles, Hospital, Calendar, MessageCircle, Clock } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { FAQNursing } from '../components/FAQSection';
@@ -218,10 +218,8 @@ const Nursing = () => {
         <div className="n-hero-overlay" />
         <div className="n-hero-banner-wrap hce-container">
           <div className="n-hero-text">
-            <span style={{ color: '#e31837', fontWeight: '800', letterSpacing: '2px', marginBottom: '0.8rem', fontSize: '1.1rem', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif" }}>
-              INICIAMOS EL 3 DE AGOSTO DE 2026
-            </span>
-            <span className="n-sec-badge"><Sparkles size={14} /> PROGRAMA DE ALTA ESPECIALIDAD</span>
+
+            <span className="n-sec-badge">PROGRAMA DE ALTA ESPECIALIDAD</span>
             <h1 className="n-hero-title-text">
               Entrénate en el Cuidado de Enfermería en ECMO
             </h1>
@@ -229,29 +227,56 @@ const Nursing = () => {
               Entrenamiento diseñado e impartido 100% por enfermería para enfermería.
             </p>
 
-            {/* Cronómetro de inicio */}
-            <div className="n-countdown-container" style={{ display: 'flex', gap: '15px', marginBottom: '2.5rem' }}>
-              <div className="n-countdown-item" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px', padding: '10px 15px', minWidth: '75px', textAlign: 'center' }}>
-                <div className="n-countdown-val" style={{ fontSize: '1.8rem', fontWeight: '900', color: '#ffffff', fontFamily: 'Outfit', lineHeight: '1.2' }}>{timeLeft.days}</div>
-                <div className="n-countdown-lbl" style={{ fontSize: '0.65rem', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Días</div>
-              </div>
-              <div className="n-countdown-item" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px', padding: '10px 15px', minWidth: '75px', textAlign: 'center' }}>
-                <div className="n-countdown-val" style={{ fontSize: '1.8rem', fontWeight: '900', color: '#ffffff', fontFamily: 'Outfit', lineHeight: '1.2' }}>{timeLeft.hours}</div>
-                <div className="n-countdown-lbl" style={{ fontSize: '0.65rem', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Horas</div>
-              </div>
-              <div className="n-countdown-item" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px', padding: '10px 15px', minWidth: '75px', textAlign: 'center' }}>
-                <div className="n-countdown-val" style={{ fontSize: '1.8rem', fontWeight: '900', color: '#ffffff', fontFamily: 'Outfit', lineHeight: '1.2' }}>{timeLeft.minutes}</div>
-                <div className="n-countdown-lbl" style={{ fontSize: '0.65rem', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Minutos</div>
-              </div>
-              <div className="n-countdown-item" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px', padding: '10px 15px', minWidth: '75px', textAlign: 'center' }}>
-                <div className="n-countdown-val" style={{ fontSize: '1.8rem', fontWeight: '900', color: '#e31837', fontFamily: 'Outfit', lineHeight: '1.2' }}>{timeLeft.seconds}</div>
-                <div className="n-countdown-lbl" style={{ fontSize: '0.65rem', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Segundos</div>
-              </div>
+            {/* Cronómetro de inicio estilo Paris */}
+            <div className="hero-countdown reveal active">
+                <div className="countdown-label">
+                    <Calendar size={16} /> <span>Save the date: 3 de Agosto</span>
+                </div>
+                <div className="countdown-timer">
+                    <div className="time-item">
+                        <span className="time-value">{timeLeft.days}</span>
+                        <span className="time-label">Días</span>
+                    </div>
+                    <span className="time-sep">:</span>
+                    <div className="time-item">
+                        <span className="time-value">{timeLeft.hours}</span>
+                        <span className="time-label">Hrs</span>
+                    </div>
+                    <span className="time-sep">:</span>
+                    <div className="time-item">
+                        <span className="time-value">{timeLeft.minutes}</span>
+                        <span className="time-label">Min</span>
+                    </div>
+                    <span className="time-sep">:</span>
+                    <div className="time-item">
+                        <span className="time-value">{timeLeft.seconds}</span>
+                        <span className="time-label">Seg</span>
+                    </div>
+                </div>
+
+                {/* Dates and Schedules */}
+                <div className="countdown-schedule-info">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Calendar size={14} style={{ color: '#e31837' }} />
+                        <span><strong>3 de Agosto, 2026</strong></span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={14} style={{ color: '#e31837' }} />
+                        <span><strong>Fase Virtual y Presencial</strong></span>
+                    </div>
+                </div>
+
+                <div className="hero-venue-info">
+                    <MapPin size={12} /> 
+                    <span className="hero-venue-link">
+                        Sede: INER, Ciudad de México / Virtual
+                    </span>
+                </div>
             </div>
 
             <div style={{ background: 'rgba(227, 24, 55, 0.15)', border: '1px solid rgba(227, 24, 55, 0.4)', borderRadius: '8px', padding: '12px', marginBottom: '2rem', display: 'inline-block' }}>
               <span style={{ color: '#ffb3b3', fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={16} color="#ffeb3b" /> EXTENDIMOS INSCRIPCIONES POR ALTA DEMANDA. ¡AÚN ESTÁS A TIEMPO!
+                <Calendar size={18} color="#ffffff" /> 3 DE AGOSTO DE 2026 | EXTENDIMOS INSCRIPCIONES POR ALTA DEMANDA. ¡AÚN ESTÁS A TIEMPO!
               </span>
             </div>
 
@@ -270,7 +295,7 @@ const Nursing = () => {
       <section className="n-intro-section">
         <div className="hce-container">
           <div ref={heroRef} className={`n-intro-content reveal ${heroInView ? 'active' : ''}`}>
-            <span className="n-sec-badge"><Sparkles size={14} /> PROGRAMA DE ALTA ESPECIALIDAD</span>
+            <span className="n-sec-badge">PROGRAMA DE ALTA ESPECIALIDAD</span>
             <h1 className="n-intro-title">
               Formación por y para <span className="red-text">Profesionales de Enfermería</span>
             </h1>
@@ -309,7 +334,7 @@ const Nursing = () => {
             />
             <div className="n-endorsement-text">
               <span className="n-sec-badge" style={{ marginBottom: '0.8rem', display: 'inline-flex' }}>
-                <Sparkles size={14} /> AVAL ACADÉMICO INTERNACIONAL
+                AVAL ACADÉMICO INTERNACIONAL
               </span>
               <h3>Programa Avalado por FLECI</h3>
               <p>
@@ -324,7 +349,7 @@ const Nursing = () => {
       <section className="n-sec-padding n-methodology-section">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge"><Sparkles size={14} /> METODOLOGÍA</span>
+            <span className="n-sec-badge">METODOLOGÍA</span>
             <h2 className="n-sec-title">Un método diseñado por enfermería validado por la evidencia</h2>
             <p className="n-sec-subtitle">Estructura pedagógica optimizada para el dominio del cuidado de pacientes en soporte ECMO.</p>
           </div>
@@ -435,7 +460,7 @@ const Nursing = () => {
       <section className="n-sec-padding">
         <div className="hce-container">
           <div className="n-sec-header">
-            <span className="n-sec-badge"><Sparkles size={14} /> RESULTADOS</span>
+            <span className="n-sec-badge">RESULTADOS</span>
             <h2 className="n-sec-title">Conocimiento y Competencias Clave para tu Práctica Clínica</h2>
             <p className="n-sec-subtitle">Al finalizar el <strong>ECMO Nursing Care Course</strong>, habrás consolidado un perfil profesional de élite, estructurado en <strong>6 ejes esenciales</strong> para el cuidado avanzado del paciente crítico:</p>
           </div>
@@ -508,7 +533,7 @@ const Nursing = () => {
       <section className="n-sec-padding n-itinerary-section">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge"><Sparkles size={14} /> FASES</span>
+            <span className="n-sec-badge">FASES</span>
             <h2 className="n-sec-title">Tu recorrido formativo fase por fase</h2>
             <p className="n-sec-subtitle">Un diseño curricular que combina la flexibilidad teórica con la rigurosidad práctica.</p>
           </div>
@@ -554,7 +579,7 @@ const Nursing = () => {
       <section className="n-sec-padding n-syllabus-section" id="temario-section">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge"><Sparkles size={14} /> PLAN DE ESTUDIOS</span>
+            <span className="n-sec-badge">PLAN DE ESTUDIOS</span>
             <h2 className="n-sec-title">Programa Detallado de ECMO Nursing Care Course</h2>
             <p className="n-sec-subtitle">Haz clic en cada módulo para desplegar el programa completo de clases y objetivos de aprendizaje.</p>
           </div>
@@ -670,7 +695,7 @@ const Nursing = () => {
       <section className="n-sec-padding n-equipment-section">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge"><Sparkles size={14} /> EQUIPAMIENTO</span>
+            <span className="n-sec-badge">EQUIPAMIENTO</span>
             <h2 className="n-sec-title white">Entrenamientos con tecnología real</h2>
             <p className="n-sec-subtitle white-muted">Acceso a dispositivos utilizados en la vida real.</p>
           </div>
@@ -761,7 +786,7 @@ const Nursing = () => {
       <section className="n-sec-padding">
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge"><Sparkles size={14} /> EVALUACIÓN</span>
+            <span className="n-sec-badge">EVALUACIÓN</span>
             <h2 className="n-sec-title">Tu progreso medido en cada etapa</h2>
             <p className="n-sec-subtitle">Un sistema integral de evaluación que asegura que <strong>integrarás</strong> los conocimientos teóricos y habilidades prácticas necesarios para el cuidado de pacientes en ECMO.</p>
           </div>
@@ -810,7 +835,7 @@ const Nursing = () => {
       <section className="n-virtual-faculty">
         <div className="hce-container">
           <div className="n-section-header">
-            <span className="n-sec-badge"><Sparkles size={14} /> FACULTAD CIENTÍFICA</span>
+            <span className="n-sec-badge">FACULTAD CIENTÍFICA</span>
             <h2 className="n-title">Profesores <span className="red-text">Internacionales</span></h2>
             <p className="n-subtitle">19 expertos integrados en nuestra plataforma de aprendizaje virtual.</p>
           </div>
@@ -839,7 +864,7 @@ const Nursing = () => {
         <div className="n-presencial-bg-glow"></div>
         <div className="hce-container">
           <div className="n-section-header">
-            <span className="n-sec-badge"><Sparkles size={14} /> EXPERIENCIA IN-SITU</span>
+            <span className="n-sec-badge">EXPERIENCIA IN-SITU</span>
             <h2 className="n-title">Facultad <span className="red-text">Presencial</span></h2>
             <p className="n-subtitle">Expertos internacionales que guiarán el entrenamiento práctico de alta fidelidad.</p>
           </div>
@@ -921,7 +946,7 @@ const Nursing = () => {
         <div className="n-faq-glow"></div>
         <div className="hce-container">
           <div className="n-sec-header center">
-            <span className="n-sec-badge"><Sparkles size={14} /> RESPUESTAS</span>
+            <span className="n-sec-badge">RESPUESTAS</span>
             <h2 className="n-sec-title">Preguntas Frecuentes (FAQ)</h2>
             <p className="n-sec-subtitle">Todo lo que necesitas saber sobre el ECMO Nursing Care Course.</p>
           </div>
@@ -1089,7 +1114,7 @@ const Nursing = () => {
             </a>
             <div className="n-endorsement-text">
               <span className="n-sec-badge" style={{ marginBottom: '0.8rem', display: 'inline-flex' }}>
-                <Sparkles size={14} /> AVAL ACADÉMICO INTERNACIONAL
+                AVAL ACADÉMICO INTERNACIONAL
               </span>
               <h3>Programa Avalado por FLECI</h3>
               <p>
