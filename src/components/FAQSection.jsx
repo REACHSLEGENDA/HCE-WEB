@@ -132,6 +132,7 @@ const FAQ_PARIS = [
         <p style={{ fontSize: '0.85em', opacity: 0.85 }}>* El horario puede variar dependiendo del desarrollo de las actividades del grupo.</p>
       </>
     ),
+  },
   {
     q: '¿Cuáles son los requisitos de inscripción?',
     a: (
