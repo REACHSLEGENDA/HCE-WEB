@@ -254,24 +254,7 @@ const Nursing = () => {
                     </div>
                 </div>
 
-                {/* Dates and Schedules */}
-                <div className="countdown-schedule-info">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Calendar size={14} style={{ color: '#e31837' }} />
-                        <span><strong>3 de Agosto, 2026</strong></span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Clock size={14} style={{ color: '#e31837' }} />
-                        <span><strong>Fase Virtual y Presencial</strong></span>
-                    </div>
-                </div>
 
-                <div className="hero-venue-info">
-                    <MapPin size={12} /> 
-                    <span className="hero-venue-link">
-                        Sede: INER, Ciudad de México / Virtual
-                    </span>
-                </div>
             </div>
 
             <div style={{ background: 'rgba(227, 24, 55, 0.15)', border: '1px solid rgba(227, 24, 55, 0.4)', borderRadius: '8px', padding: '12px', marginBottom: '2rem', display: 'inline-block' }}>
