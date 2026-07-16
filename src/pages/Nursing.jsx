@@ -167,7 +167,7 @@ const Nursing = () => {
   };
 
   useEffect(() => {
-    const targetDate = new Date('2026-07-20T00:00:00');
+    const targetDate = new Date('2026-08-03T00:00:00');
     const updateTimer = () => {
       const difference = targetDate.getTime() - new Date().getTime();
       if (difference <= 0) {
@@ -218,7 +218,9 @@ const Nursing = () => {
         <div className="n-hero-overlay" />
         <div className="n-hero-banner-wrap hce-container">
           <div className="n-hero-text">
-
+            <span style={{ color: '#e31837', fontWeight: '800', letterSpacing: '2px', marginBottom: '0.8rem', fontSize: '1.1rem', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif" }}>
+              INICIAMOS EL 3 DE AGOSTO DE 2026
+            </span>
             <span className="n-sec-badge">PROGRAMA DE ALTA ESPECIALIDAD</span>
             <h1 className="n-hero-title-text">
               Entrénate en el Cuidado de Enfermería en ECMO
@@ -259,7 +261,7 @@ const Nursing = () => {
 
             <div style={{ background: 'rgba(227, 24, 55, 0.15)', border: '1px solid rgba(227, 24, 55, 0.4)', borderRadius: '6px', padding: '6px 12px', marginTop: '1.5rem', marginBottom: '2rem', display: 'inline-block' }}>
               <span style={{ color: '#ffb3b3', fontWeight: 'bold', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Calendar size={14} color="#ffffff" /> 3 DE AGOSTO DE 2026 | EXTENDIMOS INSCRIPCIONES POR ALTA DEMANDA. ¡AÚN ESTÁS A TIEMPO!
+                EXTENDIMOS INSCRIPCIONES POR ALTA DEMANDA. ¡AÚN ESTÁS A TIEMPO!
               </span>
             </div>
 
