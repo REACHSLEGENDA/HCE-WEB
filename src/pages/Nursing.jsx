@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
-import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send, ChevronLeft, ChevronRight, Gamepad2, Cpu, Activity, Gauge, Sparkles, Hospital, Calendar } from 'lucide-react';
+import { MonitorPlay, BookOpen, Layers, UsersRound, Target, BrainCircuit, ShieldAlert, TrendingUp, GraduationCap, MapPin, Award, CheckCircle, ArrowRight, Download, Send, ChevronLeft, ChevronRight, Gamepad2, Cpu, Activity, Gauge, Sparkles, Hospital, Calendar, MessageCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { FAQNursing } from '../components/FAQSection';
@@ -219,7 +219,7 @@ const Nursing = () => {
         <div className="n-hero-banner-wrap hce-container">
           <div className="n-hero-text">
             <span style={{ color: '#e31837', fontWeight: '800', letterSpacing: '2px', marginBottom: '0.8rem', fontSize: '1.1rem', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif" }}>
-              INICIAMOS EL 20 DE JULIO DE 2026
+              INICIAMOS EL 3 DE AGOSTO DE 2026
             </span>
             <span className="n-sec-badge"><Sparkles size={14} /> PROGRAMA DE ALTA ESPECIALIDAD</span>
             <h1 className="n-hero-title-text">
@@ -247,6 +247,12 @@ const Nursing = () => {
                 <div className="n-countdown-val" style={{ fontSize: '1.8rem', fontWeight: '900', color: '#e31837', fontFamily: 'Outfit', lineHeight: '1.2' }}>{timeLeft.seconds}</div>
                 <div className="n-countdown-lbl" style={{ fontSize: '0.65rem', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Segundos</div>
               </div>
+            </div>
+
+            <div style={{ background: 'rgba(227, 24, 55, 0.15)', border: '1px solid rgba(227, 24, 55, 0.4)', borderRadius: '8px', padding: '12px', marginBottom: '2rem', display: 'inline-block' }}>
+              <span style={{ color: '#ffb3b3', fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={16} color="#ffeb3b" /> EXTENDIMOS INSCRIPCIONES POR ALTA DEMANDA. ¡AÚN ESTÁS A TIEMPO!
+              </span>
             </div>
 
             <button 
@@ -1034,8 +1040,17 @@ const Nursing = () => {
           </div>
 
           <div className="n-faq-footer">
-            📩 ¿Tienes alguna otra duda? Si tu pregunta no está en esta lista, haz clic en el botón de WhatsApp o escríbenos directamente a{' '}
-            <a href="mailto:info@healthcareexp.com">info@healthcareexp.com</a>. ¡Nuestro equipo de admisiones te atenderá de inmediato!
+            <p style={{ marginBottom: '1rem', opacity: 0.8 }}>¿Tienes alguna otra duda? Si la pregunta no está en esta lista, escríbenos a info@healthcareexp.com o utiliza el botón de WhatsApp.</p>
+            <a
+              href="https://wa.me/525659271906?text=Hola,%20tengo%20una%20duda%20sobre%20el%20ECMO%20Nursing%20Care%20Course."
+              target="_blank"
+              rel="noreferrer"
+              className="faq-wa-btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#1bd741', color: '#fff', padding: '12px 24px', borderRadius: '50px', textDecoration: 'none', fontWeight: 'bold' }}
+            >
+              <MessageCircle size={18} />
+              ¿Más preguntas? Escríbenos por WhatsApp
+            </a>
           </div>
         </div>
       </section>

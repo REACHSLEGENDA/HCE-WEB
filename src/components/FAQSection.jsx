@@ -122,8 +122,16 @@ const FAQ_PARIS = [
   },
   {
     q: '¿Cuánto tiempo dura el programa y cuál es la carga horaria?',
-    a: 'El programa está estructurado para completarse en 4 días intensivos. La fase teórica presencial se realizará del 28 al 29 de octubre de 2026 en el Auditorio del INER de 8:00 a 18:00 horas. La fase práctica presencial se realiza del 30 al 31 de octubre en el Centro de Simulación del INER de 8:00 a 18:00 horas. El horario puede variar dependiendo del desarrollo de las actividades del grupo.',
-  },
+    a: (
+      <>
+        <p style={{ marginBottom: '10px' }}>El programa está estructurado para completarse en 4 días intensivos:</p>
+        <ul style={{ paddingLeft: '20px', listStyleType: 'disc', marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <li><strong>Fase teórica presencial:</strong> Del 28 al 29 de octubre de 2026 en el Auditorio del INER de 8:00 a 18:00 horas.</li>
+          <li><strong>Fase práctica presencial:</strong> Del 30 al 31 de octubre en el Centro de Simulación del INER de 8:00 a 18:00 horas.</li>
+        </ul>
+        <p style={{ fontSize: '0.85em', opacity: 0.85 }}>* El horario puede variar dependiendo del desarrollo de las actividades del grupo.</p>
+      </>
+    ),
   {
     q: '¿Cuáles son los requisitos de inscripción?',
     a: (
@@ -214,13 +222,13 @@ export function FAQParis() {
     <section className="faq-section faq-section--dark" id="faq-paris">
       <div className="faq-inner">
         <div className="faq-header">
-          <span className="faq-badge" style={{ background: 'rgba(0,71,255,0.12)', color: '#6090ff' }}>Preguntas Frecuentes</span>
-          <h2 className="faq-title" style={{ color: '#ffffff' }}>FAQ – <span style={{ color: '#6090ff' }}>Diploma Internacional de París en ECMO</span></h2>
+          <span className="faq-badge" style={{ background: 'rgba(0,71,255,0.12)', color: '#0047ff' }}>PREGUNTAS FRECUENTES</span>
+          <h2 className="faq-title" style={{ color: '#ffffff' }}>FAQ – <span style={{ color: '#0047ff' }}>Diploma Internacional de París en ECMO</span></h2>
           <p className="faq-subtitle" style={{ color: 'rgba(255,255,255,0.65)' }}>Todo lo que necesitas saber antes de inscribirte.</p>
         </div>
         <div className="faq-list">
           {FAQ_PARIS.map((item, i) => (
-            <FAQItem key={i} item={item} index={i} accentColor="#6090ff" />
+            <FAQItem key={i} item={item} index={i} accentColor="#0047ff" />
           ))}
         </div>
         <div className="faq-cta">
@@ -247,9 +255,9 @@ export function FAQHome() {
     <section className="faq-home-section" id="faq">
       <div className="faq-inner">
         <div className="faq-header">
-          <span className="faq-badge">Preguntas Frecuentes</span>
-          <h2 className="faq-title">¿Tienes dudas sobre <span className="gradient-text">nuestros programas</span>?</h2>
-          <p className="faq-subtitle">Selecciona el programa sobre el que quieres saber más.</p>
+          <span className="faq-badge" style={{ color: '#0047ff', background: 'rgba(0, 71, 255, 0.1)', border: '1px solid rgba(0, 71, 255, 0.3)' }}>PREGUNTAS FRECUENTES</span>
+          <h2 className="faq-title">¿Tienes dudas sobre <span className="gradient-text">nuestras experiencias</span>?</h2>
+          <p className="faq-subtitle">Selecciona la experiencia sobre la que quieres saber más.</p>
         </div>
 
         <div className="faq-program-tabs">
@@ -258,7 +266,7 @@ export function FAQHome() {
             onClick={() => setActive(active === 'nursing' ? null : 'nursing')}
           >
             <span className="faq-tab-dot" style={{ background: '#e31837' }} />
-            FAQ – ECMO Nursing Care
+            FAQ – ECMO NURSING CARE COURSE
             <ChevronDown size={16} className={`faq-tab-chevron ${active === 'nursing' ? 'rotated' : ''}`} />
           </button>
           <button
@@ -266,7 +274,7 @@ export function FAQHome() {
             onClick={() => setActive(active === 'paris' ? null : 'paris')}
           >
             <span className="faq-tab-dot" style={{ background: '#0047ff' }} />
-            FAQ – Diploma París ECMO
+            FAQ – DIPLOMA INTERNACIONAL DE PARÍS EN ECMO
             <ChevronDown size={16} className={`faq-tab-chevron ${active === 'paris' ? 'rotated' : ''}`} />
           </button>
         </div>
