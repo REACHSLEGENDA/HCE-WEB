@@ -164,7 +164,7 @@ export default function InscripcionesNursing() {
   const handleFreeRegister = () => {
     if (!canPay) return;
     const resolvedPerfil = perfil === 'otro' ? (customOtro.trim() || 'Otro') : (PROFILES[perfil]?.label || perfil);
-    const extrasLabel = [...extras].map((id) => EXTRA_CATALOG[id]?.label).filter(Boolean).join(', ') || 'Ninguno';
+    const extrasLabel = 'Ninguno';
     const payload = {
       email: email.trim(),
       perfilLabel: resolvedPerfil,
@@ -429,7 +429,7 @@ export default function InscripcionesNursing() {
           )}
 
           {/* STEP 3 — extras */}
-          {availableExtras.length > 0 && (
+          {availableExtras.length > 0 && !isFree && (
             <section className="ins-section ins-section--animate">
               <div className="ins-step-header">
                 <span className="ins-step-num">{cardSel === 'otros' ? '3' : '2'}</span>
