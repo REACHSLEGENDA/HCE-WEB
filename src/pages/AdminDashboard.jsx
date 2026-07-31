@@ -3234,7 +3234,7 @@ const AdminDashboard = () => {
             <div className="tab-pane animate-fade-in">
               <div className="section-header">
                 <h2>Solicitudes de Facturación</h2>
-                <button className="btn-secondary" onClick={async () => {
+                <button className="btn-crm-action outlined" onClick={async () => {
                   setLoadingFacturacion(true);
                   const { data } = await supabase.from('facturacion_requests').select('*').order('created_at', { ascending: false });
                   if(data) setFacturacionReqs(data);
