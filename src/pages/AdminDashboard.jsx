@@ -41,7 +41,8 @@ import {
   CreditCard,
   DollarSign,
   Upload,
-  Send
+  Send,
+  Receipt
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { useNotification } from '../context/NotificationContext';
@@ -141,6 +142,10 @@ const AdminDashboard = () => {
   const [loadingTracking, setLoadingTracking] = useState(false);
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [reportsSubTab, setReportsSubTab] = useState('dashboard_general');
+
+  // Facturacion requests
+  const [facturacionReqs, setFacturacionReqs] = useState([]);
+  const [loadingFacturacion, setLoadingFacturacion] = useState(false);
 
   // Course management states
   // Always start with form closed (never persist open state)
@@ -731,6 +736,26 @@ const AdminDashboard = () => {
     return () => clearInterval(interval);
   }, [activeTab]);
 
+  useEffect(() => {
+    if (activeTab === 'facturacion') {
+      const fetchFacturacion = async () => {
+        setLoadingFacturacion(true);
+        try {
+          const { data, error } = await supabase
+            .from('facturacion_requests')
+            .select('*')
+            .order('created_at', { ascending: false });
+          if (!error && data) setFacturacionReqs(data);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setLoadingFacturacion(false);
+        }
+      };
+      fetchFacturacion();
+    }
+  }, [activeTab]);
+
   // Local ticker to increment session duration of online students in real-time without DB calls
   useEffect(() => {
     if (activeTab !== 'reports') return;
@@ -1234,6 +1259,7 @@ const AdminDashboard = () => {
       case 'categories': return 'Categorías';
       case 'reports': return 'Reportes Académicos';
       case 'payments': return 'Pagos y Formularios';
+      case 'facturacion': return 'Facturación';
       case 'admins': return 'Administradores';
       case 'settings': return 'Configuración General';
       default: return 'Portal HCE Admin';
@@ -2202,6 +2228,15 @@ const AdminDashboard = () => {
           >
             <CreditCard size={20} className="menu-icon" />
             <span className="menu-label">Pagos y Formularios</span>
+          </button>
+          
+          <button 
+            className={`menu-item ${activeTab === 'facturacion' ? 'active' : ''}`}
+            onClick={() => setActiveTab('facturacion')}
+            title="Facturación"
+          >
+            <Receipt size={20} className="menu-icon" />
+            <span className="menu-label">Facturación</span>
           </button>
 
           <button 
@@ -3194,6 +3229,106 @@ const AdminDashboard = () => {
               </div>
             );
           })()}
+
+          {activeTab === 'facturacion' && (
+            <div className="tab-pane animate-fade-in">
+              <div className="section-header">
+                <h2>Solicitudes de Facturación</h2>
+                <button className="btn-secondary" onClick={async () => {
+                  setLoadingFacturacion(true);
+                  const { data } = await supabase.from('facturacion_requests').select('*').order('created_at', { ascending: false });
+                  if(data) setFacturacionReqs(data);
+                  setLoadingFacturacion(false);
+                }}>
+                  Actualizar Lista
+                </button>
+              </div>
+              
+              {loadingFacturacion ? (
+                <div style={{ textAlign: 'center', padding: '3rem' }}><div className="loading-spinner"></div></div>
+              ) : facturacionReqs.length === 0 ? (
+                <div className="empty-state">
+                  <Receipt size={48} opacity={0.5} />
+                  <h3>No hay solicitudes</h3>
+                  <p>Aún no han llegado solicitudes de facturación.</p>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Razón Social / RFC</th>
+                        <th>Contacto</th>
+                        <th>Detalles Fiscales</th>
+                        <th>Archivos</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {facturacionReqs.map(req => (
+                        <tr key={req.id}>
+                          <td>{new Date(req.created_at).toLocaleDateString()}</td>
+                          <td>
+                            <strong>{req.razon_social}</strong><br/>
+                            <span style={{fontSize:'0.85em', color:'#666'}}>{req.rfc}</span>
+                          </td>
+                          <td>
+                            {req.correo}<br/>
+                            <span style={{fontSize:'0.85em', color:'#666'}}>{req.telefono}</span>
+                          </td>
+                          <td style={{fontSize:'0.85em'}}>
+                            Uso: {req.uso_cfdi}<br/>
+                            Regimen: {req.regimen_fiscal}<br/>
+                            CP: {req.cp_fiscal}
+                          </td>
+                          <td>
+                            {req.constancia_url && (
+                              <a href={req.constancia_url} target="_blank" rel="noreferrer" style={{display:'block', marginBottom:'4px', color:'var(--primary-color)', fontSize:'0.9em'}}>Constancia Fiscal</a>
+                            )}
+                            {req.comprobantes_urls && req.comprobantes_urls.length > 0 && req.comprobantes_urls.map((url, i) => (
+                              <a key={i} href={url} target="_blank" rel="noreferrer" style={{display:'block', marginBottom:'4px', color:'#10b981', fontSize:'0.9em'}}>Comprobante {i+1}</a>
+                            ))}
+                          </td>
+                          <td>
+                            <span className={`status-badge ${req.status === 'completado' ? 'status-active' : 'status-inactive'}`}>
+                              {req.status === 'completado' ? 'Facturado' : 'Pendiente'}
+                            </span>
+                          </td>
+                          <td>
+                            <button 
+                              className="action-btn edit-btn" 
+                              title="Marcar como Completado"
+                              onClick={async () => {
+                                const newStatus = req.status === 'completado' ? 'pendiente' : 'completado';
+                                await supabase.from('facturacion_requests').update({ status: newStatus }).eq('id', req.id);
+                                setFacturacionReqs(prev => prev.map(p => p.id === req.id ? {...p, status: newStatus} : p));
+                              }}
+                            >
+                              <CheckCircle size={16} />
+                            </button>
+                            <button 
+                              className="action-btn delete-btn" 
+                              title="Eliminar"
+                              onClick={async () => {
+                                if(window.confirm('¿Seguro que deseas eliminar esta solicitud?')) {
+                                  await supabase.from('facturacion_requests').delete().eq('id', req.id);
+                                  setFacturacionReqs(prev => prev.filter(p => p.id !== req.id));
+                                }
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* VIEW: CURSOS (CRUD) */}
           {activeTab === 'courses' && (

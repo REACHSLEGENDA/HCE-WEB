@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './Facturacion.css';
@@ -137,56 +138,94 @@ export default function Facturacion() {
     setErrors({});
     setStatus('loading');
 
-    const data = new FormData();
-    data.append('_subject', `Solicitud de factura — ${form.razon_social} (${form.rfc})`);
-    data.append('_replyto', form.correo);
-
-    // Datos principales
-    data.append('Razón Social', form.razon_social);
-    data.append('RFC', form.rfc.toUpperCase());
-    data.append('Correo electrónico', form.correo);
-    if (form.telefono) data.append('Teléfono', form.telefono);
-
-    // Datos fiscales
-    data.append('Código Postal Fiscal', form.cp_fiscal);
-    data.append('Régimen Fiscal', form.regimen_fiscal);
-    data.append('Uso del CFDI', form.uso_cfdi);
-
-    // Dirección fiscal
-    const dir = [
-      form.calle, form.numero_ext && `#${form.numero_ext}`,
-      form.numero_int && `Int. ${form.numero_int}`,
-      form.colonia, form.ciudad, form.estado,
-    ].filter(Boolean).join(', ');
-    if (dir.trim()) data.append('Dirección Fiscal', dir);
-
-    // Detalles del pago
-    data.append('Método de Pago', form.metodo_pago);
-    if (form.concepto) data.append('Concepto', form.concepto);
-    if (form.monto) data.append('Monto', form.monto);
-    if (form.notas) data.append('Notas adicionales', form.notas);
-
-    // Archivos
-    if (constanciaFile) {
-      data.append('Constancia_Situacion_Fiscal', constanciaFile, constanciaFile.name);
-    }
-    files.forEach((f, i) => data.append(`Comprobante_${i + 1}`, f, f.name));
-
     try {
-      const res = await fetch('https://formspree.io/f/mreroozv', {
+      let uploadedConstanciaUrl = null;
+      let uploadedComprobantesUrls = [];
+
+      // 1. Subir archivos a Supabase Storage
+      if (constanciaFile) {
+        const ext = constanciaFile.name.split('.').pop();
+        const path = `${form.rfc.toUpperCase()}_constancia_${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from('facturacion_files').upload(path, constanciaFile);
+        if (uploadErr) throw new Error('Error al subir constancia: ' + uploadErr.message);
+        
+        const { data: { publicUrl } } = supabase.storage.from('facturacion_files').getPublicUrl(path);
+        uploadedConstanciaUrl = publicUrl;
+      }
+
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const ext = f.name.split('.').pop();
+        const path = `${form.rfc.toUpperCase()}_comprobante_${i}_${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from('facturacion_files').upload(path, f);
+        if (uploadErr) throw new Error('Error al subir comprobante: ' + uploadErr.message);
+        
+        const { data: { publicUrl } } = supabase.storage.from('facturacion_files').getPublicUrl(path);
+        uploadedComprobantesUrls.push(publicUrl);
+      }
+
+      // 2. Guardar solicitud en la base de datos
+      const dir = [
+        form.calle, form.numero_ext && `#${form.numero_ext}`,
+        form.numero_int && `Int. ${form.numero_int}`,
+        form.colonia, form.ciudad, form.estado,
+      ].filter(Boolean).join(', ');
+
+      const { error: dbError } = await supabase.from('facturacion_requests').insert({
+        razon_social: form.razon_social,
+        rfc: form.rfc.toUpperCase(),
+        correo: form.correo,
+        telefono: form.telefono,
+        cp_fiscal: form.cp_fiscal,
+        regimen_fiscal: form.regimen_fiscal,
+        uso_cfdi: form.uso_cfdi,
+        direccion: dir,
+        metodo_pago: form.metodo_pago,
+        concepto: form.concepto,
+        monto: form.monto,
+        notas: form.notas,
+        constancia_url: uploadedConstanciaUrl,
+        comprobantes_urls: uploadedComprobantesUrls
+      });
+
+      if (dbError) throw new Error('Error al guardar en base de datos: ' + dbError.message);
+
+      // 3. Notificar a Formspree (Sin adjuntos pesados, solo los links!)
+      const data = new FormData();
+      data.append('_subject', `Solicitud de factura — ${form.razon_social} (${form.rfc})`);
+      data.append('_replyto', form.correo);
+      data.append('Razón Social', form.razon_social);
+      data.append('RFC', form.rfc.toUpperCase());
+      data.append('Correo electrónico', form.correo);
+      if (form.telefono) data.append('Teléfono', form.telefono);
+      data.append('Código Postal Fiscal', form.cp_fiscal);
+      data.append('Régimen Fiscal', form.regimen_fiscal);
+      data.append('Uso del CFDI', form.uso_cfdi);
+      if (dir.trim()) data.append('Dirección Fiscal', dir);
+      data.append('Método de Pago', form.metodo_pago);
+      if (form.concepto) data.append('Concepto', form.concepto);
+      if (form.monto) data.append('Monto', form.monto);
+      if (form.notas) data.append('Notas adicionales', form.notas);
+
+      if (uploadedConstanciaUrl) {
+        data.append('Link Constancia Fiscal', uploadedConstanciaUrl);
+      }
+      if (uploadedComprobantesUrls.length > 0) {
+        data.append('Links Comprobantes de Pago', uploadedComprobantesUrls.join('\n'));
+      }
+
+      await fetch('https://formspree.io/f/mreroozv', {
         method: 'POST',
         body: data,
         headers: { Accept: 'application/json' },
       });
-      if (res.ok) {
-        setStatus('success');
-        setForm(INITIAL);
-        setFiles([]);
-        setConstanciaFile(null);
-      } else {
-        setStatus('error');
-      }
-    } catch {
+
+      setStatus('success');
+      setForm(INITIAL);
+      setFiles([]);
+      setConstanciaFile(null);
+    } catch (err) {
+      console.error(err);
       setStatus('error');
     }
   };
