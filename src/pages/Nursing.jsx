@@ -366,7 +366,7 @@ const Nursing = () => {
                     borderRadius: '6px',
                   }}>
                     <Calendar size={13} />
-                    <span>Inicio: 20 de Julio, 2026</span>
+                    <span>Inicio: 3 de Agosto, 2026</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
@@ -526,7 +526,7 @@ const Nursing = () => {
           <div className="n-timeline-container">
             {/* Step 1 */}
             <div className="n-card-base n-timeline-step">
-              <span className="n-timeline-badge active">Fase Virtual: 2 Meses, inicio 20 de Julio 2026.</span>
+              <span className="n-timeline-badge active">Fase Virtual: 2 Meses, inicio 3 de Agosto 2026.</span>
               <h3>Entrenamiento Teórico (Aprendizaje Híbrido)</h3>
               <p>Aprendizaje sincrónico y asincrónico a través de nuestra plataforma virtual. Cubre de manera progresiva los fundamentos del soporte ECMO, Fisiología y Hemodinamia Aplicada, Monitoreo Integral del Binomio Paciente-Circuito, Detección Precoz de Complicaciones.</p>
               <div style={{ marginTop: '1.2rem', textAlign: 'left' }}>
