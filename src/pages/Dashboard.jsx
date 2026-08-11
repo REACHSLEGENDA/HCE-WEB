@@ -411,12 +411,24 @@ const Dashboard = () => {
         .order('id', { ascending: true });
       if (error) throw error;
       
-      const coursesWithQuestions = await Promise.all((dbCourses || []).map(async (c) => {
-        const { data: dbQuestions } = await supabase
-          .from('questions')
-          .select('*')
-          .eq('course_id', c.id)
-          .order('id', { ascending: true });
+      // OPTIMIZACIÓN: Cargar todas las preguntas en una sola llamada (Evita el problema de las N+1 peticiones que crashean la carga)
+      const { data: allQuestions } = await supabase
+        .from('questions')
+        .select('*')
+        .order('id', { ascending: true });
+      
+      // Agrupar preguntas por curso en memoria
+      const questionsByCourse = {};
+      if (allQuestions) {
+        allQuestions.forEach(q => {
+          if (!questionsByCourse[q.course_id]) {
+            questionsByCourse[q.course_id] = [];
+          }
+          questionsByCourse[q.course_id].push(q);
+        });
+      }
+
+      const coursesWithQuestions = (dbCourses || []).map((c) => {
         return {
           id: c.id,
           title: c.title,
@@ -434,9 +446,9 @@ const Dashboard = () => {
           minAprobacion: c.min_aprobacion,
           activo: c.activo,
           category_id: c.category_id,
-          questions: dbQuestions || []
+          questions: questionsByCourse[c.id] || []
         };
-      }));
+      });
       
       const activeCourses = coursesWithQuestions.filter(c => c.activo !== false);
 
