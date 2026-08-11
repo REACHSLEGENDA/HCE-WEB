@@ -488,18 +488,32 @@ const Classroom = () => {
     }
   }, [startTrackingProgress, stopTrackingProgress]);
 
+  const [ytApiFailed, setYtApiFailed] = useState(false);
+
   useEffect(() => {
     let checkYoutubeAPI;
+    let fallbackTimeout;
+
     if (course && course.youtube_video_id && !showExam) {
       checkYoutubeAPI = setInterval(() => {
         if (window.YT && window.YT.Player) {
           initYoutubePlayer(course.youtube_video_id);
           clearInterval(checkYoutubeAPI);
+          clearTimeout(fallbackTimeout);
         }
       }, 500);
+
+      // Si después de 3 segundos la API de YT no cargó (por adblockers o red lenta), usamos un iframe estándar
+      fallbackTimeout = setTimeout(() => {
+        if (!window.YT || !window.YT.Player) {
+          clearInterval(checkYoutubeAPI);
+          setYtApiFailed(true);
+        }
+      }, 3000);
     }
     return () => {
       if (checkYoutubeAPI) clearInterval(checkYoutubeAPI);
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
       stopTrackingProgress();
       if (playerRef.current) {
         playerRef.current.destroy();
@@ -525,6 +539,7 @@ const Classroom = () => {
 
     const syncProgress = async () => {
       const totalTimeSpent = initialTimeSpentRef.current + accumulatedTimeSpentRef.current;
+      const currentWatchPercent = watchPercentRef.current; // Usar el ref actual para evitar re-renders
 
       try {
         const allKey = 'backup_all_student_progress';
@@ -535,7 +550,7 @@ const Classroom = () => {
         allProgress[progressKey] = {
           user_id: user.id,
           course_id: course.id,
-          watch_percent: watchPercent,
+          watch_percent: currentWatchPercent,
           time_spent: totalTimeSpent,
           updated_at: new Date().toISOString()
         };
@@ -550,7 +565,7 @@ const Classroom = () => {
           .upsert({
             user_id: user.id,
             course_id: course.id,
-            watch_percent: watchPercent,
+            watch_percent: currentWatchPercent,
             time_spent: totalTimeSpent,
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id,course_id' });
@@ -559,9 +574,15 @@ const Classroom = () => {
       }
     };
 
-    const timer = setTimeout(syncProgress, 1000);
-    return () => clearTimeout(timer);
-  }, [user?.id, course?.id, watchPercent]);
+    // Sincronizar cada 15 segundos para evitar ataque DDoS a Supabase
+    const timer = setInterval(syncProgress, 15000);
+    
+    // También sincronizar una vez al inicio o al desmontar (limpieza)
+    return () => {
+      clearInterval(timer);
+      syncProgress();
+    };
+  }, [user?.id, course?.id]);
 
   // Heartbeat para registrar la actividad de la clase en vivo y acumular tiempo de estudio por curso
   useEffect(() => {
@@ -1049,7 +1070,20 @@ const Classroom = () => {
               <div className="classroom-video-card">
                 <div className="video-container-wrapper">
                   {course.youtube_video_id ? (
-                    <div id="youtube-classroom-player" className="video-iframe-target"></div>
+                    ytApiFailed ? (
+                      <iframe 
+                        width="100%" 
+                        height="100%" 
+                        src={`https://www.youtube.com/embed/${course.youtube_video_id}?autoplay=0&rel=0`} 
+                        title={course.title} 
+                        frameBorder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen
+                        className="video-iframe-target"
+                      ></iframe>
+                    ) : (
+                      <div id="youtube-classroom-player" className="video-iframe-target"></div>
+                    )
                   ) : (
                     <div className="video-loading-placeholder">
                       Cargando reproductor de video...
