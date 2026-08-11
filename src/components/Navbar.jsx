@@ -147,7 +147,6 @@ const Navbar = () => {
           <div className="menu-section">
             <h3>Experiencias</h3>
             <ul className="menu-list">
-              {/* <li><Link to="/insuficiencia-cardiaca" onClick={() => toggleNav(false)}><Heart size={18} /> Insuficiencia Cardiaca</Link></li> */}
               <li><Link to="/ecmo-nursing-care" onClick={() => toggleNav(false)}><NurseCap size={18} /> ECMO Nursing Care</Link></li>
               <li><Link to="/paris-diploma-ecmo" onClick={() => toggleNav(false)}><Award size={18} /> Paris Diploma ECMO</Link></li>
             </ul>
@@ -158,6 +157,14 @@ const Navbar = () => {
             <h3>Simulador</h3>
             <ul className="menu-list">
               <li><Link to="/simulador-ecmo-sim" onClick={() => toggleNav(false)}><Gamepad2 size={18} /> ECMO SIM</Link></li>
+            </ul>
+          </div>
+
+          {/* Colaboraciones */}
+          <div className="menu-section">
+            <h3>Colaboraciones</h3>
+            <ul className="menu-list">
+              <li><a href="https://cnadot.healthcareexp.com/" target="_blank" rel="noopener noreferrer" onClick={() => toggleNav(false)}><ExternalLink size={18} /> Máster CNADOT</a></li>
             </ul>
           </div>
 
