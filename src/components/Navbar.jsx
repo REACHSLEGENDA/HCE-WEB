@@ -164,7 +164,7 @@ const Navbar = () => {
           <div className="menu-section">
             <h3>Colaboraciones</h3>
             <ul className="menu-list">
-              <li><a href="https://cnadot.healthcareexp.com/" target="_blank" rel="noopener noreferrer" onClick={() => toggleNav(false)}><ExternalLink size={18} /> Máster CNADOT</a></li>
+              <li><a href="https://cnadot.healthcareexp.com/" target="_blank" rel="noopener noreferrer" onClick={() => toggleNav(false)}><ExternalLink size={18} /> CNADOT</a></li>
             </ul>
           </div>
 
