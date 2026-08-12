@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getSafeAvatarUrl } from '../lib/avatar';
+import { getYouTubeEmbedUrl, getYouTubePlayerError, getYouTubeVideoId } from '../lib/youtube';
 import { 
   ArrowLeft, 
   Clock, 
@@ -82,6 +83,8 @@ const Classroom = () => {
   // Player progress & exam states
   const [watchPercent, setWatchPercent] = useState(0);
   const watchPercentRef = useRef(0);
+  const [ytApiFailed, setYtApiFailed] = useState(false);
+  const [youtubeError, setYoutubeError] = useState(null);
   
   const [showExam, setShowExam] = useState(false);
   const [examAnswers, setExamAnswers] = useState({});
@@ -445,9 +448,13 @@ const Classroom = () => {
 
   // YouTube API Script loading
   useEffect(() => {
-    if (!window.YT) {
+    if (!window.YT && !document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
+      tag.onerror = () => {
+        console.warn('No se pudo cargar la API de YouTube; se usará el reproductor compatible.');
+        setYtApiFailed(true);
+      };
       const firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     }
@@ -458,13 +465,10 @@ const Classroom = () => {
       playerRef.current.destroy();
     }
 
-    let cleanVideoId = videoId;
-    if (videoId.includes('youtube.com') || videoId.includes('youtu.be')) {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-      const match = videoId.match(regExp);
-      if (match && match[2].length === 11) {
-        cleanVideoId = match[2];
-      }
+    const cleanVideoId = getYouTubeVideoId(videoId);
+    if (!cleanVideoId) {
+      setYoutubeError({ code: 2, fatal: true, message: getYouTubePlayerError(2) });
+      return;
     }
 
     try {
@@ -475,30 +479,55 @@ const Classroom = () => {
         playerVars: {
           playsinline: 1,
           rel: 0,
-          controls: 1
+          controls: 1,
+          origin: window.location.origin,
+          widget_referrer: window.location.href
         },
         events: {
+          onReady: () => {
+            setYoutubeError(null);
+          },
           onStateChange: (event) => {
             if (event.data === window.YT.PlayerState.PLAYING) {
               startTrackingProgress();
             } else {
               stopTrackingProgress();
             }
+          },
+          onError: (event) => {
+            const code = Number(event.data);
+            const fatal = [2, 100, 101, 150].includes(code);
+            console.error(`YouTube Player error ${code}:`, getYouTubePlayerError(code));
+            stopTrackingProgress();
+            setYoutubeError({ code, fatal, message: getYouTubePlayerError(code) });
+
+            if (!fatal) {
+              // Error 5/153 can recover through a regular iframe with an explicit referrer/origin.
+              setYtApiFailed(true);
+            }
           }
         }
       });
     } catch (err) {
       console.error('Error initializing YouTube Player:', err);
+      setYoutubeError({ fatal: false, message: 'No se pudo iniciar la API de YouTube.' });
+      setYtApiFailed(true);
     }
   }, [startTrackingProgress, stopTrackingProgress]);
-
-  const [ytApiFailed, setYtApiFailed] = useState(false);
 
   useEffect(() => {
     let checkYoutubeAPI;
     let fallbackTimeout;
 
     if (course && course.youtube_video_id && !showExam) {
+      setYtApiFailed(false);
+      setYoutubeError(null);
+
+      if (!getYouTubeVideoId(course.youtube_video_id)) {
+        setYoutubeError({ code: 2, fatal: true, message: getYouTubePlayerError(2) });
+        return undefined;
+      }
+
       checkYoutubeAPI = setInterval(() => {
         if (window.YT && window.YT.Player) {
           initYoutubePlayer(course.youtube_video_id);
@@ -1007,15 +1036,31 @@ const Classroom = () => {
               <div className="classroom-video-card">
                 <div className="video-container-wrapper">
                   {course.youtube_video_id ? (
-                    ytApiFailed ? (
+                    youtubeError?.fatal || !getYouTubeVideoId(course.youtube_video_id) ? (
+                      <div className="video-player-error" role="alert">
+                        <AlertCircle size={36} />
+                        <strong>No se pudo cargar el video</strong>
+                        <span>{youtubeError?.message || 'El enlace de YouTube configurado no es válido.'}</span>
+                        {getYouTubeVideoId(course.youtube_video_id) && (
+                          <a
+                            href={`https://www.youtube.com/watch?v=${getYouTubeVideoId(course.youtube_video_id)}`}
+                            target="_blank"
+                            rel="noopener"
+                          >
+                            Abrir directamente en YouTube
+                          </a>
+                        )}
+                      </div>
+                    ) : ytApiFailed ? (
                       <iframe 
                         width="100%" 
                         height="100%" 
-                        src={`https://www.youtube.com/embed/${course.youtube_video_id}?autoplay=0&rel=0`} 
+                        src={getYouTubeEmbedUrl(course.youtube_video_id)}
                         title={course.title} 
                         frameBorder="0" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                         allowFullScreen
+                        referrerPolicy="strict-origin-when-cross-origin"
                         className="video-iframe-target"
                       ></iframe>
                     ) : (

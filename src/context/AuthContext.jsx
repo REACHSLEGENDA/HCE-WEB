@@ -3,11 +3,20 @@ import { supabase } from '../lib/supabase';
 import { dataUrlToBlob, isInlineAvatar, uploadAvatar } from '../lib/avatar';
 
 const AuthContext = createContext({});
+const MAX_SAFE_ACCESS_TOKEN_LENGTH = 48 * 1024;
+
+const needsLegacySessionRecovery = (session) => Boolean(
+  session && (
+    (session.access_token?.length || 0) > MAX_SAFE_ACCESS_TOKEN_LENGTH ||
+    isInlineAvatar(session.user?.user_metadata?.avatar_url)
+  )
+);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionRecoveryRequired, setSessionRecoveryRequired] = useState(null);
   const currentUserIdRef = useRef(null);
 
   const migrateLegacyAvatar = useCallback(async (userId, profileRow, authUser) => {
@@ -87,30 +96,67 @@ export const AuthProvider = ({ children }) => {
     }
   }, [migrateLegacyAvatar]);
 
+  const refreshLegacySession = useCallback(async (session) => {
+    if (!needsLegacySessionRecovery(session)) return session;
+
+    console.warn('Se detectó una sesión antigua demasiado grande; intentando renovarla antes de consultar Supabase.');
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token: session.refresh_token
+    });
+
+    if (error) throw error;
+    if (!data.session || needsLegacySessionRecovery(data.session)) {
+      throw new Error('La metadata antigua todavía está presente en Auth y requiere la migración SQL.');
+    }
+
+    return data.session;
+  }, []);
+
+  const applySession = useCallback(async (session) => {
+    setLoading(true);
+
+    try {
+      if (!session) {
+        currentUserIdRef.current = null;
+        setUser(null);
+        setProfile(null);
+        setSessionRecoveryRequired(null);
+        return;
+      }
+
+      let activeSession = session;
+      try {
+        activeSession = await refreshLegacySession(session);
+      } catch (error) {
+        // Do not mount portal pages while the oversized JWT would make every REST call fail.
+        currentUserIdRef.current = session.user.id;
+        setUser(session.user);
+        setProfile(null);
+        setSessionRecoveryRequired({
+          message: 'La sesión guardada contiene datos antiguos demasiado grandes y Supabase la rechaza.',
+          detail: error.message
+        });
+        return;
+      }
+
+      setSessionRecoveryRequired(null);
+      currentUserIdRef.current = activeSession.user.id;
+      setUser(activeSession.user);
+      await fetchProfile(activeSession.user.id, activeSession.user);
+    } catch (error) {
+      console.error('Error al aplicar la sesión:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchProfile, refreshLegacySession]);
+
   useEffect(() => {
     let isMounted = true;
     const initialLoadDone = { current: false };
 
     const handleAuthChange = async (session) => {
       if (!isMounted) return;
-      setLoading(true);
-      try {
-        if (session) {
-          currentUserIdRef.current = session.user.id;
-          setUser(session.user);
-          await fetchProfile(session.user.id, session.user);
-        } else {
-          currentUserIdRef.current = null;
-          setUser(null);
-          setProfile(null);
-        }
-      } catch (err) {
-        console.error('Error al manejar cambio de autenticación:', err);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
+      await applySession(session);
     };
 
     const initAuth = async () => {
@@ -160,7 +206,7 @@ export const AuthProvider = ({ children }) => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, [applySession]);
 
   // Sign Up function
   const signUp = async (
@@ -234,12 +280,13 @@ export const AuthProvider = ({ children }) => {
   // Sign Out function
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (err) {
       console.warn('Supabase signOut error, forcing local logout:', err);
     } finally {
       setUser(null);
       setProfile(null);
+      setSessionRecoveryRequired(null);
       // Clear local storage keys belonging to Supabase to prevent stuck token state
       try {
         const keysToRemove = [];
@@ -254,6 +301,12 @@ export const AuthProvider = ({ children }) => {
         console.error('Error clearing local storage keys:', e);
       }
     }
+  };
+
+  const retrySessionRecovery = async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    await applySession(session);
   };
 
   // Password Reset Request
@@ -294,9 +347,11 @@ export const AuthProvider = ({ children }) => {
     user,
     profile,
     loading,
+    sessionRecoveryRequired,
     signUp,
     login,
     logout,
+    retrySessionRecovery,
     resetPassword,
     updateProfile,
     updateUserMetadata,
