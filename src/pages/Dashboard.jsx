@@ -38,7 +38,10 @@ import {
   MessageSquare,
   Star,
   Send,
-  Trash2
+  Trash2,
+  Sun,
+  Moon,
+  Monitor
 } from 'lucide-react';
 import './Dashboard.css';
 import '../components/Experiences.css';
@@ -293,7 +296,7 @@ const Dashboard = () => {
 
   // Fetch student certificates
   const fetchMyCertificates = useCallback(async () => {
-    if (!user) return;
+    if (!user?.id) return;
     try {
       const { data, error } = await supabase
         .from('certificates')
@@ -306,22 +309,14 @@ const Dashboard = () => {
       console.error('Error fetching certificates:', err.message);
       setMyCertificates([]);
     }
-  }, [user]);
+  }, [user?.id]);
 
-  // Run cleanup and load certificates on mount
+  // Expired-certificate cleanup is a privileged server/cron task. Students only read their list.
   useEffect(() => {
-    const runCleanupAndFetch = async () => {
-      try {
-        await supabase.rpc('clean_expired_certificates');
-      } catch (err) {
-        console.warn('RPC clean_expired_certificates not available:', err.message);
-      }
-      await fetchMyCertificates();
-    };
-    if (user) {
-      runCleanupAndFetch();
+    if (user?.id) {
+      void fetchMyCertificates();
     }
-  }, [user, fetchMyCertificates]);
+  }, [user?.id, fetchMyCertificates]);
 
 
 
@@ -1721,17 +1716,17 @@ const Dashboard = () => {
                 </div>
                 <div className="theme-selector-row">
                   {[
-                    { value: 'light', label: 'Claro' },
-                    { value: 'dark',  label: 'Oscuro' },
-                    { value: 'system', label: 'Sistema' },
-                  ].map(({ value, label }) => (
+                    { value: 'light', label: 'Claro', icon: Sun },
+                    { value: 'dark',  label: 'Oscuro', icon: Moon },
+                    { value: 'system', label: 'Sistema', icon: Monitor },
+                  ].map(({ value, label, icon }) => (
                     <button
                       key={value}
                       type="button"
                       className={`theme-option-btn${theme === value ? ' active' : ''}`}
                       onClick={() => setTheme(value)}
                     >
-                      <Icon size={20} />
+                      {React.createElement(icon, { size: 20 })}
                       <span>{label}</span>
                     </button>
                   ))}

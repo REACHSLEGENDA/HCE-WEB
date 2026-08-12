@@ -63,6 +63,11 @@ DROP POLICY IF EXISTS "Los usuarios pueden actualizar su propio perfil" ON publi
 CREATE POLICY "Los usuarios pueden actualizar su propio perfil" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Usuarios crean su propio perfil de estudiante" ON public.profiles;
+CREATE POLICY "Usuarios crean su propio perfil de estudiante" ON public.profiles
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = id AND rol = 'estudiante');
+
 -- 4. FUNCIÓN DISPARADORA (TRIGGER FUNCTION)
 -- Esta función se ejecuta automáticamente cuando Supabase Auth registra un
 -- nuevo usuario en el sistema. Toma el email y los metadatos de registro 
@@ -225,6 +230,9 @@ BEGIN
   WHERE expires_at < now();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+REVOKE EXECUTE ON FUNCTION public.clean_expired_certificates() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.clean_expired_certificates() TO service_role;
 
 
 -- ====================================================================
@@ -571,4 +579,3 @@ ON public.form_submissions
 FOR SELECT 
 TO authenticated 
 USING ( public.is_admin() );
-

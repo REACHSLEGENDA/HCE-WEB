@@ -74,21 +74,57 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.warn('No se pudo cargar el perfil:', error.message);
         setProfile(null);
         return null;
-      } else {
-        const safeProfile = await migrateLegacyAvatar(userId, data, authUser);
-        setProfile(safeProfile);
-        return safeProfile;
       }
+
+      if (!data && authUser?.email) {
+        const metadata = authUser.user_metadata || {};
+        const recoveredProfile = {
+          id: userId,
+          email: authUser.email,
+          nombre_completo: metadata.nombre_completo || metadata.full_name || '',
+          telefono: metadata.telefono || '',
+          pais: metadata.pais || '',
+          estado: metadata.estado || '',
+          grado: metadata.grado || '',
+          especialidad: metadata.especialidad || '',
+          institucion: metadata.institucion || '',
+          cargo: metadata.cargo || '',
+          rol: 'estudiante'
+        };
+
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert(recoveredProfile)
+          .select('*')
+          .single();
+
+        if (createError) {
+          console.warn('El usuario no tiene perfil y no se pudo reconstruir:', createError.message);
+          setProfile(null);
+          return null;
+        }
+
+        data = createdProfile;
+      }
+
+      if (!data) {
+        setProfile(null);
+        return null;
+      }
+
+      const safeProfile = await migrateLegacyAvatar(userId, data, authUser);
+      setProfile(safeProfile);
+      return safeProfile;
     } catch (err) {
       console.error('Error de red al cargar el perfil:', err);
       setProfile(null);

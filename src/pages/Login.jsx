@@ -306,6 +306,7 @@ const Login = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                     required
                   />
                   <button
@@ -488,6 +489,7 @@ const Login = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
                     minLength={6}
                     required
                   />
@@ -511,6 +513,7 @@ const Login = () => {
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
                     minLength={6}
                     required
                   />

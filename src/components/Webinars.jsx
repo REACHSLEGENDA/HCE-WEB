@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useInView } from 'react-intersection-observer';
 import { CalendarDays } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { publicSupabase } from '../lib/supabase';
 import './Webinars.css';
 
 const WebinarCard = ({ image, title, date, time, link, enVivo }) => {
@@ -37,7 +36,7 @@ const Webinars = () => {
   useEffect(() => {
     const loadWebinars = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await publicSupabase
           .from('webinars')
           .select('*')
           .order('created_at', { ascending: true });
