@@ -24,8 +24,6 @@ import {
   X,
   Eye,
   EyeOff,
-  Sun,
-  Moon,
   Monitor,
   UserPlus,
   Lock,
@@ -139,8 +137,6 @@ const AdminDashboard = () => {
   // Student activity and progress surveillance states
   const [studentActivities, setStudentActivities] = useState([]);
   const [studentProgressList, setStudentProgressList] = useState([]);
-  const [loadingTracking, setLoadingTracking] = useState(false);
-  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [reportsSubTab, setReportsSubTab] = useState('dashboard_general');
 
   // Facturacion requests
@@ -315,7 +311,6 @@ const AdminDashboard = () => {
   const [loadingPayments, setLoadingPayments] = useState(true);
   const [paymentsError, setPaymentsError] = useState(null);
   const [loadingForms, setLoadingForms] = useState(true);
-  const [formsError, setFormsError] = useState(null);
   const [paymentSortOrder, setPaymentSortOrder] = useState('desc'); // 'desc' | 'asc'
   const [formSortOrder, setFormSortOrder] = useState('desc'); // 'desc' | 'asc'
 
@@ -430,13 +425,13 @@ const AdminDashboard = () => {
           const processed = processAndFilterList(merged, 'payment');
           setStripePayments(processed);
           localStorage.setItem('admin_imported_stripe_payments', JSON.stringify(processed));
-          showToast('success', `${filteredImported.length} transacciones importadas correctamente (Posteriores a Mayo 2026)`);
+          showToast(`${filteredImported.length} transacciones importadas correctamente (Posteriores a Mayo 2026)`, 'success');
         } else {
-          showToast('error', 'No se encontraron transacciones válidas posteriores a Mayo 2026');
+          showToast('No se encontraron transacciones válidas posteriores a Mayo 2026', 'error');
         }
       } catch (err) {
         console.error('Import error:', err);
-        showToast('error', 'Error al importar archivo: ' + err.message);
+        showToast('Error al importar archivo: ' + err.message, 'error');
       }
     };
     reader.readAsText(file);
@@ -472,13 +467,13 @@ const AdminDashboard = () => {
           const processed = processAndFilterList(merged, 'form');
           setFormSubmissions(processed);
           localStorage.setItem('admin_imported_form_submissions', JSON.stringify(processed));
-          showToast('success', `${filteredImported.length} envíos de formularios importados correctamente (Posteriores a Mayo 2026)`);
+          showToast(`${filteredImported.length} envíos de formularios importados correctamente (Posteriores a Mayo 2026)`, 'success');
         } else {
-          showToast('error', 'No se encontraron formularios válidos posteriores a Mayo 2026');
+          showToast('No se encontraron formularios válidos posteriores a Mayo 2026', 'error');
         }
       } catch (err) {
         console.error('Import error:', err);
-        showToast('error', 'Error al importar archivo: ' + err.message);
+        showToast('Error al importar archivo: ' + err.message, 'error');
       }
     };
     reader.readAsText(file);
@@ -553,10 +548,8 @@ const AdminDashboard = () => {
       const processed = processAndFilterList(merged, 'form');
       setFormSubmissions(processed);
       localStorage.setItem('admin_imported_form_submissions', JSON.stringify(processed));
-      setFormsError(null);
     } catch (err) {
       console.warn('Could not load real form submissions:', err.message);
-      setFormsError(err.message);
       const processed = processAndFilterList(formSubmissions, 'form');
       setFormSubmissions(processed);
       localStorage.setItem('admin_imported_form_submissions', JSON.stringify(processed));
@@ -570,6 +563,8 @@ const AdminDashboard = () => {
       fetchRealStripePayments();
       fetchRealFormSubmissions();
     }
+    // Refresh only when the tab opens; these functions intentionally use that render's snapshot.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   useEffect(() => {
@@ -583,6 +578,8 @@ const AdminDashboard = () => {
       const processed = processAndFilterList(JSON.parse(savedForms), 'form');
       localStorage.setItem('admin_imported_form_submissions', JSON.stringify(processed));
     }
+    // One-time cleanup of previously imported local data.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [newStudentForm, setNewStudentForm] = useState(() => {
@@ -713,7 +710,6 @@ const AdminDashboard = () => {
       await fetchProfiles();
       await fetchCourses();
       await fetchCategories();
-      await fetchCertificates();
       await fetchWebinars();
     };
     initData();
@@ -1274,12 +1270,19 @@ const AdminDashboard = () => {
         .order('id', { ascending: true });
       if (error) throw error;
       
-      const coursesWithQuestions = await Promise.all((dbCourses || []).map(async (c) => {
-        const { data: dbQuestions } = await supabase
-          .from('questions')
-          .select('*')
-          .eq('course_id', c.id)
-          .order('id', { ascending: true });
+      const { data: allQuestions, error: questionsError } = await supabase
+        .from('questions')
+        .select('*')
+        .order('id', { ascending: true });
+      if (questionsError) throw questionsError;
+
+      const questionsByCourse = (allQuestions || []).reduce((grouped, question) => {
+        if (!grouped[question.course_id]) grouped[question.course_id] = [];
+        grouped[question.course_id].push(question);
+        return grouped;
+      }, {});
+
+      const coursesWithQuestions = (dbCourses || []).map((c) => {
         return {
           id: c.id,
           title: c.title,
@@ -1297,9 +1300,9 @@ const AdminDashboard = () => {
           minAprobacion: c.min_aprobacion,
           activo: c.activo,
           category_id: c.category_id,
-          questions: dbQuestions || []
+          questions: questionsByCourse[c.id] || []
         };
-      }));
+      });
       if (dbCourses && dbCourses.length > 0) {
         setCourses(coursesWithQuestions);
         localStorage.setItem('courses', JSON.stringify(coursesWithQuestions));
@@ -1820,7 +1823,6 @@ const AdminDashboard = () => {
   };
 
   const fetchTrackingData = async () => {
-    setLoadingTracking(true);
     let acts = null;
     let prog = null;
 
@@ -1858,12 +1860,16 @@ const AdminDashboard = () => {
         const localActs = {};
         acts.forEach(item => { localActs[item.user_id] = item; });
         localStorage.setItem('backup_all_student_activities', JSON.stringify(localActs));
-      } catch (e) {}
+      } catch (error) {
+        console.warn('No se pudo guardar el respaldo local de actividad:', error.message);
+      }
     } else {
       try {
         const localActs = JSON.parse(localStorage.getItem('backup_all_student_activities') || '{}');
         finalActs = Object.values(localActs);
-      } catch (e) {}
+      } catch (error) {
+        console.warn('No se pudo leer el respaldo local de actividad:', error.message);
+      }
     }
 
     if (prog !== null) {
@@ -1872,18 +1878,21 @@ const AdminDashboard = () => {
         const localProg = {};
         prog.forEach(item => { localProg[`${item.user_id}_${item.course_id}`] = item; });
         localStorage.setItem('backup_all_student_progress', JSON.stringify(localProg));
-      } catch (e) {}
+      } catch (error) {
+        console.warn('No se pudo guardar el respaldo local de progreso:', error.message);
+      }
     } else {
       try {
         const localProg = JSON.parse(localStorage.getItem('backup_all_student_progress') || '{}');
         finalProg = Object.values(localProg);
-      } catch (e) {}
+      } catch (error) {
+        console.warn('No se pudo leer el respaldo local de progreso:', error.message);
+      }
     }
 
     // Set the state
     setStudentActivities(finalActs);
     setStudentProgressList(finalProg);
-    setLoadingTracking(false);
   };
 
   const handleIssueCertificate = async (userId, courseId, score = 100) => {
@@ -4530,9 +4539,17 @@ const AdminDashboard = () => {
             
             // Local storage activities and progress fallback
             let localActivities = {};
-            try { localActivities = JSON.parse(localStorage.getItem('backup_all_student_activities') || '{}'); } catch (e) {}
+            try {
+              localActivities = JSON.parse(localStorage.getItem('backup_all_student_activities') || '{}');
+            } catch (error) {
+              console.warn('Respaldo local de actividad inválido:', error.message);
+            }
             let localProgress = {};
-            try { localProgress = JSON.parse(localStorage.getItem('backup_all_student_progress') || '{}'); } catch (e) {}
+            try {
+              localProgress = JSON.parse(localStorage.getItem('backup_all_student_progress') || '{}');
+            } catch (error) {
+              console.warn('Respaldo local de progreso inválido:', error.message);
+            }
             
             // Map student tracking data
             const studentTrackingList = studentProfiles.map(student => {
@@ -4576,10 +4593,6 @@ const AdminDashboard = () => {
             }).length;
             const completedCount = studentTrackingList.reduce((sum, s) => sum + s.progressList.filter(p => p.completed).length, 0);
             
-            const totalStudySeconds = studentTrackingList.reduce((sum, s) => {
-              return sum + s.progressList.reduce((courseSum, p) => courseSum + (p.timeSpent || 0), 0);
-            }, 0);
-
             const approvalRate = totalEnrollments > 0
               ? Math.round((completedCount / totalEnrollments) * 100)
               : 100;
@@ -5058,7 +5071,7 @@ const AdminDashboard = () => {
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>Basado en finalizados / inscritos</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                          {retentionRanked.slice(0, 4).map((c, i) => (
+                          {retentionRanked.slice(0, 4).map((c) => (
                             <div key={c.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px', padding: '12px', borderRadius: '10px', backgroundColor: 'var(--bg-gray)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-dark)' }}>{c.title}</span>
@@ -5864,10 +5877,10 @@ const AdminDashboard = () => {
                 </div>
                 <div className="theme-selector-row">
                   {[
-                    { value: 'light',  label: 'Claro',   icon: Sun },
-                    { value: 'dark',   label: 'Oscuro',  icon: Moon },
-                    { value: 'system', label: 'Sistema', icon: Monitor },
-                  ].map(({ value, label, icon: Icon }) => (
+                    { value: 'light',  label: 'Claro' },
+                    { value: 'dark',   label: 'Oscuro' },
+                    { value: 'system', label: 'Sistema' },
+                  ].map(({ value, label }) => (
                     <button
                       key={value}
                       type="button"

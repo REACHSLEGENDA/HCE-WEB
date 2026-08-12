@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { supabase } from '../lib/supabase';
+import { getSafeAvatarUrl, uploadAvatar } from '../lib/avatar';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Home,
@@ -28,9 +29,6 @@ import {
   Sparkles,
   Eye,
   EyeOff,
-  Sun,
-  Moon,
-  Monitor,
   Heart,
   Stethoscope,
   HeartPulse,
@@ -126,6 +124,13 @@ const Dashboard = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    e.target.value = '';
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Selecciona un archivo de imagen válido', 'error');
+      return;
+    }
+
     if (file.size > 2 * 1024 * 1024) {
       showToast('La foto de perfil debe ser menor a 2MB', 'error');
       return;
@@ -133,28 +138,19 @@ const Dashboard = () => {
 
     setUploadingAvatar(true);
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result;
-        // 1. Update auth metadata
-        await updateUserMetadata({ avatar_url: base64String });
-        // 2. Try to update profiles table
-        try {
-          await updateProfile({ avatar_url: base64String });
-        } catch (dbErr) {
-          console.warn('Could not update avatar_url in profiles table:', dbErr.message);
-        }
-        showToast('Foto de perfil actualizada correctamente', 'success');
-        setUploadingAvatar(false);
-      };
-      reader.onerror = () => {
-        showToast('Error al leer el archivo de imagen', 'error');
-        setUploadingAvatar(false);
-      };
-      reader.readAsDataURL(file);
+      const publicUrl = await uploadAvatar(supabase, user?.id, file);
+      await updateProfile({ avatar_url: publicUrl });
+
+      // Legacy versions stored the full Base64 image in the JWT. Remove it.
+      if (user?.user_metadata && Object.prototype.hasOwnProperty.call(user.user_metadata, 'avatar_url')) {
+        await updateUserMetadata({ avatar_url: null });
+      }
+
+      showToast('Foto de perfil actualizada correctamente', 'success');
     } catch (err) {
       console.error('Error updating profile picture:', err);
-      showToast('Error al actualizar la foto de perfil', 'error');
+      showToast(err.message || 'Error al actualizar la foto de perfil', 'error');
+    } finally {
       setUploadingAvatar(false);
     }
   };
@@ -412,10 +408,11 @@ const Dashboard = () => {
       if (error) throw error;
       
       // OPTIMIZACIÓN: Cargar todas las preguntas en una sola llamada (Evita el problema de las N+1 peticiones que crashean la carga)
-      const { data: allQuestions } = await supabase
+      const { data: allQuestions, error: questionsError } = await supabase
         .from('questions')
         .select('*')
         .order('id', { ascending: true });
+      if (questionsError) throw questionsError;
       
       // Agrupar preguntas por curso en memoria
       const questionsByCourse = {};
@@ -553,7 +550,7 @@ const Dashboard = () => {
 
       // Supabase
       try {
-        await supabase
+        const { error } = await supabase
           .from('student_activity')
           .upsert({
             user_id: user.id,
@@ -564,8 +561,9 @@ const Dashboard = () => {
             ip_address: ip,
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
+        if (error) throw error;
       } catch (err) {
-        // Fail silently
+        console.warn('No se pudo actualizar el estado de conexión:', err.message);
       }
     };
 
@@ -641,6 +639,7 @@ const Dashboard = () => {
   const avgProgress = numEnrolled > 0 
     ? Math.round(enrolledCourses.reduce((sum, c) => sum + c.progress, 0) / numEnrolled)
     : 0;
+  const avatarUrl = getSafeAvatarUrl(profile?.avatar_url, user?.user_metadata?.avatar_url);
 
   return (
     <div className="crm-layout" data-theme={effectiveTheme}>
@@ -766,8 +765,8 @@ const Dashboard = () => {
             <div className="user-profile-summary">
               <span className="user-greeting">Hola, <strong>{getFirstName()}</strong></span>
               <div className="user-avatar-circle" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {user?.user_metadata?.avatar_url ? (
-                  <img src={user.user_metadata.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                 ) : (
                   profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'
                 )}
@@ -787,8 +786,8 @@ const Dashboard = () => {
               <div ref={bannerRef} className="welcome-banner-card">
                 <div className="welcome-avatar-wrapper">
                   <div className="welcome-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {user?.user_metadata?.avatar_url ? (
-                      <img src={user.user_metadata.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                     ) : (
                       profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'
                     )}
@@ -1381,9 +1380,9 @@ const Dashboard = () => {
                       onClick={() => document.getElementById('profile-avatar-upload').click()}
                       title="Haz clic para cambiar foto de perfil"
                     >
-                      {user?.user_metadata?.avatar_url ? (
+                      {avatarUrl ? (
                         <img 
-                          src={user.user_metadata.avatar_url} 
+                          src={avatarUrl}
                           alt="Foto de perfil" 
                           style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
                         />
@@ -1415,6 +1414,7 @@ const Dashboard = () => {
                       accept="image/*"
                       style={{ display: 'none' }}
                       onChange={handleAvatarUpload}
+                      disabled={uploadingAvatar}
                     />
                     <h3>{profile?.nombre_completo || 'Usuario HCE'}</h3>
                     <span className="user-role-badge">Estudiante</span>
@@ -1721,10 +1721,10 @@ const Dashboard = () => {
                 </div>
                 <div className="theme-selector-row">
                   {[
-                    { value: 'light', label: 'Claro', icon: Sun },
-                    { value: 'dark',  label: 'Oscuro', icon: Moon },
-                    { value: 'system', label: 'Sistema', icon: Monitor },
-                  ].map(({ value, label, icon: Icon }) => (
+                    { value: 'light', label: 'Claro' },
+                    { value: 'dark',  label: 'Oscuro' },
+                    { value: 'system', label: 'Sistema' },
+                  ].map(({ value, label }) => (
                     <button
                       key={value}
                       type="button"

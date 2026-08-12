@@ -25,6 +25,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { supabase } from '../lib/supabase';
+import { getSafeAvatarUrl } from '../lib/avatar';
 import { getFlagUrl } from '../data/countries';
 import './Comunidad.css';
 
@@ -122,6 +123,7 @@ const Comunidad = () => {
   });
 
   const { user, profile } = useAuth();
+  const currentUserAvatarUrl = getSafeAvatarUrl(profile?.avatar_url, user?.user_metadata?.avatar_url);
   const { showToast, showConfirm } = useNotification();
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
@@ -280,7 +282,7 @@ const Comunidad = () => {
         created_at: new Date().toISOString(),
         profiles: {
           nombre_completo: profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email,
-          avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url,
+          avatar_url: currentUserAvatarUrl,
           pais: profile?.pais || user?.user_metadata?.pais,
           grado: profile?.grado || user?.user_metadata?.grado,
           cargo: profile?.cargo || user?.user_metadata?.cargo,
@@ -420,7 +422,7 @@ const Comunidad = () => {
                     {testimonials.map(item => {
                       const author = item.profiles || {};
                       const authorName = author.nombre_completo || 'Usuario HCE';
-                      const authorAvatar = author.avatar_url;
+                      const authorAvatar = getSafeAvatarUrl(author.avatar_url);
                       const authorCountry = author.pais;
                       const authorDegree = author.grado || 'Estudiante';
                       const authorCargo = author.cargo;
@@ -498,7 +500,7 @@ const Comunidad = () => {
                               if (item.image_url.startsWith('[')) {
                                 try {
                                   images = JSON.parse(item.image_url);
-                                } catch (e) {
+                                } catch {
                                   images = [item.image_url];
                                 }
                               } else {
@@ -603,8 +605,8 @@ const Comunidad = () => {
 
                       <div className="forum-profile-hint">
                         <div className="hint-avatar">
-                          {user?.user_metadata?.avatar_url ? (
-                            <img src={user.user_metadata.avatar_url} alt="Mi perfil" />
+                          {currentUserAvatarUrl ? (
+                            <img src={currentUserAvatarUrl} alt="Mi perfil" />
                           ) : (
                             profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'
                           )}

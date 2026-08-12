@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { getSafeAvatarUrl } from '../lib/avatar';
 import { 
   ArrowLeft, 
   Clock, 
@@ -51,6 +52,7 @@ const Classroom = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { showToast, showAlert, showConfirm } = useNotification();
+  const currentUserAvatarUrl = getSafeAvatarUrl(profile?.avatar_url, user?.user_metadata?.avatar_url);
 
   const playerRef = useRef(null);
   const progressIntervalRef = useRef(null);
@@ -167,11 +169,12 @@ const Classroom = () => {
         if (cError) throw cError;
 
         // Fetch questions
-        const { data: dbQuestions } = await supabase
+        const { data: dbQuestions, error: questionsError } = await supabase
           .from('questions')
           .select('*')
           .eq('course_id', c.id)
           .order('id', { ascending: true });
+        if (questionsError) throw questionsError;
 
         const courseData = {
           id: c.id,
@@ -210,10 +213,11 @@ const Classroom = () => {
 
       // Fetch all courses for recommendations
       try {
-        const { data: dbCourses } = await supabase
+        const { data: dbCourses, error: catalogError } = await supabase
           .from('courses')
           .select('*')
           .order('id', { ascending: true });
+        if (catalogError) throw catalogError;
         if (dbCourses) {
           setCatalogCourses(dbCourses.filter(c => c.activo !== false));
         } else {
@@ -316,7 +320,7 @@ const Classroom = () => {
         created_at: new Date().toISOString(),
         profiles: {
           nombre_completo: profile?.nombre_completo || user.user_metadata?.nombre_completo || user.email,
-          avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url,
+          avatar_url: currentUserAvatarUrl,
           rol: profile?.rol || 'estudiante',
           grado: profile?.grado,
           pais: profile?.pais
@@ -373,7 +377,7 @@ const Classroom = () => {
         created_at: new Date().toISOString(),
         profiles: {
           nombre_completo: profile?.nombre_completo || user.user_metadata?.nombre_completo || user.email,
-          avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url,
+          avatar_url: currentUserAvatarUrl,
           rol: profile?.rol || 'estudiante',
           grado: profile?.grado,
           pais: profile?.pais
@@ -533,58 +537,7 @@ const Classroom = () => {
     localStorage.setItem(`showExam_${user.id}_${id}`, showExam);
   }, [showExam, id, user?.id]);
 
-  // Sincronizar progreso con Supabase y localStorage para administración
-  useEffect(() => {
-    if (!user?.id || !course?.id) return;
-
-    const syncProgress = async () => {
-      const totalTimeSpent = initialTimeSpentRef.current + accumulatedTimeSpentRef.current;
-      const currentWatchPercent = watchPercentRef.current; // Usar el ref actual para evitar re-renders
-
-      try {
-        const allKey = 'backup_all_student_progress';
-        const savedAll = localStorage.getItem(allKey);
-        const allProgress = savedAll ? JSON.parse(savedAll) : {};
-        
-        const progressKey = `${user.id}_${course.id}`;
-        allProgress[progressKey] = {
-          user_id: user.id,
-          course_id: course.id,
-          watch_percent: currentWatchPercent,
-          time_spent: totalTimeSpent,
-          updated_at: new Date().toISOString()
-        };
-        localStorage.setItem(allKey, JSON.stringify(allProgress));
-      } catch (err) {
-        console.warn('Error saving local progress:', err);
-      }
-
-      try {
-        await supabase
-          .from('student_progress')
-          .upsert({
-            user_id: user.id,
-            course_id: course.id,
-            watch_percent: currentWatchPercent,
-            time_spent: totalTimeSpent,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id,course_id' });
-      } catch (err) {
-        // Fail silently
-      }
-    };
-
-    // Sincronizar cada 15 segundos para evitar ataque DDoS a Supabase
-    const timer = setInterval(syncProgress, 15000);
-    
-    // También sincronizar una vez al inicio o al desmontar (limpieza)
-    return () => {
-      clearInterval(timer);
-      syncProgress();
-    };
-  }, [user?.id, course?.id]);
-
-  // Heartbeat para registrar la actividad de la clase en vivo y acumular tiempo de estudio por curso
+  // Un solo ciclo sincroniza actividad y progreso para evitar escrituras duplicadas.
   useEffect(() => {
     if (!user?.id || !course?.id || !course?.title) return;
 
@@ -646,19 +599,24 @@ const Classroom = () => {
             initTimeSpent = allProgress[progressKey].time_spent || 0;
           }
         }
-      } catch (e) {}
+      } catch (error) {
+        console.warn('No se pudo leer el respaldo local de progreso:', error.message);
+      }
 
       try {
-        const { data: dbProg } = await supabase
+        const { data: dbProg, error: progressError } = await supabase
           .from('student_progress')
           .select('time_spent')
           .eq('user_id', user.id)
           .eq('course_id', course.id)
           .maybeSingle();
+        if (progressError) throw progressError;
         if (dbProg && dbProg.time_spent > initTimeSpent) {
           initTimeSpent = dbProg.time_spent;
         }
-      } catch (e) {}
+      } catch (error) {
+        console.warn('No se pudo cargar el tiempo inicial del curso:', error.message);
+      }
       initialTimeSpentRef.current = initTimeSpent;
 
       let initSessionDuration = 0;
@@ -671,62 +629,24 @@ const Classroom = () => {
             initSessionDuration = allActs[user.id].session_duration || 0;
           }
         }
-      } catch (e) {}
+      } catch (error) {
+        console.warn('No se pudo leer el respaldo local de actividad:', error.message);
+      }
 
       try {
-        const { data: dbAct } = await supabase
+        const { data: dbAct, error: activityError } = await supabase
           .from('student_activity')
           .select('session_duration')
           .eq('user_id', user.id)
           .maybeSingle();
+        if (activityError) throw activityError;
         if (dbAct && dbAct.session_duration > initSessionDuration) {
           initSessionDuration = dbAct.session_duration;
         }
-      } catch (e) {}
+      } catch (error) {
+        console.warn('No se pudo cargar la duración inicial de la sesión:', error.message);
+      }
       initialSessionDurationRef.current = initSessionDuration;
-    };
-
-    // Updates student_activity to mark user online (without modifying session duration)
-    const saveActiveState = async () => {
-      const action = getActionText();
-      const { browser, device } = getBrowserAndOS();
-      const ip = getMockIP(user.id);
-
-      try {
-        const allKey = 'backup_all_student_activities';
-        const savedAll = localStorage.getItem(allKey);
-        const allActivities = savedAll ? JSON.parse(savedAll) : {};
-        
-        allActivities[user.id] = {
-          ...allActivities[user.id],
-          user_id: user.id,
-          last_active_at: new Date().toISOString(),
-          current_action: action,
-          browser,
-          device,
-          ip_address: ip,
-          updated_at: new Date().toISOString()
-        };
-        localStorage.setItem(allKey, JSON.stringify(allActivities));
-      } catch (err) {
-        console.warn('Error saving local activity:', err);
-      }
-
-      try {
-        await supabase
-          .from('student_activity')
-          .upsert({
-            user_id: user.id,
-            last_active_at: new Date().toISOString(),
-            current_action: action,
-            browser,
-            device,
-            ip_address: ip,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id' });
-      } catch (err) {
-        // Fail silently
-      }
     };
 
     // Calculate elapsed time, add to accumulated totals, and sync both tables to DB
@@ -770,7 +690,7 @@ const Classroom = () => {
       }
 
       try {
-        await supabase
+        const { error: activityError } = await supabase
           .from('student_activity')
           .upsert({
             user_id: user.id,
@@ -782,8 +702,9 @@ const Classroom = () => {
             ip_address: ip,
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
-      } catch (err) {
-        // Fail silently
+        if (activityError) throw activityError;
+      } catch (error) {
+        console.warn('No se pudo sincronizar la actividad del alumno:', error.message);
       }
 
       try {
@@ -805,7 +726,7 @@ const Classroom = () => {
       }
 
       try {
-        await supabase
+        const { error: progressError } = await supabase
           .from('student_progress')
           .upsert({
             user_id: user.id,
@@ -814,25 +735,41 @@ const Classroom = () => {
             time_spent: totalTimeSpent,
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id,course_id' });
-      } catch (err) {
-        // Fail silently
+        if (progressError) throw progressError;
+      } catch (error) {
+        console.warn('No se pudo sincronizar el progreso del alumno:', error.message);
       }
     };
 
-    // Load initial data and connect immediately
-    loadInitialDurations().then(() => {
-      saveActiveState();
+    let initialized = false;
+    let finished = false;
+    let disposed = false;
+
+    void loadInitialDurations().then(() => {
+      if (disposed) return;
+      initialized = true;
+      return syncProgressAndActivity(true);
     });
 
-    const handleBeforeUnload = () => {
-      syncProgressAndActivity(false);
+    const timer = setInterval(() => {
+      if (initialized && !finished) {
+        void syncProgressAndActivity(true);
+      }
+    }, 15000);
+
+    const finishTracking = () => {
+      if (!initialized || finished) return;
+      finished = true;
+      void syncProgressAndActivity(false);
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', finishTracking);
 
     return () => {
-      syncProgressAndActivity(false);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      clearInterval(timer);
+      finishTracking();
+      disposed = true;
+      window.removeEventListener('pagehide', finishTracking);
     };
   }, [user?.id, course?.id, course?.title, showExam]);
 
@@ -1044,9 +981,9 @@ const Classroom = () => {
           <div className="classroom-user-profile">
             <span style={{ fontSize: '0.9rem' }}>Estás cursando como <strong>{getFirstName()}</strong></span>
             <div className="classroom-user-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {user?.user_metadata?.avatar_url ? (
+              {currentUserAvatarUrl ? (
                 <img 
-                  src={user.user_metadata.avatar_url} 
+                  src={currentUserAvatarUrl}
                   alt="Avatar" 
                   style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
                 />
@@ -1301,7 +1238,7 @@ const Classroom = () => {
                     .map(q => {
                       const qAuthor = q.profiles || {};
                       const qAuthorName = qAuthor.nombre_completo || 'Usuario HCE';
-                      const qAuthorAvatar = qAuthor.avatar_url;
+                      const qAuthorAvatar = getSafeAvatarUrl(qAuthor.avatar_url);
                       const qAuthorRol = qAuthor.rol || 'estudiante';
                       const qAuthorGrado = qAuthor.grado;
                       const qAuthorPais = qAuthor.pais;
@@ -1371,7 +1308,7 @@ const Classroom = () => {
                               {qReplies.map(r => {
                                 const rAuthor = r.profiles || {};
                                 const rAuthorName = rAuthor.nombre_completo || 'Usuario HCE';
-                                const rAuthorAvatar = rAuthor.avatar_url;
+                                const rAuthorAvatar = getSafeAvatarUrl(rAuthor.avatar_url);
                                 const rAuthorRol = rAuthor.rol || 'estudiante';
                                 const rAuthorGrado = rAuthor.grado;
                                 const rAuthorPais = rAuthor.pais;

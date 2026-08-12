@@ -86,7 +86,7 @@ BEGIN
     coalesce(new.raw_user_meta_data->>'especialidad', ''),
     coalesce(new.raw_user_meta_data->>'institucion', ''),
     coalesce(new.raw_user_meta_data->>'cargo', ''),
-    coalesce(new.raw_user_meta_data->>'avatar_url', '')
+    '' -- Los avatares se guardan en Storage; nunca dentro del JWT
   );
   RETURN new;
 END;
@@ -251,6 +251,52 @@ DROP POLICY IF EXISTS "Permitir borrado de certificados" ON storage.objects;
 CREATE POLICY "Permitir borrado de certificados" ON storage.objects
   FOR DELETE USING (bucket_id = 'certificates');
 
+-- Bucket público para avatares. Cada usuario solo puede modificar su carpeta.
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'avatars',
+  'avatars',
+  true,
+  2097152,
+  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+ON CONFLICT (id) DO UPDATE SET
+  public = EXCLUDED.public,
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+DROP POLICY IF EXISTS "Lectura publica de avatares HCE" ON storage.objects;
+CREATE POLICY "Lectura publica de avatares HCE" ON storage.objects
+  FOR SELECT USING (bucket_id = 'avatars');
+
+DROP POLICY IF EXISTS "Usuarios suben su avatar HCE" ON storage.objects;
+CREATE POLICY "Usuarios suben su avatar HCE" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+DROP POLICY IF EXISTS "Usuarios actualizan su avatar HCE" ON storage.objects;
+CREATE POLICY "Usuarios actualizan su avatar HCE" ON storage.objects
+  FOR UPDATE TO authenticated
+  USING (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  )
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+DROP POLICY IF EXISTS "Usuarios borran su avatar HCE" ON storage.objects;
+CREATE POLICY "Usuarios borran su avatar HCE" ON storage.objects
+  FOR DELETE TO authenticated
+  USING (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
 -- 3. Asegurar que la columna 'link' existe si la tabla ya había sido creada anteriormente
 ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS link TEXT;
 
@@ -362,7 +408,7 @@ BEGIN
     coalesce(new.raw_user_meta_data->>'especialidad', ''),
     coalesce(new.raw_user_meta_data->>'institucion', ''),
     coalesce(new.raw_user_meta_data->>'cargo', ''),
-    coalesce(new.raw_user_meta_data->>'avatar_url', '')
+    '' -- Los avatares se guardan en Storage; nunca dentro del JWT
   );
   RETURN new;
 END;
@@ -525,5 +571,4 @@ ON public.form_submissions
 FOR SELECT 
 TO authenticated 
 USING ( public.is_admin() );
-
 
