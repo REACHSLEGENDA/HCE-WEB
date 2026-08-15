@@ -267,9 +267,10 @@ const Nursing = () => {
 
             <button 
               className="n-hero-cta-btn" 
-              onClick={() => navigate('/inscripciones-ecmo-nursing')}
+              disabled
+              style={{ cursor: 'not-allowed', backgroundColor: '#475569', borderColor: '#475569' }}
             >
-              INSCRÍBETE AHORA
+              SOLD OUT - Próximamente inscripciones 3era ed.
             </button>
           </div>
         </div>
@@ -298,8 +299,8 @@ const Nursing = () => {
                   <span className="section-badge badge-limited" style={{ fontSize: '0.65rem', padding: '0.35rem 0.9rem', marginBottom: '0.8rem', display: 'inline-flex' }}>CUPO LIMITADO</span>
                   <h4>ECMO Nursing Care Course</h4>
                   <p>Asegura tu lugar en el programa líder de alta especialización en cuidado de enfermería en ECMO.</p>
-                  <button className="n-btn n-btn-brand" onClick={() => navigate('/inscripciones-ecmo-nursing')}>
-                    Inscríbete Ahora <ArrowRight size={18} />
+                  <button className="n-btn n-btn-brand" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', opacity: 0.8 }}>
+                    SOLD OUT - Próximamente 3era ed.
                   </button>
                 </div>
               </div>
@@ -380,7 +381,7 @@ const Nursing = () => {
                   </div>
                 </div>
               </div>
-              <button className="n-phase-btn-red" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscripciones Abiertas</button>
+              <button className="n-phase-btn-red" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569' }}>SOLD OUT - Próximamente 3era ed.</button>
             </div>
 
             {/* Card 2 — 100% Presencial */}
@@ -531,11 +532,11 @@ const Nursing = () => {
               <p>Aprendizaje sincrónico y asincrónico a través de nuestra plataforma virtual. Cubre de manera progresiva los fundamentos del soporte ECMO, Fisiología y Hemodinamia Aplicada, Monitoreo Integral del Binomio Paciente-Circuito, Detección Precoz de Complicaciones.</p>
               <div style={{ marginTop: '1.2rem', textAlign: 'left' }}>
                 <button 
-                  className="n-btn n-btn-brand" 
-                  onClick={() => navigate('/inscripciones-ecmo-nursing')}
-                  style={{ padding: '0.6rem 1.4rem', fontSize: '0.82rem', borderRadius: '30px' }}
+                  className="n-phase-btn-red" 
+                  disabled 
+                  style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569', padding: '0.6rem 1.4rem', fontSize: '0.82rem', borderRadius: '30px' }}
                 >
-                  ¡Inscríbete ya!
+                  SOLD OUT - Próximamente inscripciones 3era ed.
                 </button>
               </div>
             </div>
@@ -922,7 +923,7 @@ const Nursing = () => {
           </div>
           
           <div className="n-section-cta">
-            <button className="n-sales-btn large" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscribirme al Curso Ahora <ArrowRight size={20} /></button>
+            <button className="n-sales-btn large" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569' }}>SOLD OUT - Próximamente 3era ed.</button>
           </div>
         </div>
       </section>
@@ -1019,16 +1020,7 @@ const Nursing = () => {
               {
                 q: "¿Cómo puedo inscribirme?",
                 a: (
-                  <>
-                    ¡Es muy sencillo! Puedes asegurar tu lugar de inmediato haciendo{' '}
-                    <a 
-                      href="/inscripciones-ecmo-nursing" 
-                      onClick={(e) => { e.preventDefault(); navigate('/inscripciones-ecmo-nursing'); }} 
-                      style={{ color: '#00d2ff', textDecoration: 'underline', fontWeight: 'bold' }}
-                    >
-                      clic aquí
-                    </a>{' '}
-                    para acceder directamente a nuestro formulario de registro y pasarela de pago seguro.
+                    Las inscripciones se encuentran actualmente <strong>SOLD OUT</strong>. Mantente atento a nuestras redes sociales para el anuncio de la 3era edición.
                   </>
                 )
               }
@@ -1074,7 +1066,7 @@ const Nursing = () => {
               <h2>Fortalece tu práctica. <span className="red-text">Salva más vidas.</span></h2>
               <p>Formación de alta especialidad en ECMO, liderada por enfermería, para enfermería.</p>
               <div className="n-final-actions">
-                <button className="btn-buy-final" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Reserva tu lugar <ArrowRight size={18} /></button>
+                <button className="btn-buy-final" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff' }}>SOLD OUT - Próximamente 3era ed.</button>
                 <button className="btn-info-final" onClick={() => {
                   const el = document.getElementById('temario-section');
                   if (el) el.scrollIntoView({ behavior: 'smooth' });

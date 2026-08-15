@@ -80,8 +80,7 @@ const FAQ_NURSING = [
     q: '¿Cómo puedo inscribirme?',
     a: (
       <>
-        ¡Es muy sencillo! Puedes asegurar tu lugar de inmediato accediendo directamente a nuestro formulario de registro y pasarela de pago seguro.{' '}
-        <a href="/inscripciones-ecmo-nursing" style={{ color: '#e31837', fontWeight: 700 }}>Inscríbete aquí →</a>
+        Las inscripciones se encuentran actualmente <strong>SOLD OUT</strong>. Mantente atento a nuestras redes sociales para el anuncio de la 3era edición.
         <br /><br />
         <em>📩 ¿Tienes otra duda? Escríbenos a <strong>info@healthcareexp.com</strong> o utiliza el botón de WhatsApp. ¡Nuestro equipo de admisiones te atenderá de inmediato!</em>
       </>
