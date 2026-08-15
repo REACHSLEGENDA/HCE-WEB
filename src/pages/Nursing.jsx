@@ -1020,6 +1020,7 @@ const Nursing = () => {
               {
                 q: "¿Cómo puedo inscribirme?",
                 a: (
+                  <>
                     Las inscripciones se encuentran actualmente <strong>SOLD OUT</strong>. Mantente atento a nuestras redes sociales para el anuncio de la 3era edición.
                   </>
                 )
