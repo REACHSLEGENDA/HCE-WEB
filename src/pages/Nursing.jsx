@@ -270,7 +270,7 @@ const Nursing = () => {
               disabled
               style={{ cursor: 'not-allowed', backgroundColor: '#475569', borderColor: '#475569' }}
             >
-              SOLD OUT - Próximamente inscripciones 3era ed.
+              ¡SOLD OUT! 🚀 Próximamente 3.ª Edición
             </button>
           </div>
         </div>
@@ -300,7 +300,7 @@ const Nursing = () => {
                   <h4>ECMO Nursing Care Course</h4>
                   <p>Asegura tu lugar en el programa líder de alta especialización en cuidado de enfermería en ECMO.</p>
                   <button className="n-btn n-btn-brand" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', opacity: 0.8 }}>
-                    SOLD OUT - Próximamente 3era ed.
+                    ¡SOLD OUT! 🚀 Próximamente 3.ª Edición
                   </button>
                 </div>
               </div>
@@ -381,7 +381,7 @@ const Nursing = () => {
                   </div>
                 </div>
               </div>
-              <button className="n-phase-btn-red" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569' }}>SOLD OUT - Próximamente 3era ed.</button>
+              <button className="n-phase-btn-red" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569' }}>¡SOLD OUT! 🚀 Próximamente 3.ª Edición</button>
             </div>
 
             {/* Card 2 — 100% Presencial */}
@@ -536,7 +536,7 @@ const Nursing = () => {
                   disabled 
                   style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569', padding: '0.6rem 1.4rem', fontSize: '0.82rem', borderRadius: '30px' }}
                 >
-                  SOLD OUT - Próximamente inscripciones 3era ed.
+                  ¡SOLD OUT! 🚀 Próximamente 3.ª Edición
                 </button>
               </div>
             </div>
@@ -923,7 +923,7 @@ const Nursing = () => {
           </div>
           
           <div className="n-section-cta">
-            <button className="n-sales-btn large" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569' }}>SOLD OUT - Próximamente 3era ed.</button>
+            <button className="n-sales-btn large" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569' }}>¡SOLD OUT! 🚀 Próximamente 3.ª Edición</button>
           </div>
         </div>
       </section>
@@ -1066,7 +1066,7 @@ const Nursing = () => {
               <h2>Fortalece tu práctica. <span className="red-text">Salva más vidas.</span></h2>
               <p>Formación de alta especialidad en ECMO, liderada por enfermería, para enfermería.</p>
               <div className="n-final-actions">
-                <button className="btn-buy-final" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff' }}>SOLD OUT - Próximamente 3era ed.</button>
+                <button className="btn-buy-final" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff' }}>¡SOLD OUT! 🚀 Próximamente 3.ª Edición</button>
                 <button className="btn-info-final" onClick={() => {
                   const el = document.getElementById('temario-section');
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
