@@ -259,11 +259,7 @@ const Nursing = () => {
 
             </div>
 
-            <div style={{ background: 'rgba(227, 24, 55, 0.15)', border: '1px solid rgba(227, 24, 55, 0.4)', borderRadius: '6px', padding: '6px 12px', marginTop: '1.5rem', marginBottom: '2rem', display: 'inline-block' }}>
-              <span style={{ color: '#ffb3b3', fontWeight: 'bold', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                EXTENDIMOS INSCRIPCIONES POR ALTA DEMANDA. ¡AÚN ESTÁS A TIEMPO!
-              </span>
-            </div>
+
 
             <button 
               className="n-hero-cta-btn" 
@@ -296,7 +292,7 @@ const Nursing = () => {
               </div>
               <div className="n-intro-sidebar">
                 <div className="n-intro-card-box">
-                  <span className="section-badge badge-limited" style={{ fontSize: '0.65rem', padding: '0.35rem 0.9rem', marginBottom: '0.8rem', display: 'inline-flex' }}>CUPO LIMITADO</span>
+                  <span className="section-badge badge-limited" style={{ fontSize: '0.65rem', padding: '0.35rem 0.9rem', marginBottom: '0.8rem', display: 'inline-flex' }}>SOLD OUT</span>
                   <h4>ECMO Nursing Care Course</h4>
                   <p>Asegura tu lugar en el programa líder de alta especialización en cuidado de enfermería en ECMO.</p>
                   <button className="n-btn n-btn-brand" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', opacity: 0.8 }}>
@@ -1063,7 +1059,7 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-final-card">
             <div className="n-final-content">
-              <span className="section-badge badge-limited">CUPO LIMITADO</span>
+              <span className="section-badge badge-limited">SOLD OUT</span>
               <h2>Fortalece tu práctica. <span className="red-text">Salva más vidas.</span></h2>
               <p>Formación de alta especialidad en ECMO, liderada por enfermería, para enfermería.</p>
               <div className="n-final-actions">

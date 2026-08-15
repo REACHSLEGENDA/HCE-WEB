@@ -84,9 +84,9 @@ const Experiences = () => {
             description="El primer entrenamiento diseñado por y para enfermería. Lidera con seguridad y criterio clínico el cuidado integral del paciente crítico en soporte ECMO."
             link="/ecmo-nursing-care"
             img="/assets/componentes/expnur.png"
-            badge="INSCRIPCIONES ABIERTAS"
+            badge="SOLD OUT"
             badgeClass="badge-danger"
-            startDate="Inicio: 20 de Julio, 2026"
+            startDate="Próximamente 3.ª Edición"
           />
           <ExperienceCard
             delay={0.3}
