@@ -25,6 +25,8 @@ import {
   Eye,
   EyeOff,
   Monitor,
+  Sun,
+  Moon,
   UserPlus,
   Lock,
   Unlock,
@@ -5877,17 +5879,17 @@ const AdminDashboard = () => {
                 </div>
                 <div className="theme-selector-row">
                   {[
-                    { value: 'light',  label: 'Claro' },
-                    { value: 'dark',   label: 'Oscuro' },
-                    { value: 'system', label: 'Sistema' },
-                  ].map(({ value, label }) => (
+                    { value: 'light',  label: 'Claro', icon: Sun },
+                    { value: 'dark',   label: 'Oscuro', icon: Moon },
+                    { value: 'system', label: 'Sistema', icon: Monitor },
+                  ].map(({ value, label, icon }) => (
                     <button
                       key={value}
                       type="button"
                       className={`theme-option-btn${theme === value ? ' active' : ''}`}
                       onClick={() => setTheme(value)}
                     >
-                      <Icon size={20} />
+                      {React.createElement(icon, { size: 20 })}
                       <span>{label}</span>
                     </button>
                   ))}

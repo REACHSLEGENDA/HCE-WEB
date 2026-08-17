@@ -17,6 +17,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // catalog/webinar requests working even when a legacy authenticated session is invalid.
 export const publicSupabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    storageKey: 'hce-public-anonymous',
     persistSession: false,
     autoRefreshToken: false,
     detectSessionInUrl: false
