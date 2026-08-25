@@ -67,16 +67,6 @@ const Experiences = () => {
         </div>
 
         <div className="experiences-grid-premium">
-          <ExperienceCard 
-            delay={0.1}
-            icon={Heart}
-            title="Diplomado de Manejo de Avanzada en Insuficiencia Cardiaca"
-            description="Domina la trayectoria completa de la insuficiencia cardíaca avanzada: desde la optimización farmacológica y la indicación de soportes circulatorios mecánicos, hasta el trasplante cardíaco. Todo integrado mediante un aprendizaje interactivo y dinámico con HARVI."
-            link="/insuficiencia-cardiaca"
-            img="/assets/componentes/exopins.png"
-            badge="PRÓXIMAMENTE"
-            badgeClass="badge-info"
-          />
           <ExperienceCard
             delay={0.2}
             icon={NurseCap}

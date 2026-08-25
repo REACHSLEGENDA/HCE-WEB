@@ -343,16 +343,6 @@ const Dashboard = () => {
 
   const premiumSponsorCourses = [
     {
-      id: 1,
-      title: 'Diplomado de Manejo de Avanzada en Insuficiencia Cardiaca',
-      description: 'Domina la trayectoria completa de la insuficiencia cardíaca avanzada: desde la optimización farmacológica y la indicación de soportes circulatorios mecánicos, hasta el trasplante cardíaco. Todo integrado mediante un aprendizaje interactivo y dinámico con HARVI.',
-      image: '/assets/componentes/exopins.png',
-      link: '/insuficiencia-cardiaca',
-      badge: 'PRÓXIMAMENTE',
-      badgeClass: 'badge-info',
-      icon: Heart
-    },
-    {
       id: 2,
       title: 'ECMO Nursing Care Course',
       description: 'El primer entrenamiento diseñado por y para enfermería. Lidera con seguridad y criterio clínico el cuidado integral del paciente crítico en soporte ECMO.',

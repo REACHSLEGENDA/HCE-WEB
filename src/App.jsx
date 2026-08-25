@@ -7,7 +7,6 @@ import ParisDiploma from './pages/ParisDiploma';
 import AboutUs from './pages/AboutUs';
 import Nursing from './pages/Nursing';
 import EcmoSim from './pages/EcmoSim';
-import InsuficienciaCardiaca from './pages/InsuficienciaCardiaca';
 import Instructores from './pages/Instructores';
 import Retroalimentacion from './pages/Retroalimentacion';
 import Inscripciones from './pages/Inscripciones';
@@ -80,7 +79,6 @@ function App() {
             <Route path="/quienes-somos" element={<AboutUs />} />
             <Route path="/ecmo-nursing-care" element={<Nursing />} />
             <Route path="/simulador-ecmo-sim" element={<EcmoSim />} />
-            <Route path="/insuficiencia-cardiaca" element={<InsuficienciaCardiaca />} />
             <Route path="/instructores" element={<Instructores />} />
             <Route path="/retroalimentacion" element={<Retroalimentacion />} />
             <Route path="/inscripciones-diploma-paris-ecmo" element={<Inscripciones />} />
