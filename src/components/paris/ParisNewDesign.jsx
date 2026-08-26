@@ -1010,11 +1010,11 @@ const ParisNewDesign = () => {
                             
                             {new Date() < new Date('2026-09-01T00:00:00-06:00') ? (
                                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6 }}>
-                                    ¡Prepárate! Pregunta por nuestras próximas promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad <strong>Solo Step 1</strong>, que estarán disponibles en esas fechas.
+                                    ¡Prepárate! Pregunta por nuestras próximas promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad <strong>Sólo Step 1</strong>, que estarán disponibles en esas fechas.
                                 </p>
                             ) : (
                                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6 }}>
-                                    Aprovecha y pregunta por nuestras promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad ，<strong>Solo Step 1</strong>. ¡Ya están disponibles!
+                                    Aprovecha y pregunta por nuestras promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad <strong>Sólo Step 1</strong>. ¡Ya están disponibles!
                                 </p>
                             )}
                         </div>
