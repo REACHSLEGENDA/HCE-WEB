@@ -264,7 +264,7 @@ export default function Inscripciones() {
           <img 
             src="/assets/paris/logo-teorica.png" 
             alt="Certificación Teórica" 
-            style={{ maxWidth: '300px', width: '100%', display: 'block', margin: '0 auto 1.5rem auto' }} 
+            style={{ maxWidth: '550px', width: '100%', display: 'block', margin: '0 auto 1.5rem auto' }} 
           />
           <h1 className="ins-hero-title" style={{ marginBottom: '1rem' }}>
             Sólo Step 1 <br/>
