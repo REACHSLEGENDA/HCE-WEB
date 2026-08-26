@@ -261,7 +261,15 @@ export default function Inscripciones() {
       <div className="ins-hero">
         <div className="ins-hero-inner hce-container">
           <span className="section-badge">PROGRAMAS 2026</span>
-          <h1 className="ins-hero-title">Step 1 Teórico del Diploma de París en ECMO (28 y 29 CDMX)</h1>
+          <img 
+            src="/assets/paris/logo-teorica.png" 
+            alt="Certificación Teórica" 
+            style={{ maxWidth: '300px', width: '100%', display: 'block', margin: '0 auto 1.5rem auto' }} 
+          />
+          <h1 className="ins-hero-title" style={{ marginBottom: '1rem' }}>
+            Sólo Step 1 <br/>
+            <span style={{ fontSize: '1.8rem', color: '#00d2ff', display: 'block', marginTop: '10px' }}>28-29 de Octubre • 100% presencial</span>
+          </h1>
           <p className="ins-hero-sub">
             Asegura tu lugar en el paso inicial de la certificación. Selecciona tu perfil y finaliza tu inversión de forma segura.
           </p>

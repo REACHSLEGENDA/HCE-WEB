@@ -227,7 +227,7 @@ const ParisNewDesign = () => {
                     <p className="hero-sub">Certifícate con la más alta tecnología de talla internacional.</p>
                     <div className="hero-actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
-                        <Link to="/inscripciones-step1" className="btn btn-outline" style={{ background: 'rgba(255,255,255,0.1)', borderColor: '#00d2ff', color: 'white' }}>Apertura Inscripciones Solo Step 1</Link>
+                        <Link to="/inscripciones-step1" className="btn btn-outline" style={{ background: 'rgba(255,255,255,0.1)', borderColor: '#00d2ff', color: 'white' }}>Apertura Inscripciones Sólo Step 1 (28-29 de Octubre 100% presencial)</Link>
                     </div>
                     
                     {/* Hero Countdown */}
@@ -990,7 +990,7 @@ const ParisNewDesign = () => {
                         <div style={{ position: 'absolute', top: '-20px', left: '-20px', width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}></div>
                         <div style={{ position: 'absolute', bottom: '-40px', right: '-20px', width: '130px', height: '130px', borderRadius: '50%', background: 'rgba(206,17,38,0.2)' }}></div>
 
-                        <h3 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', textShadow: '2px 2px 4px rgba(0,0,0,0.3)', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                        <h3 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 900, letterSpacing: '1px', textShadow: '2px 2px 4px rgba(0,0,0,0.3)', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                             ¡Viva México! 
                             <img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Flag_of_Mexico.svg" alt="Bandera de México" style={{ height: '1em', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
                         </h3>
@@ -1017,7 +1017,7 @@ const ParisNewDesign = () => {
                         </div>
                         
                         <a 
-                            href="https://wa.me/525544669888?text=Hola,%20me%20gustaría%20preguntar%20por%20las%20promos%20de%20Viva%20México." 
+                            href="https://wa.me/5215659271906?text=Hola,%20me%20gustaría%20preguntar%20por%20las%20promos%20de%20Viva%20México." 
                             target="_blank" 
                             rel="noopener noreferrer"
                             style={{ 
