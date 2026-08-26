@@ -953,17 +953,23 @@ const ParisNewDesign = () => {
                     width: '100%',
                     backgroundColor: '#1a1f2b',
                     borderRadius: '15px',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.8)',
-                    border: '1px solid #10b981',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,104,71,0.2)',
+                    border: 'none',
                     overflow: 'hidden',
                     textAlign: 'center'
                 }}>
+                    <div style={{ display: 'flex', height: '6px', width: '100%' }}>
+                        <div style={{ flex: 1, backgroundColor: '#006847' }}></div>
+                        <div style={{ flex: 1, backgroundColor: '#ffffff' }}></div>
+                        <div style={{ flex: 1, backgroundColor: '#ce1126' }}></div>
+                    </div>
+                    
                     <button 
                         onClick={() => setShowPromoPopup(false)}
                         style={{
                             position: 'absolute',
                             top: '15px', right: '15px',
-                            background: 'rgba(255,255,255,0.1)',
+                            background: 'rgba(0,0,0,0.2)',
                             border: 'none',
                             color: '#fff',
                             width: '32px', height: '32px',
@@ -977,36 +983,57 @@ const ParisNewDesign = () => {
                     </button>
                     
                     <div style={{
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        padding: '2rem 1.5rem',
-                        color: 'white'
+                        background: 'linear-gradient(135deg, #006847 0%, #004d34 100%)',
+                        padding: '2.5rem 1.5rem',
+                        color: 'white',
+                        position: 'relative',
+                        overflow: 'hidden'
                     }}>
-                        <h3 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800 }}>¡Viva México! 🇲🇽</h3>
-                        <p style={{ margin: '10px 0 0 0', fontSize: '1rem', opacity: 0.9 }}>
+                        <div style={{ position: 'absolute', top: '-20px', left: '-20px', width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}></div>
+                        <div style={{ position: 'absolute', bottom: '-40px', right: '-20px', width: '130px', height: '130px', borderRadius: '50%', background: 'rgba(206,17,38,0.2)' }}></div>
+
+                        <h3 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', textShadow: '2px 2px 4px rgba(0,0,0,0.3)', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                            ¡Viva México! 
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Flag_of_Mexico.svg" alt="Bandera de México" style={{ height: '1em', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                        </h3>
+                        <p style={{ margin: '15px 0 0 0', fontSize: '1.05rem', fontWeight: 500, opacity: 0.95, position: 'relative' }}>
                             Celebra con nosotros y aprovecha nuestros descuentos especiales por tiempo limitado.
                         </p>
                     </div>
 
-                    <div style={{ padding: '2rem 1.5rem' }}>
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <strong style={{ display: 'block', fontSize: '1.2rem', color: '#fff', marginBottom: '8px' }}>Del 1 al 16 de Septiembre</strong>
+                    <div style={{ padding: '2.5rem 1.5rem' }}>
+                        <div style={{ marginBottom: '2rem' }}>
+                            <strong style={{ display: 'inline-block', fontSize: '1rem', color: '#ce1126', backgroundColor: 'rgba(206,17,38,0.1)', padding: '6px 16px', borderRadius: '20px', marginBottom: '15px', border: '1px solid rgba(206,17,38,0.2)' }}>
+                                📅 Del 1 al 16 de Septiembre
+                            </strong>
+                            
                             {new Date() < new Date('2026-09-01T00:00:00-06:00') ? (
-                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6 }}>
                                     ¡Prepárate! Pregunta por nuestras próximas promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad <strong>Solo Step 1</strong>, que estarán disponibles en esas fechas.
                                 </p>
                             ) : (
-                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                                    Aprovecha y pregunta por nuestras promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad <strong>Solo Step 1</strong>. ¡Ya están disponibles!
+                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6 }}>
+                                    Aprovecha y pregunta por nuestras promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad ，<strong>Solo Step 1</strong>. ¡Ya están disponibles!
                                 </p>
                             )}
                         </div>
                         
                         <a 
-                            href="https://wa.me/525544669888?text=Hola,%20me%20gustaría%20preguntar%20por%20las%20promos%20de%20Viva%20México%20del%201%20al%2016%20de%20septiembre." 
+                            href="https://wa.me/525544669888?text=Hola,%20me%20gustaría%20preguntar%20por%20las%20promos%20de%20Viva%20México." 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="btn btn-primary"
-                            style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                            style={{ 
+                                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
+                                width: '100%', 
+                                padding: '14px',
+                                backgroundColor: '#25D366', 
+                                color: 'white',
+                                fontWeight: 'bold',
+                                borderRadius: '8px',
+                                textDecoration: 'none',
+                                fontSize: '1.1rem',
+                                boxShadow: '0 4px 15px rgba(37,211,102,0.3)',
+                            }}
                             onClick={() => setShowPromoPopup(false)}
                         >
                             Preguntar por WhatsApp
