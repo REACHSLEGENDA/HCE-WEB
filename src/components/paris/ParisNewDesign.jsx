@@ -154,15 +154,13 @@ const ParisNewDesign = () => {
     const [showPromoPopup, setShowPromoPopup] = useState(false);
 
     useEffect(() => {
-        const hasSeenPromo = sessionStorage.getItem('vivamex_promo_seen');
         const now = new Date();
         const isBeforeEnd = now <= new Date('2026-09-16T23:59:59-06:00');
         
-        if (!hasSeenPromo && isBeforeEnd) {
+        if (isBeforeEnd) {
             const timer = setTimeout(() => {
                 setShowPromoPopup(true);
-                sessionStorage.setItem('vivamex_promo_seen', 'true');
-            }, 1500);
+            }, 1000);
             return () => clearTimeout(timer);
         }
     }, []);
