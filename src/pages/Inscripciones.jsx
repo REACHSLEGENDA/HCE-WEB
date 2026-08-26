@@ -109,8 +109,26 @@ export default function Inscripciones() {
     const now = new Date();
     // Validar PERFUWEEK del 6 al 10 de Mayo 2026 (Zona horaria MX -06:00 aproximada)
     const isPerfuweekValid = now >= new Date('2026-05-06T00:00:00-06:00') && now <= new Date('2026-05-10T23:59:59-06:00');
+    // Validar promos VIVAMEX de Septiembre
+    const isSeptPromoValid = now >= new Date('2026-09-01T00:00:00-06:00') && now <= new Date('2026-09-16T23:59:59-06:00');
 
-    if (code === 'HCE-INERPARIS2026' || code === 'INER30') {
+    if (code === 'VIVAMEX') {
+      if (isSeptPromoValid) {
+        setAppliedPromo({ code, discount: 0.2, type: 'discount' });
+        setApiError('');
+      } else {
+        setAppliedPromo(null);
+        setApiError('El código VIVAMEX solo es válido del 1 al 16 de Septiembre.');
+      }
+    } else if (code === 'VIVAMEXTEAM') {
+      if (isSeptPromoValid) {
+        setAppliedPromo({ code, discount: 0.3, type: 'discount' });
+        setApiError('');
+      } else {
+        setAppliedPromo(null);
+        setApiError('El código VIVAMEXTEAM solo es válido del 1 al 16 de Septiembre.');
+      }
+    } else if (code === 'HCE-INERPARIS2026' || code === 'INER30') {
       setAppliedPromo({ code, discount: 0.3, type: 'discount' });
       setApiError('');
     } else if (code === 'HCEMS' || code === 'HCEMESES') {

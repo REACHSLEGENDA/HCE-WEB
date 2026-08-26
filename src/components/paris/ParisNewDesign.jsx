@@ -151,6 +151,21 @@ function SyllabusSection() {
 
 const ParisNewDesign = () => {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const [showPromoPopup, setShowPromoPopup] = useState(false);
+
+    useEffect(() => {
+        const hasSeenPromo = sessionStorage.getItem('vivamex_promo_seen');
+        const now = new Date();
+        const isBeforeEnd = now <= new Date('2026-09-16T23:59:59-06:00');
+        
+        if (!hasSeenPromo && isBeforeEnd) {
+            const timer = setTimeout(() => {
+                setShowPromoPopup(true);
+                sessionStorage.setItem('vivamex_promo_seen', 'true');
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, []);
 
     useEffect(() => {
         const targetDate = new Date('2026-10-27T00:00:00').getTime();
@@ -212,8 +227,9 @@ const ParisNewDesign = () => {
                     />
                     <div className="h1-style">¡Conviértete en un <br />especialista en <span className="gradient-text">ECMO</span>!</div>
                     <p className="hero-sub">Certifícate con la más alta tecnología de talla internacional.</p>
-                    <div className="hero-actions">
+                    <div className="hero-actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
+                        <Link to="/inscripciones-step1" className="btn btn-outline" style={{ background: 'rgba(255,255,255,0.1)', borderColor: '#00d2ff', color: 'white' }}>Apertura Inscripciones Solo Step 1</Link>
                     </div>
                     
                     {/* Hero Countdown */}
@@ -917,6 +933,89 @@ const ParisNewDesign = () => {
                 </div>
             </section>
         </div>
+
+        {/* Promo Popup Viva Mexico */}
+        {showPromoPopup && (
+            <div style={{
+                position: 'fixed',
+                top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: 'rgba(0,0,0,0.85)',
+                zIndex: 99999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1rem',
+                animation: 'fadeIn 0.3s ease'
+            }}>
+                <div style={{
+                    position: 'relative',
+                    maxWidth: '450px',
+                    width: '100%',
+                    backgroundColor: '#1a1f2b',
+                    borderRadius: '15px',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.8)',
+                    border: '1px solid #10b981',
+                    overflow: 'hidden',
+                    textAlign: 'center'
+                }}>
+                    <button 
+                        onClick={() => setShowPromoPopup(false)}
+                        style={{
+                            position: 'absolute',
+                            top: '15px', right: '15px',
+                            background: 'rgba(255,255,255,0.1)',
+                            border: 'none',
+                            color: '#fff',
+                            width: '32px', height: '32px',
+                            borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer',
+                            zIndex: 10
+                        }}
+                    >
+                        &times;
+                    </button>
+                    
+                    <div style={{
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        padding: '2rem 1.5rem',
+                        color: 'white'
+                    }}>
+                        <h3 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800 }}>¡Viva México! 🇲🇽</h3>
+                        <p style={{ margin: '10px 0 0 0', fontSize: '1rem', opacity: 0.9 }}>
+                            Celebra con nosotros y aprovecha nuestros descuentos especiales por tiempo limitado.
+                        </p>
+                    </div>
+
+                    <div style={{ padding: '2rem 1.5rem' }}>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <strong style={{ display: 'block', fontSize: '1.2rem', color: '#fff', marginBottom: '8px' }}>Del 1 al 16 de Septiembre</strong>
+                            {new Date() < new Date('2026-09-01T00:00:00-06:00') ? (
+                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                                    ¡Prepárate! Pregunta por nuestras próximas promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad <strong>Solo Step 1</strong>, que estarán disponibles en esas fechas.
+                                </p>
+                            ) : (
+                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                                    Aprovecha y pregunta por nuestras promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad <strong>Solo Step 1</strong>. ¡Ya están disponibles!
+                                </p>
+                            )}
+                        </div>
+                        
+                        <a 
+                            href="https://wa.me/525544669888?text=Hola,%20me%20gustaría%20preguntar%20por%20las%20promos%20de%20Viva%20México%20del%201%20al%2016%20de%20septiembre." 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="btn btn-primary"
+                            style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                            onClick={() => setShowPromoPopup(false)}
+                        >
+                            Preguntar por WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        )}
+
         <FAQParis />
         <Footer />
       </div>

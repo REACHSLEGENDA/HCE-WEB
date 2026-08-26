@@ -28,17 +28,17 @@ const EXTRA_CATALOG = {
 const PROFILES = {
   especialista: {
     label: 'Médico(a) Especialista',
-    price: 19500,
+    price: 10000,
     extras: ['ecmo_sim'],
   },
   residente: {
     label: 'Médico(a) Residente',
-    price: 18500,
+    price: 10000,
     extras: ['ecmo_sim'],
   },
   enfermero: {
     label: 'Enfermero(a) / Otro Profesional',
-    price: 18500,
+    price: 10000,
     extras: ['ecmo_sim', 'ecmo_nursing'],
   },
 };
@@ -109,8 +109,18 @@ export default function Inscripciones() {
     const now = new Date();
     // Validar PERFUWEEK del 6 al 10 de Mayo 2026 (Zona horaria MX -06:00 aproximada)
     const isPerfuweekValid = now >= new Date('2026-05-06T00:00:00-06:00') && now <= new Date('2026-05-10T23:59:59-06:00');
+    // Validar promos VIVAMEX de Septiembre
+    const isSeptPromoValid = now >= new Date('2026-09-01T00:00:00-06:00') && now <= new Date('2026-09-16T23:59:59-06:00');
 
-    if (code === 'HCE-INERPARIS2026' || code === 'INER30') {
+    if (code === 'VIVAMEXTEORICO') {
+      if (isSeptPromoValid) {
+        setAppliedPromo({ code, discount: 0.3, type: 'discount' });
+        setApiError('');
+      } else {
+        setAppliedPromo(null);
+        setApiError('El código VIVAMEXTEORICO solo es válido del 1 al 16 de Septiembre.');
+      }
+    } else if (code === 'HCE-INERPARIS2026' || code === 'INER30') {
       setAppliedPromo({ code, discount: 0.3, type: 'discount' });
       setApiError('');
     } else if (code === 'HCEMS' || code === 'HCEMESES') {
@@ -294,7 +304,7 @@ export default function Inscripciones() {
               <div>
                 <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--ins-dark)' }}>Inscripción para Grupos</h4>
                 <p style={{ margin: '3px 0 0 0', fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
-                  ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> para solicitar un descuento especial para grupos mayores de 6 personas.
+                  ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> para solicitar un descuento especial para grupos mayores de 3 personas.
                 </p>
               </div>
             </div>
@@ -698,7 +708,7 @@ export default function Inscripciones() {
                 Inscripción para Grupos
               </h3>
               <p style={{ margin: '8px 0 0 0', fontSize: '0.88rem', color: '#64748b', lineHeight: '1.5' }}>
-                ¿Te inscribes con tu equipo? Ofrecemos descuentos especiales y facilidades de pago para grupos mayores de 6 personas.
+                ¿Te inscribes con tu equipo? Ofrecemos descuentos especiales y facilidades de pago para grupos mayores de 3 personas.
               </p>
             </div>
 
