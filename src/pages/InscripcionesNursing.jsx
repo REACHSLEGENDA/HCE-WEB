@@ -291,7 +291,7 @@ export default function InscripcionesNursing() {
               <div>
                 <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--ins-dark)' }}>Inscripción para Grupos</h4>
                 <p style={{ margin: '3px 0 0 0', fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
-                  ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> para solicitar un descuento especial para grupos mayores de 6 personas.
+                  ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> para solicitar un descuento especial para grupos mayores de 3 personas.
                 </p>
               </div>
             </div>
@@ -719,7 +719,7 @@ export default function InscripcionesNursing() {
                 Inscripción para Grupos
               </h3>
               <p style={{ margin: '8px 0 0 0', fontSize: '0.88rem', color: '#64748b', lineHeight: '1.5' }}>
-                ¿Te inscribes con tu equipo? Ofrecemos descuentos especiales y facilidades de pago para grupos mayores de 6 personas.
+                ¿Te inscribes con tu equipo? Ofrecemos descuentos especiales y facilidades de pago para grupos mayores de 3 personas.
               </p>
             </div>
 
