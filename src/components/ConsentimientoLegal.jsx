@@ -10,8 +10,9 @@ import { Link } from 'react-router-dom';
  * tercero.
  *
  * Contenido tomado del documento "Leyendas web y presentaciones HCE",
- * apartados A.1 (aviso de acceso), A.2 (casillas de consentimiento) y A.3
- * (aviso de privacidad simplificado).
+ * apartados A.1 (aviso de acceso), A.2 (casillas de consentimiento), A.3
+ * (aviso de privacidad simplificado), A.5 (modificaciones al programa) y A.7
+ * (requisitos técnicos).
  * ------------------------------------------------------------------------ */
 
 const CORREO = 'info@healthcareexp.com';
@@ -91,6 +92,29 @@ const ConsentimientoLegal = ({
           tu consentimiento y el procedimiento para ejercer tus derechos de acceso,
           rectificación, cancelación y oposición, o para revocar tu consentimiento. También
           puedes escribirnos a <a href={`mailto:${CORREO}`}>{CORREO}</a>.
+        </p>
+      </div>
+    </details>
+
+    {/* A.7 y A.5 — Requisitos técnicos y cambios en el programa. El documento
+        pide que los requisitos técnicos se vean antes del checkout, y este es
+        el último paso antes de pagar. */}
+    <details className="ins-aviso">
+      <summary className="ins-aviso-titulo">Requisitos técnicos y cambios en el programa</summary>
+
+      <div className="ins-aviso-cuerpo">
+        <p>
+          Para participar necesitas conexión a internet estable, navegador actualizado y
+          equipo con cámara y micrófono. Healthcare Training Experience, S.C. no es
+          responsable por fallas en el equipo, la conexión o los servicios de terceros del
+          participante.
+        </p>
+        <p>
+          Healthcare Training Experience, S.C. podrá ajustar fechas, horarios, sede y cuadro
+          docente por causas justificadas, notificando a los participantes al correo
+          registrado con la mayor anticipación posible. Si el ajuste modifica sustancialmente
+          el programa contratado, el participante podrá optar por la reprogramación a la
+          siguiente edición o por la devolución de lo pagado.
         </p>
       </div>
     </details>
