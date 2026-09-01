@@ -1,5 +1,5 @@
-import Stripe from 'stripe';
 import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
+import { getStripe } from './_stripe.js';
 
 // Carrito abandonado: el contacto entra a la lista de recuperación de Brevo.
 // La automatización espera una hora y comprueba si sigue en la lista antes de
@@ -16,7 +16,12 @@ export const handler = async (event) => {
   }
 
   try {
-    const { planId, email = '', promoCode = '' } = JSON.parse(event.body);
+    const { planId, email = '', promoCode = '', moneda = 'mxn' } = JSON.parse(event.body);
+
+    // Los planes se listan en dólares, pero hasta ahora el cobro siempre salía
+    // en pesos y por la pasarela nacional. Con la moneda explícita, un pago del
+    // extranjero se cobra en USD y `getStripe` lo manda a la cuenta 2.
+    const currency = moneda === 'usd' ? 'usd' : 'mxn';
 
     const PLANS = {
       '4m': {
@@ -42,33 +47,40 @@ export const handler = async (event) => {
       discountApplied = true;
     }
 
-    // 1. Fetch dynamic exchange rate
+    // 1. Tipo de cambio, solo necesario para cobrar en pesos
     let usdRate = 18.0; // fallback
-    try {
-      const rateRes = await fetch('https://open.er-api.com/v6/latest/USD');
-      if (rateRes.ok) {
-        const rateData = await rateRes.json();
-        if (rateData && rateData.rates && rateData.rates.MXN) {
-          usdRate = rateData.rates.MXN;
+    if (currency === 'mxn') {
+      try {
+        const rateRes = await fetch('https://open.er-api.com/v6/latest/USD');
+        if (rateRes.ok) {
+          const rateData = await rateRes.json();
+          if (rateData && rateData.rates && rateData.rates.MXN) {
+            usdRate = rateData.rates.MXN;
+          }
         }
+      } catch (e) {
+        console.error("Error fetching live exchange rate:", e);
       }
-    } catch (e) {
-      console.error("Error fetching live exchange rate:", e);
     }
 
-    // 2. Calculate MXN Price (rounded to nearest integer)
+    // 2. Importe en la moneda elegida. En USD se cobra el precio de lista tal
+    //    cual, sin conversión de por medio.
     const finalMXN = Math.round(baseUsd * usdRate);
-    const amountCents = finalMXN * 100;
+    const amountCents = currency === 'usd' ? baseUsd * 100 : finalMXN * 100;
+
+    const descripcionPrecio = currency === 'usd'
+      ? `Precio de lista de $${baseUsd} USD.`
+      : `Conversión de $${baseUsd} USD al tipo de cambio actual de $${usdRate.toFixed(2)} MXN/USD.`;
 
     const lineItems = [
       {
         price_data: {
-          currency: 'mxn',
+          currency,
           product_data: {
             name: discountApplied ? `${plan.name} (Descuento Aplicado)` : plan.name,
-            description: discountApplied 
-              ? `Acceso al Simulador Clínico Virtual ECMO Sim. Descuento especial de $50 USD aplicado con código EXPSIM26. Precio final de $${baseUsd} USD convertido al tipo de cambio actual de $${usdRate.toFixed(2)} MXN/USD.`
-              : `Acceso al Simulador Clínico Virtual ECMO Sim por el periodo contratado. Conversión de $${plan.usd} USD al tipo de cambio actual de $${usdRate.toFixed(2)} MXN/USD.`,
+            description: discountApplied
+              ? `Acceso al Simulador Clínico Virtual ECMO Sim. Descuento especial de $50 USD aplicado con código EXPSIM26. ${descripcionPrecio}`
+              : `Acceso al Simulador Clínico Virtual ECMO Sim por el periodo contratado. ${descripcionPrecio}`,
           },
           unit_amount: amountCents,
         },
@@ -81,7 +93,8 @@ export const handler = async (event) => {
       (event.headers.referer ? event.headers.referer.split('/').slice(0, 3).join('/') : null) ||
       'https://healthcareexp.com';
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    // La cuenta la decide la moneda, no la IP: en USD va a la cuenta 2.
+    const { stripe, pasarela } = getStripe(currency);
 
     const sessionOptions = {
       payment_method_types: ['card'],
@@ -93,7 +106,9 @@ export const handler = async (event) => {
       metadata: {
         plan: planId,
         email,
-        usd_rate: usdRate.toString(),
+        moneda: currency,
+        pasarela,
+        usd_rate: currency === 'mxn' ? usdRate.toString() : '',
         usd_original: plan.usd.toString(),
         usd_final: baseUsd.toString(),
         promo_applied: discountApplied ? 'EXPSIM26' : 'none',

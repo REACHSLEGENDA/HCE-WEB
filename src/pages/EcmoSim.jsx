@@ -3,6 +3,7 @@ import { useInView } from 'react-intersection-observer';
 import { Gamepad2, PlayCircle, Trophy, Users, Zap, ShieldAlert, MonitorPlay, ChevronRight, Activity } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
+import { useMonedaSugerida } from '../hooks/useMonedaSugerida';
 import Footer from '../components/Footer';
 import './EcmoSim.css';
 import { useSEO } from '../hooks/useSEO';
@@ -24,6 +25,12 @@ const EcmoSim = () => {
   const [email, setEmail] = useState('');
   const [selectedPlan, setSelectedPlan] = useState('4m'); // '4m' or '12m'
   const [usdRate, setUsdRate] = useState(18.0);
+  // Hasta ahora esta pagina mostraba los dos precios pero SIEMPRE cobraba en
+  // pesos, asi que un comprador del extranjero pasaba por la pasarela nacional.
+  // La moneda elegida es la que decide el cobro y, con ella, la cuenta de Stripe.
+  const [moneda, setMoneda] = useState('mxn');
+  const [monedaTocada, setMonedaTocada] = useState(false);
+  useMonedaSugerida(setMoneda, monedaTocada);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
   const [successInfo, setSuccessInfo] = useState(null);
@@ -81,7 +88,8 @@ const EcmoSim = () => {
         body: JSON.stringify({ 
           planId: selectedPlan, 
           email: email.trim(),
-          promoCode: appliedPromo ? 'EXPSIM26' : ''
+          promoCode: appliedPromo ? 'EXPSIM26' : '',
+          moneda
         }),
       });
       
@@ -455,6 +463,24 @@ const EcmoSim = () => {
                 />
               </div>
 
+              {/* Moneda de cobro. Se preselecciona segun el pais, pero manda
+                  siempre lo que el alumno elija aqui. */}
+              <div className="sim-currency-row">
+                <span className="sim-currency-label">Moneda de pago</span>
+                <div className="sim-currency-toggle">
+                  {['mxn', 'usd'].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`sim-currency-btn ${moneda === c ? 'sim-currency-btn--active' : ''}`}
+                      onClick={() => { setMoneda(c); setMonedaTocada(true); }}
+                    >
+                      {c.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Plans Display */}
               <div className="sim-plans-grid">
                 {/* Plan 4 Months */}
@@ -467,10 +493,10 @@ const EcmoSim = () => {
                     <span className="sim-plan-badge-simple">ACCESO COMPLETO</span>
                   </div>
                   <div className="sim-plan-pricing">
-                    <span className="sim-price-usd">
+                    <span className={moneda === 'usd' ? 'sim-price-usd' : 'sim-price-mxn'}>
                       ${appliedPromo ? '200' : '250'} USD
                     </span>
-                    <span className="sim-price-mxn">
+                    <span className={moneda === 'usd' ? 'sim-price-mxn' : 'sim-price-usd'}>
                       ${Math.round((appliedPromo ? 200 : 250) * usdRate).toLocaleString()} MXN
                     </span>
                   </div>
@@ -490,10 +516,10 @@ const EcmoSim = () => {
                     </span>
                   </div>
                   <div className="sim-plan-pricing">
-                    <span className="sim-price-usd">
+                    <span className={moneda === 'usd' ? 'sim-price-usd' : 'sim-price-mxn'}>
                       ${appliedPromo ? '650' : '700'} USD
                     </span>
-                    <span className="sim-price-mxn">
+                    <span className={moneda === 'usd' ? 'sim-price-mxn' : 'sim-price-usd'}>
                       ${Math.round((appliedPromo ? 650 : 700) * usdRate).toLocaleString()} MXN
                     </span>
                   </div>
@@ -539,9 +565,13 @@ const EcmoSim = () => {
                 {promoError && <div style={{ color: '#e74c3c', fontSize: '0.78rem', marginTop: '4px', fontWeight: 600 }}>{promoError}</div>}
               </div>
 
-              {/* Live exchange rate badge */}
+              {/* El tipo de cambio solo importa si el cobro sale en pesos. */}
               <div className="sim-rate-badge">
-                💡 Tipo de cambio en tiempo real: <strong>1 USD = ${usdRate.toFixed(2)} MXN</strong> (El cobro final se procesará en MXN).
+                {moneda === 'usd' ? (
+                  <>💳 El cobro se procesará en <strong>dólares (USD)</strong>, al precio de lista y sin conversión.</>
+                ) : (
+                  <>💡 Tipo de cambio en tiempo real: <strong>1 USD = ${usdRate.toFixed(2)} MXN</strong> (El cobro final se procesará en MXN).</>
+                )}
               </div>
 
               {checkoutError && <div className="sim-modal-error">{checkoutError}</div>}
@@ -571,7 +601,18 @@ const EcmoSim = () => {
                 className="btn-gaming mega w-full mt-4"
                 style={{ width: '100%' }}
               >
-                {isSubmitting ? 'CARGANDO PASARELA…' : `PROCEDER AL PAGO — $${(selectedPlan === '4m' ? (appliedPromo ? 200 : 250) : (appliedPromo ? 650 : 700))} USD`}
+                {isSubmitting
+                  ? 'CARGANDO PASARELA…'
+                  : (() => {
+                      // El importe del boton debe coincidir con lo que Stripe
+                      // va a cobrar, no con el precio de lista en dolares.
+                      const usd = selectedPlan === '4m'
+                        ? (appliedPromo ? 200 : 250)
+                        : (appliedPromo ? 650 : 700);
+                      return moneda === 'usd'
+                        ? `PROCEDER AL PAGO — $${usd} USD`
+                        : `PROCEDER AL PAGO — $${Math.round(usd * usdRate).toLocaleString()} MXN`;
+                    })()}
               </button>
               
               <p className="sim-modal-secure">🔒 Pago 100% seguro encriptado por Stripe.</p>

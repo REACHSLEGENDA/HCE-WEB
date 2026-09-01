@@ -916,3 +916,65 @@
   .sim-modal-header { margin-bottom: 1rem; }
   .sim-modal-form { gap: 0.75rem; }
 }
+
+/* Selector de moneda. Determina en qué se cobra y, con eso, a qué cuenta de
+   Stripe entra el pago; se preselecciona por país pero el alumno manda. */
+.sim-currency-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sim-currency-label {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.sim-currency-toggle {
+  display: inline-flex;
+  border: 1px solid var(--gold-border);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.sim-currency-btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.sim-currency-btn:hover {
+  color: var(--text-bright);
+}
+
+.sim-currency-btn--active {
+  background: var(--gold-dim);
+  color: var(--gold-pale);
+  box-shadow: inset 0 0 0 1px var(--gold-border);
+}
+
+@media (max-width: 480px) {
+  .sim-currency-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .sim-currency-toggle {
+    justify-content: center;
+  }
+  .sim-currency-btn {
+    flex: 1;
+  }
+}

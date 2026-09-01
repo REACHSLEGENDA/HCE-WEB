@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin, Users } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useMonedaSugerida } from '../hooks/useMonedaSugerida';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ConsentimientoLegal from '../components/ConsentimientoLegal';
@@ -81,6 +82,10 @@ export default function InscripcionesNursing() {
   const [customOtro, setCustomOtro] = useState('');
   const [extras, setExtras] = useState(new Set());
   const [moneda, setMoneda] = useState('mxn');
+  // Preselecciona USD fuera de Mexico. En cuanto el alumno toca el selector
+  // deja de sugerir, para no revertir su eleccion si la respuesta llega tarde.
+  const [monedaTocada, setMonedaTocada] = useState(false);
+  useMonedaSugerida(setMoneda, monedaTocada);
   const [email, setEmail] = useState('');
   const [consentPrimary, setConsentPrimary] = useState(false);
   const [consentSecondary, setConsentSecondary] = useState(false);
@@ -505,7 +510,7 @@ export default function InscripcionesNursing() {
                     key={c}
                     type="button"
                     className={`ins-currency-btn ${moneda === c ? 'ins-currency-btn--active' : ''}`}
-                    onClick={() => setMoneda(c)}
+                    onClick={() => { setMoneda(c); setMonedaTocada(true); }}
                   >
                     {c.toUpperCase()}
                   </button>
