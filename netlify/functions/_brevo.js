@@ -79,10 +79,26 @@ export async function upsertContact(email, attributes = {}) {
 }
 
 // Añadir a una lista es lo que dispara las automatizaciones.
+// Brevo responde 400 —no 200— cuando el contacto YA estaba en la lista, con el
+// mensaje "Contact already in list and/or does not exist". Es el caso normal de
+// quien vuelve a inscribirse o de una segunda prueba con el mismo correo, y
+// tratarlo como error tumbaba la función entera con un 500: el alumno veía
+// "Registro completado" y en Brevo no pasaba nada.
+//
+// El "does not exist" del mensaje no aplica aquí: todos los que llaman a esta
+// función hacen upsertContact antes, así que el contacto siempre existe.
+//
+// Ojo: si ya estaba en la lista, Brevo NO vuelve a disparar la automatización.
+// Para repetir una prueba hay que sacar antes al contacto de la lista.
 export async function addToList(email, listId) {
-  return brevoFetch(`/contacts/lists/${listId}/contacts/add`, {
-    body: { emails: [email] },
-  });
+  try {
+    return await brevoFetch(`/contacts/lists/${listId}/contacts/add`, {
+      body: { emails: [email] },
+    });
+  } catch (err) {
+    if (err.status === 400 && /already in list/i.test(err.message)) return null;
+    throw err;
+  }
 }
 
 // Sacar de una lista no es un error si el contacto no estaba en ella:
