@@ -2551,17 +2551,38 @@ const AdminDashboard = () => {
               return formSortOrder === 'desc' ? dateB - dateA : dateA - dateB;
             });
 
-            // Calculate KPIs dynamically
-            const totalRevenue = filteredPayments.reduce((acc, curr) => acc + curr.amount, 0);
+            // Calculate KPIs dynamically.
+            //
+            // Los cobros llegan en pesos y en dólares (la segunda cuenta de
+            // Stripe recibe los pagos del extranjero). Sumarlos como un solo
+            // número da un total falso: 200 USD no son 200 pesos, y el importe
+            // quedaba subestimado ~17 veces por cada cobro en dólares.
+            // Se agrupan por moneda y se muestran por separado, que además no
+            // obliga a fijar un tipo de cambio que envejecería mal.
+            const totalesPorMoneda = filteredPayments.reduce((acc, p) => {
+              const m = (p.currency || 'MXN').toUpperCase();
+              acc[m] = (acc[m] || 0) + p.amount;
+              return acc;
+            }, {});
+            // De mayor a menor, para que la moneda principal encabece.
+            const monedasOrdenadas = Object.entries(totalesPorMoneda).sort((a, b) => b[1] - a[1]);
+
             const totalTransactions = filteredPayments.length;
             const totalForms = filteredForms.length;
             const conversionRate = totalTransactions > 0 ? Math.round((totalTransactions / (totalTransactions + totalForms)) * 100) : 0;
 
             const monthsNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
             
-            // Generate monthly sales
+            // La moneda con más dinero encabeza el KPI y es la que se grafica.
+            const monedaPrincipal = monedasOrdenadas[0]?.[0] || 'MXN';
+
+            // Generate monthly sales — solo de la moneda principal, para que las
+            // barras representen una unidad real y no una mezcla.
             const monthlySales = {};
             filteredPayments.forEach(pay => {
+              // Mismo criterio que totalesPorMoneda: los importados por CSV
+              // pueden traer la moneda en minúsculas.
+              if ((pay.currency || 'MXN').toUpperCase() !== monedaPrincipal) return;
               const d = new Date(pay.date);
               if (!isNaN(d.getTime())) {
                 const monthName = monthsNames[d.getMonth()];
@@ -2585,7 +2606,9 @@ const AdminDashboard = () => {
               val: monthlySales[m] || 0
             }));
 
-            const currencySuffix = filteredPayments[0]?.currency || 'USD';
+            // Antes era `filteredPayments[0]?.currency`: la etiqueta del total
+            // salía de cuál fue el primer cobro de la lista, no de una unidad real.
+            const currencySuffix = monedaPrincipal;
 
             // Generate sales by course for Donut Chart
             const courseSales = {};
@@ -2754,8 +2777,23 @@ const AdminDashboard = () => {
                       <DollarSign size={20} />
                     </div>
                     <div className="kpi-details">
-                      <span className="kpi-label">Ingresos Totales (Est.)</span>
-                      <h3 className="kpi-value">${totalRevenue.toLocaleString()} {currencySuffix}</h3>
+                      <span className="kpi-label">Ingresos Totales</span>
+                      {/* Un renglón por moneda: sumarlas daría un número que no
+                          corresponde a ninguna cantidad real de dinero. */}
+                      {monedasOrdenadas.length === 0 ? (
+                        <h3 className="kpi-value">$0</h3>
+                      ) : (
+                        <>
+                          <h3 className="kpi-value">
+                            ${monedasOrdenadas[0][1].toLocaleString()} {monedasOrdenadas[0][0]}
+                          </h3>
+                          {monedasOrdenadas.slice(1).map(([mon, total]) => (
+                            <span key={mon} className="kpi-subvalue">
+                              + ${total.toLocaleString()} {mon}
+                            </span>
+                          ))}
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -2797,9 +2835,25 @@ const AdminDashboard = () => {
                   <div className="sub-section-block">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
                       <h3>Tendencia de Ventas ({currencySuffix})</h3>
-                      <span className="trend-indicator up" style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
-                        +45.2% ↑
-                      </span>
+                      {/* El +45.2% que estaba aquí era un valor fijo en el JSX:
+                          no salía de ningún dato y se mostraba igual con
+                          cualquier cifra. Se calcula contra el mes anterior. */}
+                      {(() => {
+                        const actual = chartData[chartData.length - 1]?.val || 0;
+                        const previo = chartData[chartData.length - 2]?.val || 0;
+                        if (!previo) return null;
+                        const variacion = Math.round(((actual - previo) / previo) * 100);
+                        const sube = variacion >= 0;
+                        return (
+                          <span
+                            className={`trend-indicator ${sube ? 'up' : 'down'}`}
+                            title="Contra el mes anterior"
+                            style={{ fontSize: '0.8rem', color: sube ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}
+                          >
+                            {sube ? '+' : ''}{variacion}% {sube ? '↑' : '↓'}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div className="svg-chart-container" style={{ position: 'relative', height: '200px', width: '100%' }}>
                       <svg viewBox="0 0 400 200" style={{ width: '100%', height: '100%', overflow: 'visible' }}>

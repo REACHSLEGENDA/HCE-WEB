@@ -1290,3 +1290,14 @@
   display: none;
   height: 0;
 }
+
+/* Segunda moneda del KPI de ingresos. Los cobros en pesos y en dólares se
+   listan por separado en vez de sumarse: un total mezclado no corresponde a
+   ninguna cantidad real de dinero. */
+.kpi-subvalue {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
