@@ -113,8 +113,8 @@ const ConsentimientoLegal = ({
           Healthcare Training Experience, S.C. podrá ajustar fechas, horarios, sede y cuadro
           docente por causas justificadas, notificando a los participantes al correo
           registrado con la mayor anticipación posible. Si el ajuste modifica sustancialmente
-          el programa contratado, el participante podrá optar por la reprogramación a la
-          siguiente edición o por la devolución de lo pagado.
+          el programa contratado, el participante podrá optar por la reprogramación sin costo
+          a la siguiente edición.
         </p>
       </div>
     </details>
