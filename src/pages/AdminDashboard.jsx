@@ -300,10 +300,13 @@ const AdminDashboard = () => {
     // getStandardGatewayCourse adivina el programa por nombre y monto. Ese
     // heurístico solo sabe de los tres programas históricos, así que a los
     // cobros de CNADOT los reclasificaba por precio: $3,500 y $4,000 caían en
-    // "ECMO SIM" y $4,500/$6,500/$8,000 en "Nursing", inflando esos números.
-    // Los pagos que llegan de la API con una pasarela identificada ya traen su
-    // programa resuelto y no deben pasar por la adivinanza.
-    if (item.gateway === 'cnadot' || item.courseId === 'cnadot') {
+    // "ECMO SIM" y $6,000 en "Nursing", inflando esos números.
+    //
+    // Se filtra por courseId y NO por gateway a propósito: la segunda cuenta
+    // también va a recibir los pagos en dólares de las experiencias, y esos sí
+    // deben clasificarse como el programa que son. get-stripe-payments ya marca
+    // 'cnadot' solo cuando el cobro no lo generó nuestro checkout.
+    if (item.courseId === 'cnadot') {
       return item;
     }
 
