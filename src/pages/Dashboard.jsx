@@ -62,6 +62,49 @@ const NurseCap = ({ size = 24, ...props }) => (
 
 import { COUNTRIES as ALL_COUNTRIES, getFlagUrl } from '../data/countries';
 
+/* ---------------------------------------------------------------------------
+ * Enlace al aula.
+ *
+ * En el navegador el aula se abre en pestaña nueva, que es deliberado: el
+ * alumno no pierde el panel mientras ve la clase.
+ *
+ * Pero en la app instalada eso la rompe. `target="_blank"` saca la navegación
+ * del contexto standalone y Chrome la abre en una Custom Tab —con su barra de
+ * direcciones encima—, así que el alumno siente que se salió de la app.
+ *
+ * Dentro de la app se navega con <Link>, sin salir del scope del manifest; en
+ * el navegador se conserva la pestaña nueva de siempre.
+ * ------------------------------------------------------------------------ */
+const enAppInstalada = () =>
+  ['standalone', 'fullscreen', 'minimal-ui', 'window-controls-overlay']
+    .some((modo) => window.matchMedia?.(`(display-mode: ${modo})`).matches) ||
+  window.navigator.standalone === true;
+
+const EnlaceAula = ({ cursoId, className, style, children }) => {
+  // El modo de presentación no cambia a media sesión: se resuelve al montar.
+  const [instalada] = useState(enAppInstalada);
+
+  if (instalada) {
+    return (
+      <Link to={`/classroom/${cursoId}`} className={className} style={style}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <a
+      href={`/classroom/${cursoId}`}
+      target="_blank"
+      rel="noreferrer"
+      className={className}
+      style={style}
+    >
+      {children}
+    </a>
+  );
+};
+
 const Dashboard = () => {
   const { user, profile, logout, updateUserMetadata, updateProfile } = useAuth();
   const { showToast } = useNotification();
@@ -944,15 +987,13 @@ const Dashboard = () => {
                                 <span className="progress-percentage">{progress}%</span>
                               </div>
                             </div>
-                            <a
-                              href={`/classroom/${course.id}`}
-                              target="_blank"
-                              rel="noreferrer"
+                            <EnlaceAula
+                              cursoId={course.id}
                               className="btn-crm-action solid"
                               style={{ textDecoration: 'none', textAlign: 'center' }}
                             >
                               Continuar Aprendiendo
-                            </a>
+                            </EnlaceAula>
                           </div>
                         </div>
                       );
@@ -1164,15 +1205,13 @@ const Dashboard = () => {
                               </div>
                             </div>
                             <div style={{ display: 'flex', gap: '10px' }}>
-                              <a
-                                href={`/classroom/${course.id}`}
-                                target="_blank"
-                                rel="noreferrer"
+                              <EnlaceAula
+                                cursoId={course.id}
                                 className="btn-crm-action solid"
                                 style={{ textDecoration: 'none', textAlign: 'center', flex: 1 }}
                               >
                                 Ir al aula
-                              </a>
+                              </EnlaceAula>
                               {completed && (
                                 <button
                                   onClick={() => setActiveTab('certificates')}
