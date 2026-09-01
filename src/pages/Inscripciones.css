@@ -1124,6 +1124,63 @@
   line-height: 1.5;
 }
 
+.ins-consent-link {
+  color: var(--ins-blue);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+/* Aviso de privacidad plegable. Va cerrado para no empujar el botón de pago
+   fuera de la pantalla, pero el texto completo queda a un toque. */
+.ins-aviso {
+  border: 1px solid var(--ins-border);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.ins-aviso-titulo {
+  padding: 0.6rem 0.85rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ins-blue);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+/* Safari dibuja su propio triángulo con ::-webkit-details-marker. */
+.ins-aviso-titulo::-webkit-details-marker {
+  display: none;
+}
+
+.ins-aviso-titulo::after {
+  content: ' ▾';
+  color: var(--ins-muted);
+}
+
+.ins-aviso[open] .ins-aviso-titulo::after {
+  content: ' ▴';
+}
+
+.ins-aviso-cuerpo {
+  padding: 0 0.85rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ins-aviso-cuerpo p {
+  margin: 0;
+  font-size: 0.73rem;
+  line-height: 1.55;
+  color: var(--ins-muted);
+}
+
+.ins-aviso-cuerpo a {
+  color: var(--ins-blue);
+  text-decoration: underline;
+}
+
 /* ── Phone selector custom ── */
 .phone-select {
   position: relative;

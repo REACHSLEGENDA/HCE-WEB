@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import ConsentimientoLegal from '../components/ConsentimientoLegal';
 import './Inscripciones.css';
 
 const USD_RATE = 17.5;
@@ -606,19 +607,12 @@ export default function Inscripciones() {
               />
             </div>
 
-            <div className="ins-privacy-block">
-              <p className="ins-privacy-text">
-                *Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.
-              </p>
-              <label className="ins-consent-row">
-                <input type="checkbox" checked={consentPrimary} onChange={(e) => setConsentPrimary(e.target.checked)} />
-                <span>Consiento y autorizo expresamente que los datos personales aquí señalados sean tratados conforme al Aviso de Privacidad.</span>
-              </label>
-              <label className="ins-consent-row">
-                <input type="checkbox" checked={consentSecondary} onChange={(e) => setConsentSecondary(e.target.checked)} />
-                <span>Consiento y autorizo expresamente que mis datos personales sean tratados para finalidades secundarias, como publicidad sobre futuros entrenamientos, mismas que no son necesarias para tu acceso.</span>
-              </label>
-            </div>
+            <ConsentimientoLegal
+              consentPrimary={consentPrimary}
+              setConsentPrimary={setConsentPrimary}
+              consentSecondary={consentSecondary}
+              setConsentSecondary={setConsentSecondary}
+            />
 
             {apiError && <p className="ins-error">{apiError}</p>}
 
