@@ -305,15 +305,6 @@
   transform: translateZ(60px);
 }
 
-.cmp-shot-back {
-  z-index: 1;
-  top: 0;
-  right: 0;
-  width: 54%;
-  opacity: 0.85;
-  transform: translateZ(10px) rotate(3deg);
-}
-
 .cmp-shot-front {
   z-index: 2;
   bottom: 2%;
@@ -322,7 +313,6 @@
   transform: translateZ(110px) rotate(-4deg);
 }
 
-.cmp-scene:hover .cmp-shot-back  { transform: translateZ(10px) rotate(5deg) translateY(-10px); }
 .cmp-scene:hover .cmp-shot-front { transform: translateZ(110px) rotate(-6deg) translateY(10px); }
 
 
@@ -390,9 +380,20 @@
 
   /* En pantallas estrechas el apilado en 3D se amontona: los mockups
      laterales se reducen y el principal ocupa casi todo el ancho. */
-  .cmp-shot-main  { top: 8%; left: 8%; width: 84%; }
-  .cmp-shot-back  { width: 46%; }
-  .cmp-shot-front { width: 40%; }
+  /* En móvil la ventana ocupa casi todo el ancho, y a 4/3 el contenedor se
+     quedaba corto: el mockup se desbordaba por abajo y se encimaba con lo que
+     sigue. La caja se hace casi cuadrada para que quepan la ventana y la
+     tarjeta que asoma. */
+  .cmp-stack { aspect-ratio: 1 / 1.02; }
+
+  /* Sin perspectiva en móvil. El translateZ de los mockups los agranda —la
+     perspectiva de 1400 px magnifica un 8% a 110 px de profundidad— y esa
+     diferencia sacaba la tarjeta fuera del contenedor. Aquí no hay paralaje
+     que justifique el 3D: se aplana y las posiciones vuelven a ser exactas. */
+  .cmp-scene { perspective: none; }
+
+  .cmp-shot-main  { top: 2%; left: 2%; width: 94%; transform: none; }
+  .cmp-shot-front { bottom: 2%; left: 0; width: 54%; transform: rotate(-3deg); }
 
   .cmp-window-url { font-size: 0.58rem; padding: 3px 8px; }
   .cmp-window-bar { padding: 7px 10px; gap: 5px; }

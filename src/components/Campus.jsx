@@ -29,9 +29,8 @@ const CARACTERISTICAS = [
 // El mockup principal lleva barra de navegador; los otros dos van sueltos
 // detrás, que es lo que da la sensación de pila.
 const MOCKUPS = [
-  { src: '/assets/componentes/campus-dashboard.webp',  alt: 'Panel principal del campus virtual HCE', clase: 'cmp-shot-main',  barra: true },
-  { src: '/assets/componentes/campus-cursos.webp',     alt: 'Catálogo de cursos del campus HCE',      clase: 'cmp-shot-back' },
-  { src: '/assets/componentes/campus-simulacion.webp', alt: 'Módulo de simulación clínica',           clase: 'cmp-shot-front' },
+  { src: '/assets/componentes/campus-dashboard.webp', alt: 'Panel principal del campus virtual HCE', clase: 'cmp-shot-main', barra: true },
+  { src: '/assets/componentes/campus-cursos.webp',    alt: 'Catálogo de cursos del campus HCE',      clase: 'cmp-shot-front' },
 ];
 
 const movimientoReducido = () =>
