@@ -27,7 +27,6 @@ const Footer = () => {
           <div className="f-col">
             <h4>Navegación</h4>
             <ul className="f-nav">
-              <li><a href="/terminos-y-condiciones"><ChevronRight size={12} /> Términos</a></li>
               <li><Link to="/aviso-de-privacidad"><ChevronRight size={12} /> Privacidad</Link></li>
               <li><a href="#"><ChevronRight size={12} /> FAQ</a></li>
             </ul>

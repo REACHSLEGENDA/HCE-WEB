@@ -38,7 +38,6 @@ const SecretPreview = lazy(() => import('./pages/SecretPreview'));
 const InscripcionesNursing = lazy(() => import('./pages/InscripcionesNursing'));
 const SecretNursingPreview = lazy(() => import('./pages/SecretNursingPreview'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-const TerminosCondiciones = lazy(() => import('./pages/TerminosCondiciones'));
 const Facturacion = lazy(() => import('./pages/Facturacion'));
 const Gallery = lazy(() => import('./pages/Gallery'));
 const Comunidad = lazy(() => import('./pages/Comunidad'));
@@ -245,7 +244,6 @@ function App() {
               <Route path="/inscripciones-ecmo-nursing" element={<InscripcionesNursing />} />
               <Route path="/debug-checkout-nursing-preview-2026" element={<SecretNursingPreview />} />
               <Route path="/aviso-de-privacidad" element={<PrivacyPolicy />} />
-              <Route path="/terminos-y-condiciones" element={<TerminosCondiciones />} />
               <Route path="/facturacion" element={<Facturacion />} />
               <Route path="/galeria" element={<Gallery />} />
               <Route path="/comunidad" element={<Comunidad />} />
