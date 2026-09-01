@@ -25,10 +25,13 @@ const Home = () => {
     // Verificar si ya vio el popup en esta sesión
     const hasSeenPopup = sessionStorage.getItem('cnadot_popup_seen');
     if (!hasSeenPopup) {
+      // El popup espera a que termine la firma animada del hero: la marca se
+      // arma en 1.9 s, el nombre acaba de escribirse en 2.85 s y el logo del
+      // navbar entra a los 3.4 s. Saliendo antes, tapaba su propia animación.
       const timer = setTimeout(() => {
         setShowPopup(true);
         sessionStorage.setItem('cnadot_popup_seen', 'true');
-      }, 2000);
+      }, 4200);
       return () => clearTimeout(timer);
     }
   }, []);
