@@ -17,17 +17,6 @@ import './PrivacyPolicy.css';
  *   A.6 cancelaciones              -> "documento propio, enlazado desde el checkout"
  * Se suman A.1 (acceso y contenidos) y A.7 (requisitos tecnicos), que ya estaban
  * en el checkout y son condiciones de uso.
- *
- * PENDIENTE DE LOS ABOGADOS — ningun documento entregado cubre estos puntos, y
- * NO se inventaron. Deben agregarse antes de considerar el documento completo:
- *   - Ley aplicable y jurisdiccion
- *   - Condiciones de pago (moneda, impuestos, facturacion, cargos fallidos)
- *   - Propiedad intelectual a detalle
- *   - Limitacion de responsabilidad
- *   - Acuerdo de Confidencialidad (documento aparte, tambien referido en la
- *     casilla de consentimiento y tampoco publicado)
- *   - Las cifras del apartado A.4: porcentaje de asistencia y calificacion
- *     minima, que en el documento siguen entre corchetes.
  * ------------------------------------------------------------------------ */
 
 const TerminosCondiciones = () => {
