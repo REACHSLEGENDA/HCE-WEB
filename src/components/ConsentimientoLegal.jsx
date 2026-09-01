@@ -37,9 +37,10 @@ const ConsentimientoLegal = ({
     </p>
 
     {/* A.2 — Casilla obligatoria.
-        Los Términos y Condiciones y el Acuerdo de Confidencialidad todavía no
-        existen como página en el sitio, así que van sin enlace: es preferible a
-        mandar al alumno a un enlace muerto justo donde declara haberlos leído. */}
+        Los Términos y Condiciones ya tienen página propia. El Acuerdo de
+        Confidencialidad sigue sin publicarse, así que ese va sin enlace: es
+        preferible a mandar al alumno a un enlace muerto justo donde declara
+        haberlo leído. */}
     <label className="ins-consent-row">
       <input
         type="checkbox"
@@ -47,7 +48,10 @@ const ConsentimientoLegal = ({
         onChange={(e) => setConsentPrimary(e.target.checked)}
       />
       <span>
-        He leído y acepto los Términos y Condiciones, el Acuerdo de Confidencialidad y el{' '}
+        He leído y acepto los{' '}
+        <Link to="/terminos-y-condiciones" target="_blank" rel="noreferrer" className="ins-consent-link">
+          Términos y Condiciones
+        </Link>, el Acuerdo de Confidencialidad y el{' '}
         <Link to="/aviso-de-privacidad" target="_blank" rel="noreferrer" className="ins-consent-link">
           Aviso de Privacidad
         </Link>.
