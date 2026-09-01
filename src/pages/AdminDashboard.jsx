@@ -51,6 +51,16 @@ import { useNotification } from '../context/NotificationContext';
 // y no terminado (con avance < 80%) se considera abandonado.
 const ABANDONMENT_INACTIVE_DAYS = 15;
 
+// Nombre real de cada formulario. Lo que se guarda en Supabase son rótulos
+// heredados ("Inscripciones Curso Standard") que no identifican el curso.
+const FORM_LABELS = {
+  mnjlvbpw: 'Paris International Diploma in ECMO',
+  xpqenabk: 'ECMO Nursing Care Course',
+  xredqyol: 'ECMO SIM: Realidad Clínica',
+  mreroozv: 'Solicitud de Facturación',
+  xnjlvzdq: 'Retroalimentación y Dudas',
+};
+
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -265,23 +275,38 @@ const AdminDashboard = () => {
   const mapItemToGatewayCourse = (item, type = 'payment') => {
     if (type === 'form') {
       let formId = item.formId;
-      let formName = item.formName;
-      if (formId === 'ecmo_nursing') {
-        formId = 'xpqenabk';
-        formName = 'Inscripciones Nursing Care';
-      } else if (formId === 'ecmo_sim') {
-        formId = 'xredqyol';
-        formName = 'Registro Simulador ECMO';
-      } else if (formId === 'ecmo_paris') {
-        formId = 'mnjlvbpw';
-        formName = 'Inscripciones Curso Standard';
+      // Ids heredados de cuando el formulario se identificaba por programa.
+      if (formId === 'ecmo_nursing') formId = 'xpqenabk';
+      else if (formId === 'ecmo_sim') formId = 'xredqyol';
+      else if (formId === 'ecmo_paris') formId = 'mnjlvbpw';
+
+      // El nombre guardado en Supabase es el rótulo viejo ("Inscripciones Curso
+      // Standard") y no dice de qué curso se trata. Se resuelve aquí para que
+      // los registros antiguos también se muestren con el nombre real.
+      let formName = FORM_LABELS[formId] || item.formName;
+
+      // mnjlvbpw lo comparten la inscripción completa y la de "Sólo Step 1";
+      // el tag del payload es lo único que las separa.
+      if (formId === 'mnjlvbpw' && item.payload?.tag === 'ECMOParisStep12026') {
+        formName = 'Paris ECMO — Sólo Step 1';
       }
+
       return {
         ...item,
         formId,
         formName
       };
     }
+    // getStandardGatewayCourse adivina el programa por nombre y monto. Ese
+    // heurístico solo sabe de los tres programas históricos, así que a los
+    // cobros de CNADOT los reclasificaba por precio: $3,500 y $4,000 caían en
+    // "ECMO SIM" y $4,500/$6,500/$8,000 en "Nursing", inflando esos números.
+    // Los pagos que llegan de la API con una pasarela identificada ya traen su
+    // programa resuelto y no deben pasar por la adivinanza.
+    if (item.gateway === 'cnadot' || item.courseId === 'cnadot') {
+      return item;
+    }
+
     const name = item.courseName;
     const stdCourse = getStandardGatewayCourse(name, item.amount, item.currency);
 
@@ -3042,9 +3067,9 @@ const AdminDashboard = () => {
                           onChange={(e) => setFormFilterType(e.target.value)}
                         >
                           <option value="all">Todos los Formularios</option>
-                          <option value="mnjlvbpw">Inscripciones Curso Standard</option>
-                          <option value="xpqenabk">Inscripciones Nursing Care</option>
-                          <option value="xredqyol">Registro Simulador ECMO</option>
+                          <option value="mnjlvbpw">Paris International Diploma in ECMO</option>
+                          <option value="xpqenabk">ECMO Nursing Care Course</option>
+                          <option value="xredqyol">ECMO SIM: Realidad Clinica</option>
                           <option value="mreroozv">Solicitud de Facturación</option>
                           <option value="xnjlvzdq">Retroalimentación y Dudas</option>
                         </select>
