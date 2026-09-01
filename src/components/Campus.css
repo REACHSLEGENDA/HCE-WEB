@@ -307,8 +307,8 @@
 
 .cmp-shot-front {
   z-index: 2;
-  bottom: 2%;
-  left: 0;
+  bottom: 4%;
+  right: 4%;
   width: 46%;
   transform: translateZ(110px) rotate(-4deg);
 }
@@ -393,7 +393,7 @@
   .cmp-scene { perspective: none; }
 
   .cmp-shot-main  { top: 2%; left: 2%; width: 94%; transform: none; }
-  .cmp-shot-front { bottom: 2%; left: 0; width: 54%; transform: rotate(-3deg); }
+  .cmp-shot-front { bottom: 2%; right: auto; left: 0; width: 54%; transform: rotate(-3deg); }
 
   .cmp-window-url { font-size: 0.58rem; padding: 3px 8px; }
   .cmp-window-bar { padding: 7px 10px; gap: 5px; }
