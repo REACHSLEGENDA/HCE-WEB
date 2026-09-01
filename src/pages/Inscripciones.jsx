@@ -907,7 +907,18 @@ export function RegistrationForm() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
-        }),
+        })
+          .then(async (res) => {
+            // El pago ya ocurrió, así que no tiene caso romperle la pantalla al
+            // alumno si Brevo falla. Pero sin esto el error se perdía entero:
+            // fetch no lanza con un 500, y la pantalla decía "Registro
+            // completado" aunque el contacto nunca se hubiera dado de alta.
+            if (!res.ok) {
+              const detalle = await res.text().catch(() => '');
+              console.error('Brevo no registró el contacto:', res.status, detalle);
+            }
+          })
+          .catch((err) => console.error('Brevo no respondió:', err.message)),
       ]);
 
       localStorage.removeItem('hce_pago');
