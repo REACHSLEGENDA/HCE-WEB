@@ -44,7 +44,7 @@ const Retroalimentacion = () => {
     setStatus('loading');
     try {
       await Promise.all([
-        // Mailchimp via Netlify function
+        // Brevo, a través de la Netlify Function
         fetch('/.netlify/functions/feedback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -609,3 +609,27 @@
   }
 }
 
+
+/* En la portada el logo del navbar aparece cuando la firma animada del hero ya
+   terminó de armarse (~3.4 s). Antes de eso se veía el mismo logo dos veces:
+   uno quieto arriba y otro montándose en medio de la pantalla.
+
+   Es una animación, no una transición disparada por JS: si el navegador nunca
+   entrega el primer frame (pestaña de fondo), `forwards` deja igual el logo
+   visible al final. */
+.logo-wrap--espera {
+  opacity: 0;
+  animation: logo-wrap-entrar 0.8s ease 3.4s forwards;
+}
+
+@keyframes logo-wrap-entrar {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-wrap--espera {
+    opacity: 1;
+    animation: none;
+  }
+}

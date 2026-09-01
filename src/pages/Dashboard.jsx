@@ -41,7 +41,8 @@ import {
   Trash2,
   Sun,
   Moon,
-  Monitor
+  Monitor,
+  X
 } from 'lucide-react';
 import './Dashboard.css';
 import '../components/Experiences.css';
@@ -73,8 +74,11 @@ const Dashboard = () => {
     }
   }, [profile, navigate]);
   
-  // Sidebar states
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  // Sidebar states. En móvil el menú es un cajón que se superpone al contenido,
+  // así que debe arrancar cerrado; en escritorio sigue abierto como siempre.
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth <= 768
+  );
 
   const [myCertificates, setMyCertificates] = useState([]);
   
@@ -233,9 +237,6 @@ const Dashboard = () => {
 
   // Notification states
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications] = useState([
-    { id: 1, text: "Bienvenido a HCE. Tu cuenta ha sido creada con éxito.", read: false }
-  ]);
 
   // Real registration timestamp or placeholder
   const getMemberSinceDate = () => {
@@ -346,29 +347,29 @@ const Dashboard = () => {
       id: 2,
       title: 'ECMO Nursing Care Course',
       description: 'El primer entrenamiento diseñado por y para enfermería. Lidera con seguridad y criterio clínico el cuidado integral del paciente crítico en soporte ECMO.',
-      image: '/assets/componentes/expnur.png',
+      image: '/assets/componentes/expnur.webp',
       link: '/ecmo-nursing-care',
       badge: 'INSCRIPCIONES ABIERTAS',
       badgeClass: 'badge-danger',
       icon: NurseCap,
-      startDate: 'Inicio: 20 de Julio, 2026'
+      startDate: 'Próximamente: 3.ª Edición'
     },
     {
       id: 3,
       title: 'Paris International Diploma in ECMO',
       description: 'Certifícate en el programa de mayor prestigio global en ECMO, liderado por los profesores Alain Combes (ex Presidente de EuroELSO) y Matthieu Schmidt (Presidente de EuroELSO actual), máximos referentes globales e investigadores de ECMO del Hospital la Pitié-Salpêtrière. Accede a la experiencia del centro ECMO más grande del mundo, directo de París a Latinoamérica.',
-      image: '/assets/componentes/expparis.png',
+      image: '/assets/componentes/expparis.webp',
       link: '/paris-diploma-ecmo',
       badge: 'INSCRIPCIONES ABIERTAS',
       badgeClass: 'badge-danger',
       icon: Award,
-      startDate: 'Inicio: 27 de Octubre, 2026'
+      startDate: 'Inicio: 28 de Octubre, 2026'
     },
     {
       id: 4,
       title: 'ECMO SIM: Realidad Clínica',
       description: 'Sumérgete en una experiencia de alta fidelidad. Toma decisiones críticas y domina el soporte ECMO V-V y V-A en un entorno virtual interactivo, intuitivo y seguro, diseñado para acelerar tu curva de aprendizaje y el de tu equipo multidisciplinario.',
-      image: '/assets/componentes/expsim.png',
+      image: '/assets/componentes/expsim.webp',
       link: '/simulador-ecmo-sim',
       badge: 'SIMULADOR',
       badgeClass: 'badge-warning',
@@ -621,15 +622,55 @@ const Dashboard = () => {
   const numInProgress = inProgressCourses.length;
 
   // Average progress
-  const avgProgress = numEnrolled > 0 
+  const avgProgress = numEnrolled > 0
     ? Math.round(enrolledCourses.reduce((sum, c) => sum + c.progress, 0) / numEnrolled)
     : 0;
   const avatarUrl = getSafeAvatarUrl(profile?.avatar_url, user?.user_metadata?.avatar_url);
 
+  // Notificaciones derivadas del estado real del alumno. Antes esto era un
+  // arreglo fijo con un solo mensaje de bienvenida que nunca cambiaba, así que
+  // la campanita mostraba el punto rojo para siempre y enseñaba a ignorarla.
+  const notifications = [
+    ...myCertificates.slice(0, 3).map((cert) => ({
+      id: `cert-${cert.id}`,
+      text: `Tu certificado de ${cert.courses?.title || 'tu programa'} ya está disponible para descargar.`,
+      tab: 'certificates',
+    })),
+    ...inProgressCourses.slice(0, 3).map((course) => ({
+      id: `prog-${course.id}`,
+      text: `Llevas ${course.progress}% de ${course.title}. Continúa donde te quedaste.`,
+      tab: 'courses',
+    })),
+    ...enrolledCourses
+      .filter((course) => course.progress === 0)
+      .slice(0, 2)
+      .map((course) => ({
+        id: `nuevo-${course.id}`,
+        text: `Aún no comienzas ${course.title}. Tu acceso ya está activo.`,
+        tab: 'courses',
+      })),
+  ];
+
   return (
     <div className="crm-layout" data-theme={effectiveTheme}>
+      {/* Fondo oscuro para cerrar el cajón tocando fuera. Solo visible en móvil. */}
+      {!isSidebarCollapsed && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarCollapsed(true)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar Navigation */}
       <aside className={`crm-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+        <button
+          className="sidebar-close-btn"
+          onClick={() => setIsSidebarCollapsed(true)}
+          aria-label="Cerrar menú"
+        >
+          <X size={18} />
+        </button>
         <div className="sidebar-header">
           <div className="logo-container">
             <img 
@@ -731,17 +772,29 @@ const Dashboard = () => {
                 title="Notificaciones"
               >
                 <Bell size={20} />
-                <span className="notification-badge-dot"></span>
+                {/* El punto rojo solo aparece si de verdad hay algo que ver. */}
+                {notifications.length > 0 && <span className="notification-badge-dot"></span>}
               </button>
               {showNotifications && (
                 <div className="notifications-dropdown">
                   <div className="dropdown-header">Notificaciones</div>
                   <div className="dropdown-body">
-                    {notifications.map(n => (
-                      <div key={n.id} className="notification-item">
-                        <p>{n.text}</p>
+                    {notifications.length === 0 ? (
+                      <div className="notification-item notification-empty">
+                        <p>Estás al día. Aquí te avisaremos cuando tengas un certificado listo o un curso pendiente.</p>
                       </div>
-                    ))}
+                    ) : (
+                      notifications.map(n => (
+                        <button
+                          key={n.id}
+                          type="button"
+                          className="notification-item"
+                          onClick={() => { setActiveTab(n.tab); setShowNotifications(false); }}
+                        >
+                          <p>{n.text}</p>
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -831,14 +884,46 @@ const Dashboard = () => {
               <div className="continue-learning-section">
                 <h2>Continuar Aprendiendo</h2>
                 {inProgressCourses.length === 0 ? (
-                  <div className="crm-empty-state-card">
-                    <Inbox size={48} className="empty-state-icon" />
-                    <h3>Sin cursos activos</h3>
-                    <p>Actualmente no tienes ninguna materia o diplomado inscrito en progreso.</p>
-                    <button className="btn-crm-action solid btn-empty-state" onClick={() => setActiveTab('explore')}>
-                      Explorar Cursos
-                    </button>
-                  </div>
+                  /* Un alumno recién registrado llegaba a un vacío con un botón
+                     genérico. Si hay contenido gratuito disponible se le ofrece
+                     como primer paso concreto, que es el mejor momento para
+                     engancharlo: acaba de decidir entrar. */
+                  catalogCourses.length > 0 ? (
+                    <div className="crm-empty-state-card empty-state-suggestion">
+                      <PlayCircle size={48} className="empty-state-icon" />
+                      <h3>Empieza por aquí</h3>
+                      <p>
+                        Aún no tienes un programa en curso, pero <strong>{catalogCourses[0].title}</strong>{' '}
+                        está disponible sin costo y puedes verlo ahora mismo.
+                      </p>
+                      <div className="empty-state-actions">
+                        {catalogCourses[0].youtube_video_id ? (
+                          <a
+                            href={`/classroom/${catalogCourses[0].id}`}
+                            className="btn-crm-action solid btn-empty-state"
+                          >
+                            Comenzar ahora
+                          </a>
+                        ) : (
+                          <button className="btn-crm-action solid btn-empty-state" onClick={() => setActiveTab('explore')}>
+                            Comenzar ahora
+                          </button>
+                        )}
+                        <button className="btn-crm-action btn-empty-state" onClick={() => setActiveTab('explore')}>
+                          Ver todo el catálogo
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="crm-empty-state-card">
+                      <Inbox size={48} className="empty-state-icon" />
+                      <h3>Sin cursos activos</h3>
+                      <p>Actualmente no tienes ninguna materia o diplomado inscrito en progreso.</p>
+                      <button className="btn-crm-action solid btn-empty-state" onClick={() => setActiveTab('explore')}>
+                        Explorar Cursos
+                      </button>
+                    </div>
+                  )
                 ) : (
                   <div className="dash-exp-grid">
                     {inProgressCourses.map(course => {

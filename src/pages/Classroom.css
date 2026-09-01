@@ -818,3 +818,86 @@
   color: #94a3b8 !important;
   cursor: not-allowed !important;
 }
+
+/* ==========================================================================
+   Responsivo móvil
+   Las reglas de arriba (líneas ~404-423) solo colapsan las rejillas; todo lo
+   definido después —tarjeta de dudas, comentarios, controles del reproductor—
+   se quedaba sin tratamiento en pantallas chicas. Este bloque va al final a
+   propósito, para que sobrescriba sin tocar nada del diseño de escritorio.
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Encabezado: el botón de volver y el perfil competían por el mismo renglón */
+  .classroom-header {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  .header-left {
+    gap: 12px;
+    min-width: 0;
+  }
+  .header-logo {
+    max-height: 28px;
+    width: auto;
+  }
+  .back-btn {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  .classroom-video-card,
+  .classroom-doubts-card,
+  .classroom-info-sidebar {
+    padding: 16px;
+  }
+
+  /* "Avance del Video" y los botones dejan de pelearse por el ancho */
+  .classroom-player-controls {
+    align-items: stretch;
+    gap: 12px;
+  }
+  .classroom-btn-actions {
+    width: 100%;
+  }
+  .classroom-btn-actions .back-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .comment-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* En pantallas muy angostas el nombre no cabe; el avatar solo ya identifica */
+  .classroom-user-profile > span {
+    display: none;
+  }
+
+  .classroom-container {
+    padding: 16px 12px;
+  }
+  .classroom-video-card,
+  .classroom-doubts-card,
+  .classroom-info-sidebar {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  /* Botones apilados: "Bypass" y "Tomar Examen" no caben lado a lado */
+  .classroom-btn-actions {
+    flex-direction: column;
+  }
+  .classroom-btn-actions .back-btn {
+    width: 100%;
+  }
+
+  .doubt-comment-card.reply-card {
+    margin-left: 12px;
+  }
+}

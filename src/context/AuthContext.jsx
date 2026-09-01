@@ -298,6 +298,17 @@ export const AuthProvider = ({ children }) => {
       } catch (err) {
         console.error('Error writing phone to profile:', err);
       }
+
+      // Brevo — alta en la lista del portal, que dispara el correo de bienvenida.
+      // No bloquea el registro: si Brevo falla, la cuenta ya quedó creada igual.
+      fetch('/.netlify/functions/portal-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email, nombres, apellidos, telefono,
+          pais, estado, grado, especialidad, institucion, cargo,
+        }),
+      }).catch((err) => console.error('Error registering portal contact in Brevo:', err));
     }
 
     return data;

@@ -1,7 +1,13 @@
-import { createHash } from 'crypto';
+import { LISTS, isConfigured, buildAttributes, upsertContact, addToList, removeFromList } from './_brevo.js';
 
-const MAILCHIMP_TAG = 'ECMOParis2026';
-const CANCEL_TAG = 'CANCELPARIS';
+// Esta función atiende dos páginas distintas: la inscripción completa al Paris
+// Diploma y la de "Sólo Step 1". Cada una manda su propio `tag` en el payload,
+// que es lo que decide a qué lista —y por tanto a qué correo— va el inscrito.
+// Ambas comparten el carrito abandonado de Paris (#9).
+const LISTA_POR_TAG = {
+  ECMOParis2026:      LISTS.INSCRITOS_PARIS,
+  ECMOParisStep12026: LISTS.STEP1_PARIS,
+};
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -9,92 +15,28 @@ export const handler = async (event) => {
   }
 
   try {
-    const {
-      nombres, apellidos, email, telefono,
-      pais, estado, grado, especialidad, institucion, cargo,
-      perfil, extras, moneda, total_mxn,
-    } = JSON.parse(event.body);
+    const payload = JSON.parse(event.body);
+    const { email, tag } = payload;
 
     if (!email) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Email requerido' }) };
     }
 
-    const API_KEY     = process.env.MAILCHIMP_API_KEY;
-    const AUDIENCE_ID = process.env.MAILCHIMP_AUDIENCE_ID;
-    const SERVER      = process.env.MAILCHIMP_SERVER;
-
-    if (!API_KEY || !AUDIENCE_ID || !SERVER) {
+    if (!isConfigured()) {
       return { statusCode: 500, body: JSON.stringify({ error: 'Missing env vars' }) };
     }
 
-    const auth    = Buffer.from(`anystring:${API_KEY}`).toString('base64');
-    const headers = { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' };
-    const baseUrl = `https://${SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}`;
-    const hash    = createHash('md5').update(email.toLowerCase()).digest('hex');
+    // 1. Atributos primero: la automatización de bienvenida los usa al renderizar
+    //    el correo, así que deben existir antes de que el contacto entre a la lista.
+    await upsertContact(email, buildAttributes(payload));
 
-    // Upsert contacto con todos los merge fields
-    const upsertRes = await fetch(`${baseUrl}/members/${hash}`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({
-        email_address: email,
-        status_if_new: 'subscribed',   // dispara flujo de bienvenida en Mailchimp
-        merge_fields: {
-          FNAME:   nombres      || '',
-          LNAME:   apellidos    || '',
-          PHONE:   telefono     || '',
-          MMERGE5: grado        || '',  // Profesión
-          MMERGE6: especialidad || '',
-          MMERGE7: institucion  || '',
-        },
-      }),
-    });
+    // 2. Sale del carrito abandonado para que su automatización de recuperación,
+    //    que a la hora comprueba si sigue en la lista, ya no le envíe nada.
+    await removeFromList(email, LISTS.CARRITO_PARIS);
 
-    const upsertData = await upsertRes.json();
-    console.log('Mailchimp upsert:', upsertRes.status, upsertData.id || upsertData.detail);
-
-    // Forzar re-entrada del tag para disparar Customer Journeys
-    // Paso 1: Quitar tag de abandono (inactivo) y refrescar tag de éxito
-    await fetch(`${baseUrl}/members/${hash}/tags`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        tags: [
-          { name: CANCEL_TAG, status: 'inactive' },
-          { name: MAILCHIMP_TAG, status: 'inactive' }
-        ],
-      }),
-    });
-
-    // Paso 2: Pequeña espera para que Mailchimp procese el cambio
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Paso 3: Volver a poner el tag (activo)
-    await fetch(`${baseUrl}/members/${hash}/tags`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        tags: [{ name: MAILCHIMP_TAG, status: 'active' }],
-      }),
-    });
-
-    // Nota con el detalle completo de la inscripción
-    const note = [
-      `INSCRIPCIÓN HCE 2026`,
-      `PERFIL: ${perfil}`,
-      `EXTRAS: ${extras || 'Ninguno'}`,
-      `MONEDA: ${(moneda || 'mxn').toUpperCase()}`,
-      `TOTAL: $${total_mxn} MXN`,
-      `PAÍS: ${pais}, ${estado}`,
-      `CARGO: ${cargo}`,
-      `TAG: ${MAILCHIMP_TAG}`,
-    ].join('\n');
-
-    await fetch(`${baseUrl}/members/${hash}/notes`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ note }),
-    });
+    // 3. Entrar a la lista de inscritos dispara el correo de confirmación.
+    //    Si llegara un tag desconocido, cae en la inscripción completa.
+    await addToList(email, LISTA_POR_TAG[tag] || LISTS.INSCRITOS_PARIS);
 
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };
 

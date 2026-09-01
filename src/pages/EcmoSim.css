@@ -169,7 +169,7 @@
   min-height: 92vh;
   display: flex;
   align-items: center;
-  background: url('/assets/paginas/ecmosim.png') no-repeat center 15% / cover;
+  background: url('/assets/paginas/ecmosim.webp') no-repeat center 15% / cover;
   padding-top: 100px;
   overflow: hidden;
 }
@@ -544,7 +544,7 @@
 /* ── FINAL CTA ────────────────────────────────────── */
 .sim-final-cta {
   padding: 10rem 0;
-  background: url('/assets/paginas/ecmosim.png') no-repeat center center / cover;
+  background: url('/assets/paginas/ecmosim.webp') no-repeat center center / cover;
   position: relative;
 }
 .sim-final-cta::before {

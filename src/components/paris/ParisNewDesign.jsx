@@ -166,7 +166,7 @@ const ParisNewDesign = () => {
     }, []);
 
     useEffect(() => {
-        const targetDate = new Date('2026-10-27T00:00:00').getTime();
+        const targetDate = new Date('2026-10-28T00:00:00').getTime();
         const interval = setInterval(() => {
             const now = new Date().getTime();
             const distance = targetDate - now;
@@ -236,7 +236,7 @@ const ParisNewDesign = () => {
                     {/* Hero Countdown */}
                     <div className="hero-countdown reveal active">
                         <div className="countdown-label">
-                            <Calendar size={16} /> <span>Save the date: 27 de Octubre</span>
+                            <Calendar size={16} /> <span>Save the date: 28 de Octubre</span>
                         </div>
                         <div className="countdown-timer">
                             <div className="time-item">
@@ -783,7 +783,7 @@ const ParisNewDesign = () => {
                             Agrega ECMO Nursing con 20% de Descuento
                         </h4>
                         <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.6', marginBottom: '1.2rem' }}>
-                            Si eres enfermero(a), puedes complementar tu inscripción al Diploma Internacional con el <strong>ECMO Nursing Care Course</strong> con un <strong>20% de descuento</strong>. Fecha de inicio: <strong>20 de Julio</strong> — ideal como preparación teórica y práctica antes de la certificación en París en Octubre.
+                            Si eres enfermero(a), puedes complementar tu inscripción al Diploma Internacional con el <strong>ECMO Nursing Care Course</strong> con un <strong>20% de descuento</strong>. Próxima edición por confirmar — ideal como preparación teórica y práctica antes de la certificación en París en Octubre.
                         </p>
                         <Link 
                             to="/inscripciones-diploma-paris-ecmo" 

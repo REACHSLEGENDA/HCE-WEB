@@ -1,50 +1,17 @@
-import Stripe from 'stripe';
-import { createHash } from 'crypto';
+import { getStripe } from './_stripe.js';
+import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
 
 const USD_RATE = 17.5; // 1 USD = 17.5 MXN (source of truth for nursing checkout)
 
-const MAILCHIMP_TAG = 'CANCELNURSING';
-
 const LEGAL_TEXT = '*Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.';
 
-async function addMailchimpTag(email, perfilLabel, extrasLabel) {
-  const API_KEY     = process.env.MAILCHIMP_API_KEY;
-  const AUDIENCE_ID = process.env.MAILCHIMP_AUDIENCE_ID;
-  const SERVER      = process.env.MAILCHIMP_SERVER;
-  if (!API_KEY || !AUDIENCE_ID || !SERVER || !email) return;
-
-  const auth    = Buffer.from(`anystring:${API_KEY}`).toString('base64');
-  const headers = { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' };
-  const baseUrl = `https://${SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}`;
-  const hash    = createHash('md5').update(email.toLowerCase()).digest('hex');
-
-  // Upsert member
-  await fetch(`${baseUrl}/members/${hash}`, {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify({
-      email_address: email,
-      status_if_new: 'subscribed',
-    }),
-  });
-
-  // Apply tag
-  await fetch(`${baseUrl}/members/${hash}/tags`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      tags: [{ name: MAILCHIMP_TAG, status: 'active' }],
-    }),
-  });
-
-  // Add note with inscription details
-  await fetch(`${baseUrl}/members/${hash}/notes`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      note: `INTERÉS EN ECMO NURSING (CARRITO ABANDONADO)\nPERFIL: ${perfilLabel}\nEXTRAS: ${extrasLabel || 'Ninguno'}\nTAG: ${MAILCHIMP_TAG}`,
-    }),
-  });
+// Carrito abandonado: el contacto entra a la lista de recuperación de Brevo.
+// La automatización espera una hora y comprueba si sigue en la lista antes de
+// enviarle nada, así que basta con sacarlo de ella cuando complete el pago.
+async function registrarCarritoAbandonado(email) {
+  if (!isConfigured() || !email) return;
+  await upsertContact(email);
+  await addToList(email, LISTS.CARRITO_NURSING);
 }
 
 const PRICES_MXN = {
@@ -160,7 +127,7 @@ export const handler = async (event) => {
       total_mxn: totalMXN,
     })).toString('base64url');
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const { stripe, pasarela } = getStripe(currency);
 
     const sessionOptions = {
       payment_method_types: ['card'],
@@ -181,7 +148,8 @@ export const handler = async (event) => {
         email,
         promo_applied: promoCode || 'none',
         total_mxn: totalMXN.toString(),
-        mailchimp_tag: MAILCHIMP_TAG,
+        moneda: currency,
+        pasarela,
       },
       payment_intent_data: {
         metadata: {
@@ -191,7 +159,8 @@ export const handler = async (event) => {
           email,
           promo_applied: promoCode || 'none',
           total_mxn: totalMXN.toString(),
-          mailchimp_tag: MAILCHIMP_TAG,
+          moneda: currency,
+          pasarela,
         }
       }
     };
@@ -212,10 +181,9 @@ export const handler = async (event) => {
 
     const session = await stripe.checkout.sessions.create(sessionOptions);
 
-    // Mailchimp: registrar carrito abandonado (no bloqueante)
-    const extrasLabel = validExtras.map((e) => EXTRA_LABELS[e]).join(', ');
-    addMailchimpTag(email, activeProfileLabel, extrasLabel).catch((err) =>
-      console.error('Mailchimp tag error:', err.message)
+    // Brevo: registrar carrito abandonado (no bloqueante)
+    registrarCarritoAbandonado(email).catch((err) =>
+      console.error('Brevo carrito abandonado error:', err.message)
     );
 
     return {

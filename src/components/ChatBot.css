@@ -409,3 +409,10 @@
     padding: 6px 11px;
   }
 }
+
+/* El banner de cookies ocupa la misma esquina inferior derecha y en móvil se
+   vuelve una barra a todo lo ancho. Como el widget tiene mayor z-index, tapaba
+   el botón "Aceptar todo". Mientras haya que decidir cookies, el chat se oculta. */
+body.cookie-banner-open .hce-chat-widget {
+  display: none;
+}

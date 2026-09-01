@@ -452,10 +452,31 @@
   border-bottom: 1px solid var(--border-color);
   font-size: 0.8rem;
   line-height: 1.4;
+  /* Ahora cada aviso es un <button> que lleva a su sección, así que hay que
+     neutralizar los estilos propios del botón. */
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .notification-item:hover {
   background-color: var(--bg-sidebar);
+}
+
+.notification-empty {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.notification-empty:hover {
+  background-color: transparent;
 }
 
 .user-profile-summary {
@@ -1058,22 +1079,33 @@
 }
 
 @media (max-width: 768px) {
+  /* En móvil el menú deja de ser un riel permanente y pasa a ser un cajón que
+     se desliza sobre el contenido. El riel de 64px robaba ancho a una pantalla
+     que ya va justa, y como el aside es `fixed` terminaba encimado sobre las
+     tarjetas en vez de empujarlas. */
   .crm-sidebar {
-    width: 64px;
+    width: 260px;
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
   }
   .crm-sidebar.collapsed {
-    width: 0px;
-    border-right: none;
+    width: 260px;
+    transform: translateX(-100%);
+    box-shadow: none;
   }
-  .crm-sidebar .menu-label, .crm-sidebar .brand-text {
+  /* El cajón sí tiene espacio para las etiquetas, no hace falta ocultarlas. */
+  .crm-sidebar .menu-label {
+    display: inline;
+  }
+  .crm-sidebar .brand-text {
     display: none;
   }
-  .crm-main-container {
-    margin-left: 64px;
-  }
+  /* El contenido siempre ocupa el ancho completo: el cajón va por encima. */
+  .crm-main-container,
   .crm-sidebar.collapsed + .crm-main-container {
-    margin-left: 0px;
+    margin-left: 0;
   }
+
   
   .crm-top-header {
     padding: 0 20px;
@@ -2132,5 +2164,55 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── Cajón móvil: fondo y botón de cerrar ─────────────────────────────────
+   Los selectores van acotados a .crm-layout a propósito: Dashboard.css y
+   AdminDashboard.css terminan en el mismo bundle, y con nombres globales
+   idénticos el minificador fusionaba ambas reglas dejando un solo z-index.
+   Las reglas base van antes de la media query (no suman especificidad). */
+.crm-layout .sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1005;
+}
 
+.crm-layout .sidebar-close-btn {
+  display: none;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background: var(--bg-gray);
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 2;
+}
 
+.crm-layout .sidebar-close-btn:hover {
+  color: var(--accent-orange);
+}
+
+@media (max-width: 768px) {
+  .crm-layout .sidebar-backdrop { display: block; }
+  /* El ☰ del encabezado queda tapado por el cajón: hace falta salida visible. */
+  .crm-layout .sidebar-close-btn { display: flex; }
+}
+
+/* Estado vacío que sugiere el curso gratuito como primer paso. */
+.empty-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.empty-state-suggestion .btn-empty-state {
+  text-decoration: none;
+}

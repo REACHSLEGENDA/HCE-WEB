@@ -184,7 +184,7 @@ const Gallery = () => {
         <div className="gallery-hero-overlay"></div>
         <div className="hce-container">
           <div ref={headerRef} className={`gallery-hero-content au-reveal ${headerInView ? 'active' : ''}`}>
-            <div className="section-badge">
+            <div className="section-badge badge-oscuro">
               <Sparkles size={16} />
               GALERÍA HCE
             </div>

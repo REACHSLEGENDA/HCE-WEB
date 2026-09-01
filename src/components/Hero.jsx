@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, Gamepad2, Presentation } from 'lucide-react';
+import FirmaHCE from './FirmaHCE';
 import './Hero.css';
 
 const Hero = () => {
@@ -13,6 +14,7 @@ const Hero = () => {
   return (
     <header className="hce-home-hero" id="home">
       <div className="hce-container hero-inner">
+        <FirmaHCE />
         <div className={`hero-content reveal ${active ? 'active' : ''}`}>
           <div className="section-badge">
             <Sparkles size={16} /> Experiencia clínica de vanguardia

@@ -83,7 +83,7 @@
 .ic-hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url('/assets/componentes/insuficiencia.png');
+  background-image: url('/assets/componentes/insuficiencia.webp');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;

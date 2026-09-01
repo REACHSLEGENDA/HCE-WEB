@@ -1,226 +1,437 @@
-.campus-futuristic-section {
-  padding: 10rem 0;
-  background-color: #0a192f;
+/* ===========================================================================
+   Sección "Evoluciona tu formación" (Campus).
+
+   Todas las clases van con prefijo cmp- porque este archivo termina en el
+   mismo bundle que el resto de la home: sin prefijo, dos componentes que
+   declaren la misma clase se pisan al minificar.
+   ======================================================================== */
+
+.cmp-section {
   position: relative;
   overflow: hidden;
-  color: white;
+  padding: 9rem 0;
+  background: #0c2338;
+  color: #ffffff;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  isolation: isolate;
 }
 
-.campus-mesh-bg {
+/* --- Fondo: aurora en deriva + rejilla técnica ------------------------- */
+
+.cmp-aurora {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(0, 210, 255, 0.1) 0, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(30, 55, 184, 0.1) 0, transparent 50%),
-    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg stroke='%23ffffff' stroke-width='0.5' stroke-opacity='0.05'%3E%3Cpath d='M36 34v-8h-8v8h8zm4 0V1.66c0-.92-.75-1.66-1.66-1.66H1.66C.74 0 0 .75 0 1.66V39.6c0 .92.75 1.66 1.66 1.66h39.15c.92 0 1.66-.75 1.66-1.66V36l-4-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  z-index: 1;
+  inset: -30%;
+  z-index: -2;
+  background:
+    radial-gradient(38% 42% at 22% 28%, rgba(0, 210, 255, 0.20), transparent 70%),
+    radial-gradient(34% 38% at 78% 68%, rgba(37, 99, 235, 0.22), transparent 70%),
+    radial-gradient(26% 30% at 62% 12%, rgba(249, 115, 22, 0.10), transparent 70%);
+  animation: cmp-deriva 26s ease-in-out infinite alternate;
 }
 
-.campus-flex-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6rem;
+@keyframes cmp-deriva {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to   { transform: translate3d(3%, 2%, 0) scale(1.08); }
+}
+
+.cmp-grid-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  /* La rejilla se desvanece hacia los bordes para que no corte la sección. */
+  mask-image: radial-gradient(72% 62% at 50% 45%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(72% 62% at 50% 45%, #000 40%, transparent 100%);
+}
+
+/* --- Rejilla de la sección -------------------------------------------- */
+
+.cmp-layout {
   position: relative;
-  z-index: 2;
-}
-
-.campus-info-block {
-  flex: 1;
-  max-width: 550px;
-}
-
-.tech-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(0, 210, 255, 0.1);
-  border: 1px solid rgba(0, 210, 255, 0.2);
-  color: #00d2ff;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  margin-bottom: 2rem;
-}
-
-.campus-title-main {
-  font-size: 3.8rem;
-  line-height: 1.1;
-  margin-bottom: 2rem;
-  font-weight: 800;
-}
-
-.blue-gradient-text {
-  background: linear-gradient(90deg, #00d2ff 0%, #1e37b8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: inline-block;
-}
-
-.campus-description {
-  font-size: 1.15rem;
-  color: #94a3b8;
-  line-height: 1.8;
-  margin-bottom: 3rem;
-}
-
-.campus-features-list {
+  z-index: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 4rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: 5rem;
 }
 
-.c-feature-item {
+/* --- Entrada escalonada -----------------------------------------------
+   Un solo observador marca la sección como visible y cada elemento entra
+   según su --orden. Así el retardo se declara en el JSX, junto al contenido,
+   y no hay que mantener una lista de delays en el CSS. */
+
+.cmp-anim {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--orden, 0) * 90ms);
+}
+
+[data-visible] .cmp-anim {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Columna de texto -------------------------------------------------- */
+
+.cmp-copy {
+  max-width: 560px;
+}
+
+.cmp-title {
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: clamp(2.6rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+/* El acento cian recorre un degradado muy lento: da vida al título sin
+   competir con el resto del movimiento de la sección. */
+.cmp-title-accent {
+  background: linear-gradient(100deg, #00d2ff 0%, #3b82f6 38%, #00d2ff 76%, #3b82f6 100%);
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: cmp-barrido 9s linear infinite;
+}
+
+@keyframes cmp-barrido {
+  to { background-position: 260% 0; }
+}
+
+.cmp-lead {
+  font-size: 1.08rem;
+  line-height: 1.75;
+  color: #9fb3c8;
+  margin-bottom: 2.5rem;
+}
+
+/* --- Características --------------------------------------------------- */
+
+.cmp-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Misma altura en las cuatro: "Comunidad internacional" ocupa dos líneas y
+     sin esto la segunda fila quedaba más alta que la primera. */
+  grid-auto-rows: 1fr;
+  gap: 0.9rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2.75rem;
+}
+
+.cmp-feature {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Entrada y hover van juntos en una sola declaración: `transition` es una
+   abreviatura, así que una segunda regla borraría el retardo escalonado que
+   .cmp-anim aplica a estos mismos elementos. */
+.cmp-feature {
+  transition:
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--orden, 0) * 90ms),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--orden, 0) * 90ms),
+    background-color 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.cmp-feature:hover {
+  background: rgba(0, 210, 255, 0.07);
+  border-color: rgba(0, 210, 255, 0.35);
+}
+
+.cmp-feature-icon {
+  transition: box-shadow 0.35s ease, color 0.35s ease;
+}
+
+.cmp-feature-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  /* Mismo lenguaje de formas que la sección de métricas: los iconos son
+     círculos en toda la home nueva. */
+  border-radius: 50%;
+  background: linear-gradient(150deg, rgba(0, 210, 255, 0.18), rgba(37, 99, 235, 0.14));
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  color: #00d2ff;
+}
+
+.cmp-feature:hover .cmp-feature-icon {
+  box-shadow: 0 0 22px rgba(0, 210, 255, 0.35);
+}
+
+.cmp-feature-text {
+  font-size: 0.98rem;
   font-weight: 600;
   color: #e2e8f0;
+  line-height: 1.25;
 }
 
-.cf-icon {
-  width: 46px;
-  height: 46px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #00d2ff;
-}
+/* --- Botón ------------------------------------------------------------- */
 
-.campus-go-btn {
+.cmp-cta {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  background: #00d2ff;
-  color: #0a192f;
-  padding: 1.2rem 2.5rem;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 1.1rem;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 10px 30px rgba(0, 210, 255, 0.3);
+  gap: 0.65rem;
+  padding: 1rem 2rem;
+  border-radius: 100px;
+  background: linear-gradient(120deg, #00d2ff, #2563eb);
+  color: #ffffff;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  box-shadow: 0 14px 34px rgba(0, 130, 255, 0.28);
+  /* Misma razón que en .cmp-feature: si el hover declarara su propia
+     `transition`, borraría el retardo de entrada de .cmp-anim. */
+  transition:
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--orden, 0) * 90ms),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--orden, 0) * 90ms),
+    box-shadow 0.4s ease;
 }
 
-.campus-go-btn:hover {
-  transform: translateY(-5px) scale(1.05);
-  background: white;
-  box-shadow: 0 20px 40px rgba(255, 255, 255, 0.1);
+.cmp-cta:hover {
+  box-shadow: 0 18px 44px rgba(0, 170, 255, 0.42);
 }
 
-.campus-mockup-wrapper {
-  flex: 1;
-  position: relative;
+.cmp-cta svg {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.glow-orb {
+.cmp-cta:hover svg {
+  transform: translate(3px, -3px);
+}
+
+/* Destello que cruza el botón al pasar el cursor. */
+.cmp-cta::after {
+  content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(0, 210, 255, 0.2) 0%, transparent 70%);
-  filter: blur(40px);
-  z-index: 1;
+  top: 0;
+  left: -120%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-18deg);
 }
 
-.mockup-stack {
+.cmp-cta:hover::after {
+  animation: cmp-destello 0.85s ease-out;
+}
+
+@keyframes cmp-destello {
+  to { left: 130%; }
+}
+
+/* --- Escena de mockups -------------------------------------------------- */
+
+.cmp-scene {
   position: relative;
-  z-index: 2;
-  height: 500px;
-  perspective: 2000px;
+  perspective: 1400px;
 }
 
-.m-card {
+.cmp-halo {
   position: absolute;
-  background: #1e293b;
+  inset: 8% 6%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 190, 255, 0.28), rgba(0, 190, 255, 0.10) 45%, transparent 72%);
+  animation: cmp-latido 7s ease-in-out infinite;
+}
+
+@keyframes cmp-latido {
+  0%, 100% { opacity: 0.55; transform: scale(0.95); }
+  50%      { opacity: 0.9;  transform: scale(1.06); }
+}
+
+.cmp-stack {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  transform-style: preserve-3d;
+  animation: cmp-flotar 9s ease-in-out infinite;
+}
+
+@keyframes cmp-flotar {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
+}
+
+/* El giro del paralaje vive en una capa propia: así la flotación (que anima
+   el contenedor) y el giro (que anima esta capa) nunca se sobrescriben. */
+.cmp-scene[data-paralaje] .cmp-stack {
+  transform: rotateX(var(--giro-x, 0deg)) rotateY(var(--giro-y, 0deg));
+  animation: none;
+}
+
+/* Mockups apilados ------------------------------------------------------- */
+
+.cmp-shot {
+  position: absolute;
+  margin: 0;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #0b1f36;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.5);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease;
 }
 
-.m-card img {
+.cmp-shot img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.9;
+  display: block;
 }
 
-.m-main {
-  width: 450px;
-  height: 280px;
+.cmp-shot-main {
   z-index: 3;
-  top: 100px;
-  right: 0;
-  transform: rotateY(-15deg);
+  top: 12%;
+  left: 14%;
+  width: 76%;
+  transform: translateZ(60px);
 }
 
-.m-secondary {
-  width: 350px;
-  height: 220px;
-  z-index: 2;
-  top: 40px;
-  right: 150px;
-  transform: rotateY(-15deg) translateZ(-50px);
-  opacity: 0.6;
-}
-
-.m-tertiary {
-  width: 300px;
-  height: 180px;
+.cmp-shot-back {
   z-index: 1;
-  top: 200px;
-  right: 250px;
-  transform: rotateY(-15deg) translateZ(-100px);
-  opacity: 0.3;
+  top: 0;
+  right: 0;
+  width: 54%;
+  opacity: 0.85;
+  transform: translateZ(10px) rotate(3deg);
 }
 
-.m-label {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(10px);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #00d2ff;
+.cmp-shot-front {
+  z-index: 2;
+  bottom: 2%;
+  left: 0;
+  width: 46%;
+  transform: translateZ(110px) rotate(-4deg);
 }
 
-.campus-mockup-wrapper:hover .m-main { transform: rotateY(-5deg) translateZ(30px); opacity: 1; }
-.campus-mockup-wrapper:hover .m-secondary { transform: rotateY(-5deg) translateZ(10px) translateX(-20px); opacity: 0.8; }
-.campus-mockup-wrapper:hover .m-tertiary { transform: rotateY(-5deg) translateZ(-10px) translateX(-40px); opacity: 0.6; }
+.cmp-scene:hover .cmp-shot-back  { transform: translateZ(10px) rotate(5deg) translateY(-10px); }
+.cmp-scene:hover .cmp-shot-front { transform: translateZ(110px) rotate(-6deg) translateY(10px); }
 
-@media (max-width: 1100px) {
-  .campus-flex-container { flex-direction: column; text-align: center; gap: 4rem; }
-  .campus-info-block { max-width: 100%; display: flex; flex-direction: column; align-items: center; }
-  .campus-features-list { justify-content: center; }
-  .mockup-stack { height: 400px; width: 100%; max-width: 600px; margin: 0 auto; }
-  .m-main { width: 80%; left: 10%; right: auto; }
+
+/* Barra de navegador del mockup principal. El pantallazo a secas se leía como
+   una captura pegada; con el marco se lee como el producto abierto. */
+
+.cmp-window-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-@media (max-width: 768px) {
-  .campus-title-main { font-size: 2.8rem; }
-  .m-secondary, .m-tertiary { display: none; }
-  .m-main { width: 100%; left: 0; top: 0; position: relative; transform: none; height: auto; aspect-ratio: 16/9; }
-  .mockup-stack { height: auto; min-height: 200px; margin-top: 2rem; }
+.cmp-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-@media (max-width: 480px) {
-  .campus-title-main { font-size: 2rem; }
-  .campus-features-list { grid-template-columns: 1fr; }
-  .campus-futuristic-section { padding: 6rem 0; }
-  .m-main { width: 100%; top: 0; }
-  .mockup-stack { height: auto; }
+.cmp-dot:nth-child(1) { background: rgba(248, 113, 113, 0.75); }
+.cmp-dot:nth-child(2) { background: rgba(250, 204, 21, 0.75); }
+.cmp-dot:nth-child(3) { background: rgba(74, 222, 128, 0.75); }
+
+.cmp-window-url {
+  flex: 1;
+  margin-left: 8px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #8fa9c4;
+  font-size: 0.68rem;
+  letter-spacing: 0.3px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Adaptación a pantallas menores ------------------------------------ */
+
+@media (max-width: 1024px) {
+  .cmp-section { padding: 6.5rem 0; }
+
+  .cmp-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3.5rem;
+  }
+
+  .cmp-copy { max-width: none; }
+
+  .cmp-scene { order: 2; }
+}
+
+@media (max-width: 640px) {
+  .cmp-section { padding: 5rem 0; }
+
+  .cmp-features { grid-template-columns: minmax(0, 1fr); }
+
+  .cmp-lead { font-size: 1rem; margin-bottom: 2rem; }
+
+  .cmp-cta { width: 100%; justify-content: center; }
+
+  /* En pantallas estrechas el apilado en 3D se amontona: los mockups
+     laterales se reducen y el principal ocupa casi todo el ancho. */
+  .cmp-shot-main  { top: 8%; left: 8%; width: 84%; }
+  .cmp-shot-back  { width: 46%; }
+  .cmp-shot-front { width: 40%; }
+
+  .cmp-window-url { font-size: 0.58rem; padding: 3px 8px; }
+  .cmp-window-bar { padding: 7px 10px; gap: 5px; }
+  .cmp-dot { width: 7px; height: 7px; }
+
+}
+
+/* --- Respeto por quien pide menos movimiento ---------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .cmp-anim {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .cmp-aurora,
+  .cmp-title-accent,
+  .cmp-halo,
+  .cmp-stack,
+  .cmp-scan,
+  .cmp-cta:hover::after {
+    animation: none;
+  }
+
+  .cmp-scan { opacity: 0; }
+
+  .cmp-shot,
+  .cmp-cta svg {
+    transition: none;
+  }
+}
+
+/* Fuera de pantalla no hay nada que animar: se congelan los bucles decorativos
+   en lugar de dejarlos girando contra la GPU durante todo el scroll. */
+.cmp-section:not([data-activo]) .cmp-aurora,
+.cmp-section:not([data-activo]) .cmp-halo,
+.cmp-section:not([data-activo]) .cmp-stack,
+.cmp-section:not([data-activo]) .cmp-scan,
+.cmp-section:not([data-activo]) .cmp-title-accent {
+  animation-play-state: paused;
 }

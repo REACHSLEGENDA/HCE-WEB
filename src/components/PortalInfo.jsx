@@ -14,7 +14,7 @@ const PortalInfo = () => {
       
       <div className="hce-container" ref={ref}>
         <div className={`portal-header reveal ${inView ? 'active' : ''}`}>
-          <div className="section-badge">
+          <div className="section-badge badge-oscuro">
             <GraduationCap size={16} /> PORTAL DE APRENDIZAJE HCE
           </div>
           <h2 className="portal-title">

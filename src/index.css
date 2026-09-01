@@ -168,8 +168,8 @@ img, video {
   display: inline-flex;
   align-items: center;
   gap: 0.8rem;
-  background: #051124;
-  color: #00d2ff;
+  background: #ffffff;
+  color: #0369a1;
   padding: 0.5rem 1.4rem;
   border-radius: 100px;
   font-family: 'Outfit', 'Montserrat', sans-serif;
@@ -177,22 +177,43 @@ img, video {
   font-size: 0.75rem;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  border: 1px solid rgba(0, 210, 255, 0.25);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(3, 105, 161, 0.18);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
   margin-bottom: 1.5rem;
   transition: all 0.3s ease;
   width: fit-content;
 }
 
 .section-badge svg {
-  color: #00d2ff;
-  filter: drop-shadow(0 0 5px rgba(0, 210, 255, 0.5));
+  color: #0891b2;
 }
 
 .section-badge:hover {
   transform: translateY(-2px);
-  border-color: rgba(0, 210, 255, 0.5);
-  box-shadow: 0 8px 25px rgba(0, 210, 255, 0.15);
+  border-color: rgba(3, 105, 161, 0.45);
+  box-shadow: 0 8px 22px rgba(3, 105, 161, 0.16);
+}
+
+/* Variante para secciones de fondo OSCURO: sin relleno ni borde, solo las
+   letras. El chip relleno se veia como un parche pegado encima del fondo. */
+.section-badge.badge-oscuro {
+  background: transparent;
+  color: #00d2ff;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.section-badge.badge-oscuro svg {
+  color: #00d2ff;
+  filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.45));
+}
+
+.section-badge.badge-oscuro:hover {
+  transform: none;
+  border: none;
+  box-shadow: none;
+  color: #7ee7ff;
 }
 
 /* Animations */

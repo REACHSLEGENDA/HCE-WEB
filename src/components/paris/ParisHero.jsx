@@ -41,7 +41,7 @@ const ParisHero = () => {
       </div>
 
       <div className="paris-hero-content">
-        <div className="section-badge">
+        <div className="section-badge badge-oscuro">
           <Award size={16} /> Certificación Internacional
         </div>
         

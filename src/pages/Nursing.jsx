@@ -92,8 +92,7 @@ const Nursing = () => {
 
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [activeModule, setActiveModule] = useState(null);
+    const [activeModule, setActiveModule] = useState(null);
   const [activeFaq, setActiveFaq] = useState(null);
   const facultyTrackRef = React.useRef(null);
   const lastInteractionRef = React.useRef(0);
@@ -166,26 +165,6 @@ const Nursing = () => {
     setActiveModule(activeModule === index ? null : index);
   };
 
-  useEffect(() => {
-    const targetDate = new Date('2026-08-03T00:00:00');
-    const updateTimer = () => {
-      const difference = targetDate.getTime() - new Date().getTime();
-      if (difference <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((difference / 1000 / 60) % 60);
-      const seconds = Math.floor((difference / 1000) % 60);
-      setTimeLeft({ days, hours, minutes, seconds });
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   const virtualFaculty = [
     { src: "/assets/instructores/p-carlosm.jpeg", name: "Dr. Carlos García Camacho", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Clínico y ECMO Especialista. Doctor en Ciencias de la Salud. Máster en Perfusión. Máster en Innovación e Investigación en Cuidados de la Salud. Ex Presidente de la Asociación Española de Perfusionistas", hospital: "Hospital Universitario Puerta del Mar de Cádiz" },
     { src: "/assets/instructores/p-juanm.jpeg", name: "Dr. Juan Blanco Morillo", country: "ESPAÑA", flag: "https://flagcdn.com/w80/es.png", role: "Perfusionista Clínico y ECMO Especialista. Doctor en Ciencias de la Salud. Máster en Gestión del Riesgo Cardiovascular. Miembro Ejecutivo del Comité de ICEBP", hospital: "Hospital Universitario Virgen de la Arrixaca" },
@@ -219,7 +198,7 @@ const Nursing = () => {
         <div className="n-hero-banner-wrap hce-container">
           <div className="n-hero-text">
             <span style={{ color: '#e31837', fontWeight: '800', letterSpacing: '2px', marginBottom: '0.8rem', fontSize: '1.1rem', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif" }}>
-              INICIAMOS EL 3 DE AGOSTO DE 2026
+              PRÓXIMAMENTE · 3.ª EDICIÓN
             </span>
             <span className="n-sec-badge">PROGRAMA DE ALTA ESPECIALIDAD</span>
             <h1 className="n-hero-title-text">
@@ -229,34 +208,11 @@ const Nursing = () => {
               Entrenamiento diseñado e impartido 100% por enfermería para enfermería.
             </p>
 
-            {/* Cronómetro de inicio estilo Paris */}
+            {/* El cronómetro vuelve cuando haya fecha confirmada de la 3.ª edición. */}
             <div className="hero-countdown reveal active">
                 <div className="countdown-label">
-                    <Calendar size={16} /> <span>Save the date: 3 de Agosto</span>
+                    <Calendar size={16} /> <span>Fecha de la 3.ª edición por confirmar</span>
                 </div>
-                <div className="countdown-timer">
-                    <div className="time-item">
-                        <span className="time-value">{timeLeft.days}</span>
-                        <span className="time-label">Días</span>
-                    </div>
-                    <span className="time-sep">:</span>
-                    <div className="time-item">
-                        <span className="time-value">{timeLeft.hours}</span>
-                        <span className="time-label">Hrs</span>
-                    </div>
-                    <span className="time-sep">:</span>
-                    <div className="time-item">
-                        <span className="time-value">{timeLeft.minutes}</span>
-                        <span className="time-label">Min</span>
-                    </div>
-                    <span className="time-sep">:</span>
-                    <div className="time-item">
-                        <span className="time-value">{timeLeft.seconds}</span>
-                        <span className="time-label">Seg</span>
-                    </div>
-                </div>
-
-
             </div>
 
 
@@ -363,7 +319,7 @@ const Nursing = () => {
                     borderRadius: '6px',
                   }}>
                     <Calendar size={13} />
-                    <span>Inicio: 3 de Agosto, 2026</span>
+                    <span>Próximamente: 3.ª Edición</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
@@ -523,7 +479,7 @@ const Nursing = () => {
           <div className="n-timeline-container">
             {/* Step 1 */}
             <div className="n-card-base n-timeline-step">
-              <span className="n-timeline-badge active">Fase Virtual: 2 Meses, inicio 3 de Agosto 2026.</span>
+              <span className="n-timeline-badge active">Fase Virtual: 2 Meses · Fecha de inicio por confirmar.</span>
               <h3>Entrenamiento Teórico (Aprendizaje Híbrido)</h3>
               <p>Aprendizaje sincrónico y asincrónico a través de nuestra plataforma virtual. Cubre de manera progresiva los fundamentos del soporte ECMO, Fisiología y Hemodinamia Aplicada, Monitoreo Integral del Binomio Paciente-Circuito, Detección Precoz de Complicaciones.</p>
               <div style={{ marginTop: '1.2rem', textAlign: 'left' }}>

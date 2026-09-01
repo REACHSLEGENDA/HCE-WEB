@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Users, Heart, Activity, Award, Gamepad2, PlayCircle, Hospital, Home as HomeIcon, Image, Camera, LogIn, User, LogOut, ExternalLink, MessageSquare } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
@@ -18,6 +18,10 @@ const NurseCap = ({ size = 24, ...props }) => (
 );
 
 const Navbar = () => {
+  // En la portada el logo del navbar espera a que termine la firma animada del
+  // hero: si aparece antes, se ve el mismo logo dos veces mientras se arma.
+  const enPortada = useLocation().pathname === '/';
+
   const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
@@ -58,7 +62,7 @@ const Navbar = () => {
           <span></span>
         </div>
 
-        <div className="logo-wrap">
+        <div className={`logo-wrap ${enPortada ? 'logo-wrap--espera' : ''}`}>
           <Link to="/">
             <img src="/assets/componentes/ghghg-scaled.png" alt="HCE Logo" />
           </Link>

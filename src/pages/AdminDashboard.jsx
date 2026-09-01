@@ -47,13 +47,20 @@ import {
 import './AdminDashboard.css';
 import { useNotification } from '../context/NotificationContext';
 
+// Días sin actividad en la plataforma a partir de los cuales un curso iniciado
+// y no terminado (con avance < 80%) se considera abandonado.
+const ABANDONMENT_INACTIVE_DAYS = 15;
+
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { showToast, showAlert, showConfirm } = useNotification();
 
-  // Sidebar state
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  // Sidebar state. En móvil el menú se superpone al contenido, así que arranca
+  // cerrado; en escritorio se mantiene abierto como siempre.
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth <= 768
+  );
 
   // Active Tab: 'dashboard' | 'courses' | 'students' | 'certificates' | 'categories' | 'reports' | 'admins' | 'settings'
   const [activeTab, setActiveTabState] = useState(() => {
@@ -870,17 +877,13 @@ const AdminDashboard = () => {
     const studentProfiles = stats.studentProfiles || [];
     const activeCount = stats.activeCount || 0;
     const completedCount = stats.completedCount || 0;
-    const approvalRate = stats.approvalRate || 100;
+    const approvalRate = stats.approvalRate || 0;
     const retentionRanked = stats.retentionRanked || [];
     const abandonmentRanked = stats.abandonmentRanked || [];
     const liveConnected = stats.liveConnected || [];
     const courseStatsList = stats.courseStatsList || [];
     const certs = stats.certificates || [];
     const webs = stats.webinars || [];
-    const deviceCounts = stats.deviceCounts || {};
-    const totalDevices = stats.totalDevices || 1;
-    const browserCounts = stats.browserCounts || {};
-    const totalBrowsers = stats.totalBrowsers || 1;
     const countriesDisplay = stats.countriesDisplay || [];
     const alertsList = stats.alertsList || [];
     const studentTrackingList = stats.studentTrackingList || [];
@@ -901,22 +904,21 @@ const AdminDashboard = () => {
       <tr>
         <td style="font-weight:600">${c.title}</td>
         <td style="text-align:center">${c.enrolled}</td>
+        <td style="text-align:center">${c.abandoned}</td>
         <td style="text-align:center">${c.abandonmentRate}%</td>
         <td style="text-align:center">${c.retentionRate}%</td>
       </tr>
     `).join('');
 
     // Section 2: Connected Real-time
-    const liveConnectedRows = liveConnected.length === 0 
-      ? '<tr><td colspan="6" style="text-align:center;padding:15px;color:#64748b">No hay alumnos conectados en vivo en este momento.</td></tr>'
+    const liveConnectedRows = liveConnected.length === 0
+      ? '<tr><td colspan="4" style="text-align:center;padding:15px;color:#64748b">No hay alumnos conectados en vivo en este momento.</td></tr>'
       : liveConnected.map(student => `
       <tr>
         <td style="font-weight:600">${student.nombre_completo || student.email}</td>
         <td style="text-align:center">${formatDuration(student.activity?.session_duration || 0)}</td>
-        <td style="text-align:center">${student.activity?.ip_address || '-'}</td>
+        <td style="text-align:center">${student.activity?.current_action || '-'}</td>
         <td style="text-align:center">${student.pais || '-'}</td>
-        <td style="text-align:center">${student.activity?.device || '-'}</td>
-        <td style="text-align:center">${student.activity?.browser || '-'}</td>
       </tr>
     `).join('');
 
@@ -951,37 +953,19 @@ const AdminDashboard = () => {
       </tr>`;
     }).join('');
 
-    // Section 5: Webinars
+    // Section 5: Webinars. Solo se listan los datos registrados del webinar.
+    // No hay tabla de asistencia en la base de datos, por lo que no se reportan
+    // registrados / presentes / ausentes / permanencia / participación.
     const webinarRows = webs.length === 0
-      ? '<tr><td colspan="6" style="text-align:center;padding:15px;color:#64748b">No hay webinars registrados.</td></tr>'
-      : webs.map((w, idx) => {
-      const reg = 120 + (idx * 24) + (w.title.charCodeAt(0) % 20);
-      const pres = Math.round(reg * 0.78);
-      const aus = reg - pres;
-      const perm = 45 + (idx * 3) % 20;
-      const pregs = Math.round(pres * 0.15);
-      return `
+      ? '<tr><td colspan="4" style="text-align:center;padding:15px;color:#64748b">No hay webinars registrados.</td></tr>'
+      : webs.map(w => `
         <tr>
-          <td style="font-weight:600">${w.title}<br/><span style="font-size:9px;color:#64748b">${w.date || 'Sin fecha'} • ${w.activo ? 'Activo' : 'Inactivo'}</span></td>
-          <td style="text-align:center">${reg}</td>
-          <td style="text-align:center">${pres}</td>
-          <td style="text-align:center">${aus}</td>
-          <td style="text-align:center">${perm} min</td>
-          <td style="text-align:right">${pregs} preguntas</td>
+          <td style="font-weight:600">${w.title}</td>
+          <td style="text-align:center">${w.date || 'Sin fecha'}</td>
+          <td style="text-align:center">${w.time || '-'}</td>
+          <td style="text-align:right">${w.activo ? 'Activo' : 'Inactivo'}</td>
         </tr>
-      `;
-    }).join('');
-
-    // Section 6: Devices & Browsers
-    const deviceRows = Object.entries(deviceCounts).map(([device, count]) => {
-      const pct = Math.round((count / totalDevices) * 100);
-      return `<tr><td><strong>${device}</strong></td><td style="text-align:right">${pct}% (${count})</td></tr>`;
-    }).join('');
-
-    const browserRows = Object.entries(browserCounts).map(([browser, count]) => {
-      const pct = Math.round((count / totalBrowsers) * 100);
-      return `<tr><td><strong>${browser}</strong></td><td style="text-align:right">${pct}% (${count})</td></tr>`;
-    }).join('');
+      `).join('');
 
     const countryRows = countriesDisplay.length === 0
       ? '<tr><td colspan="3" style="text-align:center;padding:15px;color:#64748b">No hay datos geográficos registrados.</td></tr>'
@@ -1075,7 +1059,7 @@ const AdminDashboard = () => {
       <div class="kpi"><span>Alumnos Inscritos</span><h2>${studentProfiles.length}</h2></div>
       <div class="kpi"><span>Alumnos Activos (Semana)</span><h2>${activeCount}</h2></div>
       <div class="kpi"><span>Cursos Completados</span><h2>${completedCount}</h2></div>
-      <div class="kpi"><span>Tasa de Aprobación</span><h2>${approvalRate}%</h2></div>
+      <div class="kpi"><span>Tasa de Finalización</span><h2>${approvalRate}%</h2></div>
     </div>
     
     <div class="grid-2">
@@ -1092,12 +1076,13 @@ const AdminDashboard = () => {
       </div>
       <div>
         <div class="section-title">⚠️ Cursos con Mayor Abandono</div>
+        <p style="font-size:9px;color:#64748b;margin:-8px 0 10px 0">Curso iniciado, sin terminar, avance menor a 80% y sin actividad en la plataforma desde hace ${ABANDONMENT_INACTIVE_DAYS}+ días.</p>
         <table>
           <thead>
-            <tr><th>Curso</th><th style="text-align:center">Inscritos</th><th style="text-align:center">Abandono</th><th style="text-align:center">Retención</th></tr>
+            <tr><th>Curso</th><th style="text-align:center">Inscritos</th><th style="text-align:center">Abandonos</th><th style="text-align:center">Abandono</th><th style="text-align:center">Retención</th></tr>
           </thead>
           <tbody>
-            ${abandonmentRows || '<tr><td colspan="4" style="text-align:center;color:#64748b">Sin datos</td></tr>'}
+            ${abandonmentRows || '<tr><td colspan="5" style="text-align:center;color:#64748b">Sin datos</td></tr>'}
           </tbody>
         </table>
       </div>
@@ -1109,7 +1094,7 @@ const AdminDashboard = () => {
     <div class="section-title">🟢 Alumnos Conectados en Tiempo Real</div>
     <table>
       <thead>
-        <tr><th>Alumno</th><th style="text-align:center">Tiempo Sesión</th><th style="text-align:center">IP</th><th style="text-align:center">País</th><th style="text-align:center">Dispositivo</th><th style="text-align:center">Navegador</th></tr>
+        <tr><th>Alumno</th><th style="text-align:center">Tiempo Sesión</th><th style="text-align:center">Acción Actual</th><th style="text-align:center">País</th></tr>
       </thead>
       <tbody>
         ${liveConnectedRows}
@@ -1119,7 +1104,7 @@ const AdminDashboard = () => {
     <div class="section-title">🎓 Rendimiento Detallado por Curso</div>
     <table>
       <thead>
-        <tr><th>Curso</th><th style="text-align:center">Inscritos</th><th style="text-align:center">Activos (7d)</th><th style="text-align:center">Completados</th><th style="text-align:center">Reprobados</th><th style="text-align:center">Avance Prom.</th><th style="text-align:center">Tasa Aprobación</th></tr>
+        <tr><th>Curso</th><th style="text-align:center">Inscritos</th><th style="text-align:center">Activos (7d)</th><th style="text-align:center">Completados</th><th style="text-align:center">Casi terminados</th><th style="text-align:center">Avance Prom.</th><th style="text-align:center">Tasa Finalización</th></tr>
       </thead>
       <tbody>
         ${courseStatsRows}
@@ -1142,7 +1127,7 @@ const AdminDashboard = () => {
     <div class="section-title">📹 Webinars de Especialización</div>
     <table>
       <thead>
-        <tr><th>Webinar</th><th style="text-align:center">Registrados</th><th style="text-align:center">Presentes</th><th style="text-align:center">Ausentes</th><th style="text-align:center">Permanencia Prom.</th><th style="text-align:right">Participación</th></tr>
+        <tr><th>Webinar</th><th style="text-align:center">Fecha</th><th style="text-align:center">Horario</th><th style="text-align:right">Estado</th></tr>
       </thead>
       <tbody>
         ${webinarRows}
@@ -1152,23 +1137,6 @@ const AdminDashboard = () => {
 
   <!-- PAGE 4: USO DE PLATAFORMA & ALERTAS -->
   <div class="page-break">
-    <div class="grid-2">
-      <div>
-        <div class="section-title">📱 Dispositivos Utilizados</div>
-        <table>
-          <thead><tr><th>Dispositivo</th><th style="text-align:right">Porcentaje</th></tr></thead>
-          <tbody>${deviceRows}</tbody>
-        </table>
-      </div>
-      <div>
-        <div class="section-title">🌐 Navegadores</div>
-        <table>
-          <thead><tr><th>Navegador</th><th style="text-align:right">Porcentaje</th></tr></thead>
-          <tbody>${browserRows}</tbody>
-        </table>
-      </div>
-    </div>
-
     <div class="section-title">🌎 Ubicación Geográfica de Alumnos</div>
     <table>
       <thead>
@@ -2156,8 +2124,24 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-layout" data-theme={effectiveTheme}>
+      {/* Fondo oscuro para cerrar el cajón tocando fuera. Solo visible en móvil. */}
+      {!isSidebarCollapsed && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsSidebarCollapsed(true)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar navigation */}
       <aside className={`admin-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+        <button
+          className="sidebar-close-btn"
+          onClick={() => setIsSidebarCollapsed(true)}
+          aria-label="Cerrar menú"
+        >
+          <X size={18} />
+        </button>
         <div className="sidebar-header">
           <div className="logo-container">
             <img 
@@ -2486,7 +2470,11 @@ const AdminDashboard = () => {
             const gatewayCourses = [
               { id: 'ecmo_sim', title: 'ECMO SIM: Realidad Clínica' },
               { id: 'ecmo_nursing', title: 'ECMO Nursing Care Course' },
-              { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' }
+              { id: 'ecmo_paris', title: 'Paris International Diploma in ECMO' },
+              // Segunda cuenta de Stripe. Sus cobros llegan con courseId 'cnadot'
+              // desde get-stripe-payments porque nacen de payment links, no de
+              // las funciones de checkout de este proyecto.
+              { id: 'cnadot', title: 'CNADOT — Donación de Órganos' }
             ];
 
             // Filter payments based on search and filters
@@ -4558,10 +4546,7 @@ const AdminDashboard = () => {
               const activity = studentActivities.find(act => act.user_id === student.id) || localActivities[student.id] || {
                 session_duration: 0,
                 current_action: 'Ninguna',
-                last_active_at: null,
-                browser: 'Chrome',
-                device: 'Windows',
-                ip_address: '189.143.1.1'
+                last_active_at: null
               };
               
               const progressList = courses.map(c => {
@@ -4595,9 +4580,10 @@ const AdminDashboard = () => {
             }).length;
             const completedCount = studentTrackingList.reduce((sum, s) => sum + s.progressList.filter(p => p.completed).length, 0);
             
+            // Sin inscripciones no hay tasa que reportar: 0, no 100.
             const approvalRate = totalEnrollments > 0
               ? Math.round((completedCount / totalEnrollments) * 100)
-              : 100;
+              : 0;
 
             // Inactive students breakdown
             const nowTime = new Date();
@@ -4678,7 +4664,7 @@ const AdminDashboard = () => {
 
             // If empty, add standard HCE warnings to make it look professional
             if (alertsList.length === 0) {
-              alertsList.push({ type: 'info', text: 'No hay alertas críticas en este momento. Cumplimiento académico del 100%.' });
+              alertsList.push({ type: 'info', text: 'No hay alertas críticas en este momento.' });
             }
 
             // Real-time connected students: active in last 15 minutes and not explicitly disconnected
@@ -4720,7 +4706,19 @@ const AdminDashboard = () => {
                 : 0;
 
               const rateRetencion = numEnrolled > 0 ? Math.round((numCompleted / numEnrolled) * 100) : 0;
-              const abandonoRate = numEnrolled > 0 ? Math.max(0, 100 - rateRetencion - 5) : 0; // simulated abandonment rate
+
+              // Abandonment measured from real data: student started the course (watchPercent > 0),
+              // never finished it, is below 80% progress, and has had no platform activity for 15+ days
+              // (no last_active_at at all counts as inactive). Inactivity is platform-wide, not per course,
+              // because student_activity only stores a single last_active_at per user.
+              const abandonoThresholdMs = ABANDONMENT_INACTIVE_DAYS * 24 * 60 * 60 * 1000;
+              const numAbandoned = enrolledForCourse.filter(s => {
+                const prog = s.progressList.find(p => p.courseId === c.id);
+                if (!prog || prog.completed || prog.watchPercent >= 80) return false;
+                if (!s.activity.last_active_at) return true;
+                return (nowTime - new Date(s.activity.last_active_at)) >= abandonoThresholdMs;
+              }).length;
+              const abandonoRate = numEnrolled > 0 ? Math.round((numAbandoned / numEnrolled) * 100) : 0;
 
               return {
                 id: c.id,
@@ -4732,6 +4730,7 @@ const AdminDashboard = () => {
                 avgProgress,
                 avgTimeSpent,
                 retentionRate: rateRetencion,
+                abandoned: numAbandoned,
                 abandonmentRate: abandonoRate
               };
             });
@@ -4740,22 +4739,12 @@ const AdminDashboard = () => {
             const retentionRanked = [...courseStatsList].sort((a, b) => b.retentionRate - a.retentionRate);
             const abandonmentRanked = [...courseStatsList].sort((a, b) => b.abandonmentRate - a.abandonmentRate);
 
-            // Devices, browsers, countries analysis
-            const deviceCounts = { Windows: 0, Android: 0, iPhone: 0, Mac: 0, Linux: 0 };
-            const browserCounts = { Chrome: 0, Edge: 0, Safari: 0, Firefox: 0, Opera: 0 };
+            // Countries analysis. No se analizan dispositivos ni navegadores: la tabla
+            // student_activity no registra esa información, así que no hay dato real que mostrar.
             const countryCounts = {};
 
             studentTrackingList.forEach(s => {
-              const dev = s.activity.device || 'Windows';
-              const brow = s.activity.browser || 'Chrome';
-              const country = s.pais || 'México';
-
-              if (deviceCounts[dev] !== undefined) deviceCounts[dev]++;
-              else deviceCounts['Windows']++;
-
-              if (browserCounts[brow] !== undefined) browserCounts[brow]++;
-              else browserCounts['Chrome']++;
-
+              const country = s.pais || 'No especificado';
               countryCounts[country] = (countryCounts[country] || 0) + 1;
             });
 
@@ -4765,9 +4754,6 @@ const AdminDashboard = () => {
               count,
               percent: studentProfiles.length > 0 ? Math.round((count / studentProfiles.length) * 100) : 0
             })).sort((a, b) => b.count - a.count);
-
-            const totalDevices = Object.values(deviceCounts).reduce((a, b) => a + b, 0) || 1;
-            const totalBrowsers = Object.values(browserCounts).reduce((a, b) => a + b, 0) || 1;
 
             const formatDuration = (totalSec) => {
               const hrs = Math.floor(totalSec / 3600);
@@ -4972,10 +4958,6 @@ const AdminDashboard = () => {
                       courseStatsList,
                       certificates,
                       webinars,
-                      deviceCounts,
-                      totalDevices,
-                      browserCounts,
-                      totalBrowsers,
                       countriesDisplay,
                       alertsList,
                       studentTrackingList,
@@ -5059,7 +5041,7 @@ const AdminDashboard = () => {
                           <AlertCircle size={24} />
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Tasa de Aprobación</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Tasa de Finalización</div>
                           <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-dark)' }}>{approvalRate}%</div>
                         </div>
                       </div>
@@ -5100,7 +5082,7 @@ const AdminDashboard = () => {
                       <div className="table-hce-container">
                         <div className="table-hce-title">
                           <span>⚠️ Cursos con Mayor Abandono</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>Inactividad mayor a 15 días con avance menor a 80%</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>Curso iniciado, sin terminar, avance menor a 80% y sin actividad en la plataforma desde hace {ABANDONMENT_INACTIVE_DAYS}+ días</span>
                         </div>
                         <div className="crm-table-wrapper" style={{ overflowX: 'auto' }}>
                           <table className="table-hce">
@@ -5108,6 +5090,7 @@ const AdminDashboard = () => {
                               <tr>
                                 <th>Curso</th>
                                 <th>Inscritos</th>
+                                <th style={{ textAlign: 'center' }}>Abandonos</th>
                                 <th style={{ textAlign: 'right' }}>% Abandono</th>
                               </tr>
                             </thead>
@@ -5116,6 +5099,7 @@ const AdminDashboard = () => {
                                 <tr key={c.id}>
                                   <td style={{ fontWeight: 600 }}>{c.title}</td>
                                   <td>{c.enrolled} alumnos</td>
+                                  <td style={{ textAlign: 'center' }}>{c.abandoned}</td>
                                   <td style={{ textAlign: 'right', fontWeight: 700, color: '#EF4444' }}>{c.abandonmentRate}%</td>
                                 </tr>
                               ))}
@@ -5189,16 +5173,14 @@ const AdminDashboard = () => {
                             <tr>
                               <th>Alumno</th>
                               <th>Tiempo Sesión</th>
-                              <th>IP</th>
+                              <th>Acción Actual</th>
                               <th>País</th>
-                              <th>Dispositivo</th>
-                              <th>Navegador</th>
                             </tr>
                           </thead>
                           <tbody>
                             {liveConnected.length === 0 ? (
                               <tr>
-                                <td colSpan="6" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
+                                <td colSpan="4" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
                                   No hay alumnos conectados en vivo en este momento.
                                 </td>
                               </tr>
@@ -5221,10 +5203,8 @@ const AdminDashboard = () => {
                                     </div>
                                   </td>
                                   <td><strong>{formatDuration(student.activity.session_duration)}</strong></td>
-                                  <td><code style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{student.activity.ip_address}</code></td>
-                                  <td>{student.pais || 'México'}</td>
-                                  <td>{student.activity.device || 'Windows'}</td>
-                                  <td>{student.activity.browser || 'Chrome'}</td>
+                                  <td>{student.activity.current_action || 'Sin registro'}</td>
+                                  <td>{student.pais || 'No especificado'}</td>
                                 </tr>
                               ))
                             )}
@@ -5343,9 +5323,9 @@ const AdminDashboard = () => {
                               <th>Inscritos</th>
                               <th>Activos (7d)</th>
                               <th>Completados</th>
-                              <th>Reprobados</th>
+                              <th>Casi terminados</th>
                               <th>Avance Promedio</th>
-                              <th>Tasa Aprobación</th>
+                              <th>Tasa Finalización</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -5355,7 +5335,7 @@ const AdminDashboard = () => {
                                 <td>{c.enrolled} alumnos</td>
                                 <td>{c.active}</td>
                                 <td><span className="badge-hce green">{c.completed}</span></td>
-                                <td><span className="badge-hce red">{c.failed}</span></td>
+                                <td><span className="badge-hce orange">{c.failed}</span></td>
                                 <td>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <div className="progress-hce-bar" style={{ width: '60px' }}>
@@ -5583,50 +5563,6 @@ const AdminDashboard = () => {
                 {/* SUBTAB CONTENT: 6. USO DE PLATAFORMA */}
                 {reportsSubTab === 'uso_plataforma' && (
                   <div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '25px', marginBottom: '25px' }}>
-                      {/* Devices card list */}
-                      <div className="table-hce-container">
-                        <div className="table-hce-title">
-                          <span>📱 Dispositivos Utilizados</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', padding: '10px 0' }}>
-                          {Object.entries(deviceCounts).map(([device, count]) => {
-                            const pct = Math.round((count / totalDevices) * 100);
-                            return (
-                              <div key={device} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '15px' }}>
-                                <span style={{ width: '80px', fontWeight: 600, fontSize: '0.85rem' }}>{device}</span>
-                                <div className="progress-hce-bar">
-                                  <div className="progress-hce-fill" style={{ width: `${pct}%`, backgroundColor: 'var(--primary-cyan)' }}></div>
-                                </div>
-                                <span style={{ width: '45px', textAlign: 'right', fontWeight: 700, fontSize: '0.85rem' }}>{pct}%</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Browsers card list */}
-                      <div className="table-hce-container">
-                        <div className="table-hce-title">
-                          <span>🌐 Navegadores</span>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', padding: '10px 0' }}>
-                          {Object.entries(browserCounts).map(([browser, count]) => {
-                            const pct = Math.round((count / totalBrowsers) * 100);
-                            return (
-                              <div key={browser} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '15px' }}>
-                                <span style={{ width: '80px', fontWeight: 600, fontSize: '0.85rem' }}>{browser}</span>
-                                <div className="progress-hce-bar">
-                                  <div className="progress-hce-fill" style={{ width: `${pct}%`, backgroundColor: '#3B82F6' }}></div>
-                                </div>
-                                <span style={{ width: '45px', textAlign: 'right', fontWeight: 700, fontSize: '0.85rem' }}>{pct}%</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Geographics countries list */}
                     <div className="table-hce-container">
                       <div className="table-hce-title">
@@ -5737,7 +5673,7 @@ const AdminDashboard = () => {
                                       <strong>{student.nombre_completo || student.email}</strong>
                                     </div>
                                   </td>
-                                  <td>{student.pais || 'México'}</td>
+                                  <td>{student.pais || 'No especificado'}</td>
                                   <td>{student.enrolled} cursos</td>
                                   <td><span className="badge-hce green">{student.completed} completados</span></td>
                                   <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--primary-cyan)', fontSize: '0.95rem' }}>

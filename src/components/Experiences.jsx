@@ -24,7 +24,7 @@ const ExperienceCard = ({ title, description, link, img, imgClass, containerClas
       <div className="card-glass-glow"></div>
       <div className={`exp-img-container ${containerClass || ''}`}>
         {badge && <div className={`status-badge ${badgeClass}`}>{badge}</div>}
-        <img src={img} alt={title} className={`exp-main-img ${imgClass || ''}`} />
+        <img src={img} alt={title} className={`exp-main-img ${imgClass || ''}`} loading="lazy" decoding="async" />
         <div className="img-overlay-gradient"></div>
         {Icon && <div className="card-floating-icon"><Icon size={24} /></div>}
       </div>
@@ -73,7 +73,7 @@ const Experiences = () => {
             title="ECMO Nursing Care Course"
             description="El primer entrenamiento diseñado por y para enfermería. Lidera con seguridad y criterio clínico el cuidado integral del paciente crítico en soporte ECMO."
             link="/ecmo-nursing-care"
-            img="/assets/componentes/expnur.png"
+            img="/assets/componentes/expnur.webp"
             badge="SOLD OUT"
             badgeClass="badge-danger"
             startDate="Próximamente 3.ª Edición"
@@ -84,10 +84,10 @@ const Experiences = () => {
             title="Paris International Diploma in ECMO"
             description="Certifícate en el programa de mayor prestigio global en ECMO, liderado por los profesores Alain Combes (ex Presidente de EuroELSO) y Matthieu Schmidt (Presidente de EuroELSO actual), máximos referentes globales e investigadores de ECMO del Hospital la Pitié-Salpêtrière. Accede a la experiencia del centro ECMO más grande del mundo, directo de París a Latinoamérica."
             link="/paris-diploma-ecmo"
-            img="/assets/componentes/expparis.png"
+            img="/assets/componentes/expparis.webp"
             badge="INSCRIPCIONES ABIERTAS"
             badgeClass="badge-danger"
-            startDate="Inicio: 27 de Octubre, 2026"
+            startDate="Inicio: 28 de Octubre, 2026"
           />
           <ExperienceCard
             delay={0.4}
@@ -95,7 +95,7 @@ const Experiences = () => {
             title="ECMO SIM: Realidad Clínica"
             description="Sumérgete en una experiencia de alta fidelidad. Toma decisiones críticas y domina el soporte ECMO V-V y V-A en un entorno virtual interactivo, intuitivo y seguro, diseñado para acelerar tu curva de aprendizaje y el de tu equipo multidisciplinario."
             link="/simulador-ecmo-sim"
-            img="/assets/componentes/expsim.png"
+            img="/assets/componentes/expsim.webp"
             badge="SIMULADOR"
             badgeClass="badge-warning"
           />

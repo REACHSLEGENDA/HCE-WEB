@@ -1,0 +1,145 @@
+/* Invitación a instalar el portal como app.
+
+   Vive en la esquina inferior IZQUIERDA a propósito: el widget del chat ocupa
+   la derecha con z-index 99999 y en móvil, con una barra a todo lo ancho, le
+   taparía el botón. Aquí no se estorban. */
+
+.hce-install {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 420px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+  animation: hce-install-in 0.35s ease-out;
+}
+
+@keyframes hce-install-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hce-install { animation: none; }
+}
+
+.hce-install-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.hce-install-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.hce-install-text strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.hce-install-text span {
+  font-size: 0.8rem;
+  color: #475569;
+  line-height: 1.35;
+}
+
+/* Los iconos de Compartir y Añadir van dentro del texto en iOS. */
+.hce-install-text span svg {
+  display: inline;
+  vertical-align: -2px;
+  color: #0ea5e9;
+}
+
+.hce-install-text em {
+  font-style: normal;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.hce-install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #00BCD4, #0284c7);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.hce-install-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.hce-install-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.hce-install-close:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+@media (max-width: 640px) {
+  .hce-install {
+    left: 12px;
+    right: 12px;
+    /* El botón flotante del chat ocupa la esquina inferior derecha (24px de
+       margen y ~64px de alto). En móvil la tarjeta va a todo lo ancho, así que
+       se coloca por encima de él en lugar de reservarle un hueco: con un hueco,
+       la × de cerrar quedaba justo debajo del robot. */
+    bottom: 118px;
+    max-width: none;
+    gap: 12px;
+  }
+
+  .hce-install-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .hce-install-btn {
+    padding: 9px 12px;
+  }
+
+  .hce-install-text strong { font-size: 0.88rem; }
+  .hce-install-text span   { font-size: 0.75rem; }
+}
+
+/* El banner de cookies ocupa el mismo borde inferior y va por encima. Mientras
+   haya que decidir cookies, la invitación a instalar espera su turno: el mismo
+   criterio que ya se usa con el widget del chat. */
+body.cookie-banner-open .hce-install {
+  display: none;
+}

@@ -902,7 +902,7 @@ export function RegistrationForm() {
           body: JSON.stringify(payload),
         }).catch(() => {}),
 
-        // Mailchimp — alta del contacto + tag + flujo de bienvenida
+        // Brevo — alta del contacto y entrada a la lista que dispara la bienvenida
         fetch('/.netlify/functions/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

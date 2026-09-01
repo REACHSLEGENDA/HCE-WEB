@@ -1,46 +1,13 @@
 import Stripe from 'stripe';
-import { createHash } from 'crypto';
+import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
 
-const MAILCHIMP_TAG = 'CANCELSIM';
-
-async function addMailchimpTag(email, planName, priceMXN) {
-  const API_KEY     = process.env.MAILCHIMP_API_KEY;
-  const AUDIENCE_ID = process.env.MAILCHIMP_AUDIENCE_ID;
-  const SERVER      = process.env.MAILCHIMP_SERVER;
-  if (!API_KEY || !AUDIENCE_ID || !SERVER || !email) return;
-
-  const auth    = Buffer.from(`anystring:${API_KEY}`).toString('base64');
-  const headers = { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' };
-  const baseUrl = `https://${SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}`;
-  const hash    = createHash('md5').update(email.toLowerCase()).digest('hex');
-
-  // Upsert member
-  await fetch(`${baseUrl}/members/${hash}`, {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify({
-      email_address: email,
-      status_if_new: 'subscribed',
-    }),
-  });
-
-  // Apply tag
-  await fetch(`${baseUrl}/members/${hash}/tags`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      tags: [{ name: MAILCHIMP_TAG, status: 'active' }],
-    }),
-  });
-
-  // Add note
-  await fetch(`${baseUrl}/members/${hash}/notes`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      note: `INTERÉS EN SIMULADOR (CARRITO ABANDONADO)\nPLAN: ${planName}\nPRECIO ESTIMADO: $${priceMXN} MXN\nTAG: ${MAILCHIMP_TAG}`,
-    }),
-  });
+// Carrito abandonado: el contacto entra a la lista de recuperación de Brevo.
+// La automatización espera una hora y comprueba si sigue en la lista antes de
+// enviarle nada, así que basta con sacarlo de ella cuando complete el pago.
+async function registrarCarritoAbandonado(email) {
+  if (!isConfigured() || !email) return;
+  await upsertContact(email);
+  await addToList(email, LISTS.CARRITO_SIM);
 }
 
 export const handler = async (event) => {
@@ -139,12 +106,10 @@ export const handler = async (event) => {
 
     const session = await stripe.checkout.sessions.create(sessionOptions);
 
-    // Register interest in Mailchimp (non-blocking)
-    if (email) {
-      addMailchimpTag(email, plan.name, finalMXN).catch((err) =>
-        console.error('Mailchimp tag error:', err.message)
-      );
-    }
+    // Brevo: registrar carrito abandonado (no bloqueante)
+    registrarCarritoAbandonado(email).catch((err) =>
+      console.error('Brevo carrito abandonado error:', err.message)
+    );
 
     return {
       statusCode: 200,

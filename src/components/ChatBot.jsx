@@ -340,7 +340,8 @@ export default function ChatBot() {
       return;
     }
     if (btn.action === 'ecmo_sim_buy') {
-      window.open('https://buy.stripe.com/bJe8wHezt5Rm58fbEP9IQ0U', '_blank');
+      navigate('/simulador-ecmo-sim');
+      setIsOpen(false);
       return;
     }
     if (btn.action === 'whatsapp') {

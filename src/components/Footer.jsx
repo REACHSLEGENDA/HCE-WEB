@@ -9,7 +9,7 @@ const Footer = () => {
       <div className="footer-blob blob-1"></div>
       <div className="footer-blob blob-2"></div>
 
-      <div class="footer-container">
+      <div className="footer-container">
         {/* Main Content Grid */}
         <div className="f-main-grid">
 

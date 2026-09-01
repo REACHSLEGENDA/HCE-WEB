@@ -1,0 +1,218 @@
+/* ===========================================================================
+   Página 404.
+
+   Prefijo nf- en todas las clases: este CSS comparte bundle con otras páginas
+   y un nombre genérico se fusionaría con el de otro componente al minificar.
+   ======================================================================== */
+
+.nf-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.nf-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  /* El navbar es fijo: sin este espacio, el 404 le queda debajo. */
+  padding: 190px 0 110px;
+}
+
+.nf-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* El número es decorativo: lo lee el título, no esta cifra. */
+.nf-codigo {
+  margin: 0;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: clamp(5.5rem, 18vw, 11rem);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #00cae4 0%, #0898b8 40%, #f88808 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nf-titulo {
+  margin: 1.2rem 0 0;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.nf-texto {
+  max-width: 540px;
+  margin: 1rem 0 0;
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: #64748b;
+}
+
+/* --- Acciones -------------------------------------------------------------- */
+
+.nf-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 2.2rem;
+}
+
+.nf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.9rem 1.7rem;
+  border-radius: 100px;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+.nf-btn--primario {
+  background: linear-gradient(120deg, #00cae4, #0898b8);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 12px 28px rgba(0, 160, 200, 0.28);
+}
+
+.nf-btn--primario:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(0, 180, 220, 0.36);
+}
+
+.nf-btn--secundario {
+  background: #ffffff;
+  color: #0369a1;
+  border: 1px solid rgba(3, 105, 161, 0.25);
+}
+
+.nf-btn--secundario:hover {
+  background: #f0f9ff;
+  transform: translateY(-2px);
+}
+
+/* --- Atajos ---------------------------------------------------------------- */
+
+.nf-atajos {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  width: min(620px, 100%);
+}
+
+.nf-atajos-titulo {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.nf-atajos ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem 0.9rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nf-atajos a {
+  display: inline-block;
+  padding: 0.5rem 1.1rem;
+  border-radius: 100px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  color: #334155;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.nf-atajos a:hover {
+  background: #ecfeff;
+  border-color: rgba(0, 202, 228, 0.45);
+  color: #0369a1;
+}
+
+/* --- Ayuda ----------------------------------------------------------------- */
+
+.nf-ayuda {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 2.4rem 0 0;
+  font-size: 0.88rem;
+  color: #94a3b8;
+}
+
+.nf-ayuda svg {
+  color: #00cae4;
+}
+
+.nf-ayuda a {
+  color: #0369a1;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(3, 105, 161, 0.3);
+}
+
+.nf-ayuda a:hover {
+  border-bottom-color: #0369a1;
+}
+
+/* --- Pantallas pequeñas ----------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .nf-main {
+    padding: 140px 0 70px;
+  }
+
+  .nf-texto {
+    font-size: 0.95rem;
+  }
+
+  .nf-acciones {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .nf-btn {
+    justify-content: center;
+  }
+
+  .nf-atajos {
+    margin-top: 2.2rem;
+    padding-top: 1.5rem;
+  }
+}
+
+/* --- Sin animación ---------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-btn {
+    transition: none;
+  }
+
+  .nf-btn--primario:hover,
+  .nf-btn--secundario:hover {
+    transform: none;
+  }
+}

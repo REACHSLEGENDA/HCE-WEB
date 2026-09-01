@@ -262,7 +262,7 @@ export default function Inscripciones() {
         <div className="ins-hero-inner hce-container">
           <span className="section-badge">PROGRAMAS 2026</span>
           <img 
-            src="/assets/paris/logo-teorica.png" 
+            src="/assets/paris/logo-teorica.webp"
             alt="Certificación Teórica" 
             style={{ maxWidth: '550px', width: '100%', display: 'block', margin: '0 auto 1.5rem auto' }} 
           />
@@ -905,7 +905,7 @@ export function RegistrationForm() {
           body: JSON.stringify(payload),
         }).catch(() => {}),
 
-        // Mailchimp — alta del contacto + tag + flujo de bienvenida
+        // Brevo — alta del contacto y entrada a la lista que dispara la bienvenida
         fetch('/.netlify/functions/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

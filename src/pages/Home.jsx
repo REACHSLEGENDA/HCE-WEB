@@ -67,9 +67,11 @@ const Home = () => {
             onMouseOut={e => e.currentTarget.style.transform='translateY(0)'}
           >
             <img 
-              src="/assets/cnadot_flyer.png" 
-              alt="Convocatoria CNADOT Master" 
-              style={{ width: '100%', height: 'auto', display: 'block' }} 
+              src="/assets/cnadot_flyer.webp"
+              alt="Convocatoria CNADOT Master"
+              loading="lazy"
+              decoding="async"
+              style={{ width: '100%', height: 'auto', display: 'block' }}
             />
           </a>
         </div>
@@ -125,7 +127,7 @@ const Home = () => {
               ×
             </button>
             <a href="https://cnadot.healthcareexp.com/" target="_blank" rel="noopener noreferrer" onClick={() => setShowPopup(false)}>
-              <img src="/assets/cnadot_flyer.png" alt="CNADOT" style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', display: 'block', backgroundColor: '#fff' }} />
+              <img src="/assets/cnadot_flyer.webp" alt="CNADOT" decoding="async" style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', display: 'block', backgroundColor: '#fff' }} />
             </a>
             <div style={{ padding: '1.5rem', textAlign: 'center' }}>
               <h3 style={{ margin: '0 0 10px 0', fontSize: '1.4rem', color: '#ffffff' }}>CNADOT</h3>

@@ -16,6 +16,14 @@ export default function CookieBanner() {
     }
   }, []);
 
+  // El chatbot es `fixed` en la misma esquina y con mayor z-index, así que en
+  // móvil tapaba el botón de aceptar. Marcamos el body para poder ocultarlo
+  // mientras el banner esté a la vista.
+  useEffect(() => {
+    document.body.classList.toggle('cookie-banner-open', visible);
+    return () => document.body.classList.remove('cookie-banner-open');
+  }, [visible]);
+
   const accept = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ necessary: true, analysis: true, advertising: true }));
     setVisible(false);

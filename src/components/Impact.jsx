@@ -1,110 +1,165 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Users, Globe, GraduationCap, Laptop2, BarChart3 } from 'lucide-react';
 import './Impact.css';
 
-const AnimatedCounter = ({ target, duration = 2000, trigger }) => {
-  const [count, setCount] = useState(0);
+/* ---------------------------------------------------------------------------
+ * Sección "Impacto académico global".
+ *
+ * El contador va con requestAnimationFrame y no con setInterval: el intervalo
+ * anterior avanzaba a saltos fijos y dejaba a la vista cifras intermedias sin
+ * sentido (2000 se leía un instante como "1.92k"). Con rAF el número sigue el
+ * refresco real de la pantalla, frena al final con una curva de salida y
+ * siempre aterriza exacto en el valor objetivo.
+ * ------------------------------------------------------------------------ */
+
+const DURACION_MS = 1800;
+
+// Desaceleración suave: rápido al principio, casi detenido al final.
+const salidaSuave = (t) => 1 - Math.pow(1 - t, 3);
+
+const movimientoReducido = () =>
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+const formatear = (n) => n.toLocaleString('es-MX');
+
+const useConteo = (objetivo, activo) => {
+  // Quien pidió menos movimiento arranca ya en la cifra final: no hay animación
+  // que ver, así que tampoco hay estado intermedio que renderizar.
+  const [valor, setValor] = useState(() => (movimientoReducido() ? objetivo : 0));
 
   useEffect(() => {
-    if (!trigger) return;
+    if (!activo || movimientoReducido()) return;
 
-    let start = 0;
-    const end = parseInt(target);
-    if (start === end) return;
-    
-    let totalMilSecDur = duration;
-    let incrementTime = (totalMilSecDur / end) * 5;
-    if (incrementTime > 50) incrementTime = 50;
+    let frame;
+    let inicio = null;
 
-    const timer = setInterval(() => {
-      start += Math.ceil(end / (duration / incrementTime));
-      if (start >= end) {
-        setCount(end);
-        clearInterval(timer);
-      } else {
-        setCount(start);
-      }
-    }, incrementTime);
+    const paso = (ahora) => {
+      if (inicio === null) inicio = ahora;
+      const avance = Math.min((ahora - inicio) / DURACION_MS, 1);
+      setValor(Math.round(salidaSuave(avance) * objetivo));
+      if (avance < 1) frame = requestAnimationFrame(paso);
+    };
 
-    return () => clearInterval(timer);
-  }, [target, duration, trigger]);
+    frame = requestAnimationFrame(paso);
+    return () => cancelAnimationFrame(frame);
+  }, [objetivo, activo]);
 
-  return <span>{count >= 1000 ? (count / 1000).toString() + 'k' : count}</span>;
+  return valor;
 };
 
-const ImpactCard = ({ icon, target, plus, title, desc, delay, triggerAnim }) => {
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+const METRICAS = [
+  {
+    icon: Users,
+    objetivo: 2000,
+    mas: true,
+    titulo: 'Alumnos profesionales',
+    detalle: <>Egresados de nuestros programas de <strong>entrenamiento intensivo</strong>.</>,
+  },
+  {
+    icon: Globe,
+    objetivo: 10000,
+    mas: true,
+    titulo: 'Alcance global',
+    detalle: <>Especialistas conectados a través de nuestra <strong>red educativa</strong>.</>,
+  },
+  {
+    icon: GraduationCap,
+    objetivo: 100,
+    titulo: 'Docentes internacionales',
+    detalle: <>Expertos de <strong>centros líderes</strong> en Europa, EE. UU. y LATAM.</>,
+  },
+  {
+    icon: Laptop2,
+    objetivo: 50,
+    titulo: 'Clases magistrales',
+    detalle: <>Contenido premium disponible 24/7 en nuestro <a href="/login" className="imp-link">Portal Científico</a>.</>,
+  },
+];
+
+const TarjetaMetrica = ({ icon, objetivo, mas, titulo, detalle, orden, activa }) => {
+  // Alias en mayúscula: JSX necesita el componente capitalizado y así ESLint no
+  // lo toma por un parámetro sin usar (no hay plugin de React que lea el JSX).
+  const Icono = icon;
+  const tarjetaRef = useRef(null);
+  const valor = useConteo(objetivo, activa);
+
+  // Progreso del arco: el mismo avance que el número, para que la cifra y el
+  // trazo terminen juntos.
+  const progreso = objetivo > 0 ? valor / objetivo : 0;
+  const PERIMETRO = 226; // 2πr con r = 36
+
+  // Foco de luz que sigue al cursor dentro de la tarjeta. Se escribe en
+  // variables CSS para no re-renderizar React en cada movimiento del ratón.
+  const alMover = (e) => {
+    const caja = tarjetaRef.current?.getBoundingClientRect();
+    if (!caja) return;
+    tarjetaRef.current.style.setProperty('--foco-x', `${e.clientX - caja.left}px`);
+    tarjetaRef.current.style.setProperty('--foco-y', `${e.clientY - caja.top}px`);
+  };
 
   return (
-    <div ref={ref} className={`impact-premium-card reveal ${inView ? 'active' : ''}`} style={{ transitionDelay: `${delay}s` }}>
-      <div className="card-glow-element"></div>
-      <div className="impact-icon-wrapper">{icon}</div>
-      <div className="impact-data-group">
-        <h3 className="impact-number">
-          {plus && <span className="p-accent">+</span>}
-          <AnimatedCounter target={target} trigger={triggerAnim || inView} />
-        </h3>
-        <span className="impact-label">{title}</span>
+    <article
+      ref={tarjetaRef}
+      className="imp-card imp-anim"
+      style={{ '--orden': orden }}
+      onPointerMove={alMover}
+    >
+      <div className="imp-card-foco" aria-hidden="true" />
+
+      <div className="imp-card-top">
+        <span className="imp-icon"><Icono size={26} /></span>
+
+        <svg className="imp-arc" viewBox="0 0 80 80" aria-hidden="true">
+          <circle className="imp-arc-pista" cx="40" cy="40" r="36" />
+          <circle
+            className="imp-arc-trazo"
+            cx="40" cy="40" r="36"
+            strokeDasharray={PERIMETRO}
+            strokeDashoffset={PERIMETRO * (1 - progreso)}
+          />
+        </svg>
       </div>
-      <p className="impact-detail" dangerouslySetInnerHTML={{ __html: desc }}></p>
-      <div className="impact-card-line"></div>
-    </div>
+
+      <p className="imp-number">
+        {mas && <span className="imp-plus">+</span>}
+        {formatear(valor)}
+      </p>
+
+      <h3 className="imp-label">{titulo}</h3>
+      <p className="imp-detail">{detalle}</p>
+    </article>
   );
 };
 
 const Impact = () => {
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
+  // Sin triggerOnce: apaga las animaciones de fondo al salir de pantalla.
+  const { ref: refPantalla, inView: enPantalla } = useInView({ threshold: 0 });
 
   return (
-    <section className="impact-modern-section" id="impacto">
-      <div className="impact-nebula-bg"></div>
-      <div className="hce-container">
-        <div ref={ref} className={`impact-header reveal ${inView ? 'active' : ''}`}>
-          <div className="section-badge">
+    <section className="imp-section" id="impacto" ref={refPantalla} data-activo={enPantalla || undefined}>
+      <div className="imp-aurora" aria-hidden="true" />
+      <div className="imp-rays" aria-hidden="true" />
+
+      <div className="hce-container" ref={ref} data-visible={inView || undefined}>
+        <header className="imp-header">
+          <div className="section-badge badge-oscuro imp-anim" style={{ '--orden': 0 }}>
             <BarChart3 size={16} /> Métricas de éxito
           </div>
-          <h2 className="impact-main-title">Impacto <span className="cyan-highlight">académico</span> global</h2>
-          <p className="impact-main-subtitle">
-            Lideramos la educación clínica avanzada con resultados medibles y una comunidad en expansión.
+          <h2 className="imp-title imp-anim" style={{ '--orden': 1 }}>
+            Impacto <span className="imp-title-accent">académico</span> global
+          </h2>
+          <p className="imp-subtitle imp-anim" style={{ '--orden': 2 }}>
+            Lideramos la educación clínica avanzada con resultados medibles y una comunidad
+            en expansión.
           </p>
-        </div>
+        </header>
 
-        <div className="impact-flex-grid">
-          <ImpactCard 
-            icon={<Users size={32} />}
-            target={2000}
-            plus
-            title="Alumnos profesionales"
-            desc="Egresados de nuestros programas de <strong>entrenamiento intensivo</strong>."
-            delay={0.1}
-            triggerAnim={inView}
-          />
-          <ImpactCard 
-            icon={<Globe size={32} />}
-            target={10000}
-            plus
-            title="Alcance global"
-            desc="Especialistas conectados a través de nuestra <strong>red educativa</strong>."
-            delay={0.2}
-            triggerAnim={inView}
-          />
-          <ImpactCard 
-            icon={<GraduationCap size={32} />}
-            target={100}
-            title="Docentes internacionales"
-            desc="Expertos de <strong>centros líderes</strong> en Europa, EE. UU. y LATAM."
-            delay={0.3}
-            triggerAnim={inView}
-          />
-          <ImpactCard 
-            icon={<Laptop2 size={32} />}
-            target={50}
-            title="Clases magistrales"
-            desc="Contenido premium disponible 24/7 en nuestro <a href='/login' style='color: #00e5ff; text-decoration: underline; font-weight: bold;'>Portal Científico</a>."
-            delay={0.4}
-            triggerAnim={inView}
-          />
+        <div className="imp-grid">
+          {METRICAS.map((m, i) => (
+            <TarjetaMetrica key={m.titulo} {...m} orden={3 + i} activa={inView} />
+          ))}
         </div>
       </div>
     </section>

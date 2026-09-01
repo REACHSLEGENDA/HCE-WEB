@@ -1,158 +1,316 @@
-.impact-modern-section {
-  padding: 10rem 0;
-  background-color: #0a192f;
+/* ===========================================================================
+   Sección "Impacto académico global".
+
+   Prefijo imp- en todas las clases: este CSS acaba en el mismo bundle que el
+   resto de la home y los nombres genéricos se fusionan al minificar.
+   ======================================================================== */
+
+.imp-section {
   position: relative;
   overflow: hidden;
-  color: white;
+  padding: 9rem 0;
+  background: #0f2a45;
+  color: #ffffff;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+  isolation: isolate;
 }
 
-.impact-nebula-bg {
+/* --- Fondo -------------------------------------------------------------- */
+
+.imp-aurora {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(0, 210, 255, 0.1) 0, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(30, 55, 184, 0.1) 0, transparent 50%),
-    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg stroke='%23ffffff' stroke-width='0.5' stroke-opacity='0.05'%3E%3Cpath d='M36 34v-8h-8v8h8zm4 0V1.66c0-.92-.75-1.66-1.66-1.66H1.66C.74 0 0 .75 0 1.66V39.6c0 .92.75 1.66 1.66 1.66h39.15c.92 0 1.66-.75 1.66-1.66V36l-4-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  inset: -25%;
+  z-index: -2;
+  background:
+    radial-gradient(40% 40% at 15% 20%, rgba(0, 210, 255, 0.16), transparent 70%),
+    radial-gradient(36% 42% at 85% 75%, rgba(37, 99, 235, 0.20), transparent 70%);
+  animation: imp-deriva 30s ease-in-out infinite alternate;
+}
+
+@keyframes imp-deriva {
+  from { transform: translate3d(2%, 1%, 0) scale(1.04); }
+  to   { transform: translate3d(-3%, -2%, 0) scale(1); }
+}
+
+/* Haces verticales muy tenues: dan profundidad sin la textura de puntitos
+   del diseño anterior, que a pantalla completa se veía sucia. */
+.imp-rays {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0 1px,
+    transparent 1px 120px
+  );
+  mask-image: linear-gradient(180deg, transparent, #000 25%, #000 70%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 25%, #000 70%, transparent);
+}
+
+/* --- Entrada escalonada -------------------------------------------------- */
+
+.imp-anim {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--orden, 0) * 90ms);
+}
+
+[data-visible] .imp-anim {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Encabezado ---------------------------------------------------------- */
+
+.imp-header {
+  position: relative;
   z-index: 1;
-}
-
-.impact-header {
-  text-align: center;
-  margin-bottom: 6rem;
-  position: relative;
-  z-index: 2;
-}
-
-.impact-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #00d2ff;
-  letter-spacing: 1px;
-  margin-bottom: 1.5rem;
-}
-
-.impact-main-title {
-  font-size: 3.5rem;
-  font-weight: 800;
-  margin-bottom: 1.5rem;
-}
-
-.cyan-highlight {
-  color: #00d2ff;
-  text-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
-}
-
-.impact-main-subtitle {
-  font-size: 1.2rem;
-  color: #94a3b8;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.impact-flex-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  position: relative;
-  z-index: 2;
-}
-
-.impact-premium-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(0, 210, 255, 0.3);
-  padding: 3rem 2.5rem;
-  border-radius: 24px;
-  position: relative;
-  transition: all 0.5s ease;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  transform: translateY(-5px);
+  margin-bottom: 4.5rem;
 }
 
-.card-glow-element {
+.imp-title {
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: clamp(2.3rem, 4.6vw, 3.6rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.25rem;
+}
+
+.imp-title-accent {
+  background: linear-gradient(100deg, #00d2ff 0%, #60a5fa 45%, #00d2ff 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: imp-barrido 8s linear infinite;
+}
+
+@keyframes imp-barrido {
+  to { background-position: 220% 0; }
+}
+
+.imp-subtitle {
+  max-width: 640px;
+  font-size: 1.08rem;
+  line-height: 1.7;
+  color: #94a8bd;
+}
+
+/* --- Rejilla de tarjetas -------------------------------------------------- */
+
+.imp-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.imp-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.75rem 2.25rem;
+  border-radius: 20px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Entrada y hover viajan en la MISMA declaración a propósito. `transition` es
+   una abreviatura: una segunda declaración en otra regla borraría el retardo
+   escalonado de .imp-anim y las cuatro tarjetas entrarían a la vez. Por eso el
+   retardo se repite aquí, aplicado solo a las propiedades de entrada. */
+.imp-card {
+  transition:
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--orden, 0) * 90ms),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--orden, 0) * 90ms),
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+.imp-card:hover {
+  border-color: rgba(0, 210, 255, 0.35);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 210, 255, 0.12) inset;
+}
+
+/* Foco de luz que sigue al cursor. Las coordenadas llegan como variables
+   desde el componente, así que mover el ratón no re-renderiza React. */
+.imp-card-foco {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 50% 100%, rgba(0, 210, 255, 0.15), transparent 70%);
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    260px circle at var(--foco-x, 50%) var(--foco-y, 50%),
+    rgba(0, 210, 255, 0.16),
+    transparent 70%
+  );
+  transition: opacity 0.35s ease;
+}
+
+.imp-card:hover .imp-card-foco {
   opacity: 1;
 }
 
-.impact-icon-wrapper {
-  width: 64px;
-  height: 64px;
-  background: #00d2ff;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #0a192f;
-  margin-bottom: 2rem;
-  transition: all 0.3s ease;
-  z-index: 2;
-}
+/* --- Icono y arco de progreso -------------------------------------------- */
 
-.impact-number {
-  font-size: 3.5rem;
-  font-weight: 800;
-  color: white;
-  line-height: 1;
-  margin-bottom: 0.5rem;
-  letter-spacing: -1px;
+.imp-card-top {
   position: relative;
-  z-index: 2;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1.5rem;
 }
 
-.p-accent {
-  color: #00d2ff;
-  margin-right: -5px;
-}
-
-.impact-label {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #e2e8f0;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  position: relative;
-  z-index: 2;
-}
-
-.impact-detail {
-  font-size: 0.95rem;
-  color: #94a3b8;
-  line-height: 1.6;
-  position: relative;
-  z-index: 2;
-}
-
-.impact-card-line {
+.imp-icon {
   position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  height: 3px;
-  background: #00d2ff;
+  inset: 12px;
+  display: grid;
+  place-items: center;
+  /* Redondo, igual que el arco que lo rodea: dos formas distintas en el mismo
+     sitio (cuadro dentro de círculo) se leían como un descuido. */
+  border-radius: 50%;
+  background: linear-gradient(150deg, rgba(0, 210, 255, 0.22), rgba(37, 99, 235, 0.18));
+  border: 1px solid rgba(0, 210, 255, 0.28);
+  color: #00d2ff;
+  transition: box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (max-width: 768px) {
-  .impact-main-title { font-size: 2.5rem; }
-  .impact-number { font-size: 2.8rem; }
-  .impact-modern-section { padding: 5rem 0; }
+.imp-card:hover .imp-icon {
+  transform: scale(1.06);
+  box-shadow: 0 0 26px rgba(0, 210, 255, 0.4);
+}
+
+/* El arco se dibuja al mismo ritmo que sube el número: el trazo es el
+   avance real del contador, no una animación decorativa aparte. */
+.imp-arc {
+  position: absolute;
+  inset: 0;
+  width: 80px;
+  height: 80px;
+  transform: rotate(-90deg); /* el trazo arranca arriba, no a la derecha */
+}
+
+.imp-arc circle {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.imp-arc-pista {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.imp-arc-trazo {
+  stroke: #00d2ff;
+  filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.6));
+}
+
+/* --- Cifra y textos ------------------------------------------------------- */
+
+.imp-number {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: clamp(2.4rem, 3.4vw, 3.1rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  /* Las cifras no cambian de ancho mientras cuentan: sin esto, la tarjeta
+     entera vibra al pasar de 999 a 1,000. */
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 0.75rem;
+}
+
+.imp-plus {
+  color: #00d2ff;
+  font-size: 0.7em;
+}
+
+.imp-label {
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #e2e8f0;
+  margin-bottom: 0.6rem;
+}
+
+.imp-detail {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #8fa3b8;
+  margin: 0;
+}
+
+.imp-detail strong {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.imp-link {
+  color: #00e5ff;
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.4);
+  transition: border-color 0.3s ease;
+}
+
+.imp-link:hover {
+  border-bottom-color: #00e5ff;
+}
+
+/* --- Adaptación a pantallas menores --------------------------------------- */
+
+@media (max-width: 1024px) {
+  .imp-section { padding: 6.5rem 0; }
+  .imp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .imp-header { margin-bottom: 3.5rem; }
+}
+
+@media (max-width: 560px) {
+  .imp-section { padding: 5rem 0; }
+  .imp-grid { grid-template-columns: minmax(0, 1fr); gap: 1.1rem; }
+  .imp-card { padding: 1.6rem 1.4rem 1.8rem; }
+  .imp-card-top { width: 68px; height: 68px; margin-bottom: 1.1rem; }
+  .imp-arc { width: 68px; height: 68px; }
+  .imp-subtitle { font-size: 1rem; }
+}
+
+/* --- Respeto por quien pide menos movimiento ------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .imp-anim {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .imp-aurora,
+  .imp-title-accent {
+    animation: none;
+  }
+
+  .imp-card,
+  .imp-icon,
+  .imp-card-foco {
+    transition: none;
+  }
+}
+
+/* Igual que en la sección del campus: los bucles solo corren en pantalla. */
+.imp-section:not([data-activo]) .imp-aurora,
+.imp-section:not([data-activo]) .imp-title-accent {
+  animation-play-state: paused;
 }

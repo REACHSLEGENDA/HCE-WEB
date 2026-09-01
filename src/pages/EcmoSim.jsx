@@ -184,7 +184,7 @@ const EcmoSim = () => {
 
       setIsSuccessFormSubmitted(true);
 
-      // Enriquecer datos en Mailchimp de manera asíncrona
+      // Brevo: completa los atributos del contacto sin bloquear la respuesta
       fetch('/.netlify/functions/sim-register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -198,7 +198,7 @@ const EcmoSim = () => {
           institucion: payload.institucion,
           pais: payload.pais
         }),
-      }).catch(err => console.error('Error enriching Mailchimp:', err));
+      }).catch(err => console.error('Error al enriquecer el contacto en Brevo:', err));
     } catch (err) {
       setSuccessFormError('Error de red. Por favor revisa tu conexión.');
     } finally {

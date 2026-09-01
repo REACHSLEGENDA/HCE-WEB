@@ -269,7 +269,7 @@ const AboutUs = () => {
 
             <div className="au-founder-img-side">
               <div className="au-founder-img-wrap">
-                <img src="/assets/aboutus/jenifer-trejo.jpg" alt="Dra. Jenifer Trejo Guerra" className="au-founder-img" />
+                <img src="/assets/aboutus/jenifer-trejo.webp" alt="Dra. Jenifer Trejo Guerra" className="au-founder-img" loading="lazy" decoding="async" />
                 <div className="au-founder-img-overlay" />
                 <div className="au-founder-name-tag">
                   <span className="au-founder-tag-name">Dra. Jenifer Trejo Guerra</span>

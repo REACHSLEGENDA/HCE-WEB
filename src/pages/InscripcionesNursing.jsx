@@ -905,7 +905,7 @@ export function RegistrationForm() {
           body: JSON.stringify(payload),
         }).catch(() => {}),
 
-        // Mailchimp
+        // Brevo — alta del contacto y entrada a la lista que dispara la bienvenida
         fetch('/.netlify/functions/nursing-register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
