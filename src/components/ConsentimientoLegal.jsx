@@ -118,6 +118,33 @@ const ConsentimientoLegal = ({
         </p>
       </div>
     </details>
+
+    {/* A.6 — Cancelaciones. El documento original traía una tabla de reembolsos
+        escalonada (90% / 50% / 0%); HCE indicó quitar las devoluciones y dejar
+        solo la reprogramación por única ocasión, la cancelación por parte de
+        HCE y la suspensión por uso indebido. */}
+    <details className="ins-aviso">
+      <summary className="ins-aviso-titulo">Política de cancelaciones</summary>
+
+      <div className="ins-aviso-cuerpo">
+        <p>
+          <strong>Cancelación por el participante.</strong> La inscripción no es
+          reembolsable. Por única ocasión, el participante podrá solicitar su
+          reprogramación a la siguiente edición del programa, cubriendo en su caso la
+          diferencia de precio.
+        </p>
+        <p>
+          <strong>Cancelación por Healthcare Training Experience, S.C.</strong> Si el
+          programa se cancela por causas atribuibles a HCE, el participante conserva su
+          lugar mediante reprogramación sin costo a la siguiente edición.
+        </p>
+        <p>
+          <strong>Suspensión por uso indebido.</strong> El incumplimiento de las
+          condiciones de acceso y confidencialidad dará lugar a la suspensión del acceso
+          al programa, sin que proceda devolución respecto de la parte ya impartida.
+        </p>
+      </div>
+    </details>
   </div>
 );
 

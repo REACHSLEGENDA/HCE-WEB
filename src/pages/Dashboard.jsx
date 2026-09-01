@@ -419,6 +419,8 @@ const Dashboard = () => {
       link: '/simulador-ecmo-sim',
       badge: 'SIMULADOR',
       badgeClass: 'badge-warning',
+      // El simulador no es un programa con fechas: se contrata y se usa.
+      cta: 'Obtener simulador',
       icon: Gamepad2
     },
   ];
@@ -879,7 +881,7 @@ const Dashboard = () => {
                 </div>
                 <div className="welcome-text-details">
                   <h2>¡Bienvenido de vuelta, {profile?.nombre_completo || 'Alumno'}!</h2>
-                  <p>{localStorage.getItem('welcomeMessage') || 'Sigue redefiniendo el estándar de la educación médica continua a través de simulación clínica avanzada y ECMO.'}</p>
+                  <p>{localStorage.getItem('welcomeMessage') || 'En Healthcare Training Experience seguimos redefiniendo la educación médica continua. ¡No esperes más! Ingresa al material que tenemos para ti.'}</p>
                 </div>
               </div>
 
@@ -1333,7 +1335,7 @@ const Dashboard = () => {
                           <p className="exp-desc-premium">{course.description}</p>
                           <div className="exp-footer-premium">
                             <span className="exp-link-action">
-                              <span>{isComingSoon ? 'Próximamente' : 'Ver programa'}</span>
+                              <span>{isComingSoon ? 'Próximamente' : (course.cta || 'Ver programa')}</span>
                               {!isComingSoon && <ArrowRight size={18} />}
                             </span>
                           </div>
@@ -1372,7 +1374,7 @@ const Dashboard = () => {
                           <p className="exp-desc-premium">{course.description}</p>
                           <div className="exp-footer-premium">
                             <span className="exp-link-action">
-                              <span>{isComingSoon ? 'Próximamente' : 'Ver programa'}</span>
+                              <span>{isComingSoon ? 'Próximamente' : (course.cta || 'Ver programa')}</span>
                               {!isComingSoon && <ArrowRight size={18} />}
                             </span>
                           </div>
@@ -1643,6 +1645,8 @@ const Dashboard = () => {
                             <option value="">Selecciona...</option>
                             <option>Médico Especialista</option>
                             <option>Médico Residente</option>
+                            <option>Médico General</option>
+                            <option>Perfusionista</option>
                             <option>Enfermero/a</option>
                             <option>Terapeuta Respiratorio</option>
                             <option>Fisioterapeuta</option>

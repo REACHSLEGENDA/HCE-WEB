@@ -429,6 +429,8 @@ const Login = () => {
                     <option value="">Selecciona...</option>
                     <option value="Médico Especialista">Médico Especialista</option>
                     <option value="Médico Residente">Médico Residente</option>
+                    <option value="Médico General">Médico General</option>
+                    <option value="Perfusionista">Perfusionista</option>
                     <option value="Enfermero/a">Enfermero/a</option>
                     <option value="Terapeuta Respiratorio">Terapeuta Respiratorio</option>
                     <option value="Fisioterapeuta">Fisioterapeuta</option>

@@ -16,7 +16,7 @@ const NurseCap = ({ size = 24, ...props }) => (
   </svg>
 );
 
-const ExperienceCard = ({ title, description, link, img, imgClass, containerClass, badge, badgeClass, delay, icon: Icon, startDate }) => {
+const ExperienceCard = ({ title, description, link, img, imgClass, containerClass, badge, badgeClass, delay, icon: Icon, startDate, cta }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   
   return (
@@ -40,7 +40,7 @@ const ExperienceCard = ({ title, description, link, img, imgClass, containerClas
         )}
         <div className="exp-footer-premium">
             <span className="exp-link-action">
-                <span>{badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'Próximamente' : 'Ver programa'}</span>
+                <span>{badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'Próximamente' : (cta || 'Ver programa')}</span>
                 {badge?.toUpperCase() !== 'PRÓXIMAMENTE' && <ArrowRight size={18} />}
             </span>
         </div>
@@ -92,6 +92,7 @@ const Experiences = () => {
           <ExperienceCard
             delay={0.4}
             icon={Gamepad2}
+            cta="Obtener simulador"
             title="ECMO SIM: Realidad Clínica"
             description="Sumérgete en una experiencia de alta fidelidad. Toma decisiones críticas y domina el soporte ECMO V-V y V-A en un entorno virtual interactivo, intuitivo y seguro, diseñado para acelerar tu curva de aprendizaje y el de tu equipo multidisciplinario."
             link="/simulador-ecmo-sim"

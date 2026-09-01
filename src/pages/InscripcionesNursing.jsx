@@ -6,6 +6,7 @@ import { useMonedaSugerida } from '../hooks/useMonedaSugerida';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ConsentimientoLegal from '../components/ConsentimientoLegal';
+import ConfirmacionInscripcion from '../components/ConfirmacionInscripcion';
 import './Inscripciones.css';
 
 function NurseCap({ size = 24, className = "" }) {
@@ -937,6 +938,7 @@ export function RegistrationForm() {
           <CheckCircle2 size={60} className="ins-result-icon ins-result-icon--ok" />
           <h2>¡Registro completado!</h2>
           <p>Tu inscripción está confirmada. En breve recibirás un correo de bienvenida con todos los detalles del programa.</p>
+          <ConfirmacionInscripcion diasCredenciales={3} />
           <a href="/" className="ins-btn ins-btn--primary">Volver al inicio</a>
         </div>
       </div>
@@ -1056,13 +1058,19 @@ export function RegistrationForm() {
             <div className="reg-field">
               <label>Grado académico / Profesión *</label>
               <select value={form.grado} onChange={set('grado')} required>
+                {/* Esta página conserva su propio orden, con enfermería primero,
+                    porque el curso es para ese perfil. Se aplican las mismas
+                    reglas relativas que en los demás formularios: Perfusionista
+                    arriba de Enfermero/a y Médico General debajo de Residente. */}
                 <option value="">Selecciona...</option>
+                <option>Perfusionista</option>
                 <option>Enfermero/a</option>
                 <option>Terapeuta Respiratorio</option>
                 <option>Fisioterapeuta</option>
                 <option>Kinesiólogo</option>
                 <option>Médico Especialista</option>
                 <option>Médico Residente</option>
+                <option>Médico General</option>
                 <option>Estudiante</option>
                 <option>Otro</option>
               </select>

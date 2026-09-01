@@ -1309,3 +1309,31 @@
     transform: scale(1) translateY(0);
   }
 }
+
+/* A.8 — Confirmación de inscripción en la pantalla de éxito. Va con menos peso
+   visual que el mensaje principal: es información de trámite, no la noticia. */
+.ins-result-legal {
+  text-align: left;
+  margin: 4px 0 20px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ins-result-legal p {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  opacity: 0.85;
+}
+
+.ins-result-legal p:last-child {
+  margin-bottom: 0;
+}
+
+.ins-result-legal a {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 600;
+}

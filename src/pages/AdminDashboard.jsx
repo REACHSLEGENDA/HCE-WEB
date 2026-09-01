@@ -658,7 +658,7 @@ const AdminDashboard = () => {
     redesFacebook: 'https://facebook.com/hce',
     redesLinkedin: 'https://linkedin.com/company/hce',
     redesInstagram: 'https://instagram.com/hce',
-    bienvenidaEstudiante: localStorage.getItem('welcomeMessage') || 'Sigue redefiniendo el estándar de la educación médica continua a través de simulación clínica avanzada y ECMO.'
+    bienvenidaEstudiante: localStorage.getItem('welcomeMessage') || 'En Healthcare Training Experience seguimos redefiniendo la educación médica continua. ¡No esperes más! Ingresa al material que tenemos para ti.'
   });
 
   // Admin password update states

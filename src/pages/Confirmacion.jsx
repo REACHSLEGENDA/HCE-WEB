@@ -44,7 +44,7 @@ const Confirmacion = () => {
           <div className="login-header" style={{ gap: '12px' }}>
             <h2 style={{ fontSize: '1.8rem', color: '#1A2B3C', fontWeight: 800 }}>¡Cuenta Activada!</h2>
             <p style={{ color: '#4a5568', fontSize: '1rem', lineHeight: '1.5', margin: '0 10px' }}>
-              Tu dirección de correo electrónico ha sido confirmada con éxito. Tu cuenta ya se encuentra activa en el portal de Healthcare Training Experience.
+              Tu dirección de correo electrónico ha sido confirmada con éxito. Tu cuenta ya se encuentra activa en el portal académico.
             </p>
           </div>
 
@@ -60,7 +60,11 @@ const Confirmacion = () => {
             margin: '8px 0'
           }}>
             <strong style={{ color: '#1E293B', display: 'block', marginBottom: '4px' }}>¿Qué sigue?</strong>
-            Ya puedes acceder a tu panel de estudiante, inscribirte a seminarios en vivo, responder evaluaciones y descargar tus diplomas oficiales.
+            {/* "Constancia de participación" es el término del documento legal
+                (apartado A.4); la web decía "diplomas oficiales", que promete
+                algo distinto a lo que los Términos y Condiciones sostienen. */}
+            Ya puedes acceder a tu panel de estudiante, inscribirte a seminarios web,
+            responder evaluaciones y descargar tus constancias de participación.
           </div>
 
           <button 

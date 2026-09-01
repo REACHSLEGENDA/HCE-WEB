@@ -172,6 +172,8 @@ const Retroalimentacion = () => {
                   <option value="">Selecciona...</option>
                   <option>Médico Especialista</option>
                   <option>Médico Residente</option>
+                  <option>Médico General</option>
+                  <option>Perfusionista</option>
                   <option>Enfermero/a</option>
                   <option>Terapeuta Respiratorio</option>
                   <option>Fisioterapeuta</option>

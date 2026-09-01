@@ -6,6 +6,7 @@ import { useMonedaSugerida } from '../hooks/useMonedaSugerida';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ConsentimientoLegal from '../components/ConsentimientoLegal';
+import ConfirmacionInscripcion from '../components/ConfirmacionInscripcion';
 import './Inscripciones.css';
 
 const USD_RATE = 17.5;
@@ -934,6 +935,7 @@ export function RegistrationForm() {
           <CheckCircle2 size={60} className="ins-result-icon ins-result-icon--ok" />
           <h2>¡Registro completado!</h2>
           <p>Tu inscripción está confirmada. En breve recibirás un correo de bienvenida con todos los detalles del programa.</p>
+          <ConfirmacionInscripcion diasCredenciales={30} />
           <a href="/" className="ins-btn ins-btn--primary">Volver al inicio</a>
         </div>
       </div>
@@ -1059,6 +1061,8 @@ export function RegistrationForm() {
                 <option value="">Selecciona...</option>
                 <option>Médico Especialista</option>
                 <option>Médico Residente</option>
+                <option>Médico General</option>
+                <option>Perfusionista</option>
                 <option>Enfermero/a</option>
                 <option>Terapeuta Respiratorio</option>
                 <option>Fisioterapeuta</option>
