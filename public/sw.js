@@ -19,7 +19,7 @@
  *   - peticiones con Authorization / respuestas de API (JSON)
  * ========================================================================== */
 
-const VERSION = 'hce-portal-v1';
+const VERSION = 'hce-portal-v2';
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const CURRENT_CACHES = [SHELL_CACHE, ASSET_CACHE];
@@ -122,8 +122,11 @@ self.addEventListener('fetch', (event) => {
   }
 
   // --- Iconos / manifest del portal ---------------------------------------
+  // No llevan hash en el nombre, así que con cache-first se quedaban
+  // congelados: cambiar el icono no servía de nada hasta subir la version del
+  // service worker. Se sirven de cache y se refrescan por detrás.
   if (PORTAL_STATIC.test(url.pathname)) {
-    event.respondWith(cacheFirst(request, ASSET_CACHE));
+    event.respondWith(staleWhileRevalidate(request, ASSET_CACHE));
     return;
   }
 
@@ -147,6 +150,23 @@ async function networkFirstShell(request) {
     const cached = await caches.match(SHELL_KEY, { cacheName: SHELL_CACHE });
     return cached || offlineFallback();
   }
+}
+
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+
+  const red = fetch(request)
+    .then((response) => {
+      if (response && response.ok && response.type === 'basic') {
+        cache.put(request, response.clone()).catch(() => {});
+      }
+      return response;
+    })
+    .catch(() => null);
+
+  // Si hay copia, se entrega ya y la red actualiza para la próxima vez.
+  return cached || (await red) || offlineFallback();
 }
 
 async function cacheFirst(request, cacheName) {

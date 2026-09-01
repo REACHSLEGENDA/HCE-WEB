@@ -106,6 +106,9 @@ const EnlaceAula = ({ cursoId, className, style, children }) => {
 };
 
 const Dashboard = () => {
+  // Mismo criterio que EnlaceAula, disponible para las tarjetas del catálogo.
+  const [appInstalada] = useState(enAppInstalada);
+
   const { user, profile, logout, updateUserMetadata, updateProfile } = useAuth();
   const { showToast } = useNotification();
   const navigate = useNavigate();
@@ -941,12 +944,12 @@ const Dashboard = () => {
                       </p>
                       <div className="empty-state-actions">
                         {catalogCourses[0].youtube_video_id ? (
-                          <a
-                            href={`/classroom/${catalogCourses[0].id}`}
+                          <EnlaceAula
+                            cursoId={catalogCourses[0].id}
                             className="btn-crm-action solid btn-empty-state"
                           >
                             Comenzar ahora
-                          </a>
+                          </EnlaceAula>
                         ) : (
                           <button className="btn-crm-action solid btn-empty-state" onClick={() => setActiveTab('explore')}>
                             Comenzar ahora
@@ -1261,12 +1264,17 @@ const Dashboard = () => {
                   ) : catalogCourses.map(course => {
                     const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
                     const isDynamicCourse = !!course.youtube_video_id;
-                    const CardElement = isDynamicCourse ? 'a' : Link;
-                    const linkProps = isDynamicCourse ? {
+                    // Dentro de la app la clase se abre sin salir; en el
+                    // navegador conserva la pestaña nueva.
+                    const CardElement = isDynamicCourse ? (appInstalada ? Link : 'a') : Link;
+                    const linkProps = isDynamicCourse ? (appInstalada ? {
+                      to: `/classroom/${course.id}`,
+                      style: { textDecoration: 'none', cursor: 'pointer' }
+                    } : {
                       href: `/classroom/${course.id}`,
                       target: '_blank',
                       style: { textDecoration: 'none', cursor: 'pointer' }
-                    } : {
+                    }) : {
                       to: course.link,
                       target: '_blank',
                       style: { textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }
