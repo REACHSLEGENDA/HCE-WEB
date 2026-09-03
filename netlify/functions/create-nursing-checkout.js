@@ -1,4 +1,5 @@
 import { getStripe } from './_stripe.js';
+import { precioConPromo, habilitaMeses } from './_promos.js';
 import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
 
 const USD_RATE = 17.5; // 1 USD = 17.5 MXN (source of truth for nursing checkout)
@@ -61,15 +62,11 @@ export const handler = async (event) => {
     const currency = moneda === 'usd' ? 'usd' : 'mxn';
     const activeProfileLabel = (perfil === 'otro' && customOtro) ? `Otro: ${customOtro}` : PROFILE_LABELS[perfil];
 
+    const now = new Date();
+
     const mxnToUnit = (mxn, isBase = false) => {
-      let finalMXN = mxn;
-      if (isBase) {
-        if (promoCode === 'HCE10MSI') {
-          finalMXN = Math.floor(mxn * 0.9);
-        } else if (promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15') {
-          finalMXN = Math.floor(mxn * 0.85);
-        }
-      }
+      // El descuento sale del catálogo compartido, nunca de una lista local.
+      const finalMXN = isBase ? precioConPromo(mxn, promoCode, 'nursing', now) : mxn;
       const amount = currency === 'usd' ? finalMXN / USD_RATE : finalMXN;
       return Math.round(amount * 100); // cents
     };
@@ -110,12 +107,7 @@ export const handler = async (event) => {
 
     // Codificar datos del pago en la URL de éxito
     const baseAmount = PRICES_MXN[perfil];
-    let discountedBase = baseAmount;
-    if (promoCode === 'HCE10MSI') {
-      discountedBase = Math.floor(baseAmount * 0.9);
-    } else if (promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15') {
-      discountedBase = Math.floor(baseAmount * 0.85);
-    }
+    const discountedBase = precioConPromo(baseAmount, promoCode, 'nursing', now);
     
     const totalMXN = discountedBase + validExtras.reduce((s, e) => s + PRICES_MXN[e], 0);
 
@@ -165,7 +157,7 @@ export const handler = async (event) => {
       }
     };
 
-    const enableInstallments = promoCode === 'HCE10MSI' || promoCode === 'HCEGRUPOS' || promoCode === 'HCEGRUPOS15';
+    const enableInstallments = habilitaMeses(promoCode, 'nursing', now);
 
     if (currency === 'mxn' && enableInstallments) {
       sessionOptions.payment_method_options = {

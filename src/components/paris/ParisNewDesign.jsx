@@ -226,7 +226,9 @@ const ParisNewDesign = () => {
                     <div className="h1-style">¡Conviértete en un <br />especialista en <span className="gradient-text">ECMO</span>!</div>
                     <p className="hero-sub">Certifícate con la más alta tecnología de talla internacional.</p>
                     <div className="hero-actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
+                        {/* Va junto al botón de "Sólo Step 1": nombrar los pasos
+                            deja clara la diferencia entre las dos opciones. */}
+                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscripción Step 1 y 2</Link>
                         <Link to="/inscripciones-step1" className="btn btn-outline" style={{ background: 'rgba(255,255,255,0.1)', borderColor: '#00d2ff', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.3', padding: '12px 25px' }}>
                             <span>Apertura Inscripciones Sólo Step 1</span>
                             <span style={{ fontSize: '0.75em', opacity: 0.8, marginTop: '4px', textTransform: 'none' }}>28-29 de Octubre • 100% presencial</span>
