@@ -46,11 +46,31 @@ import {
   RefreshCw
 } from 'lucide-react';
 import './AdminDashboard.css';
+import PosicionadorConstancia from '../components/PosicionadorConstancia';
 import { useNotification } from '../context/NotificationContext';
 
 // Días sin actividad en la plataforma a partir de los cuales un curso iniciado
 // y no terminado (con avance < 80%) se considera abandonado.
 const ABANDONMENT_INACTIVE_DAYS = 15;
+
+// Zoom escribe el ID de mil formas: en la URL de la invitación, con guiones o
+// con espacios. Se acepta cualquiera y se guarda solo el número.
+// Los webinars comparten una sola lista de Brevo: el nombre del webinar y el
+// enlace personal viajan como atributos del contacto, así que una sola
+// automatización sirve para todos. Queda editable por si algún día quieren
+// separar alguno en su propia lista.
+const LISTA_WEBINARS_BREVO = 16;
+
+const extraerZoomId = (valor) => {
+  const texto = String(valor || '').trim();
+  if (!texto) return '';
+
+  const enUrl = texto.match(/\/(?:j|w|s)\/(\d{9,12})/);
+  if (enUrl) return enUrl[1];
+
+  const soloDigitos = texto.replace(/\D/g, '');
+  return soloDigitos.length >= 9 ? soloDigitos : texto;
+};
 
 // Nombre real de cada formulario. Lo que se guarda en Supabase son rótulos
 // heredados ("Inscripciones Curso Standard") que no identifican el curso.
@@ -159,7 +179,7 @@ const AdminDashboard = () => {
     minutos_minimos: 0,
     constancia_estado: 'bloqueada',
     codigo: '',
-    brevo_lista_id: '',
+    brevo_lista_id: LISTA_WEBINARS_BREVO,
     certificado_template_url: '',
     certificado_x: '',
     certificado_y: '',
@@ -2037,6 +2057,50 @@ const AdminDashboard = () => {
     }
   };
 
+
+  // La plantilla de la constancia se puede pegar como URL o subir como archivo.
+  // Aquí no hay respaldo en Base64 a propósito: una plantilla pesa megas y
+  // guardarla incrustada en la fila del webinar reventaría la tabla.
+  const handlePlantillaConstanciaUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('La plantilla tiene que ser una imagen (PNG o JPG).', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('La plantilla supera los 5 MB permitidos.', 'error');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const extension = file.name.split('.').pop();
+      const ruta = `webinars/plantillas/${Date.now()}.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('certificates')
+        .upload(ruta, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('certificates')
+        .getPublicUrl(ruta);
+
+      setWebinarForm(prev => ({ ...prev, certificado_template_url: publicUrl }));
+      showToast('Plantilla subida. Ya puedes colocar el nombre encima.', 'success');
+    } catch (err) {
+      console.error('Error subiendo la plantilla:', err.message);
+      showToast(`No se pudo subir la plantilla: ${err.message}`, 'error');
+    } finally {
+      setActionLoading(false);
+      e.target.value = '';
+    }
+  };
+
   const isWebinarLive = (webinar) => {
     if (webinar.fecha_inicio && webinar.fecha_fin) {
       const now = new Date();
@@ -2126,7 +2190,7 @@ const AdminDashboard = () => {
         minutos_minimos: 0,
         constancia_estado: 'bloqueada',
         codigo: '',
-        brevo_lista_id: '',
+        brevo_lista_id: LISTA_WEBINARS_BREVO,
         certificado_template_url: '',
         certificado_x: '',
         certificado_y: '',
@@ -2177,7 +2241,7 @@ const AdminDashboard = () => {
       minutos_minimos: webinar.minutos_minimos ?? 0,
       constancia_estado: webinar.constancia_estado || 'bloqueada',
       codigo: '',
-      brevo_lista_id: webinar.brevo_lista_id ?? '',
+      brevo_lista_id: webinar.brevo_lista_id ?? LISTA_WEBINARS_BREVO,
       certificado_template_url: webinar.certificado_template_url || '',
       certificado_x: webinar.certificado_x ?? '',
       certificado_y: webinar.certificado_y ?? '',
@@ -4533,7 +4597,18 @@ const AdminDashboard = () => {
                         link: '',
                         fecha_inicio: '',
                         fecha_fin: '',
-                        activo: true
+                        activo: true,
+                        registro_portal: false,
+                        zoom_id: '',
+                        zoom_tipo: 'webinar',
+                        minutos_minimos: 0,
+                        constancia_estado: 'bloqueada',
+                        codigo: '',
+                        brevo_lista_id: LISTA_WEBINARS_BREVO,
+                        certificado_template_url: '',
+                        certificado_x: '',
+                        certificado_y: '',
+                        certificado_font_size: ''
                       });
                       setShowWebinarForm(true);
                     }}
@@ -4641,64 +4716,79 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* ---- Registro por el portal, asistencia y constancia ---- */}
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '18px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
+                    <div className="wz-panel">
+                      <label className="wz-switch">
                         <input
                           type="checkbox"
                           checked={webinarForm.registro_portal}
                           onChange={(e) => setWebinarForm({ ...webinarForm, registro_portal: e.target.checked })}
-                          style={{ width: '18px', height: '18px', marginTop: '2px', flexShrink: 0 }}
                         />
                         <span>
                           <strong>Registro por el portal</strong>
-                          <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>
-                            El botón de la landing deja de mandar al enlace externo: la persona entra al portal,
-                            se registra ahí y ahí mismo recibe su acceso y su constancia. Apagado, el webinar
-                            se comporta como siempre.
+                          <span className="wz-switch-desc">
+                            El botón de la landing deja de mandar al enlace externo: la persona entra al
+                            portal, se registra ahí y ahí mismo recibe su acceso de Zoom y, al terminar,
+                            su constancia. Apagado, el webinar se comporta como siempre.
                           </span>
                         </span>
                       </label>
 
                       {webinarForm.registro_portal && (
                         <>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '18px' }}>
+                          {/* 1 · Zoom */}
+                          <section className="wz-paso">
+                            <h4><span className="wz-num">1</span> Conexión con Zoom</h4>
+
                             <div className="crm-input-group">
-                              <label>ID de Zoom</label>
+                              <label>Enlace o ID del seminario</label>
                               <input
                                 type="text"
                                 value={webinarForm.zoom_id}
                                 onChange={(e) => setWebinarForm({ ...webinarForm, zoom_id: e.target.value })}
-                                placeholder="Ej. 84512345678"
+                                onBlur={(e) => setWebinarForm({ ...webinarForm, zoom_id: extraerZoomId(e.target.value) })}
+                                placeholder="Pega aquí la URL del seminario de Zoom"
                               />
-                              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                                El número de la sesión, sin guiones. Con esto Zoom manda el enlace personal
-                                y confirma la asistencia solo.
+                              <small>
+                                Pega la liga completa y yo saco el ID solo. Sin esto, Zoom no manda el
+                                enlace personal ni confirma la asistencia.
                               </small>
                             </div>
 
-                            <div className="crm-input-group">
-                              <label>Tipo en Zoom</label>
-                              <select
-                                value={webinarForm.zoom_tipo}
-                                onChange={(e) => setWebinarForm({ ...webinarForm, zoom_tipo: e.target.value })}
-                              >
-                                <option value="webinar">Seminario web</option>
-                                <option value="meeting">Reunión normal</option>
-                              </select>
+                            <div className="wz-fila">
+                              <div className="crm-input-group">
+                                <label>Tipo en Zoom</label>
+                                <select
+                                  value={webinarForm.zoom_tipo}
+                                  onChange={(e) => setWebinarForm({ ...webinarForm, zoom_tipo: e.target.value })}
+                                >
+                                  <option value="webinar">Seminario web</option>
+                                  <option value="meeting">Reunión normal</option>
+                                </select>
+                              </div>
+
+                              <div className="crm-input-group">
+                                <label>Minutos mínimos para acreditar</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={webinarForm.minutos_minimos}
+                                  onChange={(e) => setWebinarForm({ ...webinarForm, minutos_minimos: e.target.value })}
+                                  placeholder="0"
+                                />
+                                <small>En 0 basta con aparecer en el reporte.</small>
+                              </div>
                             </div>
 
-                            <div className="crm-input-group">
-                              <label>Minutos mínimos para acreditar</label>
-                              <input
-                                type="number"
-                                min="0"
-                                value={webinarForm.minutos_minimos}
-                                onChange={(e) => setWebinarForm({ ...webinarForm, minutos_minimos: e.target.value })}
-                              />
-                              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                                En 0 basta con aparecer en el reporte de Zoom.
-                              </small>
-                            </div>
+                            <p className="wz-aviso">
+                              En Zoom, dentro de las opciones del seminario, deja activado
+                              <strong> “Requerir registro”</strong>. Si no, Zoom rechaza las altas y todos
+                              acaban con el enlace genérico.
+                            </p>
+                          </section>
+
+                          {/* 2 · Correo */}
+                          <section className="wz-paso">
+                            <h4><span className="wz-num">2</span> Correo de confirmación</h4>
 
                             <div className="crm-input-group">
                               <label>Lista de Brevo</label>
@@ -4708,79 +4798,101 @@ const AdminDashboard = () => {
                                 onChange={(e) => setWebinarForm({ ...webinarForm, brevo_lista_id: e.target.value })}
                                 placeholder="Ej. 16"
                               />
-                              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                                ID de la lista que dispara el correo de confirmación.
+                              <small>
+                                Ya viene puesta la lista de webinars. Entrar a ella dispara el correo;
+                                en la plantilla de Brevo usa
+                                <code> {'{{ contact.WEBINAR_LINK }}'} </code> para insertar el enlace
+                                personal de Zoom de cada quien.
                               </small>
                             </div>
-                          </div>
+                          </section>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px' }}>
-                            <div className="crm-input-group">
-                              <label>Estado de la constancia</label>
-                              <select
-                                value={webinarForm.constancia_estado}
-                                onChange={(e) => setWebinarForm({ ...webinarForm, constancia_estado: e.target.value })}
-                              >
-                                <option value="bloqueada">🔒 Bloqueada — nadie la descarga todavía</option>
-                                <option value="codigo">🔓 Con verificación — Zoom o código</option>
-                                <option value="libre">⬇️ Libre — todo el que se registró</option>
-                              </select>
+                          {/* 3 · Constancia */}
+                          <section className="wz-paso">
+                            <h4><span className="wz-num">3</span> Constancia</h4>
+
+                            <div className="wz-fila">
+                              <div className="crm-input-group">
+                                <label>¿Quién puede descargarla?</label>
+                                <select
+                                  value={webinarForm.constancia_estado}
+                                  onChange={(e) => setWebinarForm({ ...webinarForm, constancia_estado: e.target.value })}
+                                >
+                                  <option value="bloqueada">Nadie todavía</option>
+                                  <option value="codigo">Solo quien asistió</option>
+                                  <option value="libre">Todo el que se registró</option>
+                                </select>
+                                <small>
+                                  {webinarForm.constancia_estado === 'bloqueada'
+                                    ? 'El alumno ve la constancia bloqueada. Déjalo así hasta que termine la sesión.'
+                                    : webinarForm.constancia_estado === 'libre'
+                                      ? 'Se abre para todos los registrados, hayan asistido o no. Útil al liberar la grabación.'
+                                      : 'Zoom confirma la asistencia solo. A quien no aparezca en el reporte se le pide el código.'}
+                                </small>
+                              </div>
+
+                              {webinarForm.constancia_estado === 'codigo' && (
+                                <div className="crm-input-group">
+                                  <label>Código que dice el ponente al cerrar</label>
+                                  <input
+                                    type="text"
+                                    value={webinarForm.codigo}
+                                    onChange={(e) => setWebinarForm({ ...webinarForm, codigo: e.target.value })}
+                                    placeholder="Ej. ECMO2026"
+                                  />
+                                  <small>Solo se usa cuando Zoom no reconoce a la persona. Vacío lo quita.</small>
+                                </div>
+                              )}
                             </div>
 
                             <div className="crm-input-group">
-                              <label>Código que dice el ponente al cerrar</label>
-                              <input
-                                type="text"
-                                value={webinarForm.codigo}
-                                onChange={(e) => setWebinarForm({ ...webinarForm, codigo: e.target.value })}
-                                placeholder="Ej. ECMO2026"
-                              />
-                              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                                Solo se usa como respaldo cuando Zoom no reconoce a la persona.
-                                Déjalo vacío para quitarlo.
-                              </small>
+                              <label>Plantilla de la constancia</label>
+                              <div className="wz-archivo">
+                                <input
+                                  type="text"
+                                  value={webinarForm.certificado_template_url}
+                                  onChange={(e) => setWebinarForm({ ...webinarForm, certificado_template_url: e.target.value })}
+                                  placeholder="Pega la URL de la imagen, o súbela con el botón"
+                                />
+                                <input
+                                  type="file"
+                                  id="plantilla-constancia-archivo"
+                                  accept="image/*"
+                                  style={{ display: 'none' }}
+                                  onChange={handlePlantillaConstanciaUpload}
+                                />
+                                <label htmlFor="plantilla-constancia-archivo" className="btn-crm-action outlined">
+                                  <Upload size={15} /> Subir imagen
+                                </label>
+                                {webinarForm.certificado_template_url && (
+                                  <button
+                                    type="button"
+                                    className="btn-crm-action outlined"
+                                    onClick={() => setWebinarForm({ ...webinarForm, certificado_template_url: '' })}
+                                  >
+                                    Quitar
+                                  </button>
+                                )}
+                              </div>
+                              <small>Vacío usa la plantilla por defecto de HCE. Máximo 5 MB.</small>
                             </div>
-                          </div>
 
-                          <div className="crm-input-group">
-                            <label>Plantilla de la constancia (URL)</label>
-                            <input
-                              type="text"
-                              value={webinarForm.certificado_template_url}
-                              onChange={(e) => setWebinarForm({ ...webinarForm, certificado_template_url: e.target.value })}
-                              placeholder="Vacío usa la plantilla por defecto de HCE"
+                            <PosicionadorConstancia
+                              templateUrl={webinarForm.certificado_template_url}
+                              x={webinarForm.certificado_x}
+                              y={webinarForm.certificado_y}
+                              fontSize={webinarForm.certificado_font_size || 40}
+                              nombreEjemplo="Nombre del Alumno"
+                              onChange={({ x, y, fontSize }) =>
+                                setWebinarForm((prev) => ({
+                                  ...prev,
+                                  certificado_x: x,
+                                  certificado_y: y,
+                                  certificado_font_size: fontSize,
+                                }))
+                              }
                             />
-                          </div>
-
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '18px' }}>
-                            <div className="crm-input-group">
-                              <label>Nombre — posición X</label>
-                              <input
-                                type="number"
-                                value={webinarForm.certificado_x}
-                                onChange={(e) => setWebinarForm({ ...webinarForm, certificado_x: e.target.value })}
-                                placeholder="centro"
-                              />
-                            </div>
-                            <div className="crm-input-group">
-                              <label>Nombre — posición Y</label>
-                              <input
-                                type="number"
-                                value={webinarForm.certificado_y}
-                                onChange={(e) => setWebinarForm({ ...webinarForm, certificado_y: e.target.value })}
-                                placeholder="centro"
-                              />
-                            </div>
-                            <div className="crm-input-group">
-                              <label>Tamaño de letra</label>
-                              <input
-                                type="number"
-                                value={webinarForm.certificado_font_size}
-                                onChange={(e) => setWebinarForm({ ...webinarForm, certificado_font_size: e.target.value })}
-                                placeholder="40"
-                              />
-                            </div>
-                          </div>
+                          </section>
                         </>
                       )}
                     </div>

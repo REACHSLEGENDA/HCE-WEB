@@ -7,7 +7,7 @@
 
 import { admin, usuarioDesdeToken, json, isConfigured as supabaseListo } from './_supabase.js';
 import { agregarRegistrante, isConfigured as zoomListo } from './_zoom.js';
-import { isConfigured as brevoListo, upsertContact, addToList } from './_brevo.js';
+import { isConfigured as brevoListo, upsertContact, addToList, removeFromList } from './_brevo.js';
 
 function partirNombre(nombreCompleto, email) {
   const limpio = (nombreCompleto || '').trim();
@@ -106,9 +106,26 @@ export const handler = async (event) => {
     if (errInsert) throw new Error(errInsert.message);
 
     // Brevo: no bloquea la respuesta. Si la lista no esta configurada se salta.
+    //
+    // El enlace personal viaja como atributo del contacto para que la plantilla
+    // de Brevo lo inserte con {{ contact.WEBINAR_LINK }}. Asi el alumno recibe
+    // un solo correo, con la marca de HCE, en vez del de Zoom por separado.
     if (brevoListo() && webinar.brevo_lista_id) {
-      const atributos = nombreCompleto ? { FIRSTNAME: nombre, LASTNAME: apellido } : {};
+      const atributos = {
+        WEBINAR_NOMBRE: webinar.title || '',
+        WEBINAR_LINK: joinUrl || '',
+      };
+      if (nombreCompleto) {
+        atributos.FIRSTNAME = nombre;
+        atributos.LASTNAME = apellido;
+      }
+
+      // Brevo NO vuelve a disparar la automatizacion si el contacto ya estaba
+      // en la lista, y con una sola lista para todos los webinars eso dejaria
+      // sin correo a quien ya asistio a uno antes. Se le saca y se le vuelve a
+      // meter: la salida no dispara nada y la entrada si.
       upsertContact(email, atributos)
+        .then(() => removeFromList(email, webinar.brevo_lista_id))
         .then(() => addToList(email, webinar.brevo_lista_id))
         .catch((err) => console.error('Brevo webinar error:', err.message));
     }
