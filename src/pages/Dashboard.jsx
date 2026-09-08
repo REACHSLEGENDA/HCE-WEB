@@ -42,10 +42,14 @@ import {
   Sun,
   Moon,
   Monitor,
+  Video,
+  Lock,
+  Download,
   X
 } from 'lucide-react';
 import './Dashboard.css';
 import '../components/Experiences.css';
+import { generarConstancia, descargarConstancia } from '../lib/constancia';
 
 const NurseCap = ({ size = 24, ...props }) => (
   <svg
@@ -366,6 +370,186 @@ const Dashboard = () => {
   }, [user?.id, fetchMyCertificates]);
 
 
+  // ---- Webinars con registro en el portal ---------------------------------
+  //
+  // El alumno se registra aquí, recibe su enlace de Zoom y, al terminar la
+  // sesión, desbloquea su constancia. La asistencia la confirma Zoom sola; el
+  // código que dio el ponente al cierre es solo el respaldo para quien entró
+  // con otro correo.
+
+  const [webinarsPortal, setWebinarsPortal] = useState([]);
+  const [misRegistrosWebinar, setMisRegistrosWebinar] = useState([]);
+  const [webinarOcupado, setWebinarOcupado] = useState(null);
+  const [modalCodigo, setModalCodigo] = useState(null);
+
+  const llamarFuncionWebinar = useCallback(async (ruta, cuerpo) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`/.netlify/functions/${ruta}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.access_token || ''}`,
+      },
+      body: JSON.stringify(cuerpo),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const error = new Error(data.error || 'No pudimos completar la operación. Intenta de nuevo.');
+      error.estado = data.estado;
+      throw error;
+    }
+    return data;
+  }, []);
+
+  const fetchWebinarsPortal = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('webinars')
+        .select('*')
+        .eq('registro_portal', true)
+        .eq('activo', true)
+        .order('id', { ascending: false });
+      if (error) throw error;
+      setWebinarsPortal(data || []);
+    } catch (err) {
+      console.error('Error cargando webinars del portal:', err.message);
+      setWebinarsPortal([]);
+    }
+  }, []);
+
+  const fetchMisRegistrosWebinar = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const { data, error } = await supabase
+        .from('webinar_registros')
+        .select('*')
+        .eq('user_id', user.id);
+      if (error) throw error;
+      setMisRegistrosWebinar(data || []);
+    } catch (err) {
+      console.error('Error cargando registros de webinar:', err.message);
+      setMisRegistrosWebinar([]);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    void fetchWebinarsPortal();
+  }, [fetchWebinarsPortal]);
+
+  useEffect(() => {
+    if (user?.id) void fetchMisRegistrosWebinar();
+  }, [user?.id, fetchMisRegistrosWebinar]);
+
+  // Quien llega desde la landing con ?webinar=12 cae directo en la sección.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('webinar')) {
+      setActiveTab('webinars');
+    }
+  }, []);
+
+  const registroDeWebinar = (webinarId) =>
+    misRegistrosWebinar.find((r) => String(r.webinar_id) === String(webinarId)) || null;
+
+  const handleRegistrarWebinar = async (webinar) => {
+    setWebinarOcupado(webinar.id);
+    try {
+      const data = await llamarFuncionWebinar('webinar-register', { webinarId: webinar.id });
+      await fetchMisRegistrosWebinar();
+      showToast(
+        data.yaRegistrado
+          ? 'Ya estabas registrado en este webinar.'
+          : 'Listo, quedaste registrado. También te mandamos el acceso a tu correo.',
+        'success'
+      );
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setWebinarOcupado(null);
+    }
+  };
+
+  // Dibuja la constancia, la sube al portal y devuelve la URL final. Si el
+  // almacenamiento falla, el alumno igual se queda con su archivo local.
+  const emitirConstanciaWebinar = async (webinar, plantilla, folio) => {
+    const nombre =
+      profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email || 'Alumno';
+
+    const { blob, dataUrl } = await generarConstancia({
+      nombre,
+      templateUrl: plantilla?.url,
+      x: plantilla?.x,
+      y: plantilla?.y,
+      fontSize: plantilla?.fontSize,
+    });
+
+    try {
+      const ruta = `${user.id}/webinar_${webinar.id}_${folio}.png`;
+      const { error } = await supabase.storage
+        .from('certificates')
+        .upload(ruta, blob, { upsert: true });
+      if (error) throw error;
+
+      const { data: publico } = supabase.storage.from('certificates').getPublicUrl(ruta);
+
+      await llamarFuncionWebinar('webinar-unlock', {
+        webinarId: webinar.id,
+        accion: 'certificado',
+        certificadoUrl: publico.publicUrl,
+        folio,
+      });
+
+      await fetchMisRegistrosWebinar();
+      return publico.publicUrl;
+    } catch (err) {
+      console.warn('No se pudo guardar la constancia en el portal:', err.message);
+      showToast('Generamos tu constancia, pero no quedó guardada en el portal. Descárgala ahora.', 'warning');
+      return dataUrl;
+    }
+  };
+
+  const handleDesbloquearWebinar = async (webinar, codigo = '') => {
+    setWebinarOcupado(webinar.id);
+    try {
+      const data = await llamarFuncionWebinar('webinar-unlock', {
+        webinarId: webinar.id,
+        codigo,
+      });
+
+      const archivo = `Constancia_${(webinar.title || 'Webinar').replace(/\s+/g, '_')}.png`;
+      const url = data.certificadoUrl
+        ? data.certificadoUrl
+        : await emitirConstanciaWebinar(webinar, data.plantilla, data.folio);
+
+      setModalCodigo(null);
+      await descargarConstancia(url, archivo);
+      await fetchMisRegistrosWebinar();
+
+      showToast(
+        data.via === 'zoom'
+          ? `Zoom confirmó tu asistencia (${data.minutos} min). Aquí está tu constancia.`
+          : '¡Listo! Tu constancia se descargó y quedó guardada en el portal.',
+        'success'
+      );
+    } catch (err) {
+      // Cuando Zoom no lo reconoce se le pide el código en lugar de dejarlo
+      // con un error seco: casi siempre entró con un correo distinto.
+      if (err.estado === 'requiere-codigo' || err.estado === 'codigo-invalido') {
+        setModalCodigo({
+          webinar,
+          valor: codigo,
+          mensaje: err.message,
+          esError: err.estado === 'codigo-invalido',
+        });
+      } else {
+        setModalCodigo(null);
+        showToast(err.message, 'error');
+      }
+    } finally {
+      setWebinarOcupado(null);
+    }
+  };
+
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -381,6 +565,7 @@ const Dashboard = () => {
       case 'dashboard': return 'Dashboard';
       case 'explore': return 'Explorar Cursos';
       case 'courses': return 'Mis Cursos';
+      case 'webinars': return 'Webinars';
       case 'certificates': return 'Certificados';
       case 'profile': return 'Mi Perfil';
       case 'settings': return 'Configuración';
@@ -757,7 +942,16 @@ const Dashboard = () => {
             <span className="menu-label">Mis Cursos</span>
           </button>
 
-          <button 
+          <button
+            className={`menu-item ${activeTab === 'webinars' ? 'active' : ''}`}
+            onClick={() => setActiveTab('webinars')}
+            title="Webinars"
+          >
+            <Video size={20} className="menu-icon" />
+            <span className="menu-label">Webinars</span>
+          </button>
+
+          <button
             className={`menu-item ${activeTab === 'certificates' ? 'active' : ''}`}
             onClick={() => setActiveTab('certificates')}
             title="Certificados"
@@ -1384,6 +1578,200 @@ const Dashboard = () => {
                   })}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* VIEW: WEBINARS (registro, acceso a Zoom y constancia) */}
+          {activeTab === 'webinars' && (
+            <div className="webinars-portal-view">
+              <div className="section-title-row">
+                <h2>Webinars Gratuitos</h2>
+                <p>Regístrate, entra por Zoom y descarga tu constancia al terminar. Todo desde aquí.</p>
+              </div>
+
+              {webinarsPortal.length === 0 ? (
+                <div className="crm-empty-state-card">
+                  <Video size={48} className="empty-state-icon" />
+                  <h3>No hay webinars abiertos</h3>
+                  <p>En cuanto se programe el siguiente lo verás aquí y te avisaremos a tu correo.</p>
+                </div>
+              ) : (
+                <div className="webinar-portal-grid">
+                  {webinarsPortal.map((webinar) => {
+                    const registro = registroDeWebinar(webinar.id);
+                    const ocupado = webinarOcupado === webinar.id;
+                    const estado = webinar.constancia_estado || 'bloqueada';
+
+                    return (
+                      <article key={webinar.id} className="webinar-portal-card">
+                        {webinar.image_url && (
+                          <div className="webinar-portal-media">
+                            <img src={webinar.image_url} alt="" loading="lazy" />
+                          </div>
+                        )}
+
+                        <div className="webinar-portal-body">
+                          <h3>{webinar.title}</h3>
+                          <p className="webinar-portal-fecha">
+                            <Calendar size={14} />
+                            <span>{webinar.date}{webinar.time ? ` · ${webinar.time}` : ''}</span>
+                          </p>
+
+                          {!registro ? (
+                            <button
+                              className="btn-crm-action solid webinar-portal-btn"
+                              disabled={ocupado}
+                              onClick={() => handleRegistrarWebinar(webinar)}
+                            >
+                              {ocupado ? 'Registrando…' : 'Registrar mi asistencia'}
+                            </button>
+                          ) : (
+                            <>
+                              <div className="webinar-portal-acceso">
+                                <span className="webinar-portal-chip">
+                                  <CheckCircle size={13} /> Registrado
+                                </span>
+                                {registro.join_url && (
+                                  <a
+                                    className="btn-crm-action outlined webinar-portal-btn"
+                                    href={registro.join_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    <PlayCircle size={15} /> Entrar al Zoom
+                                  </a>
+                                )}
+                              </div>
+
+                              <div className="webinar-portal-constancia">
+                                {registro.asistio ? (
+                                  <>
+                                    <p className="webinar-portal-constancia-titulo">
+                                      <Award size={15} /> Constancia disponible
+                                    </p>
+                                    <p className="webinar-portal-nota">
+                                      {registro.metodo === 'zoom'
+                                        ? `Zoom confirmó ${registro.minutos} minutos de asistencia.`
+                                        : 'Tu asistencia quedó confirmada.'}
+                                    </p>
+                                    <button
+                                      className="btn-crm-action solid webinar-portal-btn"
+                                      disabled={ocupado}
+                                      onClick={() => handleDesbloquearWebinar(webinar)}
+                                    >
+                                      <Download size={15} />
+                                      {ocupado
+                                        ? 'Preparando…'
+                                        : registro.certificado_url
+                                          ? 'Descargar constancia'
+                                          : 'Generar y descargar'}
+                                    </button>
+                                  </>
+                                ) : estado === 'bloqueada' ? (
+                                  <>
+                                    <p className="webinar-portal-constancia-titulo bloqueada">
+                                      <Lock size={15} /> Constancia bloqueada
+                                    </p>
+                                    <p className="webinar-portal-nota">
+                                      Se libera cuando termine el webinar. Si no alcanzas a asistir,
+                                      espera: próximamente publicaremos la grabación de forma abierta.
+                                    </p>
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="webinar-portal-constancia-titulo">
+                                      <Lock size={15} /> Constancia por desbloquear
+                                    </p>
+                                    <p className="webinar-portal-nota">
+                                      Zoom verifica tu asistencia solo. Si no te reconoce, te pedimos
+                                      el código que dio el ponente al cerrar la clase.
+                                    </p>
+                                    <button
+                                      className="btn-crm-action solid webinar-portal-btn"
+                                      disabled={ocupado}
+                                      onClick={() => handleDesbloquearWebinar(webinar)}
+                                    >
+                                      {ocupado ? 'Verificando…' : 'Desbloquear constancia'}
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+
+              {modalCodigo && (
+                <div
+                  className="webinar-modal-backdrop"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Desbloquear constancia"
+                  onClick={() => setModalCodigo(null)}
+                >
+                  <div className="webinar-modal" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="webinar-modal-cerrar"
+                      onClick={() => setModalCodigo(null)}
+                      aria-label="Cerrar"
+                    >
+                      <X size={18} />
+                    </button>
+
+                    <h3>¿Asististe a «{modalCodigo.webinar.title}»?</h3>
+                    <p className={modalCodigo.esError ? 'webinar-modal-error' : 'webinar-modal-nota'}>
+                      {modalCodigo.mensaje}
+                    </p>
+
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleDesbloquearWebinar(modalCodigo.webinar, modalCodigo.valor);
+                      }}
+                    >
+                      <input
+                        type="text"
+                        autoFocus
+                        value={modalCodigo.valor}
+                        onChange={(e) =>
+                          setModalCodigo({ ...modalCodigo, valor: e.target.value, esError: false })
+                        }
+                        placeholder="Código de la clase"
+                        className="webinar-modal-input"
+                      />
+
+                      <div className="webinar-modal-acciones">
+                        <button
+                          type="button"
+                          className="btn-crm-action outlined"
+                          onClick={() => setModalCodigo(null)}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="btn-crm-action solid"
+                          disabled={
+                            !modalCodigo.valor.trim() ||
+                            webinarOcupado === modalCodigo.webinar.id
+                          }
+                        >
+                          {webinarOcupado === modalCodigo.webinar.id ? 'Validando…' : 'Desbloquear'}
+                        </button>
+                      </div>
+                    </form>
+
+                    <p className="webinar-modal-pie">
+                      ¿No pudiste asistir? Próximamente liberaremos la grabación de forma abierta.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -2216,3 +2216,218 @@
 .empty-state-suggestion .btn-empty-state {
   text-decoration: none;
 }
+
+/* ==========================================================================
+   Webinars del portal: registro, acceso a Zoom y constancia.
+   Todo se resuelve con los tokens de arriba, así que el bloque funciona igual
+   en claro y en oscuro sin duplicar reglas por tema.
+   ========================================================================== */
+
+.webinar-portal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.webinar-portal-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.webinar-portal-media {
+  aspect-ratio: 16 / 9;
+  background: var(--bg-gray);
+}
+
+.webinar-portal-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.webinar-portal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.webinar-portal-body h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  color: var(--text-dark);
+  text-wrap: balance;
+}
+
+.webinar-portal-fecha {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.webinar-portal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.webinar-portal-acceso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.webinar-portal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(67, 160, 71, 0.12);
+  color: var(--accent-green);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* La constancia es el remate de la tarjeta: va separada por una línea para que
+   se lea como un bloque aparte del acceso a la clase. */
+.webinar-portal-constancia {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.webinar-portal-constancia-titulo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.webinar-portal-constancia-titulo.bloqueada {
+  color: var(--text-muted);
+}
+
+.webinar-portal-nota {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* ---- Diálogo del código de asistencia ---- */
+
+.webinar-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 25, 47, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.webinar-modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 26px 24px 20px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: 0 18px 50px rgba(10, 25, 47, 0.28);
+}
+
+.webinar-modal h3 {
+  margin: 0;
+  padding-right: 28px;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  color: var(--text-dark);
+  text-wrap: balance;
+}
+
+.webinar-modal-nota,
+.webinar-modal-error {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.webinar-modal-nota { color: var(--text-muted); }
+.webinar-modal-error { color: var(--accent-orange); font-weight: 600; }
+
+.webinar-modal-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dark);
+  background: var(--bg-gray);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+
+.webinar-modal-input:focus-visible {
+  outline: 2px solid var(--primary-cyan);
+  outline-offset: 1px;
+}
+
+.webinar-modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.webinar-modal-pie {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.webinar-modal-cerrar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  padding: 4px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.webinar-modal-cerrar:hover { color: var(--accent-orange); }
+
+@media (max-width: 560px) {
+  .webinar-portal-grid { grid-template-columns: 1fr; }
+  .webinar-portal-acceso { flex-direction: column; align-items: stretch; }
+  .webinar-modal-acciones { flex-direction: column-reverse; }
+  .webinar-modal-acciones .btn-crm-action { width: 100%; justify-content: center; }
+}

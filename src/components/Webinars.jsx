@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarDays } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { publicSupabase } from '../lib/supabase';
 import './Webinars.css';
 
-const WebinarCard = ({ image, title, date, time, link, enVivo }) => {
+const WebinarCard = ({ id, image, title, date, time, link, enVivo, registroPortal }) => {
   return (
     <div className="webinar-immersive-card">
       <div className="webinar-card-image-container">
@@ -21,9 +22,18 @@ const WebinarCard = ({ image, title, date, time, link, enVivo }) => {
         <h3 className="webinar-card-title">{title}</h3>
         <p className="webinar-card-time" style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '1.5rem', fontWeight: '500' }}>{time}</p>
         <div className="webinar-card-action">
-          <a href={link} target="_blank" rel="noreferrer" className="btn-webinar-card">
-            {enVivo ? 'Unirse al Webinar (En Vivo)' : 'Registrarme Gratis'}
-          </a>
+          {/* Con registro por el portal la persona no sale del sitio: entra al
+              portal, se registra ahi y ahi mismo recibe su acceso y, al
+              terminar, su constancia. Sin él se conserva el enlace externo. */}
+          {registroPortal ? (
+            <Link to={`/dashboard?webinar=${id}`} className="btn-webinar-card">
+              {enVivo ? 'Entrar al Webinar (En Vivo)' : 'Registrarme Gratis'}
+            </Link>
+          ) : (
+            <a href={link} target="_blank" rel="noreferrer" className="btn-webinar-card">
+              {enVivo ? 'Unirse al Webinar (En Vivo)' : 'Registrarme Gratis'}
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -100,14 +110,16 @@ const Webinars = () => {
         </div>
         <div className="webinar-immersive-grid" style={{ display: 'grid', gridTemplateColumns: webinars.length > 1 ? 'repeat(auto-fit, minmax(350px, 1fr))' : '1fr', gap: '30px', maxWidth: '1200px' }}>
           {webinars.map((webinar) => (
-            <WebinarCard 
+            <WebinarCard
               key={webinar.id}
+              id={webinar.id}
               image={webinar.image_url}
               title={webinar.title}
               date={webinar.date}
               time={webinar.time}
               link={webinar.link}
               enVivo={isWebinarLive(webinar)}
+              registroPortal={!!webinar.registro_portal}
             />
           ))}
           {webinars.length === 0 && (

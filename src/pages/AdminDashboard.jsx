@@ -42,7 +42,8 @@ import {
   DollarSign,
   Upload,
   Send,
-  Receipt
+  Receipt,
+  RefreshCw
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { useNotification } from '../context/NotificationContext';
@@ -150,8 +151,24 @@ const AdminDashboard = () => {
     link: '',
     fecha_inicio: '',
     fecha_fin: '',
-    activo: true
+    activo: true,
+    // Registro por el portal, asistencia por Zoom y constancia.
+    registro_portal: false,
+    zoom_id: '',
+    zoom_tipo: 'webinar',
+    minutos_minimos: 0,
+    constancia_estado: 'bloqueada',
+    codigo: '',
+    brevo_lista_id: '',
+    certificado_template_url: '',
+    certificado_x: '',
+    certificado_y: '',
+    certificado_font_size: ''
   });
+
+  // Listado de registrados de un webinar (se abre desde la tabla).
+  const [webinarRegistros, setWebinarRegistros] = useState(null);
+  const [sincronizandoWebinar, setSincronizandoWebinar] = useState(false);
 
   // Student activity and progress surveillance states
   const [studentActivities, setStudentActivities] = useState([]);
@@ -2034,38 +2051,63 @@ const AdminDashboard = () => {
     e.preventDefault();
     setActionLoading(true);
     try {
+      // Los campos numéricos vacíos van como null, no como cadena, o Postgres
+      // rechaza el guardado entero.
+      const numeroONulo = (valor) =>
+        valor === '' || valor === null || valor === undefined ? null : Number(valor);
+
+      const payload = {
+        title: webinarForm.title,
+        date: webinarForm.date,
+        time: webinarForm.time,
+        image_url: webinarForm.image_url,
+        link: webinarForm.link,
+        fecha_inicio: webinarForm.fecha_inicio || null,
+        fecha_fin: webinarForm.fecha_fin || null,
+        activo: webinarForm.activo,
+        registro_portal: webinarForm.registro_portal,
+        zoom_id: webinarForm.zoom_id ? String(webinarForm.zoom_id).replace(/\s/g, '') : null,
+        zoom_tipo: webinarForm.zoom_tipo || 'webinar',
+        minutos_minimos: numeroONulo(webinarForm.minutos_minimos) ?? 0,
+        constancia_estado: webinarForm.constancia_estado || 'bloqueada',
+        brevo_lista_id: numeroONulo(webinarForm.brevo_lista_id),
+        certificado_template_url: webinarForm.certificado_template_url || null,
+        certificado_x: numeroONulo(webinarForm.certificado_x),
+        certificado_y: numeroONulo(webinarForm.certificado_y),
+        certificado_font_size: numeroONulo(webinarForm.certificado_font_size)
+      };
+
+      let webinarId = editingWebinar?.id;
+
       if (editingWebinar) {
         const { error } = await supabase
           .from('webinars')
-          .update({
-            title: webinarForm.title,
-            date: webinarForm.date,
-            time: webinarForm.time,
-            image_url: webinarForm.image_url,
-            link: webinarForm.link,
-            fecha_inicio: webinarForm.fecha_inicio || null,
-            fecha_fin: webinarForm.fecha_fin || null,
-            activo: webinarForm.activo
-          })
+          .update(payload)
           .eq('id', editingWebinar.id);
         if (error) throw error;
         showToast('Webinar actualizado correctamente', 'success');
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('webinars')
-          .insert([{
-            title: webinarForm.title,
-            date: webinarForm.date,
-            time: webinarForm.time,
-            image_url: webinarForm.image_url,
-            link: webinarForm.link,
-            fecha_inicio: webinarForm.fecha_inicio || null,
-            fecha_fin: webinarForm.fecha_fin || null,
-            activo: webinarForm.activo
-          }]);
+          .insert([payload])
+          .select('id')
+          .single();
         if (error) throw error;
+        webinarId = data?.id;
         showToast('Webinar creado correctamente', 'success');
       }
+
+      // El código de asistencia se guarda aparte: su tabla no es accesible
+      // desde el navegador para que nadie pueda leerlo y bajarse la constancia
+      // sin haber entrado a la clase.
+      if (webinarId) {
+        try {
+          await llamarWebinarAdmin('guardar-codigo', { webinarId, codigo: webinarForm.codigo });
+        } catch (err) {
+          showToast(`El webinar se guardó, pero el código no: ${err.message}`, 'warning');
+        }
+      }
+
       await fetchWebinars();
       setShowWebinarForm(false);
       setEditingWebinar(null);
@@ -2077,7 +2119,18 @@ const AdminDashboard = () => {
         link: '',
         fecha_inicio: '',
         fecha_fin: '',
-        activo: true
+        activo: true,
+        registro_portal: false,
+        zoom_id: '',
+        zoom_tipo: 'webinar',
+        minutos_minimos: 0,
+        constancia_estado: 'bloqueada',
+        codigo: '',
+        brevo_lista_id: '',
+        certificado_template_url: '',
+        certificado_x: '',
+        certificado_y: '',
+        certificado_font_size: ''
       });
     } catch (err) {
       console.error('Error saving webinar in Supabase:', err);
@@ -2107,7 +2160,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleEditWebinar = (webinar) => {
+  const handleEditWebinar = async (webinar) => {
     setEditingWebinar(webinar);
     setWebinarForm({
       title: webinar.title,
@@ -2117,9 +2170,112 @@ const AdminDashboard = () => {
       link: webinar.link,
       fecha_inicio: webinar.fecha_inicio || '',
       fecha_fin: webinar.fecha_fin || '',
-      activo: !!webinar.activo
+      activo: !!webinar.activo,
+      registro_portal: !!webinar.registro_portal,
+      zoom_id: webinar.zoom_id || '',
+      zoom_tipo: webinar.zoom_tipo || 'webinar',
+      minutos_minimos: webinar.minutos_minimos ?? 0,
+      constancia_estado: webinar.constancia_estado || 'bloqueada',
+      codigo: '',
+      brevo_lista_id: webinar.brevo_lista_id ?? '',
+      certificado_template_url: webinar.certificado_template_url || '',
+      certificado_x: webinar.certificado_x ?? '',
+      certificado_y: webinar.certificado_y ?? '',
+      certificado_font_size: webinar.certificado_font_size ?? ''
     });
     setShowWebinarForm(true);
+
+    // El código vive en una tabla que el navegador no puede leer, así que se
+    // pide a la función y se rellena cuando llega.
+    try {
+      const { codigo } = await llamarWebinarAdmin('leer-codigo', { webinarId: webinar.id });
+      setWebinarForm((prev) => ({ ...prev, codigo: codigo || '' }));
+    } catch (err) {
+      console.warn('No se pudo leer el código del webinar:', err.message);
+    }
+  };
+
+  // Puente con la función de Netlify que gestiona lo que el navegador no puede
+  // tocar: el código de asistencia y la sincronización con Zoom.
+  const llamarWebinarAdmin = async (accion, cuerpo = {}) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch('/.netlify/functions/webinar-admin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.access_token || ''}`
+      },
+      body: JSON.stringify({ accion, ...cuerpo })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'No se pudo completar la operación.');
+    return data;
+  };
+
+  const fetchWebinarRegistros = async (webinar) => {
+    setWebinarRegistros({ webinar, filas: null });
+    try {
+      const { data, error } = await supabase
+        .from('webinar_registros')
+        .select('*')
+        .eq('webinar_id', webinar.id)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      setWebinarRegistros({ webinar, filas: data || [] });
+    } catch (err) {
+      console.error('Error cargando registrados:', err.message);
+      showToast(`No se pudo cargar el listado: ${err.message}`, 'error');
+      setWebinarRegistros({ webinar, filas: [] });
+    }
+  };
+
+  const handleSincronizarWebinar = async (webinar) => {
+    setSincronizandoWebinar(true);
+    try {
+      const data = await llamarWebinarAdmin('sincronizar', { webinarId: webinar.id });
+      if (!data.ok) {
+        showToast(data.mensaje, 'warning');
+      } else {
+        showToast(
+          `Zoom reportó ${data.participantes} participantes. Se actualizaron ${data.actualizados} registros.`,
+          'success'
+        );
+      }
+      await fetchWebinarRegistros(webinar);
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setSincronizandoWebinar(false);
+    }
+  };
+
+  // Exporta el listado tal cual se ve, para pasarlo a quien lleve el control.
+  const exportarRegistrosWebinar = () => {
+    if (!webinarRegistros?.filas?.length) return;
+
+    const escapar = (valor) => `"${String(valor ?? '').replace(/"/g, '""')}"`;
+    const encabezado = ['Nombre', 'Correo', 'Asistió', 'Minutos', 'Verificado por', 'Constancia', 'Registro'];
+    const cuerpo = webinarRegistros.filas.map((r) => [
+      r.nombre_completo || '',
+      r.email,
+      r.asistio ? 'Sí' : 'No',
+      r.minutos ?? 0,
+      r.metodo || '',
+      r.certificado_url ? 'Descargada' : '',
+      new Date(r.created_at).toLocaleString()
+    ].map(escapar).join(','));
+
+    // El BOM hace que Excel abra los acentos bien en Windows.
+    const csv = '﻿' + [encabezado.map(escapar).join(','), ...cuerpo].join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Registrados_${(webinarRegistros.webinar.title || 'webinar').replace(/\s+/g, '_')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // Filtering students
@@ -4484,6 +4640,151 @@ const AdminDashboard = () => {
                       />
                     </div>
 
+                    {/* ---- Registro por el portal, asistencia y constancia ---- */}
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '18px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={webinarForm.registro_portal}
+                          onChange={(e) => setWebinarForm({ ...webinarForm, registro_portal: e.target.checked })}
+                          style={{ width: '18px', height: '18px', marginTop: '2px', flexShrink: 0 }}
+                        />
+                        <span>
+                          <strong>Registro por el portal</strong>
+                          <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+                            El botón de la landing deja de mandar al enlace externo: la persona entra al portal,
+                            se registra ahí y ahí mismo recibe su acceso y su constancia. Apagado, el webinar
+                            se comporta como siempre.
+                          </span>
+                        </span>
+                      </label>
+
+                      {webinarForm.registro_portal && (
+                        <>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '18px' }}>
+                            <div className="crm-input-group">
+                              <label>ID de Zoom</label>
+                              <input
+                                type="text"
+                                value={webinarForm.zoom_id}
+                                onChange={(e) => setWebinarForm({ ...webinarForm, zoom_id: e.target.value })}
+                                placeholder="Ej. 84512345678"
+                              />
+                              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                El número de la sesión, sin guiones. Con esto Zoom manda el enlace personal
+                                y confirma la asistencia solo.
+                              </small>
+                            </div>
+
+                            <div className="crm-input-group">
+                              <label>Tipo en Zoom</label>
+                              <select
+                                value={webinarForm.zoom_tipo}
+                                onChange={(e) => setWebinarForm({ ...webinarForm, zoom_tipo: e.target.value })}
+                              >
+                                <option value="webinar">Seminario web</option>
+                                <option value="meeting">Reunión normal</option>
+                              </select>
+                            </div>
+
+                            <div className="crm-input-group">
+                              <label>Minutos mínimos para acreditar</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={webinarForm.minutos_minimos}
+                                onChange={(e) => setWebinarForm({ ...webinarForm, minutos_minimos: e.target.value })}
+                              />
+                              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                En 0 basta con aparecer en el reporte de Zoom.
+                              </small>
+                            </div>
+
+                            <div className="crm-input-group">
+                              <label>Lista de Brevo</label>
+                              <input
+                                type="number"
+                                value={webinarForm.brevo_lista_id}
+                                onChange={(e) => setWebinarForm({ ...webinarForm, brevo_lista_id: e.target.value })}
+                                placeholder="Ej. 16"
+                              />
+                              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                ID de la lista que dispara el correo de confirmación.
+                              </small>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px' }}>
+                            <div className="crm-input-group">
+                              <label>Estado de la constancia</label>
+                              <select
+                                value={webinarForm.constancia_estado}
+                                onChange={(e) => setWebinarForm({ ...webinarForm, constancia_estado: e.target.value })}
+                              >
+                                <option value="bloqueada">🔒 Bloqueada — nadie la descarga todavía</option>
+                                <option value="codigo">🔓 Con verificación — Zoom o código</option>
+                                <option value="libre">⬇️ Libre — todo el que se registró</option>
+                              </select>
+                            </div>
+
+                            <div className="crm-input-group">
+                              <label>Código que dice el ponente al cerrar</label>
+                              <input
+                                type="text"
+                                value={webinarForm.codigo}
+                                onChange={(e) => setWebinarForm({ ...webinarForm, codigo: e.target.value })}
+                                placeholder="Ej. ECMO2026"
+                              />
+                              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                Solo se usa como respaldo cuando Zoom no reconoce a la persona.
+                                Déjalo vacío para quitarlo.
+                              </small>
+                            </div>
+                          </div>
+
+                          <div className="crm-input-group">
+                            <label>Plantilla de la constancia (URL)</label>
+                            <input
+                              type="text"
+                              value={webinarForm.certificado_template_url}
+                              onChange={(e) => setWebinarForm({ ...webinarForm, certificado_template_url: e.target.value })}
+                              placeholder="Vacío usa la plantilla por defecto de HCE"
+                            />
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '18px' }}>
+                            <div className="crm-input-group">
+                              <label>Nombre — posición X</label>
+                              <input
+                                type="number"
+                                value={webinarForm.certificado_x}
+                                onChange={(e) => setWebinarForm({ ...webinarForm, certificado_x: e.target.value })}
+                                placeholder="centro"
+                              />
+                            </div>
+                            <div className="crm-input-group">
+                              <label>Nombre — posición Y</label>
+                              <input
+                                type="number"
+                                value={webinarForm.certificado_y}
+                                onChange={(e) => setWebinarForm({ ...webinarForm, certificado_y: e.target.value })}
+                                placeholder="centro"
+                              />
+                            </div>
+                            <div className="crm-input-group">
+                              <label>Tamaño de letra</label>
+                              <input
+                                type="number"
+                                value={webinarForm.certificado_font_size}
+                                onChange={(e) => setWebinarForm({ ...webinarForm, certificado_font_size: e.target.value })}
+                                placeholder="40"
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
                     <div style={{ display: 'flex', gap: '30px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '15px 20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                       <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                         💡 El webinar se marcará como <strong>🔴 EN VIVO</strong> automáticamente durante las fechas de inicio y fin configuradas.
@@ -4579,6 +4880,15 @@ const AdminDashboard = () => {
                             </td>
                             <td>
                               <div style={{ display: 'flex', gap: '8px' }}>
+                                {webinar.registro_portal && (
+                                  <button
+                                    className="icon-action-btn"
+                                    title="Ver registrados y asistencia"
+                                    onClick={() => fetchWebinarRegistros(webinar)}
+                                  >
+                                    <Users size={16} />
+                                  </button>
+                                )}
                                 <button className="icon-action-btn edit" onClick={() => handleEditWebinar(webinar)}>
                                   <Edit size={16} />
                                 </button>
@@ -4599,6 +4909,114 @@ const AdminDashboard = () => {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              )}
+
+              {/* ---- Registrados y asistencia de un webinar ---- */}
+              {webinarRegistros && (
+                <div className="settings-card" style={{ marginTop: '24px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <h3 style={{ margin: 0 }}>Registrados — {webinarRegistros.webinar.title}</h3>
+                      <small style={{ color: 'var(--text-muted)' }}>
+                        {webinarRegistros.webinar.sincronizado_en
+                          ? `Última consulta a Zoom: ${new Date(webinarRegistros.webinar.sincronizado_en).toLocaleString()}`
+                          : 'Todavía no se ha consultado el reporte de Zoom.'}
+                      </small>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <button
+                        className="btn-crm-action outlined"
+                        disabled={sincronizandoWebinar}
+                        onClick={() => handleSincronizarWebinar(webinarRegistros.webinar)}
+                      >
+                        <RefreshCw size={15} /> {sincronizandoWebinar ? 'Consultando…' : 'Sincronizar con Zoom'}
+                      </button>
+                      <button
+                        className="btn-crm-action outlined"
+                        disabled={!webinarRegistros.filas?.length}
+                        onClick={exportarRegistrosWebinar}
+                      >
+                        <Download size={15} /> Exportar
+                      </button>
+                      <button className="btn-crm-action outlined" onClick={() => setWebinarRegistros(null)}>
+                        <X size={15} /> Cerrar
+                      </button>
+                    </div>
+                  </div>
+
+                  {webinarRegistros.filas === null ? (
+                    <p style={{ color: 'var(--text-muted)', marginTop: '20px' }}>Cargando…</p>
+                  ) : webinarRegistros.filas.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', marginTop: '20px' }}>
+                      Todavía nadie se ha registrado a este webinar desde el portal.
+                    </p>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', margin: '18px 0 4px', fontSize: '0.85rem' }}>
+                        <span><strong>{webinarRegistros.filas.length}</strong> registrados</span>
+                        <span style={{ color: 'var(--accent-green, #43A047)' }}>
+                          <strong>{webinarRegistros.filas.filter(r => r.asistio).length}</strong> con asistencia confirmada
+                        </span>
+                        <span style={{ color: 'var(--text-muted)' }}>
+                          <strong>{webinarRegistros.filas.filter(r => r.certificado_url).length}</strong> constancias descargadas
+                        </span>
+                      </div>
+
+                      <div className="table-responsive-container" style={{ marginTop: '12px' }}>
+                        <table className="admin-table">
+                          <thead>
+                            <tr>
+                              <th>Participante</th>
+                              <th>Asistencia</th>
+                              <th>Minutos</th>
+                              <th>Verificado por</th>
+                              <th>Constancia</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {webinarRegistros.filas.map(fila => (
+                              <tr key={fila.id}>
+                                <td>
+                                  <strong>{fila.nombre_completo || '—'}</strong>
+                                  <small style={{ display: 'block', color: 'var(--text-muted)' }}>{fila.email}</small>
+                                </td>
+                                <td>
+                                  {fila.asistio ? (
+                                    <span className="status-pill disponible">Asistió</span>
+                                  ) : (
+                                    <span className="status-pill suspendido">Sin confirmar</span>
+                                  )}
+                                </td>
+                                <td>{fila.minutos || 0}</td>
+                                <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                                  {fila.metodo === 'zoom' ? 'Reporte de Zoom'
+                                    : fila.metodo === 'codigo' ? 'Código de la clase'
+                                    : fila.metodo === 'libre' ? 'Acceso abierto'
+                                    : '—'}
+                                </td>
+                                <td>
+                                  {fila.certificado_url ? (
+                                    <a
+                                      href={fila.certificado_url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      style={{ color: 'var(--cyan-bright)', textDecoration: 'underline', fontSize: '0.85rem' }}
+                                    >
+                                      {fila.folio || 'Ver'}
+                                    </a>
+                                  ) : (
+                                    <span style={{ color: 'var(--text-muted)' }}>—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
