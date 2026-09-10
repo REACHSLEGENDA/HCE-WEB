@@ -5,6 +5,7 @@ import './ParisNewDesign.css';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import { FAQParis } from '../FAQSection';
+import { PROMO_MES_PATRIO, promoMesPatrioActiva } from '../../lib/promoMesPatrio';
 
 const syllabusData = [
     { title: "Circuito de ECMO: Componentes esenciales", desc: "Comprender la estructura y funcionamiento del circuito ECMO (bomba sanguínea, oxigenador y recubrimientos) para su correcta aplicación clínica." },
@@ -154,10 +155,9 @@ const ParisNewDesign = () => {
     const [showPromoPopup, setShowPromoPopup] = useState(false);
 
     useEffect(() => {
-        const now = new Date();
-        const isBeforeEnd = now <= new Date('2026-09-16T23:59:59-06:00');
-        
-        if (isBeforeEnd) {
+        // Mismo calendario que el descuento directo: cuando se acaba la promo,
+        // se acaba el popup. Antes del 1 de septiembre tampoco sale.
+        if (promoMesPatrioActiva()) {
             const timer = setTimeout(() => {
                 setShowPromoPopup(true);
             }, 1000);
@@ -1008,37 +1008,75 @@ const ParisNewDesign = () => {
                                 📅 Del 1 al 16 de Septiembre
                             </strong>
                             
-                            {new Date() < new Date('2026-09-01T00:00:00-06:00') ? (
-                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6 }}>
-                                    ¡Prepárate! Pregunta por nuestras próximas promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad <strong>Sólo Step 1</strong>, que estarán disponibles en esas fechas.
-                                </p>
-                            ) : (
-                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6 }}>
-                                    Aprovecha y pregunta por nuestras promociones exclusivas para el <strong>Diploma en París</strong> y la modalidad <strong>Sólo Step 1</strong>. ¡Ya están disponibles!
-                                </p>
-                            )}
+                            {/* Ya no se pide el código por WhatsApp: el descuento está
+                                aplicado en la página de inscripción, sin código. */}
+                            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6 }}>
+                                Descuento <strong>directo y sin código</strong> en la inscripción,
+                                válido hasta el <strong>{PROMO_MES_PATRIO.vigenciaTexto}</strong>:
+                            </p>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '16px' }}>
+                                <div style={{ padding: '14px 10px', borderRadius: '12px', background: 'rgba(206,17,38,0.08)', border: '1px solid rgba(206,17,38,0.2)' }}>
+                                    <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#ce1126', lineHeight: 1 }}>
+                                        −{Math.round(PROMO_MES_PATRIO.porcentaje.step1 * 100)}%
+                                    </div>
+                                    <div style={{ fontSize: '0.82rem', fontWeight: 600, marginTop: '6px' }}>Sólo Step 1</div>
+                                </div>
+                                <div style={{ padding: '14px 10px', borderRadius: '12px', background: 'rgba(0,104,71,0.08)', border: '1px solid rgba(0,104,71,0.2)' }}>
+                                    <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#006847', lineHeight: 1 }}>
+                                        −{Math.round(PROMO_MES_PATRIO.porcentaje.paris * 100)}%
+                                    </div>
+                                    <div style={{ fontSize: '0.82rem', fontWeight: 600, marginTop: '6px' }}>Diploma completo</div>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <a 
-                            href="https://wa.me/5215659271906?text=Hola,%20me%20gustaría%20preguntar%20por%20las%20promos%20de%20Viva%20México." 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            style={{ 
-                                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-                                width: '100%', 
-                                padding: '14px',
-                                backgroundColor: '#25D366', 
-                                color: 'white',
-                                fontWeight: 'bold',
-                                borderRadius: '8px',
-                                textDecoration: 'none',
-                                fontSize: '1.1rem',
-                                boxShadow: '0 4px 15px rgba(37,211,102,0.3)',
-                            }}
-                            onClick={() => setShowPromoPopup(false)}
-                        >
-                            Preguntar por WhatsApp
-                        </a>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <Link
+                                to="/inscripciones-step1"
+                                onClick={() => setShowPromoPopup(false)}
+                                style={{
+                                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                    padding: '14px',
+                                    backgroundColor: '#ce1126',
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    borderRadius: '8px',
+                                    textDecoration: 'none',
+                                    fontSize: '1.05rem',
+                                    boxShadow: '0 4px 15px rgba(206,17,38,0.3)',
+                                }}
+                            >
+                                Inscribirme a Sólo Step 1
+                            </Link>
+                            <Link
+                                to="/inscripciones-diploma-paris-ecmo"
+                                onClick={() => setShowPromoPopup(false)}
+                                style={{
+                                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                    padding: '14px',
+                                    backgroundColor: '#006847',
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    borderRadius: '8px',
+                                    textDecoration: 'none',
+                                    fontSize: '1.05rem',
+                                    boxShadow: '0 4px 15px rgba(0,104,71,0.3)',
+                                }}
+                            >
+                                Inscribirme al Diploma completo
+                            </Link>
+                            {/* Los grupos siguen teniendo su código propio: ese sí va por WhatsApp. */}
+                            <a
+                                href="https://wa.me/5215659271906?text=Hola,%20somos%20un%20grupo%20y%20queremos%20el%20descuento%20de%20equipos%20del%20Diploma%20de%20Par%C3%ADs."
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => setShowPromoPopup(false)}
+                                style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)', textDecoration: 'underline', marginTop: '4px' }}
+                            >
+                                ¿Vienen en grupo? Pregunten por el descuento de equipos
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

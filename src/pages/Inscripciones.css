@@ -1181,6 +1181,111 @@
   text-decoration: underline;
 }
 
+/* ── Promoción del Mes Patrio ──
+   Verde, blanco y rojo sin caer en la bandera: un borde tricolor fino y el
+   resto sobrio, para que se lea como promoción y no como adorno. */
+.ins-promo-patria {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.25rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff7f7 0%, #ffffff 55%, #f2fff6 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-left: 5px solid;
+  border-image: linear-gradient(180deg, #006847 0 33%, #d9d9d9 33% 66%, #ce1126 66%) 1;
+}
+
+.ins-promo-patria-icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ce1126;
+  color: #ffffff;
+}
+
+.ins-promo-patria-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ins-promo-patria-texto strong {
+  font-size: 0.95rem;
+  color: var(--ins-dark);
+}
+
+.ins-promo-patria-texto span {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.ins-promo-patria-texto b {
+  color: #ce1126;
+}
+
+.ins-promo-patria-chip {
+  flex-shrink: 0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 100px;
+  background: #ce1126;
+  color: #ffffff;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Precio regular tachado junto al precio con promo, en el resumen. */
+.ins-precio-con-promo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.15;
+}
+
+.ins-precio-regular {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.ins-precio-promo {
+  color: #ce1126;
+  font-weight: 700;
+}
+
+.ins-summary-promo-nota {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  background: #fff5f5;
+  border: 1px dashed rgba(206, 17, 38, 0.35);
+  font-size: 0.76rem;
+  color: #991b1b;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .ins-promo-patria {
+    flex-wrap: wrap;
+  }
+  .ins-promo-patria-chip {
+    margin-left: auto;
+  }
+}
+
 /* ── Phone selector custom ── */
 .phone-select {
   position: relative;

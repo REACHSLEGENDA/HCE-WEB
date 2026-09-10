@@ -1,5 +1,5 @@
 import { getStripe } from './_stripe.js';
-import { precioConPromo, habilitaMeses } from './_promos.js';
+import { precioConPromo, habilitaMeses, promoAutomatica } from './_promos.js';
 import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
 
 const USD_RATE = 17; // 1 USD = 17 MXN (server-side source of truth)
@@ -130,6 +130,7 @@ export const handler = async (event) => {
         extras: validExtras.join(','),
         moneda: currency,
         pasarela,
+        promo: promoCode || promoAutomatica('paris', now)?.etiqueta || 'none',
         curso: 'Paris International Diploma in ECMO',
       },
     };

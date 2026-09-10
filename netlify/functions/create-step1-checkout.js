@@ -1,5 +1,5 @@
 import { getStripe } from './_stripe.js';
-import { precioConPromo, habilitaMeses } from './_promos.js';
+import { precioConPromo, habilitaMeses, promoAutomatica } from './_promos.js';
 import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
 
 const USD_RATE = 17; // 1 USD = 17 MXN (server-side source of truth)
@@ -15,10 +15,14 @@ async function registrarCarritoAbandonado(email) {
   await addToList(email, LISTS.CARRITO_PARIS);
 }
 
+// El 26 de agosto de 2026 la pagina paso a $10,000 parejo para los tres
+// perfiles, pero este archivo se quedo en 19,500 / 18,500: la pantalla decia
+// diez mil y Stripe cobraba diecinueve mil quinientos. Este es el precio que
+// se cobra; la pagina solo lo muestra.
 const PRICES_MXN = {
-  especialista:  19500,
-  residente:     18500,
-  enfermero:     18500,
+  especialista:  10000,
+  residente:     10000,
+  enfermero:     10000,
   ecmo_sim:       3500,
   ecmo_nursing:   3500,
 };
@@ -130,6 +134,9 @@ export const handler = async (event) => {
         extras: validExtras.join(','),
         moneda: currency,
         pasarela,
+        // Para que en el panel se distinga una venta con promo directa de una
+        // a precio regular, aunque el alumno no haya escrito codigo.
+        promo: promoCode || promoAutomatica('step1', now)?.etiqueta || 'none',
         curso: 'Paris International Diploma in ECMO',
       },
     };

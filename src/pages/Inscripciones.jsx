@@ -6,6 +6,8 @@ import { useMonedaSugerida } from '../hooks/useMonedaSugerida';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ConsentimientoLegal from '../components/ConsentimientoLegal';
+import AvisoMesPatrio from '../components/PromoMesPatrio';
+import { PROMO_MES_PATRIO, promoMesPatrioActiva } from '../lib/promoMesPatrio';
 import ConfirmacionInscripcion from '../components/ConfirmacionInscripcion';
 import './Inscripciones.css';
 
@@ -119,14 +121,12 @@ export default function Inscripciones() {
     // Validar promos VIVAMEX de Septiembre
     const isSeptPromoValid = now >= new Date('2026-09-01T00:00:00-06:00') && now <= new Date('2026-09-16T23:59:59-06:00');
 
-    if (code === 'VIVAMEX') {
-      if (isSeptPromoValid) {
-        setAppliedPromo({ code, discount: 0.2, type: 'discount' });
-        setApiError('');
-      } else {
-        setAppliedPromo(null);
-        setApiError('El código VIVAMEX solo es válido del 1 al 16 de Septiembre.');
-      }
+    // VIVAMEX ya no existe como código: ese 20% se aplica solo durante el Mes
+    // Patrio. Quien lo escriba recibe el mismo precio, sin error. El de equipos
+    // (VIVAMEXTEAM, 30%) sí sigue, porque da más que el descuento directo.
+    if (code === 'VIVAMEX' && isSeptPromoValid) {
+      setAppliedPromo(null);
+      setApiError('');
     } else if (code === 'VIVAMEXTEAM') {
       if (isSeptPromoValid) {
         setAppliedPromo({ code, discount: 0.3, type: 'discount' });
@@ -171,8 +171,19 @@ export default function Inscripciones() {
   const availableExtras = perfil ? PROFILES[perfil].extras.map((id) => ({ id, ...EXTRA_CATALOG[id] })) : [];
   const rawBase = perfil ? PROFILES[perfil].price : 0;
   const isFree = appliedPromo?.type === 'free';
-  const baseDiscount = (perfil && appliedPromo && !isFree) ? Math.floor(rawBase * appliedPromo.discount) : 0;
-  const baseMXN = isFree ? 0 : (appliedPromo?.type === 'fixed_price' ? appliedPromo.fixedPrice : rawBase - baseDiscount);
+  // Misma regla que el servidor (_promos.js): se calcula el precio con el
+  // código escrito y el precio con la promo directa del Mes Patrio, y gana el
+  // más bajo. No se acumulan.
+  const porcentajePatrio = promoMesPatrioActiva() ? PROMO_MES_PATRIO.porcentaje.paris : 0;
+  const precioConCodigo = (!appliedPromo || isFree) ? rawBase
+    : appliedPromo.type === 'fixed_price' ? Math.min(appliedPromo.fixedPrice, rawBase)
+    : rawBase - Math.floor(rawBase * appliedPromo.discount);
+  const precioConPatrio = rawBase - Math.floor(rawBase * porcentajePatrio);
+  const baseMXN = isFree ? 0 : Math.min(precioConCodigo, precioConPatrio);
+  // Cuando el precio final es menor que el regular, el resumen lo tacha.
+  const hayDescuento = perfil && !isFree && baseMXN < rawBase;
+  const ganaPatrio = hayDescuento && precioConPatrio <= precioConCodigo && porcentajePatrio > 0;
+  const displayRegular = moneda === 'usd' ? Math.ceil(rawBase / USD_RATE) : rawBase;
   
   const extrasMXN = isFree ? 0 : [...extras].reduce((s, id) => s + EXTRA_CATALOG[id].price, 0);
   const totalMXN = baseMXN + extrasMXN;
@@ -285,6 +296,8 @@ export default function Inscripciones() {
 
         {/* ── LEFT: selection flow ── */}
         <div className="ins-main">
+
+          <AvisoMesPatrio porcentaje={PROMO_MES_PATRIO.porcentaje.paris} />
 
           {/* Announcement Banner */}
           <div style={{
@@ -518,8 +531,21 @@ export default function Inscripciones() {
                 <>
                   <div className="ins-summary-line">
                     <span>{PROFILES[perfil].label}</span>
-                    <span>{fmt(displayBase, cur)}</span>
+                    {hayDescuento ? (
+                      <span className="ins-precio-con-promo">
+                        <s className="ins-precio-regular">{fmt(displayRegular, cur)}</s>
+                        <span className="ins-precio-promo">{fmt(displayBase, cur)}</span>
+                      </span>
+                    ) : (
+                      <span>{fmt(displayBase, cur)}</span>
+                    )}
                   </div>
+                  {ganaPatrio && (
+                    <div className="ins-summary-promo-nota">
+                      <span>Promoción Mes Patrio −{Math.round(porcentajePatrio * 100)}%</span>
+                      <span>hasta el {PROMO_MES_PATRIO.vigenciaTexto}</span>
+                    </div>
+                  )}
                   {[...extras].map((id) => {
                     const ex = EXTRA_CATALOG[id];
                     const price = moneda === 'usd' ? Math.ceil(ex.price / USD_RATE) : ex.price;
