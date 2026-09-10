@@ -441,9 +441,11 @@ const Dashboard = () => {
     if (user?.id) void fetchMisRegistrosWebinar();
   }, [user?.id, fetchMisRegistrosWebinar]);
 
-  // Quien llega desde la landing con ?webinar=12 cae directo en la sección.
+  // Quien llega desde la landing con ?webinar=12, o desde el asistente con
+  // ?tab=webinars, cae directo en la sección en vez de tener que buscarla.
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('webinar')) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('webinar') || params.get('tab') === 'webinars') {
       setActiveTab('webinars');
     }
   }, []);

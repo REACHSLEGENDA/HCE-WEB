@@ -11,17 +11,19 @@ const FLOWS = {
     text: '¡Hola! Soy el asistente de HCE.\n\n¿En qué puedo ayudarte?',
     buttons: [
       { label: '¿Qué es HCE?',            next: 'que_es_hce' },
-      { label: '¿Qué es el Portal HCE?',  next: 'info_portal' },
       { label: 'Ver programas',            next: 'programas' },
+      { label: 'Webinars gratuitos',       next: 'webinars' },
+      { label: '¿Qué es el Portal HCE?',  next: 'info_portal' },
       { label: 'Experiencias abiertas',    next: 'disponibles' },
       { label: 'Hablar con un asesor',     next: 'contacto' },
     ],
   },
 
   info_portal: {
-    text: 'El **Portal Académico HCE** es nuestra plataforma digital de educación continua:\n\n**¿Para qué sirve?**\nSirve para que los estudiantes registrados tomen cursos especializados en cuidados críticos, realicen evaluaciones interactivas (aprobación del 80%) y descarguen sus certificados oficiales autogenerados.\n\n**¿Cómo accedo?**\nPuedes ingresar de forma segura usando la opción de "Acceso Alumnos" con tus credenciales asignadas.',
+    text: 'El **Portal Académico HCE** es nuestra plataforma digital de educación continua:\n\n**¿Para qué sirve?**\nPara tomar cursos especializados en cuidados críticos, resolver sus evaluaciones (se aprueba con 80%) y descargar los certificados oficiales.\n\nTambién es donde te registras a los **webinars gratuitos**: ahí recibes tu enlace de Zoom y, al terminar la sesión, se desbloquea tu constancia de asistencia.\n\n**¿Cómo accedo?**\nCon la opción de "Acceso Alumnos". Si es tu primera vez, puedes crear tu cuenta ahí mismo.',
     buttons: [
       { label: 'Ingresar al Portal',      action: 'login' },
+      { label: 'Webinars gratuitos',      next: 'webinars' },
       { label: 'Volver',                 next: 'home_portal' },
     ],
   },
@@ -32,6 +34,7 @@ const FLOWS = {
     buttons: [
       { label: '¿Cómo tomo mis clases?',   next: 'estudiante_clases' },
       { label: '¿Cómo obtengo certificados?', next: 'estudiante_certificados' },
+      { label: 'Webinars y constancias',   next: 'estudiante_webinars' },
       { label: 'Problemas con un video',  next: 'estudiante_video_problemas' },
       { label: '¿Cuánto duran mis cursos?', next: 'estudiante_duracion' },
       { label: 'Otros temas (General)',   next: 'welcome' },
@@ -44,6 +47,7 @@ const FLOWS = {
     buttons: [
       { label: '¿Cómo edito/creo cursos?',  next: 'admin_gestion_cursos' },
       { label: 'Gestionar Webinars',        next: 'admin_webinars' },
+      { label: 'Asistencia y constancias',  next: 'admin_webinar_asistencia' },
       { label: 'Matricular alumnos',        next: 'admin_matricula' },
       { label: '¿Cómo exporto reportes?',   next: 'admin_reportes' },
       { label: 'Seguridad y Accesos',       next: 'admin_seguridad' },
@@ -61,8 +65,9 @@ const FLOWS = {
   },
 
   estudiante_certificados: {
-    text: 'Los certificados se emiten automáticamente al aprobar la evaluación del curso:\n\n1. Requieren una calificación mínima de **80%** (o el mínimo definido en el curso).\n2. Al aprobar, puedes descargarlo de inmediato en el aula.\n3. También se guardará en tu historial de **Certificados** y en **Certificados Recientes** de tu dashboard.',
+    text: 'Depende de si es un **curso** o un **webinar**:\n\n**Cursos.** El certificado se emite al aprobar la evaluación con **80%** o más. Lo descargas de inmediato en el aula y te queda guardado en tu pestaña **Certificados**.\n\n**Webinars.** La constancia se desbloquea al terminar la sesión y vive en la pestaña **Webinars**, no en Certificados. No lleva examen: basta con haber asistido.',
     buttons: [
+      { label: 'Constancia de webinar',    next: 'estudiante_webinar_constancia' },
       { label: '¿Tienen vigencia?',        next: 'estudiante_certificados_vigencia' },
       { label: 'Volver a estudiante',      next: 'welcome_student' },
     ],
@@ -71,6 +76,24 @@ const FLOWS = {
   estudiante_certificados_vigencia: {
     text: 'Tu certificado **no expira** — una vez descargado es tuyo para siempre.\n\nLo que sí tiene límite son los **30 días de descarga**: a partir de la fecha de emisión tienes 30 días para descargarlo desde el portal. Pasado ese plazo, el archivo se elimina del sistema.\n\n📥 Te recomendamos descargarlo cuanto antes y guardarlo en un lugar seguro.',
     buttons: [
+      { label: 'Volver a estudiante',      next: 'welcome_student' },
+    ],
+  },
+
+  // ── Webinars (estudiante) ───────────────────────────────────────────────────
+  estudiante_webinars: {
+    text: 'Los webinars de HCE son **gratuitos** y todo se maneja desde aquí, en la pestaña **Webinars** de tu menú:\n\n1. Abre la tarjeta del webinar y pulsa **"Registrar mi asistencia"**.\n2. Zoom te manda a tu correo tu **enlace personal** de entrada. También te queda a la mano en el botón "Entrar al Zoom" de esa misma tarjeta.\n3. Conéctate el día de la sesión con ese enlace.\n4. Al terminar, en la misma tarjeta se desbloquea tu constancia.\n\nUsa siempre tu enlace, no el de un compañero: es lo que nos permite acreditarte la asistencia a ti.',
+    buttons: [
+      { label: 'Ir a mis webinars',        action: 'portal_webinars' },
+      { label: '¿Cómo bajo mi constancia?', next: 'estudiante_webinar_constancia' },
+      { label: 'Volver a estudiante',      next: 'welcome_student' },
+    ],
+  },
+
+  estudiante_webinar_constancia: {
+    text: 'En la pestaña **Webinars**, dentro de la tarjeta de la sesión, pulsa **"Desbloquear constancia"**.\n\nLo que pasa después es automático: consultamos el reporte de Zoom y, si apareces con los minutos requeridos, **tu constancia se descarga sola**, con tu nombre y su folio. No tienes que escribir nada ni pedírnosla.\n\nSolo si Zoom no te reconoce —suele pasar cuando entraste con otro correo o desde el equipo de alguien más— te pediremos el **código que el ponente dijo al cerrar la clase**.\n\nY si no alcanzaste a conectarte, espera: liberamos la grabación más adelante.',
+    buttons: [
+      { label: 'Ir a mis webinars',        action: 'portal_webinars' },
       { label: 'Volver a estudiante',      next: 'welcome_student' },
     ],
   },
@@ -98,8 +121,36 @@ const FLOWS = {
   },
 
   admin_webinars: {
-    text: 'Desde la pestaña **Webinars** puedes gestionar las transmisiones en vivo:\n\n1. **Crear/Editar:** Haz clic en "+ Crear Webinar" o en el icono de lápiz.\n2. **Fechas en Vivo (Automático):** Al configurar la fecha de inicio y fin, el sistema marcará automáticamente el webinar como **🔴 EN VIVO** en la página de inicio (Landing Page) durante ese periodo de tiempo.\n3. **Imagen del Webinar:** Puedes ingresar una **URL de imagen** directa o utilizar el botón **"Subir Archivo"** para cargar un archivo local (máx. 2MB).\n4. **Enlace y Visibilidad:** Agrega el enlace de la reunión (Zoom, Meet, etc.) y marca la casilla **"Activo"** para que sea visible en la web.',
+    text: 'En la pestaña **Webinars**, con "+ Crear Webinar" o el lápiz para editar.\n\n**Lo de siempre:** título, fecha y horario en texto, imagen (URL o "Subir Archivo", máx. 2 MB) y el enlace de la reunión. Las **fechas de inicio y fin** marcan el webinar como 🔴 EN VIVO solo en ese rango. La casilla **Activo** lo hace visible en la web.\n\n**Si además quieres registro, asistencia y constancia**, palomea **"Registro por el portal"**. Ahí el botón de la landing deja de mandar al enlace externo y lleva al portal.',
     buttons: [
+      { label: 'Configurar Zoom',          next: 'admin_webinar_zoom' },
+      { label: 'Configurar la constancia', next: 'admin_webinar_constancia' },
+      { label: 'Volver a admin',           next: 'welcome_admin' },
+    ],
+  },
+
+  admin_webinar_zoom: {
+    text: '**Antes, en Zoom.** Programa el seminario y deja activado **"Requerir registro"**. Sin eso Zoom rechaza las altas y todos acaban con el enlace genérico, sin asistencia verificable.\n\n**Después, en el panel** (paso 1 del formulario):\n\n1. **Enlace o ID:** pega la URL completa del seminario; el ID se extrae solo.\n2. **Tipo:** "Seminario web" si lo diste como webinar; "Reunión normal" si fue una reunión.\n3. **Minutos mínimos:** cuántos minutos hay que haber estado para acreditar. En 0 basta con aparecer en el reporte.\n\nEl **correo de confirmación** (paso 2) sale solo: la lista de Brevo ya viene puesta y la plantilla inserta el enlace personal de cada quien.',
+    buttons: [
+      { label: 'Configurar la constancia', next: 'admin_webinar_constancia' },
+      { label: 'Ver asistencia',           next: 'admin_webinar_asistencia' },
+      { label: 'Volver a admin',           next: 'welcome_admin' },
+    ],
+  },
+
+  admin_webinar_constancia: {
+    text: 'En el paso 3 del formulario decides **quién puede descargarla**:\n\n**Nadie todavía** — el alumno la ve bloqueada. Déjalo así hasta que termine la sesión.\n**Solo quien asistió** — Zoom confirma solo; a quien no aparezca se le pide el código. Es el que usarás al cerrar la clase.\n**Todo el que se registró** — abierta para todos, útil al liberar la grabación.\n\nEl **código** es el que dice el ponente al despedirse, y solo entra en juego cuando Zoom no reconoce a la persona.\n\nLa **plantilla** puedes pegarla como URL o subirla (máx. 5 MB). Debajo aparece la imagen real: haz clic encima para colocar el nombre y ajusta el tamaño con el deslizador.',
+    buttons: [
+      { label: 'Ver asistencia',           next: 'admin_webinar_asistencia' },
+      { label: 'Volver a Webinars',        next: 'admin_webinars' },
+      { label: 'Volver a admin',           next: 'welcome_admin' },
+    ],
+  },
+
+  admin_webinar_asistencia: {
+    text: 'En la fila del webinar, el icono de **personas** abre el listado: quién se registró, quién asistió, cuántos minutos estuvo, cómo se verificó y quién ya descargó su constancia.\n\nAhí mismo tienes dos botones:\n\n**Sincronizar con Zoom** — vuelve a pedir el reporte de asistencia. Ojo: Zoom tarda unos minutos en generarlo después de que cierras la sesión, así que si lo pides de inmediato te dirá que aún no hay datos. Espera y vuelve a darle.\n\n**Exportar** — baja el listado en CSV para abrirlo en Excel.\n\nAunque no toques nada, la asistencia también se consulta sola cuando un alumno intenta desbloquear su constancia.',
+    buttons: [
+      { label: 'Volver a Webinars',        next: 'admin_webinars' },
       { label: 'Volver a admin',           next: 'welcome_admin' },
     ],
   },
@@ -120,8 +171,9 @@ const FLOWS = {
   },
 
   admin_reportes: {
-    text: 'En la sección **Reportes** puedes obtener las métricas y exportaciones:\n\n1. **EXCEL:** Descarga una base de datos en formato CSV con el listado de alumnos, su profesión, hospital, cursos inscritos y fecha de registro.\n2. **PDF:** Genera y abre un reporte ejecutivo imprimible con los KPIs de finalización, retención de cursos y certificados emitidos.',
+    text: 'En la sección **Reportes** puedes obtener las métricas y exportaciones:\n\n1. **EXCEL:** Descarga una base de datos en formato CSV con el listado de alumnos, su profesión, hospital, cursos inscritos y fecha de registro.\n2. **PDF:** Genera y abre un reporte ejecutivo imprimible con los KPIs de finalización, retención de cursos y certificados emitidos.\n\nLos registrados de cada webinar se exportan aparte, desde la propia pestaña de Webinars.',
     buttons: [
+      { label: 'Ver asistencia',           next: 'admin_webinar_asistencia' },
       { label: 'Volver a admin',           next: 'welcome_admin' },
     ],
   },
@@ -135,11 +187,12 @@ const FLOWS = {
 
   // ── Experiencias abiertas ────────────────────────────────────────────────────
   disponibles: {
-    text: 'Actualmente tenemos abierta la siguiente experiencia:\n\n**Paris International Diploma in ECMO**\nCertificación internacional en soporte vital extracorpóreo, desarrollada con el Hospital Pitié-Salpêtrière de París.\n\nFecha: **27 de octubre de 2026**\nSede: **INER — Instituto Nacional de Enfermedaderas Respiratorias, Ciudad de México**\nModalidad: Presencial\n\nCupo limitado.',
+    text: 'Esto es lo que está abierto ahora mismo:\n\n**Paris International Diploma in ECMO** — Step 1 y 2\nCertificación internacional presencial, con el Hospital Pitié-Salpêtrière de París.\nInicio: **28 de octubre de 2026** · Sede: **INER, Ciudad de México**\n\n**Solo Step 1 (Teórico)**\nLa parte teórica del diploma, por separado.\n**28 y 29 de octubre**, 100% presencial.\n\n**ECMO Sim** — simulador virtual, disponible todo el año.\n\n**Webinars gratuitos** — sesiones en vivo con expertos.\n\nECMO Nursing Care está agotado; la 3.ª edición se anuncia pronto.',
     buttons: [
-      { label: 'Ver temario completo',   next: 'temario' },
-      { label: 'Quiénes lo imparten',    next: 'instructores' },
-      { label: 'Quiero inscribirme',     next: 'inscripcion_paris' },
+      { label: 'Diploma completo',       next: 'paris' },
+      { label: 'Solo Step 1',            next: 'step1' },
+      { label: 'Webinars gratuitos',     next: 'webinars' },
+      { label: 'Hablar con un asesor',   next: 'contacto' },
       { label: 'Inicio',                 next: 'home_portal' },
     ],
   },
@@ -165,23 +218,37 @@ const FLOWS = {
 
   // ── Programas ────────────────────────────────────────────────────────────────
   programas: {
-    text: 'HCE ofrece 4 experiencias de formación:\n\n**Diploma Paris ECMO** — Certificación internacional presencial (inscripciones abiertas)\n\n**ECMO Sim** — Simulador clínico virtual, 100% online\n\n**ECMO Nursing Care** — Formación especializada para enfermería en UCI\n\n**Webinars** — Sesiones en vivo con expertos internacionales (próximamente)\n\n¿Sobre cuál te gustaría saber más?',
+    text: 'HCE ofrece estas experiencias de formación:\n\n**Diploma Paris ECMO** — Certificación internacional presencial. Inscripciones abiertas, inicia el 28 de octubre.\n\n**Solo Step 1** — La parte teórica del diploma, por separado. 28 y 29 de octubre.\n\n**ECMO Sim** — Simulador clínico virtual, 100% online, todo el año.\n\n**ECMO Nursing Care** — Formación para enfermería en UCI. Agotado; 3.ª edición próximamente.\n\n**Webinars gratuitos** — Sesiones en vivo con expertos, con constancia de asistencia.\n\n¿Sobre cuál te gustaría saber más?',
     buttons: [
       { label: 'Diploma Paris ECMO',   next: 'paris' },
+      { label: 'Solo Step 1',          next: 'step1' },
       { label: 'ECMO Sim',             next: 'ecmo_sim' },
       { label: 'ECMO Nursing Care',    next: 'nursing' },
+      { label: 'Webinars gratuitos',   next: 'webinars' },
       { label: 'Inicio',               next: 'home_portal' },
     ],
   },
 
   // ── Paris ────────────────────────────────────────────────────────────────────
   paris: {
-    text: '**Paris International Diploma in ECMO**\n\nEl programa de formación en ECMO más completo de Latinoamérica, desarrollado en colaboración con el Hospital Pitié-Salpêtrière de París — centro de referencia mundial.\n\nAbarca desde los fundamentos del circuito hasta el manejo clínico avanzado: destete, anticoagulación, ventilación en paciente crítico, manejo de complicaciones y casos clínicos reales.\n\nFecha: **27 de octubre de 2026**\nSede: **INER, Ciudad de México**\n\nCupo limitado.',
+    text: '**Paris International Diploma in ECMO**\n\nEl programa de formación en ECMO más completo de Latinoamérica, desarrollado en colaboración con el Hospital Pitié-Salpêtrière de París — centro de referencia mundial.\n\nAbarca desde los fundamentos del circuito hasta el manejo clínico avanzado: destete, anticoagulación, ventilación en paciente crítico, manejo de complicaciones y casos clínicos reales.\n\nLa inscripción cubre el **Step 1 y el Step 2**.\n\nInicio: **28 de octubre de 2026**\nSede: **INER, Ciudad de México**\n\nCupo limitado.',
     buttons: [
       { label: 'Ver temario completo',  next: 'temario' },
       { label: 'Quiénes lo imparten',   next: 'instructores' },
       { label: 'Quiero inscribirme',    next: 'inscripcion_paris' },
+      { label: 'Solo quiero el Step 1', next: 'step1' },
       { label: 'Inicio',                next: 'home_portal' },
+    ],
+  },
+
+  // ── Step 1 ───────────────────────────────────────────────────────────────────
+  step1: {
+    text: '**Step 1 Teórico — por separado**\n\nEs la fase teórica del Paris International Diploma in ECMO, abierta como inscripción independiente para quien no quiere llevar el diploma completo.\n\n**28 y 29 de octubre**, 100% presencial en el INER, Ciudad de México.\n\nSi después decides continuar, el Step 2 es la fase práctica del mismo programa.',
+    buttons: [
+      { label: 'Inscribirme al Step 1',  action: 'step1_buy' },
+      { label: 'Ver el diploma completo', next: 'paris' },
+      { label: 'Hablar con un asesor',   next: 'contacto' },
+      { label: 'Inicio',                 next: 'home_portal' },
     ],
   },
 
@@ -217,7 +284,7 @@ const FLOWS = {
 
   // ── ECMO Sim ─────────────────────────────────────────────────────────────────
   ecmo_sim: {
-    text: '**ECMO Sim** — Simulador clínico virtual para profesionales de la salud.\n\nRecrea una UCI real en 3D: interactúas con ventiladores mecánicos, consolas ECMO y constantes vitales que reaccionan en tiempo real a cada decisión. Aprende a manejar escenarios críticos sin riesgo para el paciente.\n\n100% online, accede desde tu computadora.\nSuscripción de **4 meses** con acceso ilimitado a todos los escenarios.\nPrecio: **$250 USD**',
+    text: '**ECMO Sim** — Simulador clínico virtual para profesionales de la salud.\n\nRecrea una UCI real en 3D: interactúas con ventiladores mecánicos, consolas ECMO y constantes vitales que reaccionan en tiempo real a cada decisión. Aprende a manejar escenarios críticos sin riesgo para el paciente.\n\n100% online, accede desde tu computadora.\n\n**4 meses — $250 USD**\n**12 meses — $700 USD**\n\nAcceso ilimitado a todos los escenarios durante tu suscripción.',
     buttons: [
       { label: 'Acceder al simulador',   action: 'ecmo_sim_buy' },
       { label: 'Ver otros programas',    next: 'programas' },
@@ -227,10 +294,22 @@ const FLOWS = {
 
   // ── Nursing Care ─────────────────────────────────────────────────────────────
   nursing: {
-    text: '**ECMO Nursing Care Course**\n\nFormación especializada para enfermeros/as y profesionales de cuidados intensivos. Cubre los protocolos, monitoreo y cuidados específicos del paciente bajo soporte ECMO desde la perspectiva de enfermería en UCI.\n\nPara información sobre fechas, acceso y proceso de registro, te recomendamos hablar con un asesor.',
+    text: '**ECMO Nursing Care Course**\n\nFormación especializada para enfermeros/as y profesionales de cuidados intensivos. Cubre los protocolos, monitoreo y cuidados específicos del paciente bajo soporte ECMO desde la perspectiva de enfermería en UCI.\n\nLa 2.ª edición está **agotada**. La **3.ª edición** se anunciará próximamente.\n\nSi quieres que te avisemos en cuanto abran las inscripciones, escríbenos y te apartamos el aviso.',
     buttons: [
-      { label: 'Hablar con un asesor',   next: 'contacto' },
+      { label: 'Ver el curso',           action: 'nursing_page' },
+      { label: 'Avísenme de la 3.ª ed.', next: 'contacto' },
       { label: 'Ver otros programas',    next: 'programas' },
+      { label: 'Inicio',                 next: 'home_portal' },
+    ],
+  },
+
+  // ── Webinars (público) ───────────────────────────────────────────────────────
+  webinars: {
+    text: 'Los **webinars de HCE son gratuitos**: sesiones en vivo por Zoom con especialistas nacionales e internacionales en cuidados críticos y ECMO.\n\nAl terminar cada sesión recibes una **constancia de asistencia** con tu nombre y folio, que descargas tú mismo desde el portal.\n\n**Cómo funciona:**\n1. Te registras en el Portal HCE (crear cuenta es gratis).\n2. Zoom te manda tu enlace personal por correo.\n3. Te conectas el día de la sesión.\n4. Al cerrar, se desbloquea tu constancia.\n\nSi no alcanzas a conectarte, liberamos la grabación más adelante.',
+    buttons: [
+      { label: 'Ver webinars abiertos',  action: 'webinars_landing' },
+      { label: 'Ingresar al Portal',     action: 'login' },
+      { label: 'Ver programas',          next: 'programas' },
       { label: 'Inicio',                 next: 'home_portal' },
     ],
   },
@@ -344,12 +423,40 @@ export default function ChatBot() {
       setIsOpen(false);
       return;
     }
+    if (btn.action === 'step1_buy') {
+      navigate('/inscripciones-step1');
+      setIsOpen(false);
+      return;
+    }
+    if (btn.action === 'nursing_page') {
+      navigate('/ecmo-nursing-care');
+      setIsOpen(false);
+      return;
+    }
+    if (btn.action === 'portal_webinars') {
+      navigate('/dashboard?tab=webinars');
+      setIsOpen(false);
+      return;
+    }
+    if (btn.action === 'webinars_landing') {
+      // La rejilla de webinars vive en la portada. Si ya estamos ahí basta
+      // con desplazarse; si no, primero hay que navegar y esperar al render.
+      const irAlBloque = () => document.getElementById('webinars-grid')?.scrollIntoView({ behavior: 'smooth' });
+      if (window.location.pathname === '/') {
+        irAlBloque();
+      } else {
+        navigate('/');
+        setTimeout(irAlBloque, 400);
+      }
+      setIsOpen(false);
+      return;
+    }
     if (btn.action === 'whatsapp') {
       window.open('https://wa.me/525659271906', '_blank');
       return;
     }
     if (btn.action === 'email') {
-      window.open('mailto:info@hce.mx', '_blank');
+      window.open('mailto:info@healthcareexp.com', '_blank');
       return;
     }
     
