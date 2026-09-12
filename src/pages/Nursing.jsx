@@ -914,8 +914,8 @@ const Nursing = () => {
                 a: "ECMO Nursing Care se centra por completo en el día a día al pie de la cama del paciente. Aprenderás a realizar un monitoreo adecuado del binomio circuito-paciente, evaluar el sitio de canulación, prevenir y resolver de inmediato escenarios de crisis, manejar las complicaciones en ECMO, vigilar la anticoagulación segura y comprender la transferencia de gases."
               },
               {
-                q: "¿Qué avales y certificaciones otorga este curso?",
-                a: "Al concluir y aprobar satisfactoriamente todas las evaluaciones, recibirás una Certificación Oficial emitida por Healthcare Training Experience (HTE) con el prestigioso aval de la FLECI (Federación Latinoamericana de Enfermería de Cuidados Intensivos). Esta credencial acredita tus competencias avanzadas en el cuidado de enfermería en ECMO, respaldada por un cuerpo docente experto y tecnología de simulación de vanguardia."
+                q: "¿Qué aval otorga este curso?",
+                a: "Al concluir y aprobar satisfactoriamente todas las evaluaciones, recibirás una Certificación Oficial emitida por Healthcare Training Experience (HTE) con el prestigioso aval de la FLECI (Federación Latinoamericana de Enfermería de Cuidados Intensivos)."
               },
               {
                 q: "¿Cuál es la modalidad del entrenamiento y cómo está estructurado?",
