@@ -2,7 +2,7 @@ import { getStripe } from './_stripe.js';
 import { precioConPromo, habilitaMeses, promoAutomatica } from './_promos.js';
 import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
 
-const USD_RATE = 17; // 1 USD = 17 MXN (server-side source of truth)
+const USD_RATE = 17.5; // Debe coincidir con USD_RATE de la página de inscripción: es lo que ve el alumno.
 
 const LEGAL_TEXT = '*Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.';
 
@@ -63,7 +63,8 @@ export const handler = async (event) => {
     const mxnToUnit = (mxn, isBase = false) => {
       // El descuento sale del catálogo compartido, nunca de una lista local.
       const finalMXN = isBase ? precioConPromo(mxn, promoCode, 'step1', now) : mxn;
-      const amount = currency === 'usd' ? finalMXN / USD_RATE : finalMXN;
+      // En USD se cobra el dólar entero hacia arriba, igual que lo redondea la página.
+      const amount = currency === 'usd' ? Math.ceil(finalMXN / USD_RATE) : finalMXN;
       return Math.round(amount * 100); // centavos / cents
     };
 
