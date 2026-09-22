@@ -126,6 +126,12 @@ export default function Inscripciones() {
     if (code === 'VIVAMEXTEORICO' && isSeptPromoValid) {
       setAppliedPromo(null);
       setApiError('');
+    } else if (code === 'TEAM') {
+      setAppliedPromo({ code, discount: 0.3, type: 'discount' });
+      setApiError('');
+    } else if (code === 'TEAMPROMO') {
+      setAppliedPromo({ code, discount: 0.15, type: 'discount' });
+      setApiError('');
     } else if (code === 'HCE-INERPARIS2026' || code === 'INER30') {
       setAppliedPromo({ code, discount: 0.3, type: 'discount' });
       setApiError('');
