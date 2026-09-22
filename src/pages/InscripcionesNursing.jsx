@@ -134,10 +134,10 @@ export default function InscripcionesNursing() {
 
   const applyPromo = () => {
     const code = promoInput.trim().toUpperCase();
-    if (code === 'TEAM') {
+    if (code === 'TEAMPROMO') {
       setAppliedPromo({ code, discount: 0.3, type: 'discount' });
       setApiError('');
-    } else if (code === 'TEAMPROMO') {
+    } else if (code === 'PROMO15') {
       setAppliedPromo({ code, discount: 0.15, type: 'discount' });
       setApiError('');
     } else if (code === 'HCE10MSI') {
