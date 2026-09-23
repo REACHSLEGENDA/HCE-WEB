@@ -11,6 +11,7 @@ import {
   esCursoDePago,
   formatoPrecio,
 } from '../lib/cursos';
+import useSesionCurso from '../hooks/useSesionCurso';
 import { 
   ArrowLeft, 
   Clock, 
@@ -84,6 +85,15 @@ const Classroom = () => {
   // propósito, para que no arranquen el reproductor ni el registro de avance.
   const [acceso, setAcceso] = useState(null);
   const [inscribiendo, setInscribiendo] = useState(false);
+
+  // Registro de la visita para las métricas. No mide a los administradores
+  // (revisar un curso no es tomarlo) y espera al perfil para saber quién es.
+  const { registrarEvento } = useSesionCurso({
+    userId: user?.id,
+    courseId: course?.id,
+    activo: !!course && acceso?.permitido === true && !!profile && profile.rol !== 'admin',
+    playerRef,
+  });
 
   // Classroom Comments/Doubts States
   const [comments, setComments] = useState([]);
@@ -886,6 +896,17 @@ const Classroom = () => {
     setExamScore(score);
     
     const passingScore = course.minAprobacion || course.min_aprobacion || 80;
+
+    // Cada intento queda registrado, apruebe o no: las métricas del curso
+    // muestran cuántos intentos necesita la gente y cuántos reprueban.
+    void registrarEvento('examen_enviado', {
+      calificacion: score,
+      minimo: passingScore,
+      aprobado: score >= passingScore,
+      preguntas: qList.length,
+      correctas: correctCount,
+    });
+
     if (score >= passingScore) {
       generateCertificate(score);
     } else {
@@ -962,6 +983,7 @@ const Classroom = () => {
           }]);
           
         if (dbError) throw dbError;
+        void registrarEvento('certificado_emitido', { folio, calificacion: scoreToUse });
         showToast('¡Certificado generado y guardado en tu perfil con éxito!', 'success');
       } catch (uploadErr) {
         console.warn('Storage upload or DB insert failed. Falling back to local Base64 URL. Error:', uploadErr.message);

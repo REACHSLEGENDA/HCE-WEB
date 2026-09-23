@@ -43,10 +43,12 @@ import {
   Upload,
   Send,
   Receipt,
-  RefreshCw
+  RefreshCw,
+  TrendingUp
 } from 'lucide-react';
 import './AdminDashboard.css';
 import PosicionadorConstancia from '../components/PosicionadorConstancia';
+import MetricasCursos from '../components/admin/MetricasCursos';
 import { llamarInscripcion, esTablaFaltante, formatoPrecio } from '../lib/cursos';
 import { useNotification } from '../context/NotificationContext';
 
@@ -1300,6 +1302,7 @@ const AdminDashboard = () => {
       case 'certificates': return 'Certificados';
       case 'categories': return 'Categorías';
       case 'reports': return 'Reportes Académicos';
+      case 'metricas': return 'Métricas de Cursos';
       case 'payments': return 'Pagos y Formularios';
       case 'facturacion': return 'Facturación';
       case 'admins': return 'Administradores';
@@ -2599,6 +2602,15 @@ const AdminDashboard = () => {
           >
             <CalendarDays size={20} className="menu-icon" />
             <span className="menu-label">Webinars</span>
+          </button>
+
+          <button
+            className={`menu-item ${activeTab === 'metricas' ? 'active' : ''}`}
+            onClick={() => setActiveTab('metricas')}
+            title="Métricas de cursos"
+          >
+            <TrendingUp size={20} className="menu-icon" />
+            <span className="menu-label">Métricas</span>
           </button>
 
           <button 
@@ -5372,6 +5384,19 @@ const AdminDashboard = () => {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* VIEW: MÉTRICAS DE CURSOS */}
+          {activeTab === 'metricas' && (
+            <div className="metricas-view">
+              <div className="section-title-row" style={{ marginBottom: '20px' }}>
+                <h2>Métricas de Cursos</h2>
+                <p style={{ color: 'var(--text-muted)', margin: '6px 0 0' }}>
+                  Visitas, tiempo de estudio, avance en el video y resultados del examen de cada curso y de cada alumno.
+                </p>
+              </div>
+              <MetricasCursos cursos={courses} perfiles={profiles} />
             </div>
           )}
 

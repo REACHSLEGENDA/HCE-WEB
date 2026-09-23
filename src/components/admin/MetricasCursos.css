@@ -1,0 +1,477 @@
+/* ==========================================================================
+   Panel de métricas de cursos.
+
+   Hereda los tokens del panel (--bg-main, --text-dark, --border-color…), que
+   ya cambian solos en modo oscuro. Aquí solo se añaden los de las gráficas.
+   El acento es el cian del panel en el tono que pasa contraste de 3:1 contra
+   cada fondo (validado): #0097A7 en claro, #00A3B5 en oscuro.
+   ========================================================================== */
+
+.metricas {
+  --m-acento: #0097A7;
+  --m-acento-lavado: rgba(0, 151, 167, 0.10);
+  --m-acento-activo: #007C8A;
+  --m-reticula: #E8EDF3;
+  --m-base: #CBD5E1;
+  --m-caida: rgba(15, 23, 42, 0.06);
+  --m-recuadro-fondo: #0F172A;
+  --m-recuadro-texto: #F1F5F9;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: opacity 0.2s ease;
+}
+
+.admin-layout[data-theme="dark"] .metricas {
+  --m-acento: #00A3B5;
+  --m-acento-lavado: rgba(0, 163, 181, 0.14);
+  --m-acento-activo: #26C6DA;
+  --m-reticula: #1E2D3F;
+  --m-base: #3A4B60;
+  --m-caida: rgba(232, 240, 254, 0.08);
+  --m-recuadro-fondo: #E8F0FE;
+  --m-recuadro-texto: #0F1923;
+}
+
+/* Al recargar se conserva lo anterior, atenuado: sin parpadeos ni saltos. */
+.metricas--recargando .m-indicadores,
+.metricas--recargando .m-tarjeta { opacity: 0.55; }
+
+/* ---- Filtros ---- */
+
+.m-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.m-periodos {
+  display: inline-flex;
+  flex-wrap: wrap;
+  padding: 3px;
+  gap: 2px;
+  background: var(--bg-gray);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+
+.m-periodos button {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.m-periodos button:hover { color: var(--text-dark); }
+
+.m-periodos button.activo {
+  background: var(--bg-main);
+  color: var(--text-dark);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.m-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-main);
+  color: var(--text-dark);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.m-boton:hover:not(:disabled) { border-color: var(--m-acento); }
+.m-boton:disabled { opacity: 0.5; cursor: default; }
+
+.m-periodos button:focus-visible,
+.m-boton:focus-visible,
+.m-orden:focus-visible,
+.m-fila-clic:focus-visible {
+  outline: 2px solid var(--m-acento);
+  outline-offset: 2px;
+}
+
+.m-girando { animation: m-girar 0.9s linear infinite; }
+@keyframes m-girar { to { transform: rotate(360deg); } }
+
+/* ---- Indicadores ---- */
+
+.m-indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  transition: opacity 0.2s ease;
+}
+
+.m-indicador {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+}
+
+.m-indicador-etiqueta {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.m-indicador-valor {
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-dark);
+  overflow-wrap: anywhere;
+}
+
+.m-indicador-detalle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ---- Tarjetas ---- */
+
+.m-rejilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.m-rejilla .m-tarjeta--ancha { grid-column: 1 / -1; }
+
+.m-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 20px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  transition: opacity 0.2s ease;
+}
+
+.m-tarjeta header h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--text-dark);
+}
+
+.m-tarjeta header p {
+  margin: 4px 0 0;
+  max-width: 70ch;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ---- Gráficas ---- */
+
+.m-grafica { position: relative; min-width: 0; }
+.m-grafica svg { display: block; overflow: visible; }
+
+.m-reticula { stroke: var(--m-reticula); stroke-width: 1; shape-rendering: crispEdges; }
+.m-base     { stroke: var(--m-base); stroke-width: 1; shape-rendering: crispEdges; }
+.m-mira     { stroke: var(--m-base); stroke-width: 1; }
+.m-umbral   { stroke: var(--text-muted); stroke-width: 1; }
+
+.m-eje {
+  fill: var(--text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.m-eje--fuerte { fill: var(--text-dark); font-weight: 600; }
+
+.m-columna { fill: var(--m-acento); transition: fill 0.12s ease; }
+.m-columna--activa { fill: var(--m-acento-activo); }
+
+.m-linea {
+  fill: none;
+  stroke: var(--m-acento);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.m-area  { fill: var(--m-acento-lavado); }
+.m-caida { fill: var(--m-caida); }
+
+/* El anillo del color del fondo mantiene el punto legible sobre la línea. */
+.m-punto { fill: var(--m-acento); stroke: var(--bg-main); stroke-width: 2; }
+
+.m-zona { fill: transparent; cursor: crosshair; }
+
+.m-recuadro {
+  position: absolute;
+  z-index: 10;
+  transform: translate(12px, -110%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 120px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: var(--m-recuadro-fondo);
+  color: var(--m-recuadro-texto);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.25);
+}
+
+.m-recuadro strong { font-size: 0.92rem; }
+.m-recuadro-sub { opacity: 0.75; font-size: 0.75rem; }
+
+.m-tabla-datos summary {
+  width: fit-content;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.m-tabla-datos table { margin-top: 8px; }
+
+/* ---- Barras horizontales ---- */
+
+.m-barras {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.m-barras li {
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.m-barras-etiqueta { font-size: 0.85rem; color: var(--text-dark); }
+
+.m-barras-pista {
+  height: 14px;
+  border-radius: 0 4px 4px 0;
+  overflow: hidden;
+}
+
+.m-barras-relleno {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+  background: var(--m-acento);
+}
+
+.m-barras-valor {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- Tablas ---- */
+
+.m-tabla-acciones { display: flex; justify-content: flex-end; }
+
+.m-tabla-scroll { overflow-x: auto; }
+
+.m-tabla,
+.m-tabla-datos table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.m-tabla th,
+.m-tabla-datos th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.m-tabla td,
+.m-tabla-datos td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-dark);
+  vertical-align: middle;
+}
+
+.m-tabla .num,
+.m-tabla-datos td:not(:first-child) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.m-orden {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.m-fila-clic { cursor: pointer; }
+.m-fila-clic:hover td { background: var(--bg-gray); }
+
+.m-curso-nombre { font-weight: 600; margin-right: 8px; }
+
+.m-chip {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.m-chip.gratis { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.m-chip.pago   { background: var(--m-acento-lavado); color: var(--m-acento-activo); }
+
+.m-alumno { display: inline-flex; align-items: flex-start; gap: 6px; }
+.m-alumno svg { margin-top: 3px; flex-shrink: 0; color: var(--text-muted); }
+.m-alumno-sub { display: block; font-size: 0.74rem; color: var(--text-muted); }
+
+.m-avance { display: inline-flex; align-items: center; gap: 8px; }
+.m-avance-pista {
+  width: 56px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--m-reticula);
+  overflow: hidden;
+}
+.m-avance-pista span { display: block; height: 100%; background: var(--m-acento); }
+
+/* El estado siempre lleva texto: el color solo lo acompaña. */
+.m-estado {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--bg-gray);
+  color: var(--text-dark);
+}
+.m-estado.ok      { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.m-estado.aviso   { background: rgba(244, 81, 30, 0.10);  color: #C2410C; }
+.m-estado.apagado { color: var(--text-muted); }
+
+.admin-layout[data-theme="dark"] .m-chip.gratis,
+.admin-layout[data-theme="dark"] .m-estado.ok { color: #34D399; }
+.admin-layout[data-theme="dark"] .m-estado.aviso { color: #FB923C; }
+
+.m-historial td { background: var(--bg-gray); }
+
+.m-linea-tiempo {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 4px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.m-linea-tiempo li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.m-lt-fecha { min-width: 120px; font-weight: 600; color: var(--text-dark); }
+.m-lt-disp  { margin-left: auto; }
+
+/* ---- Estados ---- */
+
+.m-detalle-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.m-detalle-cabecera h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--text-dark);
+  text-wrap: balance;
+}
+
+.m-vacio {
+  padding: 32px;
+  text-align: center;
+  background: var(--bg-main);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-card);
+}
+.m-vacio h3 { margin: 0 0 8px; color: var(--text-dark); }
+.m-vacio p  { margin: 0 auto; max-width: 60ch; color: var(--text-muted); line-height: 1.55; }
+
+.m-sin-datos { margin: 0; padding: 24px 0; text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+.m-cargando  { color: var(--text-muted); }
+.m-error     { margin: 0; color: var(--accent-orange); font-weight: 600; }
+
+@media (max-width: 860px) {
+  .m-rejilla { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .m-barras li { grid-template-columns: 80px 1fr; }
+  .m-barras-valor { grid-column: 2; }
+  .m-lt-disp { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-girando { animation: none; }
+  .metricas, .m-tarjeta, .m-indicadores, .m-columna { transition: none; }
+}
+
+/* Filas parejas de indicadores: 5 (vista general) caben en una fila en
+   pantallas anchas y se reparten 3 + 2 en las medianas; 6 (detalle) van en
+   una fila o en 3 + 3. Así nunca queda un cuadro solo en su renglón. */
+.m-indicadores--cinco,
+.m-indicadores--seis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+@media (min-width: 1400px) {
+  .m-indicadores--cinco { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (min-width: 1560px) {
+  .m-indicadores--seis { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .m-indicadores--cinco,
+  .m-indicadores--seis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.m-recuadro--izquierda { transform: translate(calc(-100% - 12px), -110%); }
