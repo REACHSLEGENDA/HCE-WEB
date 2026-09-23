@@ -521,7 +521,9 @@ const Dashboard = () => {
     try {
       const { data, error } = await supabase
         .from('webinar_registros')
-        .select('*')
+        // El título viaja con el registro para listar la constancia en
+        // Certificados aunque el webinar ya no esté activo.
+        .select('*, webinars(title)')
         .eq('user_id', user.id);
       if (error) throw error;
       setMisRegistrosWebinar(data || []);
@@ -547,6 +549,8 @@ const Dashboard = () => {
       setActiveTab('webinars');
     }
   }, []);
+
+  const constanciasWebinar = misRegistrosWebinar.filter((r) => r.certificado_url);
 
   const registroDeWebinar = (webinarId) =>
     misRegistrosWebinar.find((r) => String(r.webinar_id) === String(webinarId)) || null;
@@ -813,43 +817,9 @@ const Dashboard = () => {
       }
     };
 
-    const getBrowserAndOS = () => {
-      const ua = navigator.userAgent;
-      let browser = 'Chrome';
-      let device = 'Windows';
-
-      if (ua.indexOf('Firefox') > -1) browser = 'Firefox';
-      else if (ua.indexOf('SamsungBrowser') > -1) browser = 'Samsung Browser';
-      else if (ua.indexOf('Opera') > -1 || ua.indexOf('OPR') > -1) browser = 'Opera';
-      else if (ua.indexOf('Edge') > -1 || ua.indexOf('Edg') > -1) browser = 'Edge';
-      else if (ua.indexOf('Chrome') > -1) browser = 'Chrome';
-      else if (ua.indexOf('Safari') > -1) browser = 'Safari';
-
-      if (ua.indexOf('Windows NT') > -1) device = 'Windows';
-      else if (ua.indexOf('Macintosh') > -1) device = 'Mac';
-      else if (ua.indexOf('Android') > -1) device = 'Android';
-      else if (ua.indexOf('iPhone') > -1 || ua.indexOf('iPad') > -1) device = 'iPhone';
-      else if (ua.indexOf('Linux') > -1) device = 'Linux';
-
-      return { browser, device };
-    };
-
-    const getMockIP = (uid) => {
-      if (!uid) return '189.143.12.45';
-      let hash = 0;
-      for (let i = 0; i < uid.length; i++) {
-        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const part3 = Math.abs((hash >> 8) & 255);
-      const part4 = Math.abs(hash & 255);
-      return `189.143.${part3}.${part4}`;
-    };
-
     const sendConnectionState = async (isOnline) => {
       const action = isOnline ? getActionText() : 'Desconectado';
       const lastActive = isOnline ? new Date().toISOString() : new Date(Date.now() - 15 * 60 * 1000).toISOString();
-      const { browser, device } = getBrowserAndOS();
-      const ip = getMockIP(user.id);
 
       // Local storage
       try {
@@ -859,12 +829,9 @@ const Dashboard = () => {
         
         allActivities[user.id] = {
           user_id: user.id,
-          session_duration: (allActivities[user.id]?.session_duration || 300) + (isOnline ? 10 : 0),
+          session_duration: (allActivities[user.id]?.session_duration || 0) + (isOnline ? 10 : 0),
           last_active_at: lastActive,
           current_action: action,
-          browser,
-          device,
-          ip_address: ip,
           updated_at: new Date().toISOString()
         };
         localStorage.setItem(allKey, JSON.stringify(allActivities));
@@ -880,9 +847,6 @@ const Dashboard = () => {
             user_id: user.id,
             last_active_at: lastActive,
             current_action: action,
-            browser,
-            device,
-            ip_address: ip,
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
         if (error) throw error;
@@ -1938,13 +1902,13 @@ const Dashboard = () => {
                 <p>Descarga tus constancias curriculares avaladas una vez que completes y apruebes cada programa.</p>
               </div>
 
-              {myCertificates.length === 0 ? (
+              {myCertificates.length === 0 && constanciasWebinar.length === 0 ? (
                 <div className="crm-empty-state-card">
                   <Award size={48} className="empty-state-icon" />
                   <h3>Sin certificados disponibles</h3>
                   <p>Tu constancia oficial aparecerá aquí una vez que apruebes el curso correspondiente.</p>
                 </div>
-              ) : (
+              ) : myCertificates.length === 0 ? null : (
                 <div className="table-responsive-container" style={{ marginTop: '20px' }}>
                   <table className="admin-table">
                     <thead>
@@ -2019,6 +1983,46 @@ const Dashboard = () => {
                     <span style={{ color: '#EF4444', fontWeight: '700' }}>⚠</span>
                     La fecha indica el límite para descargar tu constancia. Después de esa fecha el archivo será eliminado del portal. El certificado como tal <strong>no expira</strong> — es permanente una vez descargado.
                   </p>
+                </div>
+              )}
+
+              {/* Constancias de asistencia a webinars: antes solo se veían en
+                  la pestaña Webinars, y el alumno las buscaba aquí. */}
+              {constanciasWebinar.length > 0 && (
+                <div style={{ marginTop: myCertificates.length ? '32px' : '8px' }}>
+                  <h3 className="catalog-subtitle">Constancias de webinars</h3>
+                  <div className="table-responsive-container" style={{ marginTop: '12px' }}>
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Folio</th>
+                          <th>Webinar</th>
+                          <th>Emitida</th>
+                          <th>Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {constanciasWebinar.map((r) => {
+                          const titulo = r.webinars?.title || 'Webinar';
+                          return (
+                            <tr key={r.id}>
+                              <td><strong>{r.folio ? `#${r.folio}` : '—'}</strong></td>
+                              <td><strong>{titulo}</strong></td>
+                              <td>{r.certificado_en ? new Date(r.certificado_en).toLocaleDateString() : '—'}</td>
+                              <td>
+                                <button
+                                  className="btn-crm-action solid"
+                                  onClick={() => descargarConstancia(r.certificado_url, `Constancia_${titulo.replace(/\s+/g, '_')}.png`)}
+                                >
+                                  <Download size={15} /> Descargar
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

@@ -648,38 +648,6 @@ const Classroom = () => {
       return `Estudiando curso: ${course.title}`;
     };
 
-    const getBrowserAndOS = () => {
-      const ua = navigator.userAgent;
-      let browser = 'Chrome';
-      let device = 'Windows';
-
-      if (ua.indexOf('Firefox') > -1) browser = 'Firefox';
-      else if (ua.indexOf('SamsungBrowser') > -1) browser = 'Samsung Browser';
-      else if (ua.indexOf('Opera') > -1 || ua.indexOf('OPR') > -1) browser = 'Opera';
-      else if (ua.indexOf('Edge') > -1 || ua.indexOf('Edg') > -1) browser = 'Edge';
-      else if (ua.indexOf('Chrome') > -1) browser = 'Chrome';
-      else if (ua.indexOf('Safari') > -1) browser = 'Safari';
-
-      if (ua.indexOf('Windows NT') > -1) device = 'Windows';
-      else if (ua.indexOf('Macintosh') > -1) device = 'Mac';
-      else if (ua.indexOf('Android') > -1) device = 'Android';
-      else if (ua.indexOf('iPhone') > -1 || ua.indexOf('iPad') > -1) device = 'iPhone';
-      else if (ua.indexOf('Linux') > -1) device = 'Linux';
-
-      return { browser, device };
-    };
-
-    const getMockIP = (uid) => {
-      if (!uid) return '189.143.12.45';
-      let hash = 0;
-      for (let i = 0; i < uid.length; i++) {
-        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const part3 = Math.abs((hash >> 8) & 255);
-      const part4 = Math.abs(hash & 255);
-      return `189.143.${part3}.${part4}`;
-    };
-
     const loadInitialDurations = async () => {
       let initTimeSpent = 0;
       try {
@@ -759,8 +727,6 @@ const Classroom = () => {
       
       const action = isOnlineState ? getActionText() : 'Desconectado';
       const lastActive = isOnlineState ? new Date().toISOString() : new Date(Date.now() - 15 * 60 * 1000).toISOString();
-      const { browser, device } = getBrowserAndOS();
-      const ip = getMockIP(user.id);
 
       try {
         const allKey = 'backup_all_student_activities';
@@ -772,9 +738,6 @@ const Classroom = () => {
           session_duration: totalSessionDuration,
           last_active_at: lastActive,
           current_action: action,
-          browser,
-          device,
-          ip_address: ip,
           updated_at: new Date().toISOString()
         };
         localStorage.setItem(allKey, JSON.stringify(allActivities));
@@ -790,9 +753,6 @@ const Classroom = () => {
             session_duration: totalSessionDuration,
             last_active_at: lastActive,
             current_action: action,
-            browser,
-            device,
-            ip_address: ip,
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
         if (activityError) throw activityError;
