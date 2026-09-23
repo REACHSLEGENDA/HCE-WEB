@@ -29,6 +29,11 @@ const CODIGOS = {
   HCEGRUPOS15:         { porcentaje: 0.15,  programas: ['paris', 'step1', 'nursing'], meses: true },
   PERFUWEEK:           { porcentaje: 0.15,  programas: ['paris', 'step1'], vigencia: 'perfuweek' },
   STEP1EARLY:          { porcentaje: 0.50,  programas: ['step1'] },
+  // Descuento para equipos: se reparte por WhatsApp a quien pregunta por
+  // inscripciones de mas de 3 personas. Sin vigencia.
+  TEAMPROMO:           { porcentaje: 0.30,  programas: ['paris', 'step1', 'nursing'] },
+  // Descuento general de campana. Sin vigencia.
+  PROMO15:             { porcentaje: 0.15,  programas: ['paris', 'step1', 'nursing'] },
   // Fiestas patrias: el 20% (Paris) y el 30% (Step 1) ya se aplican SOLOS, sin
   // código (ver AUTOMATICAS). Pedir el código por WhatsApp no estaba
   // funcionando, así que solo sobrevive el de equipos, que da más que el
