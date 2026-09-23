@@ -1,0 +1,330 @@
+/* ==========================================================================
+   Lecciones, tareas y grupos en el panel de administración.
+   Usa los tokens del panel (--bg-main, --text-dark, --border-color…), que ya
+   cambian solos en modo oscuro.
+   ========================================================================== */
+
+.lms-aviso {
+  padding: 14px 16px;
+  border: 1px dashed var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-gray);
+  color: var(--text-dark);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.lms-cargando,
+.lms-vacio {
+  margin: 0;
+  padding: 16px 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.lms-ayuda {
+  margin: 4px 0 16px;
+  max-width: 70ch;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.lms-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-gray);
+  color: var(--text-dark);
+  font: inherit;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.lms-textarea:focus { outline: none; border-color: var(--primary-cyan); background: var(--bg-main); }
+
+.crm-input-group small { font-size: 0.74rem; line-height: 1.5; color: var(--text-muted); }
+.crm-input-group code,
+.lms-aviso code {
+  padding: 1px 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-main);
+  font-size: 0.74rem;
+}
+
+/* ---- Lecciones ---- */
+
+.lms-lecciones { display: flex; flex-direction: column; gap: 14px; }
+
+.lms-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.lms-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-main);
+}
+
+.lms-fila + .lms-fila { border-top: 1px solid var(--border-color); }
+
+.lms-orden {
+  width: 22px;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.lms-icono { flex-shrink: 0; color: var(--primary-cyan); }
+
+.lms-fila-texto { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.lms-fila-texto strong { color: var(--text-dark); font-size: 0.9rem; overflow-wrap: anywhere; }
+.lms-fila-texto small { color: var(--text-muted); font-size: 0.76rem; }
+.lms-alerta { color: var(--accent-orange); font-weight: 600; }
+
+.lms-acciones { display: flex; gap: 6px; flex-shrink: 0; }
+.lms-acciones .icon-action-btn:disabled { opacity: 0.35; cursor: default; }
+
+.lms-agregar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.lms-agregar .btn-crm-action { display: inline-flex; align-items: center; gap: 5px; }
+
+.lms-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--primary-cyan);
+  border-radius: 10px;
+  background: var(--bg-gray);
+}
+
+.lms-editor-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lms-editor-cabecera h4 { margin: 0; color: var(--text-dark); }
+
+.lms-fila-campos { display: grid; grid-template-columns: minmax(0, 1fr) 140px; gap: 14px; }
+
+.lms-archivo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.lms-archivo span { font-size: 0.82rem; color: var(--text-muted); overflow-wrap: anywhere; }
+.lms-archivo label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.lms-archivo input { display: none; }
+
+.lms-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.86rem;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.lms-check input { width: 16px; height: 16px; accent-color: var(--primary-cyan); }
+
+.lms-editor-acciones { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.lms-editor-acciones .btn-crm-action { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---- Revisión de tareas ---- */
+
+.lms-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.lms-segmentos {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-gray);
+}
+
+.lms-segmentos button {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lms-segmentos button.activo {
+  background: var(--bg-main);
+  color: var(--text-dark);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.lms-entregas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.lms-entrega {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-main);
+  overflow: hidden;
+}
+
+.lms-entrega-resumen {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.lms-entrega-alumno { display: flex; flex-direction: column; min-width: 0; }
+.lms-entrega-alumno small { color: var(--text-muted); font-size: 0.78rem; }
+.lms-entrega-fecha { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+
+.lms-estado {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lms-estado--entregada { background: rgba(0, 188, 212, 0.12); color: #0E7490; }
+.lms-estado--aprobada  { background: rgba(16, 185, 129, 0.12); color: #047857; }
+.lms-estado--rechazada { background: rgba(244, 81, 30, 0.10); color: #C2410C; }
+
+.admin-layout[data-theme="dark"] .lms-estado--entregada { color: #22D3EE; }
+.admin-layout[data-theme="dark"] .lms-estado--aprobada  { color: #34D399; }
+.admin-layout[data-theme="dark"] .lms-estado--rechazada { color: #FB923C; }
+
+.lms-entrega-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 14px;
+}
+
+.lms-entrega-detalle .texto-leccion { color: var(--text-dark); font-size: 0.9rem; }
+.lms-entrega-detalle .btn-crm-action { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---- Grupos ---- */
+
+.lms-grupos { display: flex; flex-direction: column; gap: 20px; }
+.lms-grupos .settings-card h3 { display: flex; align-items: center; gap: 8px; }
+
+.lms-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.lms-inline input,
+.lms-inline select {
+  flex: 1 1 240px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-gray);
+  color: var(--text-dark);
+  font: inherit;
+  font-size: 0.86rem;
+}
+
+.lms-inline .btn-crm-action { display: inline-flex; align-items: center; gap: 6px; }
+
+.lms-detalle-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.lms-detalle-cabecera h2 { flex: 1; margin: 0; font-size: 1.25rem; color: var(--text-dark); }
+.lms-detalle-cabecera .btn-crm-action { display: inline-flex; align-items: center; gap: 6px; }
+.lms-peligro:hover { border-color: var(--accent-orange) !important; color: var(--accent-orange) !important; }
+
+.lms-rejilla-dos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.lms-lista-simple {
+  list-style: none;
+  margin: 10px 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.lms-lista-simple li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  font-size: 0.86rem;
+  color: var(--text-dark);
+}
+
+.lms-lista-simple li + li { border-top: 1px solid var(--border-color); }
+.lms-lista-simple li > span { min-width: 0; overflow-wrap: anywhere; }
+.lms-lista-simple small { color: var(--text-muted); margin-left: 4px; }
+.lms-lista-simple .btn-crm-action { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.lms-candidatos { margin-top: 0; }
+
+.lms-grupos form.crm-input-group { margin-top: 6px; gap: 8px; }
+.lms-grupos form.crm-input-group label { display: flex; align-items: center; gap: 6px; }
+.lms-grupos form.crm-input-group .btn-crm-action { align-self: flex-start; }
+
+.lms-masiva { display: flex; flex-direction: column; gap: 12px; }
+.lms-masiva .lms-inline { margin-bottom: 0; }
+
+@media (max-width: 900px) {
+  .lms-rejilla-dos { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .lms-fila-campos { grid-template-columns: 1fr; }
+  .lms-entrega-resumen { grid-template-columns: minmax(0, 1fr) auto; }
+  .lms-entrega-fecha { grid-column: 1 / -1; }
+  .lms-fila { flex-wrap: wrap; }
+  .lms-acciones { margin-left: 34px; }
+}

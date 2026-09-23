@@ -475,3 +475,23 @@
 }
 
 .m-recuadro--izquierda { transform: translate(calc(-100% - 12px), -110%); }
+
+/* Filtros de la derecha (grupo + actualizar) y selectores dentro de tarjetas. */
+.m-filtros-derecha { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+.m-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-main);
+  color: var(--text-dark);
+  font: inherit;
+  font-size: 0.82rem;
+  max-width: 100%;
+}
+
+.m-tarjeta > .m-select { align-self: flex-start; }
+
+/* En el embudo de lecciones los títulos son largos: más espacio a la etiqueta. */
+.m-tarjeta--ancha .m-barras li { grid-template-columns: minmax(140px, 32%) 1fr auto; }
+.m-tarjeta--ancha .m-barras-etiqueta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

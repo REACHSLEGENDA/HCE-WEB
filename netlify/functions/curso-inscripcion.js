@@ -10,6 +10,8 @@
 //   confirmar       al volver de Stripe, verifica el pago e inscribe
 //   admin-inscribir un administrador inscribe a alguien (becas, casos manuales)
 //   admin-quitar    un administrador da de baja una inscripción
+//   admin-inscribir-correos   inscribe una lista de correos pegada de golpe
+//   admin-grupo-sincronizar   inscribe a los miembros de un grupo en sus cursos
 
 import { admin, usuarioDesdeToken, adminDesdeToken, json, isConfigured as supabaseListo } from './_supabase.js';
 import { getStripe } from './_stripe.js';
@@ -47,6 +49,62 @@ export const handler = async (event) => {
     const cuerpo = JSON.parse(event.body || '{}');
     const { accion } = cuerpo;
     const db = admin();
+
+    // ---- Inscripción masiva y por grupos (administrador) -------------------
+    if (accion === 'admin-inscribir-correos' || accion === 'admin-grupo-sincronizar') {
+      const administrador = await adminDesdeToken(event.headers);
+      if (!administrador) return json(403, { error: 'Solo un administrador puede hacer esto.' });
+
+      // Pegar una lista de correos (de un hospital, de una generación) e
+      // inscribirlos a todos en un curso. Devuelve quién no tiene cuenta, para
+      // que el administrador sepa a quién invitar a registrarse.
+      if (accion === 'admin-inscribir-correos') {
+        const { correos = [], courseId } = cuerpo;
+        const curso = await cargarCurso(db, courseId);
+        if (!curso) return json(404, { error: 'Ese curso ya no existe.' });
+
+        const buscados = [...new Set(correos.map((c) => String(c).trim().toLowerCase()).filter(Boolean))];
+        if (!buscados.length) return json(400, { error: 'No hay correos en la lista.' });
+
+        const { data: perfiles, error } = await db.from('profiles').select('id, email').range(0, 9999);
+        if (error) throw new Error(error.message);
+        const porCorreo = new Map((perfiles || []).map((p) => [String(p.email || '').toLowerCase(), p.id]));
+
+        const encontrados = buscados.filter((c) => porCorreo.has(c));
+        for (const correo of encontrados) {
+          await inscribir(db, { userId: porCorreo.get(correo), courseId: curso.id, origen: 'admin' });
+        }
+        return json(200, {
+          ok: true,
+          inscritos: encontrados.length,
+          sinCuenta: buscados.filter((c) => !porCorreo.has(c)),
+        });
+      }
+
+      // Inscribe a todos los miembros del grupo en todos sus cursos. Se llama
+      // cada vez que cambia el grupo; es idempotente, así que no duplica nada.
+      const { grupoId } = cuerpo;
+      const [{ data: miembros }, { data: cursos }] = await Promise.all([
+        db.from('grupo_miembros').select('user_id').eq('grupo_id', Number(grupoId)),
+        db.from('grupo_cursos').select('course_id').eq('grupo_id', Number(grupoId)),
+      ]);
+
+      let nuevas = 0;
+      for (const m of miembros || []) {
+        for (const c of cursos || []) {
+          const { data: previa } = await db
+            .from('inscripciones')
+            .select('id')
+            .eq('user_id', m.user_id)
+            .eq('course_id', c.course_id)
+            .maybeSingle();
+          if (previa) continue;
+          await inscribir(db, { userId: m.user_id, courseId: c.course_id, origen: 'grupo' });
+          nuevas += 1;
+        }
+      }
+      return json(200, { ok: true, nuevas });
+    }
 
     // ---- Acciones de administrador ------------------------------------------
     if (accion === 'admin-inscribir' || accion === 'admin-quitar') {

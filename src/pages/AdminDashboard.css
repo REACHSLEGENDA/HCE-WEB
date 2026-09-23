@@ -694,7 +694,15 @@
 }
 
 /* BUTTONS */
-.btn-crm-action {
+/* Reglas del panel limitadas al panel y con más peso que las del portal del
+   alumno y de Comunidad, que usan el mismo nombre de clase con ancho completo,
+   mayúsculas y forma de píldora. Sin esto, al pasar del portal al panel sin
+   recargar, todos los botones del panel se estiraban a lo ancho. */
+.admin-layout .btn-crm-action {
+  width: auto;
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: inherit;
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: 600;
@@ -707,30 +715,30 @@
   transition: var(--transition-smooth);
 }
 
-.btn-crm-action.solid {
+.admin-layout .btn-crm-action.solid {
   background-color: var(--primary-cyan);
   border: 1px solid var(--primary-cyan);
   color: white;
 }
 
-.btn-crm-action.solid:hover:not(:disabled) {
+.admin-layout .btn-crm-action.solid:hover:not(:disabled) {
   background-color: var(--primary-cyan-hover);
   border-color: var(--primary-cyan-hover);
   box-shadow: var(--shadow-hover);
 }
 
-.btn-crm-action.outlined {
+.admin-layout .btn-crm-action.outlined {
   background: none;
   border: 1px solid var(--border-color);
   color: var(--text-dark);
 }
 
-.btn-crm-action.outlined:hover:not(:disabled) {
+.admin-layout .btn-crm-action.outlined:hover:not(:disabled) {
   background-color: var(--bg-gray);
   border-color: var(--text-muted);
 }
 
-.btn-crm-action.mini {
+.admin-layout .btn-crm-action.mini {
   padding: 6px 12px;
   font-size: 0.75rem;
   border-radius: 6px;
@@ -1534,4 +1542,31 @@
   gap: 7px;
   white-space: nowrap;
   cursor: pointer;
+}
+
+/* Contador de pendientes en el menú (tareas por revisar). */
+.admin-sidebar .menu-item { position: relative; }
+
+.menu-contador {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-orange);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Con el menú colapsado queda como un punto sobre el icono. */
+.admin-sidebar.collapsed .menu-contador {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  min-width: 0;
+  padding: 0 5px;
+  font-size: 0.64rem;
 }

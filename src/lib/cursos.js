@@ -99,3 +99,8 @@ export const esCursoDePago = (curso) => curso?.tipo === 'pago' && Number(curso?.
 
 export const formatoPrecio = (mxn) =>
   `$${Number(mxn || 0).toLocaleString('es-MX')} MXN`;
+
+// Acepta correos separados por comas, espacios, saltos de línea o punto y coma
+// (lo que sale al copiar una columna de Excel).
+export const extraerCorreos = (texto) =>
+  [...new Set((String(texto || '').match(/[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/g) || []).map((c) => c.toLowerCase()))];

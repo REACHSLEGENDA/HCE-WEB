@@ -289,3 +289,46 @@ export function formatoDinero(ingresos) {
   if (ingresos.usd) partes.push(`US$${formatoEntero(ingresos.usd)}`);
   return partes.length ? partes.join(' · ') : '$0';
 }
+
+/**
+ * Cuántos alumnos completaron cada lección del curso, en orden. Es el embudo
+ * del curso: dice en qué lección se atora la gente. El porcentaje es sobre los
+ * inscritos, que son quienes podrían haberla hecho.
+ */
+export function avancePorLeccion({ lecciones, progreso, inscritos }) {
+  const completas = new Map();
+  for (const p of progreso) {
+    if (!p.completada) continue;
+    completas.set(p.leccion_id, (completas.get(p.leccion_id) || 0) + 1);
+  }
+  return [...lecciones]
+    .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0) || a.id - b.id)
+    .map((l) => {
+      const completaron = completas.get(l.id) || 0;
+      return {
+        leccionId: l.id,
+        titulo: l.titulo,
+        tipo: l.tipo,
+        completaron,
+        porcentaje: inscritos ? Math.min(100, (completaron / inscritos) * 100) : 0,
+      };
+    });
+}
+
+/** Lecciones completadas por alumno en un curso: { user_id: cantidad }. */
+export function leccionesCompletadasPorAlumno(progreso) {
+  const conteo = {};
+  for (const p of progreso) if (p.completada) conteo[p.user_id] = (conteo[p.user_id] || 0) + 1;
+  return conteo;
+}
+
+/**
+ * Curva de retención de una lección de video, a partir de su avance guardado
+ * (uno por alumno). Mismo formato que curvaRetencion.
+ */
+export function curvaRetencionDeLeccion(progresoDeLeccion) {
+  return curvaRetencion(progresoDeLeccion.map((p) => ({
+    user_id: p.user_id,
+    porcentaje_max: p.completada ? 100 : p.porcentaje || 0,
+  })));
+}

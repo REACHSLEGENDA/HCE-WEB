@@ -44,11 +44,16 @@ import {
   Send,
   Receipt,
   RefreshCw,
-  TrendingUp
+  TrendingUp,
+  ClipboardList,
+  UsersRound
 } from 'lucide-react';
 import './AdminDashboard.css';
 import PosicionadorConstancia from '../components/PosicionadorConstancia';
 import MetricasCursos from '../components/admin/MetricasCursos';
+import EditorLecciones from '../components/admin/EditorLecciones';
+import RevisionTareas from '../components/admin/RevisionTareas';
+import GruposAdmin from '../components/admin/GruposAdmin';
 import { llamarInscripcion, esTablaFaltante, formatoPrecio } from '../lib/cursos';
 import { useNotification } from '../context/NotificationContext';
 
@@ -228,8 +233,21 @@ const AdminDashboard = () => {
     category_id: '',
     tipo: 'gratis',
     precio_mxn: '',
+    vigencia_meses: '',
     questions: []
   });
+
+  // Tareas sin revisar: se muestran como contador en el menú.
+  const [tareasPendientes, setTareasPendientes] = useState(0);
+
+  // Se cuenta al entrar al panel, no solo al abrir la pestaña de Tareas.
+  useEffect(() => {
+    supabase
+      .from('tarea_entregas')
+      .select('id', { count: 'exact', head: true })
+      .eq('estado', 'entregada')
+      .then(({ count, error }) => { if (!error) setTareasPendientes(count || 0); });
+  }, []);
 
   // Student details modal states
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -1303,6 +1321,8 @@ const AdminDashboard = () => {
       case 'categories': return 'Categorías';
       case 'reports': return 'Reportes Académicos';
       case 'metricas': return 'Métricas de Cursos';
+      case 'tareas': return 'Tareas';
+      case 'grupos': return 'Grupos';
       case 'payments': return 'Pagos y Formularios';
       case 'facturacion': return 'Facturación';
       case 'admins': return 'Administradores';
@@ -1319,10 +1339,16 @@ const AdminDashboard = () => {
         .order('id', { ascending: true });
       if (error) throw error;
       
-      const { data: allQuestions, error: questionsError } = await supabase
-        .from('questions')
-        .select('*')
-        .order('id', { ascending: true });
+      // Las respuestas correctas ya no son legibles desde el navegador; el
+      // administrador las obtiene por una función que verifica su rol. Antes de
+      // la migración esa función no existe y se leen como siempre.
+      let { data: allQuestions, error: questionsError } = await supabase.rpc('preguntas_admin');
+      if (questionsError) {
+        ({ data: allQuestions, error: questionsError } = await supabase
+          .from('questions')
+          .select('*')
+          .order('id', { ascending: true }));
+      }
       if (questionsError) throw questionsError;
 
       const questionsByCourse = (allQuestions || []).reduce((grouped, question) => {
@@ -1361,6 +1387,7 @@ const AdminDashboard = () => {
           category_id: c.category_id,
           tipo: c.tipo || 'gratis',
           precio_mxn: c.precio_mxn,
+          vigencia_meses: c.vigencia_meses ?? null,
           questions: questionsByCourse[c.id] || []
         };
       });
@@ -1427,6 +1454,7 @@ const AdminDashboard = () => {
       category_id: '',
       tipo: 'gratis',
       precio_mxn: '',
+      vigencia_meses: '',
       questions: []
     });
     setShowCourseForm(true);
@@ -1452,6 +1480,7 @@ const AdminDashboard = () => {
       category_id: course.category_id || '',
       tipo: course.tipo || 'gratis',
       precio_mxn: course.precio_mxn ?? '',
+      vigencia_meses: course.vigencia_meses ?? '',
       questions: course.questions || []
     });
     setShowCourseForm(true);
@@ -1478,6 +1507,7 @@ const AdminDashboard = () => {
       category_id: '',
       tipo: 'gratis',
       precio_mxn: '',
+      vigencia_meses: '',
       questions: []
     });
     localStorage.removeItem('adminShowCourseForm');
@@ -1610,7 +1640,6 @@ const AdminDashboard = () => {
 
     setActionLoading(true);
     try {
-      const video = courseForm.youtube_video_id || '';
       const dbData = {
         title: courseForm.title,
         description: courseForm.description,
@@ -1619,7 +1648,6 @@ const AdminDashboard = () => {
         requisitos: courseForm.requisitos,
         image_url: courseForm.image || '',
         link: courseForm.link || '',
-        youtube_video_id: video,
         certificado_template_url: courseForm.certificado_template_url || '',
         certificado_x: courseForm.certificado_x || 300,
         certificado_y: courseForm.certificado_y || 400,
@@ -1649,35 +1677,22 @@ const AdminDashboard = () => {
         return data[0].id;
       };
 
-      // Primero se intenta con los campos nuevos. Si la migración todavía no
-      // corre, Supabase no los conoce y se guarda como antes.
+      // Los campos se agregaron en dos migraciones distintas (acceso y precio
+      // primero, vigencia después). Se intenta con todo y, si Supabase no
+      // conoce alguna columna, se va quitando solo lo que falta: así un curso
+      // de pago no pierde su precio porque aún no exista la vigencia.
+      const acceso = { tipo: esDePago ? 'pago' : 'gratis', precio_mxn: esDePago ? precio : null };
+      const vigencia = { vigencia_meses: Number(courseForm.vigencia_meses) > 0 ? Number(courseForm.vigencia_meses) : null };
+      const columnaFaltante = (err) => /could not find the '.*' column|column .* does not exist/i.test(err?.message || '');
+
       let courseId = null;
-      let esquemaNuevo = true;
-      try {
-        courseId = await escribirCurso({
-          ...dbData,
-          tipo: esDePago ? 'pago' : 'gratis',
-          precio_mxn: esDePago ? precio : null,
-          tiene_video: !!video
-        });
-      } catch (err) {
-        if (!/could not find the '.*' column|column .* does not exist/i.test(err?.message || '')) throw err;
-        esquemaNuevo = false;
-        courseId = await escribirCurso(dbData);
-      }
-
-      // Con la migración, el video pasa a su tabla protegida y solo después se
-      // borra del curso. Si algo falla en medio, el video no se pierde.
-      if (esquemaNuevo && courseId) {
-        const { error: contenidoError } = await supabase
-          .from('curso_contenido')
-          .upsert(
-            { course_id: courseId, youtube_video_id: video || null, actualizado_en: new Date().toISOString() },
-            { onConflict: 'course_id' }
-          );
-        if (contenidoError) throw contenidoError;
-
-        await supabase.from('courses').update({ youtube_video_id: null }).eq('id', courseId);
+      for (const intento of [{ ...dbData, ...acceso, ...vigencia }, { ...dbData, ...acceso }, dbData]) {
+        try {
+          courseId = await escribirCurso(intento);
+          break;
+        } catch (err) {
+          if (!columnaFaltante(err) || intento === dbData) throw err;
+        }
       }
 
       if (courseId) {
@@ -1700,8 +1715,13 @@ const AdminDashboard = () => {
         }
       }
 
-      showToast(editingCourse ? 'Curso actualizado correctamente' : 'Curso creado correctamente', 'success');
       await fetchCourses();
+      if (!editingCourse && courseId) {
+        setEditingCourse({ ...courseForm, id: courseId });
+        showToast('Curso creado. Ahora agrégale sus lecciones abajo.', 'success');
+        return;
+      }
+      showToast('Curso actualizado correctamente', 'success');
       handleCloseCourseForm();
     } catch (err) {
       console.error('Error saving course:', err.message);
@@ -2602,6 +2622,25 @@ const AdminDashboard = () => {
           >
             <CalendarDays size={20} className="menu-icon" />
             <span className="menu-label">Webinars</span>
+          </button>
+
+          <button
+            className={`menu-item ${activeTab === 'tareas' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tareas')}
+            title="Tareas por revisar"
+          >
+            <ClipboardList size={20} className="menu-icon" />
+            <span className="menu-label">Tareas</span>
+            {tareasPendientes > 0 && <span className="menu-contador">{tareasPendientes}</span>}
+          </button>
+
+          <button
+            className={`menu-item ${activeTab === 'grupos' ? 'active' : ''}`}
+            onClick={() => setActiveTab('grupos')}
+            title="Grupos e inscripción masiva"
+          >
+            <UsersRound size={20} className="menu-icon" />
+            <span className="menu-label">Grupos</span>
           </button>
 
           <button
@@ -3971,31 +4010,17 @@ const AdminDashboard = () => {
                         </select>
                       </div>
                       <div className="crm-input-group">
-                        <label>ID o URL del Video de YouTube *</label>
-                        <input 
-                          type="text" 
-                          required 
-                          value={courseForm.youtube_video_id || ''} 
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            let cleanId = val;
-                            if (val.includes('youtube.com') || val.includes('youtu.be')) {
-                              const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-                              const match = val.match(regExp);
-                              if (match && match[2].length === 11) {
-                                cleanId = match[2];
-                              }
-                            }
-                            const thumbnailUrl = cleanId && cleanId.length === 11 ? `https://img.youtube.com/vi/${cleanId}/hqdefault.jpg` : '';
-                            setCourseForm(prev => ({
-                              ...prev,
-                              youtube_video_id: val,
-                              // En un curso de pago la miniatura delataría el video.
-                              image: prev.image || (prev.tipo === 'pago' ? '' : thumbnailUrl)
-                            }));
-                          }} 
-                          placeholder="Ej. dQw4w9WgXcQ o enlace completo"
+                        <label>Vigencia del certificado (meses)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={courseForm.vigencia_meses}
+                          onChange={(e) => setCourseForm({ ...courseForm, vigencia_meses: e.target.value })}
+                          placeholder="Vacío = no vence"
                         />
+                        <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                          Si vence, al alumno se le avisa 30 días antes para que vuelva a presentar el examen.
+                        </small>
                       </div>
                     </div>
 
@@ -4249,6 +4274,26 @@ const AdminDashboard = () => {
                   </form>
                 </div>
               ) : null}
+
+              {/* Va fuera del formulario del curso a propósito: tiene su propio
+                  formulario, y uno dentro de otro enviaría el curso completo. */}
+              {showCourseForm && (
+                <div className="settings-card" style={{ marginBottom: '30px' }}>
+                  <h3>Lecciones del curso</h3>
+                  {editingCourse?.id && !isNaN(Number(editingCourse.id)) ? (
+                    <EditorLecciones
+                      courseId={Number(editingCourse.id)}
+                      onCambio={fetchCourses}
+                      notificar={showToast}
+                      confirmar={showConfirm}
+                    />
+                  ) : (
+                    <p style={{ color: 'var(--text-muted)', margin: '8px 0 0' }}>
+                      Publica el curso para empezar a agregarle lecciones: videos, documentos PDF, lecturas y tareas.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Table of courses */}
               <div className="table-responsive-container">
@@ -5384,6 +5429,31 @@ const AdminDashboard = () => {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* VIEW: TAREAS */}
+          {activeTab === 'tareas' && (
+            <div className="tareas-view">
+              <div className="section-title-row" style={{ marginBottom: '20px' }}>
+                <h2>Tareas</h2>
+                <p style={{ color: 'var(--text-muted)', margin: '6px 0 0' }}>
+                  Lo que entregan los alumnos en las lecciones de tipo tarea. Aprobar la da por completa; pedir corrección la reabre.
+                </p>
+              </div>
+              <div className="settings-card">
+                <RevisionTareas cursos={courses} perfiles={profiles} notificar={showToast} onPendientes={setTareasPendientes} />
+              </div>
+            </div>
+          )}
+
+          {/* VIEW: GRUPOS */}
+          {activeTab === 'grupos' && (
+            <div className="grupos-view">
+              <div className="section-title-row" style={{ marginBottom: '20px' }}>
+                <h2>Grupos e inscripción masiva</h2>
+              </div>
+              <GruposAdmin cursos={courses} perfiles={profiles} notificar={showToast} confirmar={showConfirm} />
             </div>
           )}
 

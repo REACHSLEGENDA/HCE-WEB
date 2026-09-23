@@ -12,6 +12,9 @@ import {
   distribucionCalificaciones,
   porAlumno,
   historialDeAlumno,
+  avancePorLeccion,
+  leccionesCompletadasPorAlumno,
+  curvaRetencionDeLeccion,
   formatoEntero,
   formatoMinutos,
   formatoPorcentaje,
@@ -47,13 +50,26 @@ async function traerTodo(tabla, columnas, filtrar) {
   const filas = [];
   const TANDA = 1000;
   for (let desde = 0; ; desde += TANDA) {
-    const consulta = filtrar(supabase.from(tabla).select(columnas).order('id').range(desde, desde + TANDA - 1));
+    const conId = !['leccion_progreso', 'grupo_miembros'].includes(tabla);
+    const base = supabase.from(tabla).select(columnas);
+    const consulta = filtrar((conId ? base.order('id') : base).range(desde, desde + TANDA - 1));
     const { data, error } = await consulta;
     if (error) throw error;
     filas.push(...data);
     if (data.length < TANDA) break;
   }
   return filas;
+}
+
+// Lecciones y grupos llegaron después: si su migración no corre, el panel
+// funciona igual, solo sin esas vistas.
+async function traerOpcional(tabla, columnas) {
+  try {
+    return await traerTodo(tabla, columnas, (q) => q);
+  } catch (err) {
+    if (esTablaFaltante(err)) return [];
+    throw err;
+  }
 }
 
 const fechaCorta = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
@@ -132,6 +148,7 @@ export default function MetricasCursos({ cursos, perfiles }) {
   const [cargando, setCargando] = useState(false);
   const [estado, setEstado] = useState(null); // null | 'sin-migracion' | mensaje de error
   const [cursoAbierto, setCursoAbierto] = useState(null);
+  const [grupoFiltro, setGrupoFiltro] = useState('');
 
   const desde = useMemo(() => inicioDelPeriodo(periodo), [periodo]);
 
@@ -154,7 +171,14 @@ export default function MetricasCursos({ cursos, perfiles }) {
         // Las inscripciones van completas: "inscritos" es un total, no del periodo.
         traerTodo('inscripciones', 'id, user_id, course_id, origen, monto, moneda, created_at', (q) => q),
       ]);
-      setDatos({ sesiones, eventos, inscripciones });
+      // El avance por lección es acumulado: no se corta por periodo.
+      const [lecciones, progreso, grupos, miembros] = await Promise.all([
+        traerOpcional('curso_lecciones', 'id, course_id, orden, titulo, tipo, obligatoria'),
+        traerOpcional('leccion_progreso', 'user_id, leccion_id, course_id, porcentaje, completada'),
+        traerOpcional('grupos', 'id, nombre'),
+        traerOpcional('grupo_miembros', 'grupo_id, user_id'),
+      ]);
+      setDatos({ sesiones, eventos, inscripciones, lecciones, progreso, grupos, miembros });
     } catch (err) {
       if (esTablaFaltante(err)) setEstado('sin-migracion');
       else setEstado(err.message || 'No se pudieron cargar las métricas.');
@@ -165,11 +189,26 @@ export default function MetricasCursos({ cursos, perfiles }) {
 
   useEffect(() => { void cargar(); }, [cargar]);
 
+  // Con un grupo elegido, todo el panel se limita a sus miembros: sirve para
+  // ver cómo va un hospital o una generación en particular.
+  const datosVista = useMemo(() => {
+    if (!datos || !grupoFiltro) return datos;
+    const miembros = new Set(datos.miembros.filter((m) => String(m.grupo_id) === grupoFiltro).map((m) => m.user_id));
+    const soloMiembros = (filas) => filas.filter((f) => miembros.has(f.user_id));
+    return {
+      ...datos,
+      sesiones: soloMiembros(datos.sesiones),
+      eventos: soloMiembros(datos.eventos),
+      inscripciones: soloMiembros(datos.inscripciones),
+      progreso: soloMiembros(datos.progreso),
+    };
+  }, [datos, grupoFiltro]);
+
   const resumen = useMemo(() => {
-    if (!datos) return [];
-    return resumenPorCurso({ cursos, ...datos, desde })
+    if (!datosVista) return [];
+    return resumenPorCurso({ cursos, ...datosVista, desde })
       .sort((a, b) => b.visitas - a.visitas || b.inscritos - a.inscritos);
-  }, [datos, cursos, desde]);
+  }, [datosVista, cursos, desde]);
 
   if (estado === 'sin-migracion') {
     return (
@@ -201,9 +240,17 @@ export default function MetricasCursos({ cursos, perfiles }) {
             </button>
           ))}
         </div>
-        <button type="button" className="m-boton" onClick={() => void cargar()} disabled={cargando}>
-          <RefreshCw size={15} className={cargando ? 'm-girando' : ''} /> Actualizar
-        </button>
+        <div className="m-filtros-derecha">
+          {datos?.grupos?.length > 0 && (
+            <select className="m-select" value={grupoFiltro} onChange={(e) => setGrupoFiltro(e.target.value)} aria-label="Filtrar por grupo">
+              <option value="">Todos los alumnos</option>
+              {datos.grupos.map((g) => <option key={g.id} value={String(g.id)}>{g.nombre}</option>)}
+            </select>
+          )}
+          <button type="button" className="m-boton" onClick={() => void cargar()} disabled={cargando}>
+            <RefreshCw size={15} className={cargando ? 'm-girando' : ''} /> Actualizar
+          </button>
+        </div>
       </div>
 
       {estado && <p className="m-error">{estado}</p>}
@@ -213,14 +260,14 @@ export default function MetricasCursos({ cursos, perfiles }) {
       {datos && (cursoDetalle ? (
         <DetalleCurso
           fila={cursoDetalle}
-          datos={datos}
+          datos={datosVista}
           perfiles={perfiles}
           desde={desde}
           minimoAprobacion={cursos.find((c) => Number(c.id) === cursoDetalle.courseId)?.minAprobacion || 80}
           onVolver={() => setCursoAbierto(null)}
         />
       ) : (
-        <VistaGeneral resumen={resumen} datos={datos} desde={desde} onAbrir={setCursoAbierto} />
+        <VistaGeneral resumen={resumen} datos={datosVista} desde={desde} onAbrir={setCursoAbierto} />
       ))}
     </div>
   );
@@ -323,6 +370,7 @@ const COLUMNAS_ALUMNO = [
   { id: 'visitas', etiqueta: 'Visitas', num: true },
   { id: 'minutosActivos', etiqueta: 'Tiempo activo', num: true },
   { id: 'avanceVideo', etiqueta: 'Avance del video', num: true },
+  { id: 'lecciones', etiqueta: 'Lecciones', num: true },
   { id: 'intentos', etiqueta: 'Intentos', num: true },
   { id: 'mejorCalificacion', etiqueta: 'Mejor calif.', num: true },
   { id: 'ultimaVisita', etiqueta: 'Última visita', num: true },
@@ -336,16 +384,29 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, onVolver
   const sesiones = useMemo(() => datos.sesiones.filter((s) => s.course_id === id), [datos, id]);
   const eventos = useMemo(() => datos.eventos.filter((e) => e.course_id === id), [datos, id]);
   const inscripciones = useMemo(() => datos.inscripciones.filter((i) => i.course_id === id), [datos, id]);
+  const lecciones = useMemo(() => (datos.lecciones || []).filter((l) => Number(l.course_id) === id), [datos, id]);
+  const progreso = useMemo(() => (datos.progreso || []).filter((p) => Number(p.course_id) === id), [datos, id]);
+
+  // Con lecciones, la curva de abandono es la de cada video, elegible.
+  const videos = lecciones.filter((l) => l.tipo === 'video' && progreso.some((p) => p.leccion_id === l.id));
+  const [videoElegido, setVideoElegido] = useState(null);
+  const videoCurva = videos.find((v) => v.id === videoElegido) || videos[0] || null;
+  const embudo = lecciones.length > 1 ? avancePorLeccion({ lecciones, progreso, inscritos: inscripciones.length }) : [];
+  const leccionesDe = leccionesCompletadasPorAlumno(progreso);
+  const obligatorias = lecciones.filter((l) => l.obligatoria !== false).length || lecciones.length;
 
   const dias = visitasPorDia(sesiones, desde);
-  const curva = curvaRetencion(sesiones);
+  const curva = videoCurva
+    ? curvaRetencionDeLeccion(progreso.filter((p) => p.leccion_id === videoCurva.id))
+    : curvaRetencion(sesiones);
   const caida = mayorCaida(curva);
   const duracionSeg = sesiones.reduce((m, s) => Math.max(m, s.duracion_video_seg || 0), 0) || null;
   const porDispositivo = dispositivos(sesiones);
   const calificaciones = distribucionCalificaciones(eventos);
 
   const alumnos = useMemo(() => {
-    const filas = porAlumno({ sesiones, eventos, inscripciones, perfiles });
+    const filas = porAlumno({ sesiones, eventos, inscripciones, perfiles })
+      .map((f) => ({ ...f, lecciones: leccionesDe[f.userId] || 0 }));
     const { columna, desc } = orden;
     return filas.sort((a, b) => {
       const va = a[columna] ?? -1;
@@ -353,7 +414,8 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, onVolver
       const cmp = typeof va === 'string' && columna === 'nombre' ? va.localeCompare(vb, 'es') : va > vb ? 1 : va < vb ? -1 : 0;
       return desc ? -cmp : cmp;
     });
-  }, [sesiones, eventos, inscripciones, perfiles, orden]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sesiones, eventos, inscripciones, perfiles, orden, progreso]);
 
   const aTiempo = (punto) => {
     if (!duracionSeg) return `el ${punto}% del video`;
@@ -408,14 +470,37 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, onVolver
         </Tarjeta>
       ) : (
         <div className="m-rejilla">
+          {embudo.length > 0 && (
+            <Tarjeta
+              titulo="¿En qué lección se quedan?"
+              subtitulo="Cuántos de los inscritos completaron cada lección, desde el inicio del curso."
+              ancha
+            >
+              <BarrasHorizontales
+
+                filas={embudo.map((e, i) => ({
+                  clave: e.leccionId,
+                  etiqueta: `${i + 1}. ${e.titulo}`,
+                  valor: e.porcentaje,
+                  texto: `${e.completaron} · ${Math.round(e.porcentaje)}%`,
+                }))}
+              />
+            </Tarjeta>
+          )}
+
           <Tarjeta
-            titulo="¿Dónde abandonan el video?"
+            titulo={videoCurva ? `¿Dónde abandonan el video? · ${videoCurva.titulo}` : '¿Dónde abandonan el video?'}
             subtitulo={caida
               ? `El tramo que más gente pierde va de ${aTiempo(caida.desde)} a ${aTiempo(caida.hasta)}: ahí se va el ${Math.round(caida.caida)}% de quienes lo empezaron.`
               : 'Porcentaje de alumnos que seguía viendo en cada punto del video.'}
             ancha
           >
-            <GraficaRetencion curva={curva} caida={caida} duracionSeg={duracionSeg} />
+            {videos.length > 1 && (
+              <select className="m-select" value={videoCurva?.id || ''} onChange={(e) => setVideoElegido(Number(e.target.value))} aria-label="Video">
+                {videos.map((v) => <option key={v.id} value={v.id}>{v.titulo}</option>)}
+              </select>
+            )}
+            <GraficaRetencion curva={curva} caida={caida} duracionSeg={videoCurva ? null : duracionSeg} />
           </Tarjeta>
 
           <Tarjeta titulo="Visitas por día">
@@ -510,6 +595,7 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, onVolver
                           {a.avanceVideo}%
                         </span>
                       </td>
+                      <td className="num">{lecciones.length ? `${a.lecciones} de ${obligatorias}` : '—'}</td>
                       <td className="num">{a.intentos || '—'}</td>
                       <td className="num">{a.mejorCalificacion ?? '—'}</td>
                       <td className="num">{fechaHora(a.ultimaVisita)}</td>
@@ -523,7 +609,7 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, onVolver
                     </tr>
                     {abierto && (
                       <tr className="m-historial">
-                        <td colSpan={8}>
+                        <td colSpan={9}>
                           <Historial visitas={historialDeAlumno(sesiones, a.userId)} />
                         </td>
                       </tr>
@@ -532,7 +618,7 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, onVolver
                 );
               })}
               {alumnos.length === 0 && (
-                <tr><td colSpan={8} className="m-sin-datos">Todavía no hay alumnos en este curso.</td></tr>
+                <tr><td colSpan={9} className="m-sin-datos">Todavía no hay alumnos en este curso.</td></tr>
               )}
             </tbody>
           </table>

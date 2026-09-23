@@ -2469,3 +2469,168 @@
 .curso-precio-chip.gratis   { background: #10b981; color: #ffffff; }
 .curso-precio-chip.pago     { background: #00bcd4; color: #06222b; }
 .curso-precio-chip.inscrito { background: rgba(15, 23, 42, 0.78); color: #e2e8f0; }
+
+/* ==========================================================================
+   Logros: puntos, insignias y tabla de posiciones.
+   ========================================================================== */
+
+.logros-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 24px;
+  padding: 22px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.logros-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.logros-cabecera h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+}
+
+.logros-cabecera h2 svg { color: #f59e0b; }
+.logros-cabecera p { margin: 4px 0 0; font-size: 0.82rem; color: var(--text-muted); }
+
+.logros-puntos { display: flex; flex-direction: column; align-items: flex-end; }
+.logros-puntos-valor { font-size: 2rem; font-weight: 800; line-height: 1; color: var(--text-dark); }
+.logros-puntos-etiqueta { margin-top: 4px; font-size: 0.78rem; color: var(--text-muted); }
+
+.logros-insignias {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 10px;
+}
+
+.logros-insignia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px 12px;
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.logros-insignia-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-gray);
+}
+
+.logros-insignia-nombre { font-size: 0.82rem; font-weight: 700; line-height: 1.25; }
+.logros-insignia-req { font-size: 0.7rem; line-height: 1.35; }
+
+.logros-insignia--obtenida {
+  border-style: solid;
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.06);
+  color: var(--text-dark);
+}
+
+.logros-insignia--obtenida .logros-insignia-icono { background: rgba(245, 158, 11, 0.16); color: #d97706; }
+.logros-insignia--obtenida .logros-insignia-req { color: #b45309; font-weight: 600; }
+.crm-layout[data-theme="dark"] .logros-insignia--obtenida .logros-insignia-icono { color: #fbbf24; }
+.crm-layout[data-theme="dark"] .logros-insignia--obtenida .logros-insignia-req { color: #fbbf24; }
+
+.logros-inferior {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.logros-inferior h3 {
+  margin: 0 0 10px;
+  font-size: 0.86rem;
+  color: var(--text-dark);
+}
+
+.logros-tabla ol,
+.logros-reglas ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.logros-tabla li {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+
+.logros-tabla li.logros-yo { background: var(--bg-active-item); font-weight: 700; }
+.logros-pos { font-weight: 800; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.logros-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.logros-pts { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.logros-reglas li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border-color);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.logros-reglas li strong { color: var(--text-dark); font-variant-numeric: tabular-nums; }
+.logros-nota { margin: 0; font-size: 0.82rem; color: var(--text-muted); }
+
+.logros-visibilidad {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.logros-visibilidad:hover { color: var(--text-dark); }
+
+@media (max-width: 720px) {
+  .logros-inferior { grid-template-columns: 1fr; }
+  .logros-puntos { align-items: flex-start; }
+}
+
+/* Vigencia del certificado en la tabla de Certificados. */
+.cert-vigencia { font-size: 0.82rem; font-weight: 600; }
+.cert-vigencia--ok { color: var(--accent-green); }
+.cert-vigencia--pronto { color: #d97706; }
+.cert-vigencia--vencido { color: var(--accent-orange); }
+.cert-recertificar { display: block; margin-top: 3px; font-size: 0.74rem; font-weight: 700; color: var(--primary-cyan); }

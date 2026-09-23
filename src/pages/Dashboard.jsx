@@ -50,6 +50,7 @@ import {
 import './Dashboard.css';
 import '../components/Experiences.css';
 import { generarConstancia, descargarConstancia } from '../lib/constancia';
+import LogrosAlumno from '../components/LogrosAlumno';
 import {
   cargarMisInscripciones,
   llamarInscripcion,
@@ -381,6 +382,22 @@ const Dashboard = () => {
   // `null` significa que la migración aún no corre: en ese caso los cursos se
   // comportan como siempre (abiertos) y "inscrito" se deduce del avance.
   const [misInscripciones, setMisInscripciones] = useState(new Set());
+  const [progresoCursos, setProgresoCursos] = useState({});
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('student_progress')
+      .select('course_id, watch_percent')
+      .eq('user_id', user.id)
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn('No se pudo cargar el avance de los cursos:', error.message);
+          return;
+        }
+        setProgresoCursos(Object.fromEntries((data || []).map((f) => [Number(f.course_id), f.watch_percent || 0])));
+      });
+  }, [user?.id]);
   const [cursoOcupado, setCursoOcupado] = useState(null);
 
   const fetchMisInscripciones = useCallback(async () => {
@@ -733,7 +750,8 @@ const Dashboard = () => {
       // OPTIMIZACIÓN: Cargar todas las preguntas en una sola llamada (Evita el problema de las N+1 peticiones que crashean la carga)
       const { data: allQuestions, error: questionsError } = await supabase
         .from('questions')
-        .select('*')
+        // Nunca la respuesta correcta: esa solo la conoce el servidor.
+        .select('id, course_id, question_text, options')
         .order('id', { ascending: true });
       if (questionsError) throw questionsError;
       
@@ -893,11 +911,13 @@ const Dashboard = () => {
     // Check if they have a certificate
     const hasCert = myCertificates.some(cert => cert.course_id === courseId);
     if (hasCert) return 100;
-    
-    // Check watch percent from localStorage
+
+    // El avance vive en la base; antes solo se leía de este navegador, y en
+    // otro dispositivo el curso aparecía en 0 y salía de "en progreso". Se
+    // toma el mayor de los dos para no perder lo de antes.
     const prefix = user?.id ? `${user.id}_` : '';
-    const pct = parseInt(localStorage.getItem(`watchPercent_${prefix}${courseId}`) || '0');
-    return pct;
+    const local = parseInt(localStorage.getItem(`watchPercent_${prefix}${courseId}`) || '0', 10) || 0;
+    return Math.min(100, Math.max(local, progresoCursos[Number(courseId)] || 0));
   };
 
   const processedCourses = catalogCourses.map(course => {
@@ -1340,6 +1360,8 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
+
+              <LogrosAlumno userId={user?.id} />
 
               {/* Content Grid (Certificates, Recommendations, Activity) */}
               <div className="dashboard-grid" style={{ marginTop: '40px' }}>
@@ -1918,6 +1940,7 @@ const Dashboard = () => {
                         <th>Fecha de Emisión</th>
                         <th>Descarga antes de</th>
                         <th>Calificación</th>
+                        <th>Vigencia</th>
                         <th>Acción</th>
                       </tr>
                     </thead>
@@ -1936,6 +1959,28 @@ const Dashboard = () => {
                             <span style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>límite de descarga</span>
                           </td>
                           <td>{cert.score}%</td>
+                          <td>
+                            {(() => {
+                              // Sin fecha, el certificado es permanente. Con fecha
+                              // vence, y 30 días antes se sugiere recertificarse.
+                              if (!cert.vigente_hasta) return <span className="cert-vigencia cert-vigencia--ok">Permanente</span>;
+                              const vence = new Date(cert.vigente_hasta);
+                              const dias = Math.ceil((vence - Date.now()) / 86400000);
+                              const estado = dias < 0 ? 'vencido' : dias <= 30 ? 'pronto' : 'ok';
+                              return (
+                                <>
+                                  <span className={`cert-vigencia cert-vigencia--${estado}`}>
+                                    {dias < 0 ? 'Vencido' : `Hasta ${vence.toLocaleDateString()}`}
+                                  </span>
+                                  {estado !== 'ok' && (
+                                    <Link to={`/classroom/${cert.course_id}`} className="cert-recertificar">
+                                      Recertificarme
+                                    </Link>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </td>
                           <td>
                             {cert.pdf_url === 'local-simulated' ? (
                               <button 
@@ -1981,7 +2026,7 @@ const Dashboard = () => {
                   </table>
                   <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ color: '#EF4444', fontWeight: '700' }}>⚠</span>
-                    La fecha indica el límite para descargar tu constancia. Después de esa fecha el archivo será eliminado del portal. El certificado como tal <strong>no expira</strong> — es permanente una vez descargado.
+                    La fecha indica el límite para descargar tu constancia. Después de esa fecha el archivo será eliminado del portal. Salvo que la columna Vigencia indique otra cosa, el certificado como tal <strong>no expira</strong>.
                   </p>
                 </div>
               )}
