@@ -4,6 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getSafeAvatarUrl } from '../lib/avatar';
 import { getYouTubeEmbedUrl, getYouTubePlayerError, getYouTubeVideoId } from '../lib/youtube';
+import {
+  puedeEntrar,
+  cargarVideoCurso,
+  llamarInscripcion,
+  esCursoDePago,
+  formatoPrecio,
+} from '../lib/cursos';
 import { 
   ArrowLeft, 
   Clock, 
@@ -71,6 +78,12 @@ const Classroom = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [catalogCourses, setCatalogCourses] = useState([]);
+
+  // Control de acceso: null mientras se verifica; { permitido: false, curso }
+  // cuando el alumno no está inscrito. En ese caso `course` se queda vacío a
+  // propósito, para que no arranquen el reproductor ni el registro de avance.
+  const [acceso, setAcceso] = useState(null);
+  const [inscribiendo, setInscribiendo] = useState(false);
 
   // Classroom Comments/Doubts States
   const [comments, setComments] = useState([]);
@@ -162,6 +175,8 @@ const Classroom = () => {
   useEffect(() => {
     const loadClassroomData = async () => {
       setLoading(true);
+      let cursoCargado = null;
+      let preguntasCargadas = [];
       try {
         // Fetch specific course
         const { data: c, error: cError } = await supabase
@@ -196,11 +211,13 @@ const Classroom = () => {
           minAprobacion: c.min_aprobacion,
           activo: c.activo,
           category_id: c.category_id,
+          tipo: c.tipo || 'gratis',
+          precio_mxn: c.precio_mxn,
           questions: dbQuestions || []
         };
 
-        setCourse(courseData);
-        setQuestions(dbQuestions || []);
+        cursoCargado = courseData;
+        preguntasCargadas = dbQuestions || [];
       } catch (err) {
         console.warn('Supabase fetch failed, trying local fallback:', err.message);
         const saved = localStorage.getItem('courses');
@@ -208,9 +225,44 @@ const Classroom = () => {
           const coursesList = JSON.parse(saved);
           const found = coursesList.find(c => Number(c.id) === Number(id));
           if (found) {
-            setCourse(found);
-            setQuestions(found.questions || []);
+            cursoCargado = found;
+            preguntasCargadas = found.questions || [];
           }
+        }
+      }
+
+      // Solo entra quien está inscrito (o es administrador). La verificación
+      // corre también sobre el curso que venga del respaldo local, para que no
+      // sea una forma de brincarse el control.
+      if (cursoCargado) {
+        let permitido = false;
+        let errorVerificando = false;
+        try {
+          permitido = await puedeEntrar(user.id, cursoCargado.id, profile?.rol === 'admin');
+        } catch (errAcceso) {
+          console.warn('No se pudo verificar la inscripción:', errAcceso.message);
+          errorVerificando = true;
+        }
+
+        if (permitido) {
+          const video = await cargarVideoCurso(cursoCargado.id, cursoCargado.youtube_video_id);
+          setCourse({ ...cursoCargado, youtube_video_id: video });
+          setQuestions(preguntasCargadas);
+          setAcceso({ permitido: true });
+        } else {
+          setCourse(null);
+          setAcceso({
+            permitido: false,
+            errorVerificando,
+            curso: {
+              id: cursoCargado.id,
+              title: cursoCargado.title,
+              description: cursoCargado.description,
+              image: cursoCargado.image,
+              tipo: cursoCargado.tipo,
+              precio_mxn: cursoCargado.precio_mxn,
+            },
+          });
         }
       }
 
@@ -235,10 +287,12 @@ const Classroom = () => {
       }
     };
 
-    if (id) {
+    // Se espera a tener al usuario: sin él no hay contra qué verificar la
+    // inscripción. Se repite cuando llega el perfil por si resulta ser admin.
+    if (id && user?.id) {
       loadClassroomData();
     }
-  }, [id]);
+  }, [id, user?.id, profile?.rol]);
 
   // Classroom Comments/Doubts Logic
   const fetchComments = useCallback(async () => {
@@ -971,10 +1025,80 @@ const Classroom = () => {
     return profile.nombre_completo.split(' ')[0];
   };
 
+  // Desde la puerta del curso: gratis inscribe y recarga; de pago manda a Stripe.
+  const handleObtenerAcceso = async () => {
+    if (!acceso?.curso) return;
+    setInscribiendo(true);
+    try {
+      if (esCursoDePago(acceso.curso)) {
+        const { url } = await llamarInscripcion('checkout', { courseId: acceso.curso.id });
+        window.location.href = url;
+        return;
+      }
+      await llamarInscripcion('gratis', { courseId: acceso.curso.id });
+      showToast('¡Listo! Ya estás inscrito.', 'success');
+      window.location.reload();
+    } catch (err) {
+      showToast(err.message, 'error');
+      setInscribiendo(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="classroom-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
         <p style={{ color: '#00bcd4', fontWeight: 'bold', fontSize: '1.2rem' }}>Cargando Aula de Aprendizaje HCE...</p>
+      </div>
+    );
+  }
+
+  if (acceso && !acceso.permitido) {
+    const cursoBloqueado = acceso.curso;
+    const dePago = esCursoDePago(cursoBloqueado);
+
+    return (
+      <div className="classroom-layout aula-puerta">
+        <div className="aula-puerta-tarjeta">
+          {cursoBloqueado.image && (
+            <div className="aula-puerta-imagen">
+              <img src={cursoBloqueado.image} alt="" />
+            </div>
+          )}
+
+          <div className="aula-puerta-cuerpo">
+            <span className={`aula-puerta-etiqueta ${dePago ? 'pago' : 'gratis'}`}>
+              {dePago ? 'Curso de pago' : 'Curso gratuito'}
+            </span>
+            <h1>{cursoBloqueado.title}</h1>
+
+            {acceso.errorVerificando ? (
+              <p>No pudimos verificar tu inscripción. Revisa tu conexión e intenta de nuevo.</p>
+            ) : dePago ? (
+              <p>Para entrar al aula necesitas inscribirte. El acceso se activa en cuanto se confirma tu pago.</p>
+            ) : (
+              <p>Este curso no tiene costo. Inscríbete para entrar al aula y guardar tu avance.</p>
+            )}
+
+            <div className="aula-puerta-acciones">
+              {acceso.errorVerificando ? (
+                <button className="aula-puerta-btn" onClick={() => window.location.reload()}>
+                  Reintentar
+                </button>
+              ) : (
+                <button className="aula-puerta-btn" onClick={handleObtenerAcceso} disabled={inscribiendo}>
+                  {inscribiendo
+                    ? 'Un momento…'
+                    : dePago
+                      ? `Comprar por ${formatoPrecio(cursoBloqueado.precio_mxn)}`
+                      : 'Inscribirme gratis'}
+                </button>
+              )}
+              <button onClick={() => navigate('/dashboard')} className="back-btn">
+                <ArrowLeft size={16} /> Volver al Portal
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

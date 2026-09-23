@@ -50,6 +50,12 @@ import {
 import './Dashboard.css';
 import '../components/Experiences.css';
 import { generarConstancia, descargarConstancia } from '../lib/constancia';
+import {
+  cargarMisInscripciones,
+  llamarInscripcion,
+  esCursoDePago,
+  formatoPrecio,
+} from '../lib/cursos';
 
 const NurseCap = ({ size = 24, ...props }) => (
   <svg
@@ -370,6 +376,98 @@ const Dashboard = () => {
   }, [user?.id, fetchMyCertificates]);
 
 
+  // ---- Inscripciones a cursos ---------------------------------------------
+  //
+  // `null` significa que la migración aún no corre: en ese caso los cursos se
+  // comportan como siempre (abiertos) y "inscrito" se deduce del avance.
+  const [misInscripciones, setMisInscripciones] = useState(new Set());
+  const [cursoOcupado, setCursoOcupado] = useState(null);
+
+  const fetchMisInscripciones = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      setMisInscripciones(await cargarMisInscripciones(user.id));
+    } catch (err) {
+      console.error('Error cargando inscripciones:', err.message);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    void fetchMisInscripciones();
+  }, [fetchMisInscripciones]);
+
+  const abrirAula = (courseId) => {
+    // Dentro de la app instalada la clase se abre sin salir; en el navegador,
+    // en pestaña nueva, igual que el resto de accesos al aula.
+    if (appInstalada) navigate(`/classroom/${courseId}`);
+    else window.open(`/classroom/${courseId}`, '_blank', 'noopener');
+  };
+
+  // Un solo punto de entrada para cualquier tarjeta de curso: si ya está
+  // inscrito entra; si es gratis lo inscribe y entra; si es de pago, a Stripe.
+  const handleAbrirCurso = async (course, inscrito) => {
+    if (inscrito || misInscripciones === null) {
+      abrirAula(course.id);
+      return;
+    }
+
+    setCursoOcupado(course.id);
+    try {
+      if (esCursoDePago(course)) {
+        const { url } = await llamarInscripcion('checkout', { courseId: course.id });
+        window.location.href = url;
+        return;
+      }
+
+      await llamarInscripcion('gratis', { courseId: course.id });
+      await fetchMisInscripciones();
+      showToast(`Te inscribiste a ${course.title}.`, 'success');
+      // Después de esperar al servidor el navegador ya no permite abrir una
+      // pestaña nueva sin que la bloquee, así que se entra en la misma.
+      navigate(`/classroom/${course.id}`);
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setCursoOcupado(null);
+    }
+  };
+
+  // Regreso desde Stripe. El webhook inscribe aunque el alumno cierre la
+  // pestaña; esto solo adelanta la confirmación para que vea su curso ya.
+  useEffect(() => {
+    if (!user?.id) return;
+    const params = new URLSearchParams(window.location.search);
+    const resultado = params.get('curso_pago');
+    if (!resultado) return;
+
+    const limpiarUrl = () => window.history.replaceState({}, '', '/dashboard');
+
+    if (resultado === 'cancelado') {
+      showToast('El pago se canceló. No se hizo ningún cargo.', 'info');
+      limpiarUrl();
+      return;
+    }
+
+    const sessionId = params.get('session_id');
+    if (resultado !== 'ok' || !sessionId) return;
+
+    (async () => {
+      try {
+        await llamarInscripcion('confirmar', { sessionId, moneda: params.get('m') || 'mxn' });
+        await fetchMisInscripciones();
+        setActiveTab('courses');
+        showToast('¡Pago confirmado! Tu curso ya está en Mis Cursos.', 'success');
+      } catch (err) {
+        showToast(err.message, err.estado === 'pendiente' ? 'info' : 'error');
+      } finally {
+        limpiarUrl();
+      }
+    })();
+    // Solo al llegar: el resultado del pago viaja una vez en la URL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+
   // ---- Webinars con registro en el portal ---------------------------------
   //
   // El alumno se registra aquí, recibe su enlace de Zoom y, al terminar la
@@ -664,6 +762,11 @@ const Dashboard = () => {
           minAprobacion: c.min_aprobacion,
           activo: c.activo,
           category_id: c.category_id,
+          tipo: c.tipo || 'gratis',
+          precio_mxn: c.precio_mxn,
+          // Desde la migración el ID del video ya no viaja en el catálogo; este
+          // indicador dice si el curso se toma en el aula.
+          tiene_video: !!(c.tiene_video || c.youtube_video_id),
           questions: questionsByCourse[c.id] || []
         };
       });
@@ -837,7 +940,10 @@ const Dashboard = () => {
     const progress = getCourseProgress(course.id);
     const completed = myCertificates.some(cert => cert.course_id === course.id);
     const inProgress = progress > 0 && !completed;
-    const enrolled = completed || inProgress;
+    // Con inscripciones reales manda la tabla; antes de la migración se sigue
+    // deduciendo del avance, como siempre.
+    const inscrito = misInscripciones ? misInscripciones.has(Number(course.id)) : false;
+    const enrolled = inscrito || completed || inProgress;
     return {
       ...course,
       progress,
@@ -850,6 +956,79 @@ const Dashboard = () => {
   const enrolledCourses = processedCourses.filter(c => c.enrolled);
   const completedCourses = processedCourses.filter(c => c.completed);
   const inProgressCourses = processedCourses.filter(c => c.inProgress);
+
+  // Catálogo separado por tipo. Lo gratuito que se sugiere como primer paso
+  // tiene que ser de verdad gratuito y tomarse en el aula.
+  const cursosGratis = processedCourses.filter(c => !esCursoDePago(c));
+  const cursosDePago = processedCourses.filter(c => esCursoDePago(c));
+  const cursoSugerido = cursosGratis.find(c => c.tiene_video) || null;
+
+  // Tarjeta de un curso del catálogo del portal. Toda la tarjeta es la acción:
+  // entrar, inscribirse gratis o comprar, según el caso.
+  const renderTarjetaCurso = (course) => {
+    const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
+
+    // Curso sin aula (enlace externo): se conserva el comportamiento de siempre.
+    if (!course.tiene_video) {
+      return (
+        <Link
+          key={course.id}
+          to={course.link}
+          target="_blank"
+          className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
+          style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
+        >
+          <div className="card-glass-glow"></div>
+          <div className="exp-img-container" style={{ aspectRatio: '16/9', height: 'auto', backgroundColor: '#0f172a' }}>
+            <img src={course.image} alt={course.title} className="exp-main-img" style={{ objectFit: 'cover' }} />
+            <div className="img-overlay-gradient"></div>
+          </div>
+          <div className="exp-content-body">
+            <h3 className="exp-title-premium">{course.title}</h3>
+          </div>
+        </Link>
+      );
+    }
+
+    const dePago = esCursoDePago(course);
+    const ocupado = cursoOcupado === course.id;
+    const accion = course.enrolled
+      ? 'Entrar al curso'
+      : dePago ? 'Comprar curso' : 'Inscribirme gratis';
+    const activar = () => { if (!ocupado) handleAbrirCurso(course, course.enrolled); };
+
+    return (
+      <div
+        key={course.id}
+        role="button"
+        tabIndex={0}
+        aria-busy={ocupado}
+        className={`exp-premium-card curso-tarjeta${ocupado ? ' curso-tarjeta--ocupada' : ''}`}
+        onClick={activar}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); }
+        }}
+      >
+        <div className="card-glass-glow"></div>
+        <div className="exp-img-container" style={{ aspectRatio: '16/9', height: 'auto', backgroundColor: '#0f172a' }}>
+          <span className={`curso-precio-chip ${course.enrolled ? 'inscrito' : dePago ? 'pago' : 'gratis'}`}>
+            {course.enrolled ? 'Inscrito' : dePago ? formatoPrecio(course.precio_mxn) : 'Gratis'}
+          </span>
+          <img src={course.image} alt={course.title} className="exp-main-img" style={{ objectFit: 'cover' }} />
+          <div className="img-overlay-gradient"></div>
+        </div>
+        <div className="exp-content-body">
+          <h3 className="exp-title-premium">{course.title}</h3>
+          <div className="exp-footer-premium">
+            <span className="exp-link-action">
+              <span>{ocupado ? 'Un momento…' : accion}</span>
+              {!ocupado && <ArrowRight size={18} />}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const numEnrolled = enrolledCourses.length;
   const numCompleted = completedCourses.length;
@@ -1132,27 +1311,22 @@ const Dashboard = () => {
                      genérico. Si hay contenido gratuito disponible se le ofrece
                      como primer paso concreto, que es el mejor momento para
                      engancharlo: acaba de decidir entrar. */
-                  catalogCourses.length > 0 ? (
+                  cursoSugerido ? (
                     <div className="crm-empty-state-card empty-state-suggestion">
                       <PlayCircle size={48} className="empty-state-icon" />
                       <h3>Empieza por aquí</h3>
                       <p>
-                        Aún no tienes un programa en curso, pero <strong>{catalogCourses[0].title}</strong>{' '}
+                        Aún no tienes un programa en curso, pero <strong>{cursoSugerido.title}</strong>{' '}
                         está disponible sin costo y puedes verlo ahora mismo.
                       </p>
                       <div className="empty-state-actions">
-                        {catalogCourses[0].youtube_video_id ? (
-                          <EnlaceAula
-                            cursoId={catalogCourses[0].id}
-                            className="btn-crm-action solid btn-empty-state"
-                          >
-                            Comenzar ahora
-                          </EnlaceAula>
-                        ) : (
-                          <button className="btn-crm-action solid btn-empty-state" onClick={() => setActiveTab('explore')}>
-                            Comenzar ahora
-                          </button>
-                        )}
+                        <button
+                          className="btn-crm-action solid btn-empty-state"
+                          disabled={cursoOcupado === cursoSugerido.id}
+                          onClick={() => handleAbrirCurso(cursoSugerido, cursoSugerido.enrolled)}
+                        >
+                          {cursoOcupado === cursoSugerido.id ? 'Un momento…' : 'Comenzar ahora'}
+                        </button>
                         <button className="btn-crm-action btn-empty-state" onClick={() => setActiveTab('explore')}>
                           Ver todo el catálogo
                         </button>
@@ -1453,49 +1627,28 @@ const Dashboard = () => {
                   </p>
                 </div>
                 <div className="dash-exp-grid">
-                  {catalogCourses.length === 0 ? (
+                  {cursosGratis.length === 0 ? (
                     <div className="crm-empty-state-card mini" style={{ gridColumn: '1 / -1' }}>
                       <PlayCircle size={32} className="empty-state-icon" />
                       <h4>Próximamente</h4>
                       <p>Estamos preparando contenido gratuito para ti. ¡Vuelve pronto!</p>
                     </div>
-                  ) : catalogCourses.map(course => {
-                    const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
-                    const isDynamicCourse = !!course.youtube_video_id;
-                    // Dentro de la app la clase se abre sin salir; en el
-                    // navegador conserva la pestaña nueva.
-                    const CardElement = isDynamicCourse ? (appInstalada ? Link : 'a') : Link;
-                    const linkProps = isDynamicCourse ? (appInstalada ? {
-                      to: `/classroom/${course.id}`,
-                      style: { textDecoration: 'none', cursor: 'pointer' }
-                    } : {
-                      href: `/classroom/${course.id}`,
-                      target: '_blank',
-                      style: { textDecoration: 'none', cursor: 'pointer' }
-                    }) : {
-                      to: course.link,
-                      target: '_blank',
-                      style: { textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }
-                    };
-                    return (
-                      <CardElement
-                        key={course.id}
-                        className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
-                        {...linkProps}
-                      >
-                        <div className="card-glass-glow"></div>
-                        <div className={`exp-img-container ${course.containerClass || ''}`} style={{ aspectRatio: '16/9', height: 'auto', backgroundColor: '#0f172a' }}>
-                          <img src={course.image} alt={course.title} className={`exp-main-img ${course.imgClass || ''}`} style={{ objectFit: 'cover' }} />
-                          <div className="img-overlay-gradient"></div>
-                        </div>
-                        <div className="exp-content-body">
-                          <h3 className="exp-title-premium">{course.title}</h3>
-                        </div>
-                      </CardElement>
-                    );
-                  })}
+                  ) : cursosGratis.map(renderTarjetaCurso)}
                 </div>
               </div>
+
+              {/* Cursos de pago del portal: solo aparece la sección si hay alguno */}
+              {cursosDePago.length > 0 && (
+                <div className="catalog-courses-section-wrapper" style={{ marginBottom: '48px' }}>
+                  <h3 className="catalog-subtitle">Cursos en Línea</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px' }}>
+                    Pagas una vez y el curso queda en tu portal, con su certificado al aprobar.
+                  </p>
+                  <div className="dash-exp-grid">
+                    {cursosDePago.map(renderTarjetaCurso)}
+                  </div>
+                </div>
+              )}
 
               {/* Programas Premium */}
               <div className="catalog-courses-section-wrapper" style={{ marginBottom: '40px' }}>

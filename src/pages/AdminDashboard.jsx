@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 import './AdminDashboard.css';
 import PosicionadorConstancia from '../components/PosicionadorConstancia';
+import { llamarInscripcion, esTablaFaltante, formatoPrecio } from '../lib/cursos';
 import { useNotification } from '../context/NotificationContext';
 
 // Días sin actividad en la plataforma a partir de los cuales un curso iniciado
@@ -60,6 +61,10 @@ const ABANDONMENT_INACTIVE_DAYS = 15;
 // automatización sirve para todos. Queda editable por si algún día quieren
 // separar alguno en su propia lista.
 const LISTA_WEBINARS_BREVO = 16;
+
+// Las miniaturas de YouTube se sirven desde estos dominios y su ruta incluye
+// el ID del video.
+const esMiniaturaYoutube = (url) => /img\.youtube\.com|ytimg\.com/i.test(String(url || ''));
 
 const extraerZoomId = (valor) => {
   const texto = String(valor || '').trim();
@@ -219,12 +224,18 @@ const AdminDashboard = () => {
     certificado_y: 400,
     certificado_font_size: 40,
     category_id: '',
+    tipo: 'gratis',
+    precio_mxn: '',
     questions: []
   });
 
   // Student details modal states
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [enrollCourseId, setEnrollCourseId] = useState('');
+  // Inscripciones reales del alumno abierto en el expediente. `null` = la
+  // migración aún no corre y no hay de dónde leerlas.
+  const [inscripcionesAlumno, setInscripcionesAlumno] = useState([]);
+  const [inscribiendoAlumno, setInscribiendoAlumno] = useState(false);
   const [studentSearch, setStudentSearch] = useState('');
   const [studentSpecialtyFilter, setStudentSpecialtyFilter] = useState('');
   const [studentCountryFilter, setStudentCountryFilter] = useState('');
@@ -1317,6 +1328,16 @@ const AdminDashboard = () => {
         return grouped;
       }, {});
 
+      // El video vive en su tabla protegida; el administrador la lee completa.
+      // Antes de la migración no existe y se usa el campo viejo del curso.
+      let videosPorCurso = {};
+      const { data: contenidos, error: contenidoError } = await supabase
+        .from('curso_contenido')
+        .select('course_id, youtube_video_id');
+      if (!contenidoError) {
+        videosPorCurso = Object.fromEntries((contenidos || []).map(f => [f.course_id, f.youtube_video_id]));
+      }
+
       const coursesWithQuestions = (dbCourses || []).map((c) => {
         return {
           id: c.id,
@@ -1327,7 +1348,7 @@ const AdminDashboard = () => {
           requisitos: c.requisitos,
           image: c.image_url,
           link: c.link || '',
-          youtube_video_id: c.youtube_video_id,
+          youtube_video_id: videosPorCurso[c.id] || c.youtube_video_id,
           certificado_template_url: c.certificado_template_url,
           certificado_x: c.certificado_x,
           certificado_y: c.certificado_y,
@@ -1335,6 +1356,8 @@ const AdminDashboard = () => {
           minAprobacion: c.min_aprobacion,
           activo: c.activo,
           category_id: c.category_id,
+          tipo: c.tipo || 'gratis',
+          precio_mxn: c.precio_mxn,
           questions: questionsByCourse[c.id] || []
         };
       });
@@ -1399,6 +1422,8 @@ const AdminDashboard = () => {
       certificado_y: 400,
       certificado_font_size: 40,
       category_id: '',
+      tipo: 'gratis',
+      precio_mxn: '',
       questions: []
     });
     setShowCourseForm(true);
@@ -1422,6 +1447,8 @@ const AdminDashboard = () => {
       certificado_y: course.certificado_y || 400,
       certificado_font_size: course.certificado_font_size || 40,
       category_id: course.category_id || '',
+      tipo: course.tipo || 'gratis',
+      precio_mxn: course.precio_mxn ?? '',
       questions: course.questions || []
     });
     setShowCourseForm(true);
@@ -1446,6 +1473,8 @@ const AdminDashboard = () => {
       certificado_y: 400,
       certificado_font_size: 40,
       category_id: '',
+      tipo: 'gratis',
+      precio_mxn: '',
       questions: []
     });
     localStorage.removeItem('adminShowCourseForm');
@@ -1526,10 +1555,59 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleSaveCourse = async (e) => {
-    e.preventDefault();
+  // Portada propia del curso. Obligatoria en los de pago (ver handleSaveCourse).
+  const handleCoursePortadaUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('La portada tiene que ser una imagen (PNG, JPG o WebP).', 'error');
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      showToast('La portada supera los 3 MB permitidos.', 'error');
+      return;
+    }
+
     setActionLoading(true);
     try {
+      const extension = file.name.split('.').pop();
+      const ruta = `cursos/portadas/${Date.now()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from('certificates').upload(ruta, file);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('certificates').getPublicUrl(ruta);
+      setCourseForm(prev => ({ ...prev, image: publicUrl }));
+      showToast('Portada subida.', 'success');
+    } catch (err) {
+      showToast(`No se pudo subir la portada: ${err.message}`, 'error');
+    } finally {
+      setActionLoading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleSaveCourse = async (e) => {
+    e.preventDefault();
+
+    const esDePago = courseForm.tipo === 'pago';
+    const precio = Number(courseForm.precio_mxn);
+
+    if (esDePago && !(precio > 0)) {
+      showToast('Un curso de pago necesita un precio mayor a cero.', 'error');
+      return;
+    }
+
+    // La miniatura de YouTube lleva el ID del video en su dirección, y la
+    // portada es pública: con ella cualquiera vería el curso sin pagar.
+    if (esDePago && esMiniaturaYoutube(courseForm.image)) {
+      showToast('Los cursos de pago necesitan una portada propia: la miniatura de YouTube deja ver el video sin pagar. Sube una imagen.', 'error');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const video = courseForm.youtube_video_id || '';
       const dbData = {
         title: courseForm.title,
         description: courseForm.description,
@@ -1538,7 +1616,7 @@ const AdminDashboard = () => {
         requisitos: courseForm.requisitos,
         image_url: courseForm.image || '',
         link: courseForm.link || '',
-        youtube_video_id: courseForm.youtube_video_id || '',
+        youtube_video_id: video,
         certificado_template_url: courseForm.certificado_template_url || '',
         certificado_x: courseForm.certificado_x || 300,
         certificado_y: courseForm.certificado_y || 400,
@@ -1548,30 +1626,55 @@ const AdminDashboard = () => {
         category_id: courseForm.category_id || null
       };
 
-      let courseId = null;
       const isMockId = !editingCourse || typeof editingCourse.id === 'string' || isNaN(Number(editingCourse.id));
 
-      if (editingCourse && !isMockId) {
-        const { data, error } = await supabase
-          .from('courses')
-          .update(dbData)
-          .eq('id', Number(editingCourse.id))
-          .select();
-        
-        if (error) {
-          console.warn('Supabase update failed, falling back to insert:', error.message);
-        } else if (data && data.length > 0) {
-          courseId = data[0].id;
+      const escribirCurso = async (payload) => {
+        if (editingCourse && !isMockId) {
+          const { data, error } = await supabase
+            .from('courses')
+            .update(payload)
+            .eq('id', Number(editingCourse.id))
+            .select();
+          if (error) throw error;
+          if (data && data.length > 0) return data[0].id;
         }
-      }
-
-      if (!courseId) {
         const { data, error } = await supabase
           .from('courses')
-          .insert([dbData])
+          .insert([payload])
           .select();
         if (error) throw error;
-        courseId = data[0].id;
+        return data[0].id;
+      };
+
+      // Primero se intenta con los campos nuevos. Si la migración todavía no
+      // corre, Supabase no los conoce y se guarda como antes.
+      let courseId = null;
+      let esquemaNuevo = true;
+      try {
+        courseId = await escribirCurso({
+          ...dbData,
+          tipo: esDePago ? 'pago' : 'gratis',
+          precio_mxn: esDePago ? precio : null,
+          tiene_video: !!video
+        });
+      } catch (err) {
+        if (!/could not find the '.*' column|column .* does not exist/i.test(err?.message || '')) throw err;
+        esquemaNuevo = false;
+        courseId = await escribirCurso(dbData);
+      }
+
+      // Con la migración, el video pasa a su tabla protegida y solo después se
+      // borra del curso. Si algo falla en medio, el video no se pierde.
+      if (esquemaNuevo && courseId) {
+        const { error: contenidoError } = await supabase
+          .from('curso_contenido')
+          .upsert(
+            { course_id: courseId, youtube_video_id: video || null, actualizado_en: new Date().toISOString() },
+            { onConflict: 'course_id' }
+          );
+        if (contenidoError) throw contenidoError;
+
+        await supabase.from('courses').update({ youtube_video_id: null }).eq('id', courseId);
       }
 
       if (courseId) {
@@ -1660,14 +1763,57 @@ const AdminDashboard = () => {
   };
 
   // Alumnos handlers
-  const handleManualEnroll = (e) => {
+  // Antes este botón solo mostraba el mensaje de éxito sin guardar nada.
+  const fetchInscripcionesAlumno = async (studentId) => {
+    if (!studentId) return;
+    const { data, error } = await supabase
+      .from('inscripciones')
+      .select('course_id, origen, created_at')
+      .eq('user_id', studentId);
+    if (error) {
+      setInscripcionesAlumno(esTablaFaltante(error) ? null : []);
+      return;
+    }
+    setInscripcionesAlumno(data || []);
+  };
+
+  useEffect(() => {
+    if (selectedStudent?.id) void fetchInscripcionesAlumno(selectedStudent.id);
+  }, [selectedStudent?.id]);
+
+  const handleManualEnroll = async (e) => {
     e.preventDefault();
     if (!enrollCourseId || !selectedStudent) return;
     const course = courses.find(c => c.id === parseInt(enrollCourseId));
     if (!course) return;
 
-    showToast(`¡Alumno matriculado con éxito! Se ha inscrito a ${selectedStudent.nombre_completo || selectedStudent.email} en el curso "${course.title}".`, 'success');
-    setEnrollCourseId('');
+    setInscribiendoAlumno(true);
+    try {
+      await llamarInscripcion('admin-inscribir', { userId: selectedStudent.id, courseId: course.id });
+      await fetchInscripcionesAlumno(selectedStudent.id);
+      showToast(`${selectedStudent.nombre_completo || selectedStudent.email} quedó inscrito en "${course.title}".`, 'success');
+      setEnrollCourseId('');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setInscribiendoAlumno(false);
+    }
+  };
+
+  const handleQuitarInscripcion = async (courseId) => {
+    const course = courses.find(c => c.id === courseId);
+    if (!selectedStudent || !(await showConfirm(`¿Quitar el acceso a "${course?.title || 'este curso'}"? El alumno ya no podrá entrar al aula.`, 'Quitar inscripción'))) return;
+
+    setInscribiendoAlumno(true);
+    try {
+      await llamarInscripcion('admin-quitar', { userId: selectedStudent.id, courseId });
+      await fetchInscripcionesAlumno(selectedStudent.id);
+      showToast('Inscripción eliminada.', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setInscribiendoAlumno(false);
+    }
   };
 
   const handleToggleBlockStudent = async (student) => {
@@ -3729,14 +3875,62 @@ const AdminDashboard = () => {
                         />
                       </div>
                       <div className="crm-input-group">
-                        <label>Ruta URL de la Imagen</label>
-                        <input 
-                          type="text" 
-                          value={courseForm.image} 
-                          onChange={(e) => setCourseForm({...courseForm, image: e.target.value})} 
-                          placeholder="Ej. /assets/imagen.png"
-                        />
+                        <label>Portada del curso</label>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                          <input
+                            type="text"
+                            value={courseForm.image}
+                            onChange={(e) => setCourseForm({...courseForm, image: e.target.value})}
+                            placeholder="URL de la imagen, o súbela"
+                            style={{ flex: '1 1 200px', minWidth: 0 }}
+                          />
+                          <input
+                            type="file"
+                            id="curso-portada-archivo"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={handleCoursePortadaUpload}
+                          />
+                          <label htmlFor="curso-portada-archivo" className="btn-crm-action outlined" style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            <Upload size={15} /> Subir
+                          </label>
+                        </div>
+                        {courseForm.tipo === 'pago' && esMiniaturaYoutube(courseForm.image) && (
+                          <small style={{ color: 'var(--accent-orange)', fontSize: '0.75rem', lineHeight: 1.5 }}>
+                            Esta portada es la miniatura de YouTube y deja ver el video sin pagar. Sube una imagen propia.
+                          </small>
+                        )}
                       </div>
+                    </div>
+
+                    <div className="form-group-row">
+                      <div className="crm-input-group">
+                        <label>Acceso al curso</label>
+                        <select
+                          value={courseForm.tipo}
+                          onChange={(e) => setCourseForm({ ...courseForm, tipo: e.target.value })}
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-gray)', color: 'var(--text-dark)' }}
+                        >
+                          <option value="gratis">Gratis — el alumno se inscribe solo</option>
+                          <option value="pago">De pago — se inscribe al pagar</option>
+                        </select>
+                      </div>
+                      {courseForm.tipo === 'pago' && (
+                        <div className="crm-input-group">
+                          <label>Precio (MXN) *</label>
+                          <input
+                            type="number"
+                            min="1"
+                            required
+                            value={courseForm.precio_mxn}
+                            onChange={(e) => setCourseForm({ ...courseForm, precio_mxn: e.target.value })}
+                            placeholder="Ej. 1500"
+                          />
+                          <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                            Quien paga desde el extranjero lo ve en dólares a 17.5 por dólar.
+                          </small>
+                        </div>
+                      )}
                     </div>
 
                     <div className="form-group-row">
@@ -3784,7 +3978,8 @@ const AdminDashboard = () => {
                             setCourseForm(prev => ({
                               ...prev,
                               youtube_video_id: val,
-                              image: prev.image || thumbnailUrl
+                              // En un curso de pago la miniatura delataría el video.
+                              image: prev.image || (prev.tipo === 'pago' ? '' : thumbnailUrl)
                             }));
                           }} 
                           placeholder="Ej. dQw4w9WgXcQ o enlace completo"
@@ -4053,7 +4248,7 @@ const AdminDashboard = () => {
                       <th>Duración</th>
                       <th>Modalidad</th>
                       <th>Aprobación</th>
-                      <th>Lecciones</th>
+                      <th>Acceso</th>
                       <th>Estado</th>
                       <th>Acciones</th>
                     </tr>
@@ -4074,7 +4269,11 @@ const AdminDashboard = () => {
                         <td>{course.duracion}</td>
                         <td><span className={`status-pill disponible`}>{course.modalidad}</span></td>
                         <td>{course.minAprobacion || 80}%</td>
-                        <td>{course.lecciones || 10}</td>
+                        <td>
+                          {course.tipo === 'pago' && course.precio_mxn
+                            ? <span className="status-pill disponible">{formatoPrecio(course.precio_mxn)}</span>
+                            : <span className="status-pill" style={{ background: 'rgba(16,185,129,0.12)', color: '#10B981' }}>Gratis</span>}
+                        </td>
                         <td>
                           <button 
                             className={`status-pill ${course.activo ? 'disponible' : 'inactivo'}`}
@@ -4374,7 +4573,44 @@ const AdminDashboard = () => {
 
                       {/* Enroll Course Action */}
                       <div className="enrollment-management-block" style={{ marginTop: '30px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-                        <h4>Matricular en un Curso</h4>
+                        <h4>Cursos inscritos</h4>
+                        {inscripcionesAlumno === null ? (
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                            Las inscripciones se activan al correr la migración de cursos en Supabase.
+                          </p>
+                        ) : inscripcionesAlumno.length === 0 ? (
+                          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                            Todavía no está inscrito en ningún curso.
+                          </p>
+                        ) : (
+                          <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {inscripcionesAlumno.map(ins => {
+                              const curso = courses.find(c => c.id === ins.course_id);
+                              const origenes = { gratis: 'Se inscribió solo', pago: 'Pagó', admin: 'Inscrito por admin', previo: 'Ya lo estaba tomando' };
+                              return (
+                                <li key={ins.course_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                                  <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{curso?.title || `Curso #${ins.course_id}`}</div>
+                                    <small style={{ color: 'var(--text-muted)' }}>
+                                      {origenes[ins.origen] || ins.origen} · {new Date(ins.created_at).toLocaleDateString()}
+                                    </small>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="icon-action-btn delete"
+                                    title="Quitar acceso"
+                                    disabled={inscribiendoAlumno}
+                                    onClick={() => handleQuitarInscripcion(ins.course_id)}
+                                  >
+                                    <Trash2 size={15} />
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+
+                        <h4 style={{ marginTop: '22px' }}>Inscribir en un curso</h4>
                         <form onSubmit={handleManualEnroll} style={{ marginTop: '10px' }}>
                           <div className="crm-input-group">
                             <label>Seleccionar Programa</label>
@@ -4391,14 +4627,19 @@ const AdminDashboard = () => {
                               }}
                             >
                               <option value="">Selecciona un curso...</option>
-                              {courses.map(c => (
-                                <option key={c.id} value={c.id}>{c.title} ({c.modalidad})</option>
-                              ))}
+                              {courses
+                                .filter(c => !(inscripcionesAlumno || []).some(ins => ins.course_id === c.id))
+                                .map(c => (
+                                  <option key={c.id} value={c.id}>{c.title} ({c.tipo === 'pago' ? 'de pago' : 'gratis'})</option>
+                                ))}
                             </select>
                           </div>
-                          <button type="submit" className="btn-crm-action solid" style={{ marginTop: '15px', width: '100%' }}>
-                            Inscribir Alumno
+                          <button type="submit" className="btn-crm-action solid" style={{ marginTop: '15px', width: '100%' }} disabled={inscribiendoAlumno || inscripcionesAlumno === null}>
+                            {inscribiendoAlumno ? 'Guardando…' : 'Inscribir alumno'}
                           </button>
+                          <small style={{ display: 'block', marginTop: '8px', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                            Sirve para becas y casos manuales: da acceso aunque el curso sea de pago.
+                          </small>
                         </form>
                       </div>
 
