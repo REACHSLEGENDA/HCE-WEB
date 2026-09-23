@@ -30,53 +30,57 @@ const FLOWS = {
 
   // ── Bienvenida Estudiante ───────────────────────────────────────────────────
   welcome_student: {
-    text: '¡Hola! Soy tu asistente de HCE.\n\nVeo que estás en el portal de estudiantes. ¿En qué puedo apoyarte hoy?',
+    text: "¡Hola! Soy tu asistente de HCE.\n\nVeo que estás en el portal de estudiantes. ¿En qué puedo apoyarte hoy?",
     buttons: [
-      { label: '¿Cómo tomo mis clases?',   next: 'estudiante_clases' },
-      { label: '¿Cómo obtengo certificados?', next: 'estudiante_certificados' },
-      { label: 'Webinars y constancias',   next: 'estudiante_webinars' },
-      { label: 'Problemas con un video',  next: 'estudiante_video_problemas' },
-      { label: '¿Cuánto duran mis cursos?', next: 'estudiante_duracion' },
-      { label: 'Otros temas (General)',   next: 'welcome' },
+      { label: "¿Cómo tomo mis cursos?", next: "estudiante_clases" },
+      { label: "¿Cómo obtengo certificados?", next: "estudiante_certificados" },
+      { label: "Tareas", next: "estudiante_tareas" },
+      { label: "Puntos e insignias", next: "estudiante_logros" },
+      { label: "Webinars y constancias", next: "estudiante_webinars" },
+      { label: "Problemas con un video", next: "estudiante_video_problemas" },
+      { label: "Otros temas (General)", next: "welcome" },
     ],
   },
 
   // ── Bienvenida Administrador ────────────────────────────────────────────────
   welcome_admin: {
-    text: '¡Hola! Soy tu asistente de control HCE.\n\nVeo que estás en el portal de administración. ¿En qué proceso de gestión puedo apoyarte hoy?',
+    text: "¡Hola! Soy tu asistente de control HCE.\n\nVeo que estás en el portal de administración. ¿En qué proceso de gestión puedo apoyarte hoy?",
     buttons: [
-      { label: '¿Cómo edito/creo cursos?',  next: 'admin_gestion_cursos' },
-      { label: 'Gestionar Webinars',        next: 'admin_webinars' },
-      { label: 'Asistencia y constancias',  next: 'admin_webinar_asistencia' },
-      { label: 'Matricular alumnos',        next: 'admin_matricula' },
-      { label: '¿Cómo exporto reportes?',   next: 'admin_reportes' },
-      { label: 'Seguridad y Accesos',       next: 'admin_seguridad' },
-      { label: 'Otros temas (General)',   next: 'welcome' },
+      { label: "Crear un curso y sus lecciones", next: "admin_gestion_cursos" },
+      { label: "Revisar tareas", next: "admin_tareas" },
+      { label: "Grupos e inscripción masiva", next: "admin_grupos" },
+      { label: "Métricas de cursos", next: "admin_metricas" },
+      { label: "Gestionar Webinars", next: "admin_webinars" },
+      { label: "Matricular alumnos", next: "admin_matricula" },
+      { label: "Seguridad y accesos", next: "admin_seguridad" },
+      { label: "Otros temas (General)", next: "welcome" },
     ],
   },
 
   // ── FLUJOS ESTUDIANTE ───────────────────────────────────────────────────────
   estudiante_clases: {
-    text: 'Para ingresar y tomar tus clases:\n\n1. Ve a la pestaña **Explorar Cursos**.\n2. Selecciona la tarjeta del curso de tu interés.\n3. Esto abrirá tu aula virtual con el reproductor de video de la clase.\n4. Al finalizar la visualización (90% visto) podrás acceder al examen.',
+    text: "Así funcionan los cursos del portal:\n\n1. En **Explorar Cursos** eliges uno. Si es **gratis**, te inscribes con un clic; si es **de pago**, pagas con tarjeta y queda en tu portal al confirmarse.\n2. Cada curso tiene **lecciones**: videos, documentos PDF, lecturas o tareas. En el aula, a la derecha, ves el temario con tu avance.\n3. Los videos cuentan como vistos al llegar al **90%**; los PDF y lecturas los marcas tú como completados.\n4. Al completar las lecciones obligatorias se abre el **examen final**.\n\nTu avance se guarda solo y lo ves igual desde la computadora o el celular.",
     buttons: [
-      { label: '¿Cómo obtengo certificados?', next: 'estudiante_certificados' },
-      { label: 'Volver a estudiante',      next: 'welcome_student' },
+      { label: "¿Cómo obtengo certificados?", next: "estudiante_certificados" },
+      { label: "¿Cuánto duran?", next: "estudiante_duracion" },
+      { label: "Tareas", next: "estudiante_tareas" },
+      { label: "Volver a estudiante", next: "welcome_student" },
     ],
   },
 
   estudiante_certificados: {
-    text: 'Depende de si es un **curso** o un **webinar**:\n\n**Cursos.** El certificado se emite al aprobar la evaluación con **80%** o más. Lo descargas de inmediato en el aula y te queda guardado en tu pestaña **Certificados**.\n\n**Webinars.** La constancia se desbloquea al terminar la sesión y vive en la pestaña **Webinars**, no en Certificados. No lleva examen: basta con haber asistido.',
+    text: "Depende de si es un **curso** o un **webinar**:\n\n**Cursos.** Al aprobar el examen final (normalmente con **80%**) se genera tu certificado con tu nombre y folio, y te queda en la pestaña **Certificados**.\n\n**Webinars.** La constancia se desbloquea al terminar la sesión, sin examen, y también aparece en **Certificados**.",
     buttons: [
-      { label: 'Constancia de webinar',    next: 'estudiante_webinar_constancia' },
-      { label: '¿Tienen vigencia?',        next: 'estudiante_certificados_vigencia' },
-      { label: 'Volver a estudiante',      next: 'welcome_student' },
+      { label: "¿Tienen vigencia?", next: "estudiante_certificados_vigencia" },
+      { label: "Constancia de webinar", next: "estudiante_webinar_constancia" },
+      { label: "Volver a estudiante", next: "welcome_student" },
     ],
   },
 
   estudiante_certificados_vigencia: {
-    text: 'Tu certificado **no expira** — una vez descargado es tuyo para siempre.\n\nLo que sí tiene límite son los **30 días de descarga**: a partir de la fecha de emisión tienes 30 días para descargarlo desde el portal. Pasado ese plazo, el archivo se elimina del sistema.\n\n📥 Te recomendamos descargarlo cuanto antes y guardarlo en un lugar seguro.',
+    text: "Casi todos los certificados son **permanentes**. Algunos cursos tienen **vigencia** (por ejemplo, 12 meses): en la pestaña Certificados, la columna **Vigencia** te dice hasta cuándo vale el tuyo.\n\nTe avisamos por correo **30 días antes** de que venza. Para recertificarte pulsas **\"Recertificarme\"** y vuelves a presentar el examen.\n\nAparte, el **archivo** se queda en el portal 30 días después de emitido: descárgalo y guárdalo.",
     buttons: [
-      { label: 'Volver a estudiante',      next: 'welcome_student' },
+      { label: "Volver a estudiante", next: "welcome_student" },
     ],
   },
 
@@ -98,25 +102,72 @@ const FLOWS = {
     ],
   },
 
-  estudiante_video_problemas: {
-    text: 'Si tienes problemas con la reproducción:\n\n1. Asegúrate de tener una conexión estable.\n2. El reproductor cuenta con protección anti-trampas. No intentes adelantar el video antes de haberlo visualizado de forma normal, o el avance se reajustará.\n3. Si ya visualizaste la clase previamente (ej. sesión en vivo), puedes utilizar el botón **"Bypass: Ya lo vi en vivo"** para desbloquear el examen directamente.',
+  estudiante_tareas: {
+    text: "Algunas lecciones son **tareas**: lees las instrucciones y entregas tu respuesta escrita, un archivo, o ambos.\n\nAl entregarla, la lección cuenta como completada. Un profesor la revisa:\n\n**Aprobada** — listo.\n**Por corregir** — verás su comentario en la misma lección y podrás volver a entregarla. Mientras tanto, esa lección queda pendiente.",
     buttons: [
-      { label: 'Volver a estudiante',      next: 'welcome_student' },
+      { label: "Volver a estudiante", next: "welcome_student" },
+    ],
+  },
+
+  estudiante_logros: {
+    text: "En tu **Dashboard** ves tus puntos, tus insignias y la tabla de posiciones.\n\n**Cómo se ganan puntos:**\nLección completada: +10\nDía de estudio: +5\nWebinar al que asististe: +15\nExamen aprobado al primer intento: +20\nCurso certificado: +50\n\nEn la tabla solo aparece tu nombre y la inicial de tu apellido. Si prefieres no aparecer, usa **\"Ocultarme de la tabla\"**.",
+    buttons: [
+      { label: "Volver a estudiante", next: "welcome_student" },
+    ],
+  },
+
+  estudiante_video_problemas: {
+    text: "Si un video no carga o se traba:\n\n1. Revisa tu conexión y recarga la página.\n2. Si ves un aviso de error, usa el enlace **\"Abrir directamente en YouTube\"** que aparece en el reproductor.\n3. El reproductor no deja **adelantar** más allá de lo que ya viste: es para que el avance cuente. Puedes regresar y volver a ver lo que quieras.\n\nSi sigue fallando, escríbenos y lo revisamos.",
+    buttons: [
+      { label: "Hablar con un asesor", next: "contacto" },
+      { label: "Volver a estudiante", next: "welcome_student" },
     ],
   },
 
   estudiante_duracion: {
-    text: 'La duración varía según el programa formativo. Puedes consultar los detalles de horas curriculares, modalidad y temario en la ficha descriptiva de cada curso en **Explorar Cursos** o en el panel lateral del aula virtual.',
+    text: "La duración depende de cada curso. En el aula, el temario de la derecha muestra cuánto dura cada lección y tu avance total del curso.",
     buttons: [
-      { label: 'Volver a estudiante',      next: 'welcome_student' },
+      { label: "Volver a estudiante", next: "welcome_student" },
     ],
   },
 
   // ── FLUJOS ADMINISTRADOR ────────────────────────────────────────────────────
   admin_gestion_cursos: {
-    text: 'Desde la pestaña **Gestión de Cursos** puedes realizar estas acciones:\n\n1. **Añadir Curso:** Haz clic en el botón de agregar. Define título, descripción, enlace de video (YouTube) y las preguntas del examen.\n2. **Editar:** Usa el icono de lápiz para modificar un curso existente.\n3. **Activar/Desactivar:** Haz clic en el interruptor de estado. Si un curso está inactivo, los alumnos no podrán verlo en el catálogo.',
+    text: "En **Gestión de Cursos**:\n\n1. **Datos del curso:** título, descripción, portada y categoría.\n2. **Acceso:** Gratis (el alumno se inscribe solo) o De pago, con su precio. Los cursos de pago piden una **portada propia**: la miniatura de YouTube deja ver el video sin pagar.\n3. **Vigencia del certificado** (opcional): meses que vale. Vacío = no vence.\n4. **Examen final:** las preguntas y la calificación mínima.\n\nAl **publicar** el curso aparece abajo la tarjeta **Lecciones del curso**: ahí agregas videos, PDF, lecturas y tareas, y las ordenas con las flechas.",
     buttons: [
-      { label: 'Volver a admin',           next: 'welcome_admin' },
+      { label: "¿Qué tipo de lección uso?", next: "admin_lecciones" },
+      { label: "Volver a admin", next: "welcome_admin" },
+    ],
+  },
+
+  admin_lecciones: {
+    text: "**Video** — pega el enlace de YouTube. Súbelo como \"no listado\": solo lo ven los inscritos. Cuenta como visto al 90%.\n\n**Documento PDF** — sube el archivo. Queda privado, con enlaces que caducan en una hora.\n\n**Lectura** — escribe el texto. Admite formato sencillo: títulos con #, viñetas con guion, negritas con doble asterisco y enlaces.\n\n**Tarea** — escribe las instrucciones. El alumno entrega texto o archivo y tú la revisas en **Tareas**.\n\nCada lección puede ser **obligatoria** (necesaria para el examen) u opcional.",
+    buttons: [
+      { label: "Revisar tareas", next: "admin_tareas" },
+      { label: "Volver a admin", next: "welcome_admin" },
+    ],
+  },
+
+  admin_tareas: {
+    text: "En la pestaña **Tareas** están las entregas de los alumnos. El número rojo del menú son las pendientes.\n\nAbre una entrega para leerla o ver su archivo, y elige:\n\n**Aprobar** — la lección queda completa.\n**Pedir corrección** — escribe qué tiene que corregir (es obligatorio). El alumno lo ve en su lección y esa lección se reabre hasta que vuelva a entregar.",
+    buttons: [
+      { label: "Volver a admin", next: "welcome_admin" },
+    ],
+  },
+
+  admin_grupos: {
+    text: "En la pestaña **Grupos**:\n\n**Grupos** — reúne alumnos (un hospital, una generación) y asígnales cursos. Todos los miembros quedan inscritos, y quien entre después al grupo también. Puedes agregar miembros buscándolos o **pegando una lista de correos** de Excel.\n\n**Inscripción masiva** — pega correos, elige un curso y quedan inscritos sin crear un grupo. Si alguien no tiene cuenta, te lo listamos para invitarlo.\n\nQuitar un curso de un grupo **no** le quita el acceso a nadie: las bajas se hacen alumno por alumno.",
+    buttons: [
+      { label: "Métricas por grupo", next: "admin_metricas" },
+      { label: "Volver a admin", next: "welcome_admin" },
+    ],
+  },
+
+  admin_metricas: {
+    text: "En **Métricas** ves, por periodo y opcionalmente por **grupo**:\n\n**Todos los cursos** — visitas, alumnos activos, tiempo de estudio, certificados e ingresos.\n\n**Al abrir un curso** — en qué lección se atora la gente, en qué minuto abandonan cada video, desde qué dispositivo entran, las calificaciones del examen y la tabla de alumnos con el historial de cada visita.\n\nTodo se exporta a Excel.",
+    buttons: [
+      { label: "Reportes en Excel y PDF", next: "admin_reportes" },
+      { label: "Volver a admin", next: "welcome_admin" },
     ],
   },
 
@@ -156,10 +207,11 @@ const FLOWS = {
   },
 
   admin_matricula: {
-    text: 'Para gestionar matrículas y alumnos:\n\n1. Dirígete a la sección **Alumnos**.\n2. Busca al estudiante y haz clic en **Detalle / Matrícula**.\n3. Se abrirá su expediente con sus datos de contacto.\n4. Selecciona un programa y haz clic en **Inscribir Alumno**.\nTambién podrás auditar su Historial Académico y descargar sus constancias en esta ventana.',
+    text: "Para dar acceso a un alumno a mano (becas, casos especiales):\n\n1. Ve a **Alumnos** y abre su expediente.\n2. En **Cursos inscritos** ves sus cursos y de dónde viene su acceso (pagó, gratis, grupo, beca).\n3. Elige un curso y pulsa **Inscribir alumno**. Funciona aunque el curso sea de pago.\n4. Con el botón de la papelera le quitas el acceso.\n\nPara inscribir a muchos de golpe usa **Grupos**.",
     buttons: [
-      { label: 'Bloquear alumnos',         next: 'admin_bloquear' },
-      { label: 'Volver a admin',           next: 'welcome_admin' },
+      { label: "Grupos e inscripción masiva", next: "admin_grupos" },
+      { label: "Bloquear alumnos", next: "admin_bloquear" },
+      { label: "Volver a admin", next: "welcome_admin" },
     ],
   },
 

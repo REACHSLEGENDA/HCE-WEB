@@ -452,15 +452,19 @@ as $$
          t.user_id = auth.uid()
   from public._puntos_alumnos() t
   join public.profiles p on p.id = t.user_id
-  where p.mostrar_en_ranking and t.puntos > 0
+  where auth.uid() is not null
+    and p.mostrar_en_ranking
+    and t.puntos > 0
   order by t.puntos desc
   limit greatest(1, least(limite, 50));
 $$;
 
+-- Supabase da permiso de ejecución a PUBLIC; quitárselo solo a anon no basta
+-- porque lo hereda de PUBLIC.
+revoke execute on function public.mis_logros() from public, anon;
+revoke execute on function public.tabla_posiciones(integer) from public, anon;
 grant execute on function public.mis_logros() to authenticated;
 grant execute on function public.tabla_posiciones(integer) to authenticated;
-revoke execute on function public.mis_logros() from anon;
-revoke execute on function public.tabla_posiciones(integer) from anon;
 
 
 -- 10. Migración: cada curso con video pasa a tener su primera lección --------
