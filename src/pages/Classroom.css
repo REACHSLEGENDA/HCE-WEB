@@ -1278,3 +1278,114 @@
 @media (prefers-reduced-motion: reduce) {
   .temario-barra span { transition: none; }
 }
+
+/* Vimeo mete su propio iframe dentro del contenedor. */
+.video-vimeo iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.leccion-web .leccion-pagina {
+  margin-top: 12px;
+  background: #ffffff;
+}
+
+.aula-puerta-revision {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: #b45309;
+}
+
+/* ---- Biblioteca del curso -------------------------------------------------- */
+
+.aula-biblioteca-btn { display: inline-flex; align-items: center; gap: 6px; }
+.aula-biblioteca-num {
+  min-width: 20px; padding: 1px 6px; border-radius: 999px;
+  background: #00bcd4; color: #fff; font-size: 0.72rem; font-weight: 700; text-align: center;
+}
+
+.leccion-archivos { margin-top: 16px; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+.leccion-archivos h3,
+.aula-biblioteca h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; color: #0f172a; font-size: 0.95rem; }
+.leccion-archivos ul,
+.aula-biblioteca-grupo ul { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.leccion-archivos li,
+.aula-biblioteca-grupo li { display: flex; align-items: stretch; gap: 6px; }
+
+.leccion-archivo {
+  display: flex; flex: 1; min-width: 0; align-items: center; gap: 10px;
+  padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px;
+  background: #fff; color: #0f172a; font: inherit; font-size: 0.86rem; text-align: left; cursor: pointer;
+}
+.leccion-archivo:hover { border-color: #00bcd4; }
+.leccion-archivo-formato {
+  flex-shrink: 0; min-width: 42px; padding: 2px 6px; border-radius: 4px;
+  background: #e0f7fa; color: #00838f; font-size: 0.68rem; font-weight: 800; text-align: center;
+}
+.leccion-archivo-nombre { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.leccion-archivo-tamano { flex-shrink: 0; color: #64748b; font-size: 0.76rem; }
+.leccion-archivo-descargar {
+  flex-shrink: 0; width: 38px; border: 1px solid #e2e8f0; border-radius: 8px;
+  background: #fff; color: #475569; cursor: pointer;
+}
+.leccion-archivo-descargar:hover { border-color: #00bcd4; color: #00838f; }
+
+.aula-biblioteca-fondo { position: fixed; inset: 0; z-index: 800; display: flex; justify-content: flex-end; background: rgba(15, 23, 42, 0.45); }
+.aula-biblioteca {
+  display: flex; flex-direction: column; gap: 14px;
+  width: min(460px, 100%); height: 100%; overflow-y: auto;
+  padding: 20px; background: #fff; box-shadow: -12px 0 40px rgba(15, 23, 42, 0.2);
+}
+.aula-biblioteca header { display: flex; align-items: center; justify-content: space-between; }
+.aula-biblioteca header h2 { margin: 0; }
+.aula-biblioteca-cerrar { padding: 6px; border: 0; border-radius: 8px; background: none; color: #475569; cursor: pointer; }
+.aula-biblioteca-cerrar:hover { background: #f1f5f9; }
+.aula-biblioteca-buscar {
+  display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+  border: 1px solid #e2e8f0; border-radius: 10px; color: #64748b;
+}
+.aula-biblioteca-buscar input { flex: 1; border: 0; outline: 0; background: transparent; font: inherit; font-size: 0.9rem; color: #0f172a; }
+.aula-biblioteca-grupo h3 { margin: 0 0 8px; color: #475569; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+.aula-biblioteca-grupo h3 button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; text-transform: inherit; cursor: pointer; }
+.aula-biblioteca-grupo h3 button:hover { color: #00838f; text-decoration: underline; }
+.aula-biblioteca-vacia { margin: 0; color: #64748b; font-size: 0.9rem; }
+
+/* ---- Cabecera del aula en celular ----------------------------------------- */
+/* Con Volver, logo, Biblioteca, Vista de alumno y avatar no cabe todo en un
+   renglón: los botones quedan como ícono (con aria-label) y todo se reparte. */
+@media (max-width: 768px) {
+  .classroom-header .header-right { gap: 8px; min-width: 0; }
+  .classroom-header .header-left { flex-shrink: 1; }
+}
+@media (max-width: 600px) {
+  .classroom-header .aula-btn-texto { display: none; }
+  .classroom-header .back-btn { padding: 8px 10px; min-height: 38px; }
+}
+@media (max-width: 360px) {
+  .classroom-header .header-logo { display: none; }
+}
+
+/* Biblioteca y archivos en celular: cajón a pantalla completa, tamaño visible. */
+@media (max-width: 520px) {
+  .aula-biblioteca { width: 100%; padding: 16px; }
+  .leccion-archivos { padding: 12px; }
+  .leccion-archivo { padding: 10px; gap: 8px; }
+  .leccion-archivo-formato { min-width: 36px; }
+  .leccion-archivo-descargar { width: 42px; }
+}
+
+/* Sección del temario ("Módulo I"): título que agrupa, sin avance. */
+.temario-seccion {
+  margin: 12px 0 4px;
+  padding: 0 8px;
+  color: #0f172a;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.temario-seccion:first-child { margin-top: 0; }

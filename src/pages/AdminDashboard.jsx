@@ -46,15 +46,29 @@ import {
   RefreshCw,
   TrendingUp,
   ClipboardList,
-  UsersRound
+  UsersRound,
+  BellRing,
+  MessagesSquare,
+  Copy,
+  Building2
 } from 'lucide-react';
 import './AdminDashboard.css';
 import PosicionadorConstancia from '../components/PosicionadorConstancia';
-import MetricasCursos from '../components/admin/MetricasCursos';
+import InformesAdmin from '../components/admin/InformesAdmin';
 import EditorLecciones from '../components/admin/EditorLecciones';
+import BibliotecaCurso from '../components/admin/BibliotecaCurso';
+import ReglasCurso from '../components/admin/ReglasCurso';
+import SolicitudesInscripcion from '../components/admin/SolicitudesInscripcion';
+import ReporteAlumno from '../components/admin/ReporteAlumno';
+import NotificacionesAdmin from '../components/admin/NotificacionesAdmin';
+import MensajesAdmin from '../components/admin/MensajesAdmin';
+import GamificacionAdmin from '../components/admin/GamificacionAdmin';
+import DivisionesAdmin from '../components/admin/DivisionesAdmin';
 import RevisionTareas from '../components/admin/RevisionTareas';
 import GruposAdmin from '../components/admin/GruposAdmin';
-import { llamarInscripcion, esTablaFaltante, formatoPrecio } from '../lib/cursos';
+import CuentasPorActivar from '../components/admin/CuentasPorActivar';
+import { BotonVerComoAlumno } from '../components/CambioVista';
+import { llamarInscripcion, llamarCuenta, llamarClonar, esTablaFaltante, formatoPrecio } from '../lib/cursos';
 import { useNotification } from '../context/NotificationContext';
 
 // Días sin actividad en la plataforma a partir de los cuales un curso iniciado
@@ -236,6 +250,20 @@ const AdminDashboard = () => {
     vigencia_meses: '',
     questions: []
   });
+
+  // Divisiones, para filtrar el directorio de alumnos.
+  const [divisionesLista, setDivisionesLista] = useState([]);
+  const [studentDivisionFilter, setStudentDivisionFilter] = useState('');
+  useEffect(() => {
+    let vigente = true;
+    supabase.from('divisiones').select('id, nombre').order('nombre').then(({ data, error }) => {
+      if (vigente && !error) setDivisionesLista(data || []);
+    });
+    return () => { vigente = false; };
+  }, []);
+
+  // Alumno cuyo reporte completo está abierto.
+  const [reporteAlumno, setReporteAlumno] = useState(null);
 
   // Tareas sin revisar: se muestran como contador en el menú.
   const [tareasPendientes, setTareasPendientes] = useState(0);
@@ -1323,6 +1351,9 @@ const AdminDashboard = () => {
       case 'metricas': return 'Métricas de Cursos';
       case 'tareas': return 'Tareas';
       case 'grupos': return 'Grupos';
+      case 'notificaciones': return 'Notificaciones';
+      case 'mensajes': return 'Mensajes';
+      case 'divisiones': return 'Divisiones';
       case 'payments': return 'Pagos y Formularios';
       case 'facturacion': return 'Facturación';
       case 'admins': return 'Administradores';
@@ -1746,6 +1777,19 @@ const AdminDashboard = () => {
     }
   };
 
+  // Copia el curso con sus lecciones, exámenes, reglas y biblioteca; queda
+  // inactivo para revisarlo antes de publicarlo.
+  const handleClonarCourse = async (course) => {
+    if (!(await showConfirm(`¿Clonar "${course.title}"? Se crea una copia inactiva con sus lecciones, exámenes, reglas y archivos (sin alumnos).`, 'Clonar curso'))) return;
+    try {
+      const r = await llamarClonar('clonar', { courseId: course.id });
+      await fetchCourses();
+      showToast(`Curso clonado con ${r.lecciones} lecciones. Quedó inactivo como "${course.title} (copia)".`, 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  };
+
   const handleDeleteCourse = async (courseId) => {
     if (await showConfirm('¿Estás seguro de eliminar este curso del catálogo?', 'Eliminar Curso')) {
       try {
@@ -1839,30 +1883,19 @@ const AdminDashboard = () => {
     }
   };
 
+  // Bloquear suspende la cuenta: no entra al portal ni ve sus cursos.
   const handleToggleBlockStudent = async (student) => {
     const isBlocked = student.activo === false;
-    const action = isBlocked ? 'activar' : 'bloquear';
-    if (await showConfirm(`¿Estás seguro de que deseas ${action} la cuenta de ${student.nombre_completo || student.email}?`, 'Administrar Cuenta')) {
-      try {
-        // En un caso real, actualizamos la tabla 'profiles'
-        const { error } = await supabase
-          .from('profiles')
-          .update({ activo: isBlocked }) // actualizamos estado activo
-          .eq('id', student.id);
-        
-        if (error) {
-          // Si la columna no existe en bd, lo simulamos para el usuario
-          setProfiles(profiles.map(p => p.id === student.id ? { ...p, activo: isBlocked } : p));
-        } else {
-          await fetchProfiles();
-        }
-        showToast(`Cuenta ${isBlocked ? 'activada' : 'bloqueada'} con éxito.`, 'success');
-      } catch (err) {
-        console.error('Error blocking student:', err);
-        // Fallback local
-        setProfiles(profiles.map(p => p.id === student.id ? { ...p, activo: isBlocked } : p));
-        showToast(`Cuenta ${isBlocked ? 'activada' : 'bloqueada'} con éxito (simulado local).`, 'warning');
-      }
+    const mensaje = isBlocked
+      ? `¿Reactivar la cuenta de ${student.nombre_completo || student.email}? Volverá a entrar al portal.`
+      : `¿Bloquear la cuenta de ${student.nombre_completo || student.email}? No podrá entrar al portal ni a sus cursos.`;
+    if (!(await showConfirm(mensaje, 'Administrar Cuenta'))) return;
+    try {
+      await llamarCuenta(isBlocked ? 'activar' : 'bloquear', { userId: student.id });
+      await fetchProfiles();
+      showToast(`Cuenta ${isBlocked ? 'reactivada' : 'bloqueada'}.`, 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
     }
   };
 
@@ -1878,7 +1911,7 @@ const AdminDashboard = () => {
       // NOTA: Para crear un usuario secundario en producción sin cerrar la sesión actual de administrador, 
       // se utiliza supabase.auth.signUp o un endpoint backend / edge function. 
       // Para desarrollo de MVP, creamos el perfil en la base de datos directamente o simulamos el registro.
-      const { error } = await supabase.auth.signUp({
+      const { data: alta, error } = await supabase.auth.signUp({
         email: newStudentForm.email,
         password: newStudentForm.password,
         options: {
@@ -1900,7 +1933,17 @@ const AdminDashboard = () => {
       });
 
       if (error) throw error;
-      
+
+      // Las cuentas nuevas quedan en revisión; la que crea un administrador
+      // ya nace con acceso.
+      if (alta?.user?.id) {
+        try {
+          await llamarCuenta('aprobar', { userId: alta.user.id });
+        } catch (errAprobar) {
+          console.warn('No se pudo dar acceso a la cuenta nueva:', errAprobar.message);
+        }
+      }
+
       showToast(`¡Alumno ${nombreCompleto} registrado correctamente!`, 'success');
       handleCloseAddStudentModal();
       fetchProfiles();
@@ -2524,10 +2567,16 @@ const AdminDashboard = () => {
       const countryVal = p.pais || p.user_metadata?.pais || '';
       const matchCountry = !studentCountryFilter || countryVal.toLowerCase() === studentCountryFilter.toLowerCase();
       
-      return matchSearch && matchSpecialty && matchCountry;
+      const matchDivision = !studentDivisionFilter
+        || (studentDivisionFilter === 'sin' ? !p.division_id : String(p.division_id) === studentDivisionFilter);
+
+      return matchSearch && matchSpecialty && matchCountry && matchDivision;
     });
 
   const adminUsers = profiles.filter(p => p.rol === 'admin');
+
+  // Registradas pero todavía sin acceso a sus cursos.
+  const cuentasPendientes = profiles.filter(p => p.rol === 'estudiante' && p.aprobado === false && p.activo !== false);
 
   // Helper formatting dates
   const formatDate = (isoString) => {
@@ -2595,6 +2644,7 @@ const AdminDashboard = () => {
           >
             <GraduationCap size={20} className="menu-icon" />
             <span className="menu-label">Alumnos</span>
+            {cuentasPendientes.length > 0 && <span className="menu-contador" title="Cuentas por activar">{cuentasPendientes.length}</span>}
           </button>
 
           <button 
@@ -2641,6 +2691,33 @@ const AdminDashboard = () => {
           >
             <UsersRound size={20} className="menu-icon" />
             <span className="menu-label">Grupos</span>
+          </button>
+
+          <button
+            className={`menu-item ${activeTab === 'divisiones' ? 'active' : ''}`}
+            onClick={() => setActiveTab('divisiones')}
+            title="Divisiones (otras asociaciones)"
+          >
+            <Building2 size={20} className="menu-icon" />
+            <span className="menu-label">Divisiones</span>
+          </button>
+
+          <button
+            className={`menu-item ${activeTab === 'notificaciones' ? 'active' : ''}`}
+            onClick={() => setActiveTab('notificaciones')}
+            title="Notificaciones automáticas por correo"
+          >
+            <BellRing size={20} className="menu-icon" />
+            <span className="menu-label">Notificaciones</span>
+          </button>
+
+          <button
+            className={`menu-item ${activeTab === 'mensajes' ? 'active' : ''}`}
+            onClick={() => setActiveTab('mensajes')}
+            title="Mensajes y comunicados"
+          >
+            <MessagesSquare size={20} className="menu-icon" />
+            <span className="menu-label">Mensajes</span>
           </button>
 
           <button
@@ -2725,6 +2802,7 @@ const AdminDashboard = () => {
           </div>
 
           <div className="top-header-right">
+            <BotonVerComoAlumno />
             <div className="user-profile-summary">
               <span className="user-greeting">Hola, <strong>Admin</strong></span>
               <div className="user-avatar-circle">A</div>
@@ -4283,6 +4361,7 @@ const AdminDashboard = () => {
                   {editingCourse?.id && !isNaN(Number(editingCourse.id)) ? (
                     <EditorLecciones
                       courseId={Number(editingCourse.id)}
+                      cursos={courses}
                       onCambio={fetchCourses}
                       notificar={showToast}
                       confirmar={showConfirm}
@@ -4292,6 +4371,26 @@ const AdminDashboard = () => {
                       Publica el curso para empezar a agregarle lecciones: videos, documentos PDF, lecturas y tareas.
                     </p>
                   )}
+                </div>
+              )}
+
+              {showCourseForm && editingCourse?.id && !isNaN(Number(editingCourse.id)) && (
+                <div className="settings-card" style={{ marginBottom: '30px' }}>
+                  <h3>Reglas del curso</h3>
+                  <p style={{ color: 'var(--text-muted)', margin: '4px 0 14px', fontSize: '0.86rem' }}>
+                    Quién puede entrar, por cuánto tiempo y cuándo se da por terminado.
+                  </p>
+                  <ReglasCurso courseId={Number(editingCourse.id)} cursos={courses} tipoCurso={courseForm.tipo} notificar={showToast} />
+                </div>
+              )}
+
+              {showCourseForm && editingCourse?.id && !isNaN(Number(editingCourse.id)) && (
+                <div className="settings-card" style={{ marginBottom: '30px' }}>
+                  <h3>Biblioteca de archivos</h3>
+                  <p style={{ color: 'var(--text-muted)', margin: '4px 0 14px', fontSize: '0.86rem' }}>
+                    Artículos, manuales, programas… Liga cada archivo a una clase para que aparezca dentro de esa lección, o déjalo en la biblioteca general del curso.
+                  </p>
+                  <BibliotecaCurso courseId={Number(editingCourse.id)} notificar={showToast} confirmar={showConfirm} />
                 </div>
               )}
 
@@ -4345,6 +4444,11 @@ const AdminDashboard = () => {
                             <button className="icon-action-btn edit" onClick={() => handleOpenCourseEdit(course)} title="Editar">
                               <Edit size={16} />
                             </button>
+                            {!isNaN(Number(course.id)) && (
+                              <button className="icon-action-btn" onClick={() => handleClonarCourse(course)} title="Clonar curso">
+                                <Copy size={16} />
+                              </button>
+                            )}
                             <button className="icon-action-btn delete" onClick={() => handleDeleteCourse(course.id)} title="Eliminar">
                               <Trash2 size={16} />
                             </button>
@@ -4360,6 +4464,16 @@ const AdminDashboard = () => {
           )}
 
           {/* VIEW: ALUMNOS (Students Directory & Detail/Enrollment) */}
+          {reporteAlumno && (
+            <ReporteAlumno
+              alumno={reporteAlumno}
+              cursos={courses}
+              notificar={showToast}
+              confirmar={showConfirm}
+              onCerrar={() => setReporteAlumno(null)}
+            />
+          )}
+
           {activeTab === 'students' && (
             <div className="students-view">
               <div className="section-title-row">
@@ -4370,13 +4484,23 @@ const AdminDashboard = () => {
                 </button>
               </div>
 
+              <CuentasPorActivar
+                pendientes={cuentasPendientes}
+                cursos={courses}
+                onCambio={fetchProfiles}
+                notificar={showToast}
+                confirmar={showConfirm}
+              />
+
+              <SolicitudesInscripcion perfiles={profiles} cursos={courses} notificar={showToast} />
+
               {/* Filters toolbar */}
               <div className="filters-toolbar">
                 <div className="search-box-wrapper">
                   <Search size={18} className="search-icon-inside" />
-                  <input 
-                    type="text" 
-                    placeholder="Buscar alumno por nombre, apellido o correo..." 
+                  <input
+                    type="text"
+                    placeholder="Buscar alumno por nombre, apellido o correo..."  
                     value={studentSearch}
                     onChange={(e) => setStudentSearch(e.target.value)}
                   />
@@ -4395,6 +4519,16 @@ const AdminDashboard = () => {
                       <option value="Cardiología">Cardiología</option>
                     </select>
                   </div>
+
+                  {divisionesLista.length > 0 && (
+                    <div className="filter-select-wrapper">
+                      <select value={studentDivisionFilter} onChange={(e) => setStudentDivisionFilter(e.target.value)} aria-label="División">
+                        <option value="">Todas las divisiones</option>
+                        {divisionesLista.map((d) => <option key={d.id} value={String(d.id)}>{d.nombre}</option>)}
+                        <option value="sin">Sin división</option>
+                      </select>
+                    </div>
+                  )}
 
                   <div className="filter-select-wrapper">
                     <select value={studentCountryFilter} onChange={(e) => setStudentCountryFilter(e.target.value)}>
@@ -4537,8 +4671,8 @@ const AdminDashboard = () => {
                         <td>{student.especialidad || student.user_metadata?.especialidad || 'No registrado'}</td>
                         <td>{formatDate(student.created_at)}</td>
                         <td>
-                          <span className={`status-pill ${student.activo !== false ? 'disponible' : 'inactivo'}`}>
-                            {student.activo !== false ? 'Activo' : 'Bloqueado'}
+                          <span className={`status-pill ${student.activo === false ? 'inactivo' : student.aprobado === false ? 'pendiente' : 'disponible'}`}>
+                            {student.activo === false ? 'Bloqueado' : student.aprobado === false ? 'Por activar' : 'Activo'}
                           </span>
                         </td>
                         <td>
@@ -4563,6 +4697,9 @@ const AdminDashboard = () => {
                   <div className="admin-modal-card">
                     <div className="modal-header">
                       <h3>Expediente del Alumno</h3>
+                      <button type="button" className="btn-crm-action outlined mini" style={{ marginLeft: 'auto', marginRight: 8 }} onClick={() => setReporteAlumno(selectedStudent)}>
+                        Reporte completo
+                      </button>
                       <button className="modal-close-btn" onClick={() => setSelectedStudent(null)}>
                         <X size={20} />
                       </button>
@@ -5457,6 +5594,33 @@ const AdminDashboard = () => {
             </div>
           )}
 
+          {activeTab === 'divisiones' && (
+            <div className="divisiones-view">
+              <div className="section-title-row" style={{ marginBottom: '20px' }}>
+                <h2>Divisiones</h2>
+              </div>
+              <DivisionesAdmin perfiles={profiles} cursos={courses} onPerfilesCambiados={fetchProfiles} notificar={showToast} confirmar={showConfirm} />
+            </div>
+          )}
+
+          {activeTab === 'notificaciones' && (
+            <div className="notificaciones-view">
+              <div className="section-title-row" style={{ marginBottom: '20px' }}>
+                <h2>Notificaciones</h2>
+              </div>
+              <NotificacionesAdmin cursos={courses} notificar={showToast} confirmar={showConfirm} />
+            </div>
+          )}
+
+          {activeTab === 'mensajes' && user?.id && (
+            <div className="mensajes-view">
+              <div className="section-title-row" style={{ marginBottom: '20px' }}>
+                <h2>Mensajes y comunicados</h2>
+              </div>
+              <MensajesAdmin userId={user.id} perfiles={profiles} cursos={courses} notificar={showToast} confirmar={showConfirm} />
+            </div>
+          )}
+
           {/* VIEW: MÉTRICAS DE CURSOS */}
           {activeTab === 'metricas' && (
             <div className="metricas-view">
@@ -5466,7 +5630,7 @@ const AdminDashboard = () => {
                   Visitas, tiempo de estudio, avance en el video y resultados del examen de cada curso y de cada alumno.
                 </p>
               </div>
-              <MetricasCursos cursos={courses} perfiles={profiles} />
+              <InformesAdmin cursos={courses} perfiles={profiles} />
             </div>
           )}
 
@@ -6753,6 +6917,14 @@ const AdminDashboard = () => {
             <div className="settings-view">
               <div className="section-title-row">
                 <h2>Configuración del Portal</h2>
+              </div>
+
+              <div className="settings-card" style={{ marginBottom: '30px' }}>
+                <div className="settings-card-header">
+                  <h3>Gamificación</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '4px' }}>Puntos, niveles, insignias y recompensas de los alumnos.</p>
+                </div>
+                <GamificacionAdmin notificar={showToast} />
               </div>
 
               {/* Theme Selector */}

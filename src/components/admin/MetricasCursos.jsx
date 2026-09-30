@@ -15,12 +15,15 @@ import {
   avancePorLeccion,
   leccionesCompletadasPorAlumno,
   curvaRetencionDeLeccion,
+  matrizDeUnidades,
   formatoEntero,
   formatoMinutos,
   formatoPorcentaje,
   formatoDinero,
 } from '../../lib/metricas';
 import { GraficaColumnas, GraficaRetencion, BarrasHorizontales } from './GraficasMetricas';
+import MatrizUnidades from './MatrizUnidades';
+import AnalisisEvaluaciones from './AnalisisEvaluaciones';
 import './MetricasCursos.css';
 
 // Panel de métricas de los cursos del portal: la vista general de todos los
@@ -172,13 +175,18 @@ export default function MetricasCursos({ cursos, perfiles }) {
         traerTodo('inscripciones', 'id, user_id, course_id, origen, monto, moneda, created_at', (q) => q),
       ]);
       // El avance por lección es acumulado: no se corta por periodo.
-      const [lecciones, progreso, grupos, miembros] = await Promise.all([
+      const [lecciones, progreso, grupos, miembros, entregas, examenes, intentosEval, divisiones] = await Promise.all([
         traerOpcional('curso_lecciones', 'id, course_id, orden, titulo, tipo, obligatoria'),
         traerOpcional('leccion_progreso', 'user_id, leccion_id, course_id, porcentaje, completada'),
         traerOpcional('grupos', 'id, nombre'),
         traerOpcional('grupo_miembros', 'grupo_id, user_id'),
+        traerOpcional('tarea_entregas', 'id, user_id, leccion_id, course_id, estado, creada_en'),
+        // La matriz muestra si aprobó el examen alguna vez, no solo en el periodo.
+        traerTodo('curso_eventos', 'id, user_id, course_id, tipo, datos, creado_en', (q) => q.eq('tipo', 'examen_enviado')),
+        traerOpcional('evaluacion_intentos', 'id, leccion_id, course_id, user_id, numero, respuestas, calificacion, aprobado, enviado_en, duracion_seg'),
+        traerOpcional('divisiones', 'id, nombre'),
       ]);
-      setDatos({ sesiones, eventos, inscripciones, lecciones, progreso, grupos, miembros });
+      setDatos({ sesiones, eventos, inscripciones, lecciones, progreso, grupos, miembros, entregas, examenes, intentosEval, divisiones });
     } catch (err) {
       if (esTablaFaltante(err)) setEstado('sin-migracion');
       else setEstado(err.message || 'No se pudieron cargar las métricas.');
@@ -193,7 +201,11 @@ export default function MetricasCursos({ cursos, perfiles }) {
   // ver cómo va un hospital o una generación en particular.
   const datosVista = useMemo(() => {
     if (!datos || !grupoFiltro) return datos;
-    const miembros = new Set(datos.miembros.filter((m) => String(m.grupo_id) === grupoFiltro).map((m) => m.user_id));
+    // "g-3" es el grupo 3; "d-2", la división 2.
+    const [tipoFiltro, idFiltro] = grupoFiltro.split('-');
+    const miembros = new Set(tipoFiltro === 'd'
+      ? perfiles.filter((p) => String(p.division_id) === idFiltro).map((p) => p.id)
+      : datos.miembros.filter((m) => String(m.grupo_id) === idFiltro).map((m) => m.user_id));
     const soloMiembros = (filas) => filas.filter((f) => miembros.has(f.user_id));
     return {
       ...datos,
@@ -201,8 +213,11 @@ export default function MetricasCursos({ cursos, perfiles }) {
       eventos: soloMiembros(datos.eventos),
       inscripciones: soloMiembros(datos.inscripciones),
       progreso: soloMiembros(datos.progreso),
+      entregas: soloMiembros(datos.entregas || []),
+      examenes: soloMiembros(datos.examenes || []),
+      intentosEval: soloMiembros(datos.intentosEval || []),
     };
-  }, [datos, grupoFiltro]);
+  }, [datos, grupoFiltro, perfiles]);
 
   const resumen = useMemo(() => {
     if (!datosVista) return [];
@@ -241,10 +256,19 @@ export default function MetricasCursos({ cursos, perfiles }) {
           ))}
         </div>
         <div className="m-filtros-derecha">
-          {datos?.grupos?.length > 0 && (
-            <select className="m-select" value={grupoFiltro} onChange={(e) => setGrupoFiltro(e.target.value)} aria-label="Filtrar por grupo">
+          {(datos?.grupos?.length > 0 || datos?.divisiones?.length > 0) && (
+            <select className="m-select" value={grupoFiltro} onChange={(e) => setGrupoFiltro(e.target.value)} aria-label="Filtrar por grupo o división">
               <option value="">Todos los alumnos</option>
-              {datos.grupos.map((g) => <option key={g.id} value={String(g.id)}>{g.nombre}</option>)}
+              {datos.divisiones?.length > 0 && (
+                <optgroup label="Divisiones">
+                  {datos.divisiones.map((d) => <option key={`d-${d.id}`} value={`d-${d.id}`}>{d.nombre}</option>)}
+                </optgroup>
+              )}
+              {datos.grupos?.length > 0 && (
+                <optgroup label="Grupos">
+                  {datos.grupos.map((g) => <option key={`g-${g.id}`} value={`g-${g.id}`}>{g.nombre}</option>)}
+                </optgroup>
+              )}
             </select>
           )}
           <button type="button" className="m-boton" onClick={() => void cargar()} disabled={cargando}>
@@ -264,6 +288,7 @@ export default function MetricasCursos({ cursos, perfiles }) {
           perfiles={perfiles}
           desde={desde}
           minimoAprobacion={cursos.find((c) => Number(c.id) === cursoDetalle.courseId)?.minAprobacion || 80}
+          conExamen={(cursos.find((c) => Number(c.id) === cursoDetalle.courseId)?.questions?.length || 0) > 0}
           onVolver={() => setCursoAbierto(null)}
         />
       ) : (
@@ -376,7 +401,7 @@ const COLUMNAS_ALUMNO = [
   { id: 'ultimaVisita', etiqueta: 'Última visita', num: true },
 ];
 
-function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, onVolver }) {
+function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExamen, onVolver }) {
   const [orden, setOrden] = useState({ columna: 'ultimaVisita', desc: true });
   const [alumnoAbierto, setAlumnoAbierto] = useState(null);
 
@@ -393,6 +418,16 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, onVolver
   const videoCurva = videos.find((v) => v.id === videoElegido) || videos[0] || null;
   const embudo = lecciones.length > 1 ? avancePorLeccion({ lecciones, progreso, inscritos: inscripciones.length }) : [];
   const leccionesDe = leccionesCompletadasPorAlumno(progreso);
+  const matriz = useMemo(() => matrizDeUnidades({
+    lecciones,
+    progreso,
+    entregas: (datos.entregas || []).filter((e) => Number(e.course_id) === id),
+    examenes: (datos.examenes || []).filter((e) => Number(e.course_id) === id),
+    intentosEval: (datos.intentosEval || []).filter((e) => Number(e.course_id) === id),
+    inscripciones,
+    perfiles,
+    conExamen: conExamen || (datos.examenes || []).some((e) => Number(e.course_id) === id),
+  }), [lecciones, progreso, datos, id, inscripciones, perfiles, conExamen]);
   const obligatorias = lecciones.filter((l) => l.obligatoria !== false).length || lecciones.length;
 
   const dias = visitasPorDia(sesiones, desde);
@@ -547,6 +582,32 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, onVolver
             </Tarjeta>
           )}
         </div>
+      )}
+
+      {matriz.columnas.length > 0 && (
+        <Tarjeta
+          titulo="Matriz de unidades"
+          subtitulo="Cada alumno inscrito contra cada lección del curso. Es acumulada: no depende del periodo elegido."
+          ancha
+        >
+          <MatrizUnidades tituloCurso={fila.titulo} matriz={matriz} />
+        </Tarjeta>
+      )}
+
+      {lecciones.some((l) => l.tipo === 'examen' || l.tipo === 'encuesta') && (
+        <Tarjeta
+          titulo="Exámenes y encuestas"
+          subtitulo="Pregunta por pregunta: qué contestaron y cuántos acertaron. Es acumulado: no depende del periodo elegido."
+          ancha
+        >
+          <AnalisisEvaluaciones
+            tituloCurso={fila.titulo}
+            lecciones={lecciones}
+            intentos={(datos.intentosEval || []).filter((i) => Number(i.course_id) === id)}
+            perfiles={perfiles}
+            inscritos={inscripciones.length}
+          />
+        </Tarjeta>
       )}
 
       <Tarjeta titulo="Alumnos" subtitulo="Abre un alumno para ver cada una de sus visitas." ancha>

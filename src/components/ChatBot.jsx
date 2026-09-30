@@ -33,11 +33,15 @@ const FLOWS = {
     text: "¡Hola! Soy tu asistente de HCE.\n\nVeo que estás en el portal de estudiantes. ¿En qué puedo apoyarte hoy?",
     buttons: [
       { label: "¿Cómo tomo mis cursos?", next: "estudiante_clases" },
+      { label: "Exámenes y encuestas", next: "estudiante_evaluaciones" },
+      { label: "Sesiones en vivo (Zoom)", next: "estudiante_sesiones" },
       { label: "¿Cómo obtengo certificados?", next: "estudiante_certificados" },
       { label: "Tareas", next: "estudiante_tareas" },
-      { label: "Puntos e insignias", next: "estudiante_logros" },
+      { label: "Calendario, mensajes y archivos", next: "estudiante_herramientas" },
+      { label: "Puntos, niveles e insignias", next: "estudiante_logros" },
       { label: "Webinars y constancias", next: "estudiante_webinars" },
       { label: "Problemas con un video", next: "estudiante_video_problemas" },
+      { label: "Mi curso está en revisión", next: "estudiante_revision" },
       { label: "Otros temas (General)", next: "welcome" },
     ],
   },
@@ -47,11 +51,15 @@ const FLOWS = {
     text: "¡Hola! Soy tu asistente de control HCE.\n\nVeo que estás en el portal de administración. ¿En qué proceso de gestión puedo apoyarte hoy?",
     buttons: [
       { label: "Crear un curso y sus lecciones", next: "admin_gestion_cursos" },
+      { label: "Exámenes, encuestas y sesiones", next: "admin_evaluaciones" },
+      { label: "Reglas del curso", next: "admin_reglas" },
       { label: "Revisar tareas", next: "admin_tareas" },
-      { label: "Grupos e inscripción masiva", next: "admin_grupos" },
-      { label: "Métricas de cursos", next: "admin_metricas" },
+      { label: "Grupos y divisiones", next: "admin_grupos" },
+      { label: "Informes y métricas", next: "admin_metricas" },
+      { label: "Notificaciones y mensajes", next: "admin_comunicacion" },
       { label: "Gestionar Webinars", next: "admin_webinars" },
       { label: "Matricular alumnos", next: "admin_matricula" },
+      { label: "Cuentas por activar", next: "admin_cuentas" },
       { label: "Seguridad y accesos", next: "admin_seguridad" },
       { label: "Otros temas (General)", next: "welcome" },
     ],
@@ -59,11 +67,11 @@ const FLOWS = {
 
   // ── FLUJOS ESTUDIANTE ───────────────────────────────────────────────────────
   estudiante_clases: {
-    text: "Así funcionan los cursos del portal:\n\n1. En **Explorar Cursos** eliges uno. Si es **gratis**, te inscribes con un clic; si es **de pago**, pagas con tarjeta y queda en tu portal al confirmarse.\n2. Cada curso tiene **lecciones**: videos, documentos PDF, lecturas o tareas. En el aula, a la derecha, ves el temario con tu avance.\n3. Los videos cuentan como vistos al llegar al **90%**; los PDF y lecturas los marcas tú como completados.\n4. Al completar las lecciones obligatorias se abre el **examen final**.\n\nTu avance se guarda solo y lo ves igual desde la computadora o el celular.",
+    text: "Así funcionan los cursos del portal:\n\n1. En **Explorar Cursos** eliges uno. Si es **gratis**, te inscribes con un clic (algunos piden **solicitud**, que aprueba un administrador); si es **de pago**, pagas con tarjeta.\n2. Cada curso tiene **lecciones** agrupadas por módulos: videos, PDF, lecturas, páginas, tareas, exámenes, encuestas y sesiones en vivo. A la derecha ves el temario con tu avance.\n3. Los videos cuentan como vistos al **90%**; los PDF, lecturas y páginas los marcas tú como completados.\n4. El curso se termina según su regla: con el **examen final** o al completar las lecciones.\n\nAlgunos cursos tienen **días de acceso** o piden terminar antes otro curso.",
     buttons: [
+      { label: "Exámenes y encuestas", next: "estudiante_evaluaciones" },
       { label: "¿Cómo obtengo certificados?", next: "estudiante_certificados" },
       { label: "¿Cuánto duran?", next: "estudiante_duracion" },
-      { label: "Tareas", next: "estudiante_tareas" },
       { label: "Volver a estudiante", next: "welcome_student" },
     ],
   },
@@ -102,6 +110,28 @@ const FLOWS = {
     ],
   },
 
+  estudiante_evaluaciones: {
+    text: "Dentro del curso puede haber **exámenes** (diagnóstico, evaluaciones por módulo) y **encuestas** de satisfacción.\n\n**Exámenes:** pulsas \"Comenzar\", contestas y los califica el portal al momento. Ves tu calificación, cuántos intentos te quedan y, si el examen lo permite, qué contestaste bien.\n\n**Encuestas:** se responden una vez; no tienen calificación.\n\nSi un examen es obligatorio, hay que aprobarlo para completar la lección.",
+    buttons: [
+      { label: "Volver a estudiante", next: "welcome_student" },
+    ],
+  },
+
+  estudiante_sesiones: {
+    text: "Las **sesiones en vivo** son clases por Zoom dentro de tu curso:\n\n1. Abre la lección y pulsa **\"Registrarme a la sesión\"**.\n2. El día de la clase, el botón **\"Unirse a la clase\"** se activa **15 minutos antes** y te lleva directo a Zoom. Tu enlace es personal: entra siempre desde ahí.\n3. Con **\"Agregar a mi calendario\"** te llega un recordatorio.\n4. Tu **asistencia se confirma sola** con el reporte de Zoom (puede tardar unas horas).\n\nLas horas se muestran en **tu zona horaria**; puedes cambiarla en Configuración.",
+    buttons: [
+      { label: "Calendario, mensajes y archivos", next: "estudiante_herramientas" },
+      { label: "Volver a estudiante", next: "welcome_student" },
+    ],
+  },
+
+  estudiante_herramientas: {
+    text: "**Calendario:** en el menú ves tus sesiones en vivo y los webinars, en tu hora.\n\n**Mensajes:** escríbele al equipo de HCE (con archivo si hace falta) y lee lo que te mandan. El número rojo son los que no has leído.\n\n**Biblioteca del curso:** en el aula, el botón **Biblioteca** tiene los archivos del curso, y cada clase muestra abajo sus propios archivos.\n\n**Zona horaria:** en Configuración eliges en qué hora quieres ver todo.",
+    buttons: [
+      { label: "Volver a estudiante", next: "welcome_student" },
+    ],
+  },
+
   estudiante_tareas: {
     text: "Algunas lecciones son **tareas**: lees las instrucciones y entregas tu respuesta escrita, un archivo, o ambos.\n\nAl entregarla, la lección cuenta como completada. Un profesor la revisa:\n\n**Aprobada** — listo.\n**Por corregir** — verás su comentario en la misma lección y podrás volver a entregarla. Mientras tanto, esa lección queda pendiente.",
     buttons: [
@@ -110,8 +140,16 @@ const FLOWS = {
   },
 
   estudiante_logros: {
-    text: "En tu **Dashboard** ves tus puntos, tus insignias y la tabla de posiciones.\n\n**Cómo se ganan puntos:**\nLección completada: +10\nDía de estudio: +5\nWebinar al que asististe: +15\nExamen aprobado al primer intento: +20\nCurso certificado: +50\n\nEn la tabla solo aparece tu nombre y la inicial de tu apellido. Si prefieres no aparecer, usa **\"Ocultarme de la tabla\"**.",
+    text: "En tu **Dashboard** ves tus puntos, tu **nivel**, tus **insignias** y la tabla de posiciones.\n\n**Puntos:** lección completada +10, examen de lección aprobado +15, examen final a la primera +20, tarea +10, encuesta +5, sesión en vivo o webinar +15, día de estudio +5, día que entras +2, curso certificado +50.\n\n**Insignias:** 8 categorías con 8 niveles cada una (de Novato a Gran maestro).\n\n**Recompensas:** si el portal las tiene activas, al llegar a cierto nivel obtienes un **descuento que se aplica solo** al pagar un curso.\n\nSi prefieres no aparecer en la tabla, usa **\"Ocultarme de la tabla\"**.",
     buttons: [
+      { label: "Volver a estudiante", next: "welcome_student" },
+    ],
+  },
+
+  estudiante_revision: {
+    text: "Si tu curso dice **\"Tu acceso está en revisión\"**, es normal en cuentas nuevas: un administrador revisa tu registro, te asigna tu grupo y abre tus cursos.\n\nMientras tanto puedes explorar el portal e inscribirte o comprar; lo que ya tengas se abrirá solo cuando te den acceso.",
+    buttons: [
+      { label: "Hablar con un asesor", next: "contacto" },
       { label: "Volver a estudiante", next: "welcome_student" },
     ],
   },
@@ -133,9 +171,10 @@ const FLOWS = {
 
   // ── FLUJOS ADMINISTRADOR ────────────────────────────────────────────────────
   admin_gestion_cursos: {
-    text: "En **Gestión de Cursos**:\n\n1. **Datos del curso:** título, descripción, portada y categoría.\n2. **Acceso:** Gratis (el alumno se inscribe solo) o De pago, con su precio. Los cursos de pago piden una **portada propia**: la miniatura de YouTube deja ver el video sin pagar.\n3. **Vigencia del certificado** (opcional): meses que vale. Vacío = no vence.\n4. **Examen final:** las preguntas y la calificación mínima.\n\nAl **publicar** el curso aparece abajo la tarjeta **Lecciones del curso**: ahí agregas videos, PDF, lecturas y tareas, y las ordenas con las flechas.",
+    text: "En **Gestión de Cursos**:\n\n1. **Datos del curso**, **acceso** (gratis o de pago) y **vigencia** del certificado.\n2. Al publicarlo aparecen abajo: **Lecciones del curso**, **Reglas del curso** y **Biblioteca de archivos**.\n3. En lecciones agregas videos (YouTube, Vimeo u otra plataforma), PDF, lecturas, páginas web, tareas, exámenes, encuestas y sesiones en vivo; con **Sección** agrupas por módulos. También puedes **copiar una lección de otro curso**.\n4. En la lista de cursos, el botón de **copiar** clona un curso completo (queda inactivo para revisarlo).\n\nCon **\"Vista de alumno\"** (arriba) ves el portal como lo ve un alumno.",
     buttons: [
       { label: "¿Qué tipo de lección uso?", next: "admin_lecciones" },
+      { label: "Exámenes, encuestas y sesiones", next: "admin_evaluaciones" },
       { label: "Volver a admin", next: "welcome_admin" },
     ],
   },
@@ -156,17 +195,47 @@ const FLOWS = {
   },
 
   admin_grupos: {
-    text: "En la pestaña **Grupos**:\n\n**Grupos** — reúne alumnos (un hospital, una generación) y asígnales cursos. Todos los miembros quedan inscritos, y quien entre después al grupo también. Puedes agregar miembros buscándolos o **pegando una lista de correos** de Excel.\n\n**Inscripción masiva** — pega correos, elige un curso y quedan inscritos sin crear un grupo. Si alguien no tiene cuenta, te lo listamos para invitarlo.\n\nQuitar un curso de un grupo **no** le quita el acceso a nadie: las bajas se hacen alumno por alumno.",
+    text: "**Grupos** — reúne alumnos (un hospital, una generación) y asígnales cursos: todos quedan inscritos. Puedes pegar una lista de correos de Excel.\n\n**Inscripción masiva** — pega correos y elige un curso.\n\n**Divisiones** — para otras asociaciones: cada división tiene sus alumnos, sus cursos y sus grupos. En Informes y en el directorio de Alumnos puedes filtrar por división.\n\nQuitar un curso de un grupo no le quita el acceso a nadie: las bajas son alumno por alumno.",
     buttons: [
-      { label: "Métricas por grupo", next: "admin_metricas" },
+      { label: "Informes y métricas", next: "admin_metricas" },
       { label: "Volver a admin", next: "welcome_admin" },
     ],
   },
 
   admin_metricas: {
-    text: "En **Métricas** ves, por periodo y opcionalmente por **grupo**:\n\n**Todos los cursos** — visitas, alumnos activos, tiempo de estudio, certificados e ingresos.\n\n**Al abrir un curso** — en qué lección se atora la gente, en qué minuto abandonan cada video, desde qué dispositivo entran, las calificaciones del examen y la tabla de alumnos con el historial de cada visita.\n\nTodo se exporta a Excel.",
+    text: "En **Informes** hay tres pestañas:\n\n**Cursos** — por curso: visitas, tiempo, abandono del video, la **matriz de unidades** (cada alumno contra cada lección, exportable a Excel con colores) y el **análisis de exámenes y encuestas**.\n\n**Analíticas** — toda la plataforma: progreso, tasa de finalización, certificados vigentes y por vencer, biblioteca y horas de formación.\n\n**Línea de tiempo** — quién entró, qué aprobó, qué descargó y qué hicieron los administradores.\n\nEn **Alumnos → Reporte completo** está la ficha de cada alumno, con el botón para **reiniciar** un examen.",
     buttons: [
       { label: "Reportes en Excel y PDF", next: "admin_reportes" },
+      { label: "Volver a admin", next: "welcome_admin" },
+    ],
+  },
+
+  admin_cuentas: {
+    text: "Quien se registra **sí entra al portal** y puede inscribirse o comprar, pero sus cursos quedan **cerrados** hasta que le das acceso.\n\nEn **Alumnos**, arriba, aparece **Cuentas por activar** (el número naranja del menú). En cada cuenta:\n\n1. Pulsa **Dar acceso**.\n2. Elige su **grupo**: queda inscrito en los cursos del grupo.\n3. Si hace falta, marca **cursos adicionales**.\n4. **Activar cuenta**.\n\nSi la cuenta no procede, **Rechazar** la suspende. Los alumnos que tú das de alta con \"Agregar alumno\" ya nacen con acceso.",
+    buttons: [
+      { label: "Grupos e inscripción masiva", next: "admin_grupos" },
+      { label: "Volver a admin", next: "welcome_admin" },
+    ],
+  },
+
+  admin_evaluaciones: {
+    text: "**Examen o encuesta:** agrega la lección y pasas a escribir las preguntas: opción única, varias correctas, escala 1 a 5 (encuestas) o respuesta abierta. En el examen marcas la correcta y defines el mínimo para aprobar, los intentos y si al terminar se muestra qué contestó bien. Las respuestas correctas nunca llegan al navegador del alumno.\n\n**Sesión en vivo:** pon el ID de la reunión de Zoom y pulsa **\"Traer fecha y duración de Zoom\"**. El alumno se registra desde la lección, entra con \"Unirse\" (15 min antes) y la asistencia se confirma sola; con el botón de personas ves los registrados.\n\nEl análisis pregunta por pregunta está en **Informes → Cursos**, al abrir el curso.",
+    buttons: [
+      { label: "Informes y métricas", next: "admin_metricas" },
+      { label: "Volver a admin", next: "welcome_admin" },
+    ],
+  },
+
+  admin_reglas: {
+    text: "En la tarjeta **Reglas del curso** (dentro del curso):\n\n**Disponibilidad:** mostrar u ocultar del catálogo, **cupo** máximo y **solicitud de inscripción** (las solicitudes aparecen en Alumnos).\n\n**Límites:** **días de acceso** después de inscribirse (y si quien terminó conserva el acceso) y **cursos prerrequisito**.\n\n**Finalización:** con el examen final, al completar las lecciones obligatorias o con un porcentaje de lecciones. Con las dos últimas, el alumno obtiene su certificado con el botón \"Obtener mi certificado\".",
+    buttons: [
+      { label: "Volver a admin", next: "welcome_admin" },
+    ],
+  },
+
+  admin_comunicacion: {
+    text: "**Notificaciones** — correos automáticos por evento (cuenta activada, inscripción, registro a sesión, recordatorio 1 hora antes, examen aprobado, tarea revisada, curso terminado, mensaje nuevo). Los activas o apagas, editas el texto con variables como {nombre} o {curso} y puedes mandarte una prueba.\n\n**Mensajes** — escribe a una persona, un grupo, los inscritos de un curso o a todos, con archivo adjunto.\n\n**Comunicados** — avisos arriba del portal del alumno (internos) o en la página de inicio (externos), con fechas.",
+    buttons: [
       { label: "Volver a admin", next: "welcome_admin" },
     ],
   },
@@ -216,9 +285,10 @@ const FLOWS = {
   },
 
   admin_bloquear: {
-    text: 'Si necesitas suspender temporalmente el acceso de un usuario:\n\n1. Ve a la sección **Alumnos**.\n2. Ubica al estudiante y haz clic en el candado de la columna de acciones.\n3. Confirma la acción. El alumno cambiará a estado "Bloqueado" y no podrá ingresar a su portal.',
+    text: "En **Alumnos**, el candado de la columna de acciones **bloquea** la cuenta: el alumno no puede entrar al portal ni a sus cursos. Con el mismo botón la reactivas.\n\nLas cuentas nuevas no se bloquean: quedan **por activar** (ver \"Cuentas por activar\").",
     buttons: [
-      { label: 'Volver a admin',           next: 'welcome_admin' },
+      { label: "Cuentas por activar", next: "admin_cuentas" },
+      { label: "Volver a admin", next: "welcome_admin" },
     ],
   },
 

@@ -1,0 +1,115 @@
+/* Bandeja de mensajes. Colores propios, con tema oscuro según el contenedor
+   (portal del alumno .crm-layout o panel .admin-layout). */
+
+.msj {
+  --msj-fondo: #ffffff;
+  --msj-suave: #f8fafc;
+  --msj-borde: #e2e8f0;
+  --msj-texto: #0f172a;
+  --msj-tenue: #64748b;
+  --msj-acento: #00838f;
+  --msj-acento-suave: #e0f7fa;
+  display: flex; flex-direction: column; gap: 14px; color: var(--msj-texto);
+}
+.crm-layout[data-theme="dark"] .msj,
+.admin-layout[data-theme="dark"] .msj {
+  --msj-fondo: #0f1923;
+  --msj-suave: #15212d;
+  --msj-borde: #253445;
+  --msj-texto: #e8f0fe;
+  --msj-tenue: #94a3b8;
+  --msj-acento: #26c6da;
+  --msj-acento-suave: rgba(38, 198, 218, 0.12);
+}
+
+.msj-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.msj-pestanas { display: flex; flex-wrap: wrap; gap: 6px; }
+.msj-pestanas button,
+.msj-boton {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 38px;
+  padding: 8px 14px; border: 1px solid var(--msj-borde); border-radius: 999px;
+  background: var(--msj-fondo); color: var(--msj-texto); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer;
+}
+.msj-pestanas button.activa { border-color: var(--msj-acento); background: var(--msj-acento-suave); color: var(--msj-acento); }
+.msj-boton.principal { border-color: var(--msj-acento); background: var(--msj-acento); color: #fff; }
+.msj-boton:disabled { opacity: 0.6; cursor: default; }
+.msj-botones { display: flex; gap: 8px; flex-wrap: wrap; }
+.msj-contador { min-width: 20px; padding: 0 6px; border-radius: 999px; background: #e53935; color: #fff; font-size: 0.72rem; line-height: 18px; text-align: center; }
+
+.msj-buscar {
+  display: inline-flex; align-items: center; gap: 6px; min-width: 200px;
+  padding: 7px 10px; border: 1px solid var(--msj-borde); border-radius: 999px; background: var(--msj-fondo); color: var(--msj-tenue);
+}
+.msj-buscar input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--msj-texto); font: inherit; font-size: 0.86rem; }
+
+.msj-vacio { margin: 0; padding: 30px 10px; color: var(--msj-tenue); text-align: center; }
+.msj-nota { margin: 0; color: var(--msj-tenue); font-size: 0.86rem; }
+
+.msj-lista { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border: 1px solid var(--msj-borde); border-radius: 12px; overflow: hidden; background: var(--msj-fondo); }
+.msj-lista li + li { border-top: 1px solid var(--msj-borde); }
+.msj-fila {
+  display: grid; grid-template-columns: 200px minmax(0, 1fr) auto; grid-template-areas: 'de asunto fecha' 'de extracto fecha';
+  column-gap: 14px; width: 100%; padding: 12px 16px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.msj-fila:hover { background: var(--msj-suave); }
+.msj-fila.no-leido { background: var(--msj-acento-suave); }
+.msj-fila.no-leido .msj-de, .msj-fila.no-leido .msj-asunto { font-weight: 800; }
+.msj-de { grid-area: de; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88rem; font-weight: 600; }
+.msj-asunto { grid-area: asunto; display: inline-flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; }
+.msj-extracto { grid-area: extracto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--msj-tenue); font-size: 0.82rem; }
+.msj-fecha { grid-area: fecha; align-self: center; color: var(--msj-tenue); font-size: 0.78rem; white-space: nowrap; }
+
+.msj-titulo { margin: 0; font-size: 1.15rem; }
+.msj-hilo { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.msj-hilo li { padding: 14px 16px; border: 1px solid var(--msj-borde); border-radius: 12px; background: var(--msj-fondo); }
+.msj-hilo li.propio { background: var(--msj-suave); }
+.msj-hilo header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 8px; }
+.msj-hilo header small { color: var(--msj-tenue); font-size: 0.78rem; }
+.msj-hilo time { margin-left: auto; color: var(--msj-tenue); font-size: 0.78rem; }
+.msj-hilo p { margin: 0; font-size: 0.92rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msj-adjunto {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 10px;
+  border: 1px solid var(--msj-borde); border-radius: 8px; background: var(--msj-suave); color: var(--msj-acento); font: inherit; font-size: 0.84rem; cursor: pointer;
+}
+.msj-responder { align-self: flex-start; }
+
+.msj-redactar { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--msj-borde); border-radius: 12px; background: var(--msj-fondo); }
+.msj-campo { display: flex; flex-direction: column; gap: 6px; }
+.msj-campo label { color: var(--msj-tenue); font-size: 0.8rem; font-weight: 700; }
+.msj-campo input, .msj-campo textarea, .msj-campo select, .msj-destino select, .msj-buscar-persona input {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--msj-borde); border-radius: 8px;
+  background: var(--msj-suave); color: var(--msj-texto); font: inherit; font-size: 0.9rem;
+}
+.msj-campo textarea { resize: vertical; }
+.msj-destino { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 8px; align-items: start; }
+.msj-buscar-persona { position: relative; }
+.msj-buscar-persona ul {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; margin: 0; padding: 4px; list-style: none;
+  border: 1px solid var(--msj-borde); border-radius: 8px; background: var(--msj-fondo); box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+}
+.msj-buscar-persona button {
+  display: flex; flex-direction: column; width: 100%; padding: 8px 10px; border: 0; border-radius: 6px;
+  background: none; color: var(--msj-texto); font: inherit; font-size: 0.86rem; text-align: left; cursor: pointer;
+}
+.msj-buscar-persona button:hover { background: var(--msj-suave); }
+.msj-buscar-persona small { color: var(--msj-tenue); font-size: 0.76rem; }
+.msj-elegido {
+  display: inline-flex; align-items: center; gap: 6px; align-self: center; justify-self: start;
+  padding: 6px 10px; border-radius: 999px; background: var(--msj-acento-suave); color: var(--msj-acento); font-size: 0.86rem; font-weight: 600;
+}
+.msj-elegido button { display: inline-flex; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.msj-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.msj-adjuntar {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+  padding: 8px 12px; border: 1px dashed var(--msj-borde); border-radius: 8px; color: var(--msj-tenue); font-size: 0.84rem; cursor: pointer;
+}
+.msj-adjuntar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msj-adjuntar input { display: none; }
+
+@media (max-width: 640px) {
+  .msj-fila { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'de fecha' 'asunto asunto' 'extracto extracto'; row-gap: 2px; }
+  .msj-destino { grid-template-columns: 1fr; }
+  .msj-buscar { width: 100%; }
+  .msj-pie .msj-botones { width: 100%; }
+  .msj-pie .msj-boton { flex: 1; justify-content: center; }
+}

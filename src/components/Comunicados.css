@@ -1,0 +1,19 @@
+.comunicados { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.comunicados--externo { margin: 0; padding: 10px 16px 0; }
+.comunicado {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px; border: 1px solid #b2ebf2; border-left: 4px solid #00acc1; border-radius: 12px;
+  background: #e0f7fa; color: #004d57;
+}
+.comunicado svg { flex-shrink: 0; margin-top: 1px; }
+.comunicado-texto { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; font-size: 0.9rem; line-height: 1.45; }
+.comunicado-texto strong { color: #00363d; }
+.comunicado-texto a { align-self: flex-start; color: #00838f; font-weight: 700; }
+.comunicado button {
+  flex-shrink: 0; display: inline-flex; padding: 4px; border: 0; border-radius: 6px;
+  background: none; color: inherit; cursor: pointer;
+}
+.comunicado button:hover { background: rgba(0, 0, 0, 0.06); }
+.crm-layout[data-theme="dark"] .comunicado { border-color: rgba(38, 198, 218, 0.35); background: rgba(38, 198, 218, 0.1); color: #b2ebf2; }
+.crm-layout[data-theme="dark"] .comunicado-texto strong { color: #e0f7fa; }
+.crm-layout[data-theme="dark"] .comunicado-texto a { color: #4dd0e1; }

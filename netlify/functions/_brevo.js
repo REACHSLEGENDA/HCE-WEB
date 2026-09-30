@@ -15,6 +15,12 @@ export const LISTS = {
   COMPRADORES_SIM:   13,
   PORTAL:            14,
   STEP1_PARIS:       15,
+  // Una sola lista para todos los webinars: dispara el flujo "zoom" con la
+  // confirmación y el enlace personal de cada quien.
+  WEBINARS:          16,
+  // Avisos del portal que salen por Brevo (recordatorio de curso y
+  // recertificación): una lista, un flujo y una plantilla universal.
+  PORTAL_GENERAL:    19,
 };
 
 export const isConfigured = () => Boolean(process.env.BREVO_API_KEY);
@@ -112,4 +118,37 @@ export async function removeFromList(email, listId) {
     if (err.status === 400 || err.status === 404) return null;
     throw err;
   }
+}
+
+// Remitente de los correos del portal: CORREO_REMITENTE si está configurado;
+// si no, el primer remitente activo que ya tiene la cuenta de Brevo (el mismo
+// que usan los flujos). Así no hace falta configurar nada más.
+let remitenteEnCache = null;
+export async function remitentePorDefecto() {
+  const configurado = process.env.CORREO_REMITENTE || process.env.AVISO_REGISTROS_DE;
+  if (configurado) return configurado;
+  if (remitenteEnCache) return remitenteEnCache;
+  try {
+    const data = await brevoFetch('/senders', { method: 'GET' });
+    const lista = data?.senders || [];
+    remitenteEnCache = (lista.find((s) => s.active) || lista[0])?.email || null;
+  } catch (err) {
+    console.error('No se pudo leer el remitente de Brevo:', err.message);
+  }
+  return remitenteEnCache;
+}
+
+// Correo suelto (transaccional), fuera de las automatizaciones. Sin `de`, usa
+// el remitente de la cuenta de Brevo.
+export async function enviarCorreo({ de, para, asunto, html }) {
+  const remitente = de || await remitentePorDefecto();
+  if (!remitente) throw new Error('La cuenta de Brevo no tiene un remitente verificado.');
+  return brevoFetch('/smtp/email', {
+    body: {
+      sender: { email: remitente, name: 'Portal HCE' },
+      to: para.map((email) => ({ email })),
+      subject: asunto,
+      htmlContent: html,
+    },
+  });
 }

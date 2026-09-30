@@ -495,3 +495,105 @@
 /* En el embudo de lecciones los títulos son largos: más espacio a la etiqueta. */
 .m-tarjeta--ancha .m-barras li { grid-template-columns: minmax(140px, 32%) 1fr auto; }
 .m-tarjeta--ancha .m-barras-etiqueta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- Matriz de unidades ------------------------------------------------ */
+/* Colores de estado (siempre acompañados de su símbolo). */
+.metricas {
+  --m-ok: #2E7D32;
+  --m-curso: #E65100;
+  --m-mal: #C62828;
+}
+.admin-layout[data-theme="dark"] .metricas {
+  --m-ok: #43A047;
+  --m-curso: #FB8C00;
+  --m-mal: #E53935;
+}
+
+.m-matriz-barra { flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.m-matriz-buscar {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 8px;
+  color: var(--text-muted); background: var(--bg-main);
+}
+.m-matriz-buscar input { width: 180px; border: 0; outline: 0; background: transparent; color: var(--text-dark); font: inherit; font-size: 0.85rem; }
+.m-matriz-leyenda { display: flex; flex-wrap: wrap; gap: 14px; margin: 0; padding: 0; list-style: none; color: var(--text-muted); font-size: 0.78rem; }
+.m-matriz-leyenda li { display: inline-flex; align-items: center; gap: 6px; }
+
+.m-matriz-scroll { max-height: 560px; overflow: auto; border: 1px solid var(--border-color); border-radius: 10px; }
+.m-matriz-tabla { border-collapse: separate; border-spacing: 0; font-size: 0.8rem; }
+.m-matriz-tabla thead th { position: sticky; top: 0; z-index: 2; background: var(--bg-main); }
+.m-matriz-alumno {
+  position: sticky; left: 0; z-index: 1;
+  min-width: 200px; max-width: 240px; padding: 4px 12px;
+  background: var(--bg-main); color: var(--text-dark);
+  font-weight: 600; text-align: left;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-right: 1px solid var(--border-color);
+}
+.m-matriz-tabla thead .m-matriz-alumno { z-index: 3; vertical-align: bottom; padding-bottom: 8px; color: var(--text-muted); font-size: 0.74rem; }
+.m-matriz-col { height: 150px; width: 30px; padding: 0 0 8px; vertical-align: bottom; }
+.m-matriz-col span {
+  display: block; width: 26px; margin: 0 auto;
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  max-height: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-muted); font-size: 0.72rem; font-weight: 600;
+}
+.m-matriz-tabla td { padding: 2px; text-align: center; }
+.m-matriz-avance { padding: 0 12px; color: var(--text-dark); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.m-matriz-tabla thead .m-matriz-avance { vertical-align: bottom; padding-bottom: 8px; color: var(--text-muted); font-size: 0.74rem; }
+.m-matriz-tabla tbody tr:hover th,
+.m-matriz-tabla tbody tr:hover td { background: var(--m-acento-lavado); }
+
+.m-celda {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  color: #fff; font-size: 0.78rem; font-weight: 700; line-height: 1;
+}
+.m-celda.completa { background: var(--m-ok); }
+.m-celda.en-curso { background: var(--m-curso); }
+.m-celda.corregir,
+.m-celda.reprobado { background: var(--m-mal); }
+.m-celda.vacia { background: transparent; box-shadow: inset 0 0 0 1.5px var(--m-base); }
+.m-matriz-pie { margin: 8px 0 0; color: var(--text-muted); font-size: 0.78rem; }
+
+/* ---- Análisis de exámenes y encuestas ---------------------------------- */
+.m-analisis-barra { flex-wrap: wrap; justify-content: flex-start; gap: 10px; margin-bottom: 14px; }
+.m-analisis-barra .m-boton { margin-left: auto; }
+.m-analisis-resumen {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;
+  margin: 0 0 18px; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px;
+}
+.m-analisis-resumen div { display: flex; flex-direction: column; gap: 2px; }
+.m-analisis-resumen dt { color: var(--text-muted); font-size: 0.74rem; }
+.m-analisis-resumen dd { margin: 0; color: var(--text-dark); font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.m-analisis-preguntas { display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.m-analisis-pregunta { padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; }
+.m-analisis-pregunta h4 { display: flex; gap: 8px; margin: 0; color: var(--text-dark); font-size: 0.92rem; line-height: 1.4; }
+.m-analisis-pregunta h4 span {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--m-acento-lavado); color: var(--m-acento); font-size: 0.72rem;
+}
+.m-analisis-sub { margin: 4px 0 10px 30px; color: var(--text-muted); font-size: 0.78rem; }
+
+.m-analisis-opciones { display: flex; flex-direction: column; gap: 8px; margin: 0 0 0 30px; padding: 0; list-style: none; }
+.m-analisis-opciones li { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(80px, 1fr) auto; align-items: center; gap: 12px; }
+.m-analisis-opcion-texto { display: flex; align-items: center; gap: 6px; color: var(--text-dark); font-size: 0.84rem; overflow-wrap: anywhere; }
+.m-analisis-opciones li.correcta .m-analisis-opcion-texto { font-weight: 700; }
+.m-analisis-opciones li.correcta svg { flex-shrink: 0; color: var(--m-ok); }
+.m-analisis-opciones .m-barras-pista { background: var(--m-reticula); border-radius: 4px; }
+.m-analisis-valor { color: var(--text-muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.m-analisis-ver { display: inline-flex; align-items: center; gap: 4px; margin-left: 30px; color: var(--m-acento); font-weight: 700; }
+.m-analisis-abiertas { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; margin: 10px 0 0 30px; padding: 0; list-style: none; }
+.m-analisis-abiertas li { padding: 8px 10px; border-left: 3px solid var(--m-acento); border-radius: 4px; background: var(--m-acento-lavado); }
+.m-analisis-abiertas strong { color: var(--text-dark); font-size: 0.8rem; }
+.m-analisis-abiertas p { margin: 2px 0 0; color: var(--text-dark); font-size: 0.84rem; line-height: 1.45; }
+
+@media (max-width: 560px) {
+  .m-analisis-sub, .m-analisis-opciones, .m-analisis-ver, .m-analisis-abiertas { margin-left: 0; }
+  .m-analisis-opciones li { grid-template-columns: minmax(0, 1fr) auto; }
+  .m-analisis-opciones .m-barras-pista { grid-column: 1 / -1; grid-row: 2; }
+  .m-analisis-barra .m-boton { margin-left: 0; }
+  .m-analisis-barra .m-select { width: 100%; }
+}

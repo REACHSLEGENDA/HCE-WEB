@@ -1,0 +1,24 @@
+.sesion { display: flex; flex-direction: column; gap: 14px; }
+.sesion-aviso { margin: 0; color: #64748b; font-size: 0.88rem; line-height: 1.5; }
+
+.sesion-horario {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px; border: 1px solid #b2ebf2; border-radius: 12px; background: #e0f7fa; color: #006064;
+}
+.sesion-horario svg { flex-shrink: 0; }
+.sesion-horario div { display: flex; flex-direction: column; gap: 2px; }
+.sesion-horario strong { color: #0f172a; font-size: 1rem; text-transform: capitalize; }
+.sesion-horario span { color: #00838f; font-size: 0.86rem; }
+
+.sesion-estado { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 12px 14px; border-radius: 10px; font-weight: 600; line-height: 1.45; }
+.sesion-estado svg { flex-shrink: 0; margin-top: 1px; }
+.sesion-estado.ok { background: #e8f5e9; color: #1b5e20; }
+.sesion-estado.pendiente { background: #fff8e1; color: #8d5a00; }
+.sesion-estado.mal { background: #ffebee; color: #b71c1c; }
+
+.sesion-acciones { display: flex; flex-wrap: wrap; gap: 10px; }
+.sesion-acciones .back-btn { display: inline-flex; align-items: center; gap: 6px; }
+
+@media (max-width: 520px) {
+  .sesion-acciones .back-btn { flex: 1 1 100%; justify-content: center; }
+}

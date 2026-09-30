@@ -1,0 +1,67 @@
+.cambio-vista-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #00bcd4;
+  border-radius: 999px;
+  background: transparent;
+  color: #0097a7;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cambio-vista-boton:hover { background: rgba(0, 188, 212, 0.1); }
+
+/* Flota abajo al centro para no mover el diseño de la página de debajo. */
+.cambio-vista-franja {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+.cambio-vista-franja svg { flex-shrink: 0; color: #26c6da; }
+.cambio-vista-franja button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #00bcd4;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cambio-vista-franja button:hover { background: #00acc1; }
+
+/* En el celular el botón queda como ícono y la franja se compacta. */
+@media (max-width: 600px) {
+  .cambio-vista-boton { padding: 8px; }
+  .cambio-vista-boton span { display: none; }
+  .cambio-vista-franja {
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    gap: 6px 10px;
+    padding: 8px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+  }
+}

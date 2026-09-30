@@ -5,7 +5,7 @@
 // que dijo el ponente al cierre queda como respaldo para quien entro con otro
 // correo o desde el celular de un companero.
 
-import { admin, usuarioDesdeToken, json, isConfigured as supabaseListo } from './_supabase.js';
+import { admin, usuarioDesdeToken, cuentaHabilitada, json, isConfigured as supabaseListo } from './_supabase.js';
 import { sincronizarAsistencia, generarFolio } from './_webinars.js';
 
 const CAMPOS_WEBINAR =
@@ -31,6 +31,9 @@ export const handler = async (event) => {
   try {
     const user = await usuarioDesdeToken(event.headers);
     if (!user) return json(401, { error: 'Sesion no valida. Vuelve a entrar al portal.' });
+
+    const cuenta = await cuentaHabilitada(user.id);
+    if (!cuenta.habilitada) return json(403, { error: cuenta.error, estado: 'cuenta-no-habilitada' });
 
     const { webinarId, codigo = '', accion = 'desbloquear', certificadoUrl = '', folio = '' } =
       JSON.parse(event.body || '{}');

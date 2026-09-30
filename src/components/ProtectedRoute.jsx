@@ -95,6 +95,45 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     );
   }
 
+  // Cuenta suspendida por un administrador: no entra al portal. (Una cuenta
+  // nueva sin aprobar sí entra; lo que se le cierra son los cursos.)
+  if (profile && profile.rol !== 'admin' && profile.activo === false) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'grid',
+        placeItems: 'center',
+        padding: '24px',
+        background: '#07111f',
+        color: '#e2e8f0',
+        fontFamily: 'Outfit, sans-serif'
+      }}>
+        <section style={{
+          width: 'min(480px, 100%)',
+          padding: '28px',
+          border: '1px solid rgba(0, 210, 255, 0.25)',
+          borderRadius: '18px',
+          background: '#0d1b2a',
+          textAlign: 'center'
+        }}>
+          <h1 style={{ margin: '0 0 10px', color: '#ffffff', fontSize: '1.35rem' }}>
+            Tu cuenta está suspendida
+          </h1>
+          <p style={{ margin: '0 0 22px', lineHeight: 1.55 }}>
+            Por ahora no puedes entrar al portal. Si crees que es un error, escríbenos y lo revisamos.
+          </p>
+          <button
+            type="button"
+            onClick={() => void logout()}
+            style={{ padding: '11px 17px', border: '1px solid #64748b', borderRadius: '999px', background: 'transparent', color: '#e2e8f0', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Cerrar sesión
+          </button>
+        </section>
+      </div>
+    );
+  }
+
   if (allowedRoles && (!profile || !allowedRoles.includes(profile.rol))) {
     // If the user's role is not allowed, redirect to main dashboard
     return <Navigate to="/dashboard" replace />;

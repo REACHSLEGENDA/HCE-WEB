@@ -104,3 +104,32 @@ export const formatoPrecio = (mxn) =>
 // (lo que sale al copiar una columna de Excel).
 export const extraerCorreos = (texto) =>
   [...new Set((String(texto || '').match(/[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']+/g) || []).map((c) => c.toLowerCase()))];
+
+/** Aprobar, rechazar, bloquear o activar una cuenta (solo administradores). */
+export async function llamarCuenta(accion, cuerpo = {}) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch('/.netlify/functions/cuenta-admin', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.access_token || ''}`,
+    },
+    body: JSON.stringify({ accion, ...cuerpo }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'No se pudo actualizar la cuenta. Intenta de nuevo.');
+  return data;
+}
+
+/** Clonar un curso o copiar una lección a otro curso (solo administradores). */
+export async function llamarClonar(accion, cuerpo = {}) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch('/.netlify/functions/curso-clonar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+    body: JSON.stringify({ accion, ...cuerpo }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'No se pudo copiar. Intenta de nuevo.');
+  return data;
+}

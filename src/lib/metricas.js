@@ -302,6 +302,7 @@ export function avancePorLeccion({ lecciones, progreso, inscritos }) {
     completas.set(p.leccion_id, (completas.get(p.leccion_id) || 0) + 1);
   }
   return [...lecciones]
+    .filter((l) => l.tipo !== 'seccion')
     .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0) || a.id - b.id)
     .map((l) => {
       const completaron = completas.get(l.id) || 0;
@@ -331,4 +332,74 @@ export function curvaRetencionDeLeccion(progresoDeLeccion) {
     user_id: p.user_id,
     porcentaje_max: p.completada ? 100 : p.porcentaje || 0,
   })));
+}
+
+// ---- Matriz de unidades ----------------------------------------------------------
+//
+// Una fila por alumno inscrito y una columna por lección (más el examen final),
+// con el estado de cada cruce, como la "matriz de unidad" de TalentLMS:
+//   completa   la terminó (o aprobó el examen)
+//   en-curso   la empezó: video a medias o tarea entregada sin revisar
+//   corregir   tarea devuelta por el profesor
+//   reprobado  presentó el examen y no lo ha aprobado
+//   null       no la ha empezado
+
+export const ESTADOS_MATRIZ = {
+  completa: { simbolo: '✓', nombre: 'Completada' },
+  'en-curso': { simbolo: '○', nombre: 'En curso' },
+  corregir: { simbolo: '✗', nombre: 'Tarea por corregir' },
+  reprobado: { simbolo: '✗', nombre: 'Examen no aprobado' },
+};
+
+export function matrizDeUnidades({ lecciones, progreso, entregas = [], examenes = [], intentosEval = [], inscripciones, perfiles, conExamen }) {
+  const ordenadas = [...lecciones]
+    .filter((l) => l.tipo !== 'seccion')
+    .sort((a, b) => (a.orden || 0) - (b.orden || 0) || a.id - b.id);
+  // Exámenes de lección presentados: si no está aprobado, se ve como reprobado.
+  const presentoEval = new Set(intentosEval.map((i) => `${i.user_id}:${i.leccion_id}`));
+  const perfilPorId = new Map(perfiles.map((p) => [p.id, p]));
+  const avance = new Map(progreso.map((p) => [`${p.user_id}:${p.leccion_id}`, p]));
+
+  // De cada tarea cuenta la entrega más reciente.
+  const ultimaEntrega = new Map();
+  for (const e of entregas) {
+    const clave = `${e.user_id}:${e.leccion_id}`;
+    const previa = ultimaEntrega.get(clave);
+    if (!previa || new Date(e.creada_en) > new Date(previa.creada_en)) ultimaEntrega.set(clave, e);
+  }
+
+  const examenesPorAlumno = agruparPor(eventosDeExamen(examenes), 'user_id');
+
+  const columnas = ordenadas.map((l) => ({ id: l.id, titulo: l.titulo, tipo: l.tipo }));
+  if (conExamen) columnas.push({ id: 'examen', titulo: 'Examen final', tipo: 'examen' });
+
+  const filas = inscripciones.map((i) => {
+    const perfil = perfilPorId.get(i.user_id);
+    const celdas = ordenadas.map((l) => {
+      const p = avance.get(`${i.user_id}:${l.id}`);
+      const entrega = l.tipo === 'tarea' ? ultimaEntrega.get(`${i.user_id}:${l.id}`) : null;
+      if (entrega?.estado === 'rechazada') return 'corregir';
+      if (entrega?.estado === 'entregada') return 'en-curso';
+      if (p?.completada) return 'completa';
+      if (l.tipo === 'examen' && presentoEval.has(`${i.user_id}:${l.id}`)) return 'reprobado';
+      if (p?.porcentaje > 0) return 'en-curso';
+      return null;
+    });
+    if (conExamen) {
+      const intentos = examenesPorAlumno.get(i.user_id) || [];
+      celdas.push(intentos.some((e) => e.datos?.aprobado) ? 'completa' : intentos.length ? 'reprobado' : null);
+    }
+    const completas = celdas.filter((c) => c === 'completa').length;
+    return {
+      userId: i.user_id,
+      nombre: perfil?.nombre_completo || perfil?.email || 'Alumno sin perfil',
+      email: perfil?.email || '',
+      celdas,
+      completas,
+      porcentaje: columnas.length ? Math.round((completas / columnas.length) * 100) : 0,
+    };
+  });
+
+  filas.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  return { columnas, filas };
 }

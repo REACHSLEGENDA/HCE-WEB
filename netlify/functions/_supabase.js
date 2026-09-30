@@ -53,6 +53,48 @@ export async function adminDesdeToken(headers = {}) {
   return { ...user, perfil: data };
 }
 
+// Si la cuenta puede hacer algo en el portal. Una cuenta bloqueada no puede
+// nada. Una pendiente (recién registrada, sin aprobar) sí entra, se inscribe y
+// compra, pero no toma los cursos: con `exigirAprobacion` también se le niega.
+// Antes de correr cuentas-aprobacion.sql no existen las columnas y todas
+// cuentan como habilitadas, igual que antes.
+export async function cuentaHabilitada(userId, { exigirAprobacion = false } = {}) {
+  const { data, error } = await admin()
+    .from('profiles')
+    .select('rol, activo, aprobado')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === '42703') return { habilitada: true };
+    throw new Error(error.message);
+  }
+  if (data?.rol === 'admin') return { habilitada: true };
+  if (data?.activo === false) {
+    return { habilitada: false, error: 'Tu cuenta está suspendida. Escríbenos si crees que es un error.' };
+  }
+  if (exigirAprobacion && data?.aprobado === false) {
+    return { habilitada: false, error: 'Tu acceso a los cursos todavía está en revisión. Te avisaremos cuando quede activo.' };
+  }
+  return { habilitada: true };
+}
+
+// Deja constancia de una acción de administrador en la bitácora del portal.
+// Si la tabla no existe todavía, no pasa nada.
+export async function registrarAccionAdmin({ adminId, accion, objetivoUserId = null, courseId = null, detalle = {} }) {
+  try {
+    await admin().from('actividad_portal').insert([{
+      user_id: adminId,
+      tipo: 'admin',
+      objetivo_user_id: objetivoUserId,
+      course_id: courseId,
+      detalle: { accion, ...detalle },
+    }]);
+  } catch {
+    // La bitácora es secundaria.
+  }
+}
+
 export const json = (statusCode, body) => ({
   statusCode,
   headers: { 'Content-Type': 'application/json' },

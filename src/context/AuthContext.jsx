@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { dataUrlToBlob, isInlineAvatar, uploadAvatar } from '../lib/avatar';
+import { registrarLogin } from '../lib/actividad';
+import { recordarZona } from '../lib/zonaHoraria';
 
 const AuthContext = createContext({});
 const MAX_SAFE_ACCESS_TOKEN_LENGTH = 48 * 1024;
@@ -123,6 +125,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       const safeProfile = await migrateLegacyAvatar(userId, data, authUser);
+      recordarZona(safeProfile?.zona_horaria || null);
       setProfile(safeProfile);
       return safeProfile;
     } catch (err) {
@@ -179,6 +182,7 @@ export const AuthProvider = ({ children }) => {
       currentUserIdRef.current = activeSession.user.id;
       setUser(activeSession.user);
       await fetchProfile(activeSession.user.id, activeSession.user);
+      void registrarLogin(activeSession.user.id);
     } catch (error) {
       console.error('Error al aplicar la sesión:', error);
     } finally {

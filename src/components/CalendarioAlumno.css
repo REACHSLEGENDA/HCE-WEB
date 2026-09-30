@@ -1,0 +1,89 @@
+/* Calendario del alumno. Sesiones en vivo en turquesa, webinars en morado,
+   siempre con su nombre (el color nunca va solo). */
+
+.cal {
+  --cal-fondo: #ffffff;
+  --cal-borde: #e2e8f0;
+  --cal-texto: #0f172a;
+  --cal-tenue: #64748b;
+  --cal-hoy: #00838f;
+  --cal-sesion: #00838f;
+  --cal-sesion-fondo: #e0f7fa;
+  --cal-webinar: #6d28d9;
+  --cal-webinar-fondo: #ede9fe;
+  display: flex; flex-direction: column; gap: 12px; color: var(--cal-texto);
+}
+.crm-layout[data-theme="dark"] .cal {
+  --cal-fondo: #0f1923;
+  --cal-borde: #253445;
+  --cal-texto: #e8f0fe;
+  --cal-tenue: #94a3b8;
+  --cal-hoy: #26c6da;
+  --cal-sesion: #4dd0e1;
+  --cal-sesion-fondo: rgba(38, 198, 218, 0.14);
+  --cal-webinar: #c4b5fd;
+  --cal-webinar-fondo: rgba(139, 92, 246, 0.18);
+}
+
+.cal-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cal-nav { display: flex; align-items: center; gap: 8px; }
+.cal-nav h2 { margin: 0; min-width: 170px; font-size: 1.15rem; text-align: center; text-transform: capitalize; }
+.cal-nav button, .cal-hoy {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 38px; min-height: 38px;
+  padding: 6px 12px; border: 1px solid var(--cal-borde); border-radius: 999px;
+  background: var(--cal-fondo); color: var(--cal-texto); font: inherit; font-weight: 600; cursor: pointer;
+}
+.cal-zona { margin: 0; color: var(--cal-tenue); font-size: 0.82rem; }
+
+.cal-rejilla { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--cal-borde); border-radius: 12px; overflow: hidden; background: var(--cal-fondo); }
+.cal-dia-nombre { padding: 8px 4px; border-bottom: 1px solid var(--cal-borde); color: var(--cal-tenue); font-size: 0.74rem; font-weight: 700; text-align: center; }
+.cal-celda {
+  position: relative; display: flex; flex-direction: column; gap: 3px; min-height: 92px; min-width: 0;
+  padding: 6px; border: 0; border-right: 1px solid var(--cal-borde); border-bottom: 1px solid var(--cal-borde);
+  background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.cal-celda:nth-child(7n) { border-right: 0; }
+.cal-celda.vacia { cursor: default; background: repeating-linear-gradient(135deg, transparent 0 6px, rgba(148, 163, 184, 0.06) 6px 12px); }
+.cal-celda.elegida { outline: 2px solid var(--cal-hoy); outline-offset: -2px; }
+.cal-numero { font-size: 0.8rem; font-weight: 700; }
+.cal-celda.hoy .cal-numero {
+  display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px;
+  border-radius: 50%; background: var(--cal-hoy); color: #fff;
+}
+.cal-chip {
+  display: block; overflow: hidden; padding: 2px 5px; border-radius: 4px;
+  font-size: 0.68rem; font-weight: 600; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap;
+}
+.cal-chip.sesion { background: var(--cal-sesion-fondo); color: var(--cal-sesion); }
+.cal-chip.webinar { background: var(--cal-webinar-fondo); color: var(--cal-webinar); }
+.cal-mas { color: var(--cal-tenue); font-size: 0.68rem; }
+.cal-puntos { display: none; gap: 3px; }
+.cal-puntos span { width: 6px; height: 6px; border-radius: 50%; }
+.cal-puntos .sesion { background: var(--cal-sesion); }
+.cal-puntos .webinar { background: var(--cal-webinar); }
+
+.cal-subtitulo { margin: 6px 0 0; font-size: 1rem; text-transform: capitalize; }
+.cal-vacio { margin: 0; color: var(--cal-tenue); font-size: 0.9rem; }
+.cal-lista { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.cal-lista li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--cal-borde); border-left: 4px solid var(--cal-sesion); border-radius: 10px; background: var(--cal-fondo); }
+.cal-lista li.webinar { border-left-color: var(--cal-webinar); }
+.cal-lista-icono { flex-shrink: 0; color: var(--cal-sesion); }
+.cal-lista li.webinar .cal-lista-icono { color: var(--cal-webinar); }
+.cal-lista-texto {
+  display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0;
+  padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.cal-lista-texto strong { font-size: 0.92rem; overflow-wrap: anywhere; }
+.cal-lista-texto span { font-size: 0.84rem; text-transform: capitalize; }
+.cal-lista-texto small { color: var(--cal-tenue); font-size: 0.76rem; }
+.cal-ics {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px;
+  border: 1px solid var(--cal-borde); border-radius: 8px; background: none; color: var(--cal-tenue); cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .cal-celda { min-height: 48px; padding: 4px; align-items: center; }
+  .cal-chip, .cal-mas { display: none; }
+  .cal-puntos { display: flex; }
+  .cal-nav h2 { min-width: 0; font-size: 1rem; }
+}

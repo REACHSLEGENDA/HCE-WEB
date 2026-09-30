@@ -256,6 +256,9 @@
 /* MAIN CONTAINER STYLES */
 .admin-main-container {
   flex: 1;
+  /* Sin esto, una tabla ancha (la matriz de unidades) estira la columna y la
+     página entera se desborda en el celular. */
+  min-width: 0;
   margin-left: 260px;
   display: flex;
   flex-direction: column;
@@ -375,6 +378,7 @@
 
 /* CONTENT VIEW AREA */
 .admin-content-area {
+  min-width: 0;
   padding: 32px;
   flex: 1;
   max-width: 1400px;
@@ -1569,4 +1573,29 @@
   min-width: 0;
   padding: 0 5px;
   font-size: 0.64rem;
+}
+
+/* ---- Celular ------------------------------------------------------------- */
+
+/* Estos contenedores de tabla se usaban sin estilo: las tablas de pagos y de
+   formularios desbordaban la página en el celular. */
+.admin-layout .table-responsive-wrapper,
+.admin-layout .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  /* Varias rejillas del panel llevan sus columnas escritas en el JSX (style=),
+     que gana a cualquier regla por clase. En el celular todas pasan a una
+     sola columna. */
+  .admin-content-area [style*="grid-template-columns"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .admin-content-area [style*="grid-template-columns"] > * {
+    min-width: 0;
+  }
+  /* Los botones y campos no deben quedar por debajo de un toque cómodo. */
+  .admin-layout .icon-action-btn { min-width: 36px; min-height: 36px; }
 }

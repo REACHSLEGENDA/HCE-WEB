@@ -1,8 +1,8 @@
 // Recordatorios automáticos por correo, una vez al día.
 //
 // Netlify la ejecuta sola todas las mañanas (ver `config` al final). Busca a
-// dos tipos de alumno y los mete a una lista de Brevo, que es la que manda el
-// correo con el diseño de HCE:
+// dos tipos de alumno y los mete a la lista "portal general" de Brevo, cuyo
+// flujo manda la plantilla universal (hce-portal-general) con el diseño de HCE:
 //
 //   Inactivos: inscritos en un curso que no han terminado y llevan una semana
 //   sin entrar (o nunca entraron). Máximo tres recordatorios por curso, uno por
@@ -13,15 +13,13 @@
 //
 // Cada envío queda anotado en la tabla `recordatorios` para no repetirlo.
 //
-// Variables de entorno en Netlify (sin ellas la función no manda nada):
-//   BREVO_LISTA_RECORDATORIO     ID de la lista "Recordatorio de curso"
-//   BREVO_LISTA_RECERTIFICACION  ID de la lista "Recertificación"
-//
-// Atributos de contacto que llena para la plantilla del correo:
-//   CURSO_NOMBRE, CURSO_LINK, CURSO_AVANCE, CERT_VENCE
+// Atributos de contacto que llena para la plantilla (el texto va armado, así
+// la misma plantilla sirve para los dos avisos):
+//   AVISO_TITULO, AVISO_TEXTO, AVISO_ETIQUETA, AVISO_DATO, AVISO_BOTON,
+//   CURSO_NOMBRE, CURSO_LINK
 
 import { admin, isConfigured as supabaseListo } from './_supabase.js';
-import { isConfigured as brevoListo, upsertContact, addToList, removeFromList } from './_brevo.js';
+import { LISTS, isConfigured as brevoListo, upsertContact, addToList, removeFromList } from './_brevo.js';
 
 const DIA = 24 * 60 * 60 * 1000;
 const DIAS_INACTIVO = 7;
@@ -49,11 +47,10 @@ async function avisarPorBrevo(email, lista, atributos) {
 }
 
 export default async () => {
-  const listaInactivos = Number(process.env.BREVO_LISTA_RECORDATORIO) || null;
-  const listaRecert = Number(process.env.BREVO_LISTA_RECERTIFICACION) || null;
+  const lista = LISTS.PORTAL_GENERAL;
 
-  if (!supabaseListo() || !brevoListo() || (!listaInactivos && !listaRecert)) {
-    console.log('Recordatorios: falta configuración (Supabase, Brevo o las listas). No se envía nada.');
+  if (!supabaseListo() || !brevoListo()) {
+    console.log('Recordatorios: falta configuración (Supabase o Brevo). No se envía nada.');
     return new Response('Sin configurar', { status: 200 });
   }
 
@@ -71,8 +68,49 @@ export default async () => {
   const cursoDe = new Map(cursos.map((c) => [Number(c.id), c]));
   const nombreDe = (p) => String(p?.nombre_completo || '').split(' ')[0] || '';
 
+  // Un solo aviso por alumno al día: los dos usan la misma lista y los mismos
+  // atributos, y un segundo aviso pisaría el texto del primero.
+  const yaAvisadoHoy = new Set();
+
+  // ---- Por recertificar -----------------------------------------------------
+  // Va primero: es el aviso con fecha límite.
+  {
+    const limite = new Date(ahora + DIAS_ANTES_DE_VENCER * DIA).toISOString();
+    const porVencer = await traerTodo(db, 'certificates', 'id, user_id, course_id, vigente_hasta', (q) =>
+      q.not('vigente_hasta', 'is', null).lte('vigente_hasta', limite));
+
+    for (const cert of porVencer) {
+      const perfil = perfilDe.get(cert.user_id);
+      const curso = cursoDe.get(Number(cert.course_id));
+      if (!perfil?.email || !curso) continue;
+      if (yaAvisadoHoy.has(cert.user_id)) continue;
+      if (enviados.some((e) => e.tipo === 'recertificacion' && Number(e.certificado_id) === Number(cert.id))) continue;
+
+      try {
+        await avisarPorBrevo(perfil.email, lista, {
+          FIRSTNAME: nombreDe(perfil) || undefined,
+          AVISO_TITULO: 'Tu certificación está por vencer',
+          AVISO_TEXTO: 'Te avisamos con tiempo para que tu certificación siga vigente. Entra a tu curso para revisar cómo renovarla.',
+          AVISO_ETIQUETA: 'Vence el',
+          AVISO_DATO: new Date(cert.vigente_hasta).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Mexico_City' }),
+          AVISO_BOTON: 'Ir a mi curso',
+          CURSO_NOMBRE: curso.title,
+          CURSO_LINK: `${SITIO}/classroom/${curso.id}`,
+        });
+        await db.from('recordatorios').insert([{
+          user_id: cert.user_id, course_id: curso.id, certificado_id: cert.id, tipo: 'recertificacion',
+        }]);
+        yaAvisadoHoy.add(cert.user_id);
+        resumen.recertificacion += 1;
+      } catch (err) {
+        resumen.errores += 1;
+        console.error('Aviso de recertificación falló:', perfil.email, err.message);
+      }
+    }
+  }
+
   // ---- Inactivos ------------------------------------------------------------
-  if (listaInactivos) {
+  {
     const [inscripciones, sesiones, certificados, progreso] = await Promise.all([
       traerTodo(db, 'inscripciones', 'user_id, course_id, created_at'),
       traerTodo(db, 'curso_sesiones', 'user_id, course_id, ultima_senal_en', (q) =>
@@ -91,9 +129,6 @@ export default async () => {
     const terminados = new Set(certificados.map((c) => clave(c.user_id, c.course_id)));
     const avance = new Map(progreso.map((p) => [clave(p.user_id, p.course_id), p.watch_percent || 0]));
 
-    // Un solo correo por alumno al día aunque esté inactivo en varios cursos.
-    const yaAvisadoHoy = new Set();
-
     for (const ins of inscripciones) {
       const k = clave(ins.user_id, ins.course_id);
       const curso = cursoDe.get(Number(ins.course_id));
@@ -110,11 +145,15 @@ export default async () => {
       if (previos.some((e) => ahora - new Date(e.enviado_en).getTime() < DIAS_INACTIVO * DIA)) continue;
 
       try {
-        await avisarPorBrevo(perfil.email, listaInactivos, {
+        await avisarPorBrevo(perfil.email, lista, {
           FIRSTNAME: nombreDe(perfil) || undefined,
+          AVISO_TITULO: 'Tu curso te está esperando',
+          AVISO_TEXTO: 'Hace unos días que no entras a tu curso. Tu avance está guardado y puedes seguir justo donde te quedaste.',
+          AVISO_ETIQUETA: 'Llevas',
+          AVISO_DATO: `${Math.min(100, Math.round(avance.get(k) || 0))}%`,
+          AVISO_BOTON: 'Seguir con mi curso',
           CURSO_NOMBRE: curso.title,
           CURSO_LINK: `${SITIO}/classroom/${curso.id}`,
-          CURSO_AVANCE: `${Math.min(100, Math.round(avance.get(k) || 0))}%`,
         });
         await db.from('recordatorios').insert([{ user_id: ins.user_id, course_id: curso.id, tipo: 'inactividad' }]);
         yaAvisadoHoy.add(ins.user_id);
@@ -122,36 +161,6 @@ export default async () => {
       } catch (err) {
         resumen.errores += 1;
         console.error('Recordatorio de inactividad falló:', perfil.email, err.message);
-      }
-    }
-  }
-
-  // ---- Por recertificar -----------------------------------------------------
-  if (listaRecert) {
-    const limite = new Date(ahora + DIAS_ANTES_DE_VENCER * DIA).toISOString();
-    const porVencer = await traerTodo(db, 'certificates', 'id, user_id, course_id, vigente_hasta', (q) =>
-      q.not('vigente_hasta', 'is', null).lte('vigente_hasta', limite));
-
-    for (const cert of porVencer) {
-      const perfil = perfilDe.get(cert.user_id);
-      const curso = cursoDe.get(Number(cert.course_id));
-      if (!perfil?.email || !curso) continue;
-      if (enviados.some((e) => e.tipo === 'recertificacion' && Number(e.certificado_id) === Number(cert.id))) continue;
-
-      try {
-        await avisarPorBrevo(perfil.email, listaRecert, {
-          FIRSTNAME: nombreDe(perfil) || undefined,
-          CURSO_NOMBRE: curso.title,
-          CURSO_LINK: `${SITIO}/classroom/${curso.id}`,
-          CERT_VENCE: new Date(cert.vigente_hasta).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }),
-        });
-        await db.from('recordatorios').insert([{
-          user_id: cert.user_id, course_id: curso.id, certificado_id: cert.id, tipo: 'recertificacion',
-        }]);
-        resumen.recertificacion += 1;
-      } catch (err) {
-        resumen.errores += 1;
-        console.error('Aviso de recertificación falló:', perfil.email, err.message);
       }
     }
   }

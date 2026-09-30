@@ -5,6 +5,8 @@
 // Stripe manda por su cuenta aunque el alumno haya cerrado la pestaña. Con
 // cualquiera de los dos basta; si llegan los dos, el segundo no duplica nada.
 
+import { notificar } from './_notificaciones.js';
+
 // Debe coincidir con el tipo de cambio que anuncian las páginas de inscripción.
 export const USD_RATE = 17.5;
 
@@ -18,7 +20,14 @@ export function importeEnMoneda(precioMXN, moneda) {
   return moneda === 'usd' ? Math.ceil(precioMXN / USD_RATE) : precioMXN;
 }
 
-export async function inscribir(db, { userId, courseId, origen, stripeSessionId = null, monto = null, moneda = null }) {
+export async function inscribir(db, { userId, courseId, origen, stripeSessionId = null, monto = null, moneda = null, avisar = true }) {
+  const { data: previa } = await db
+    .from('inscripciones')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .maybeSingle();
+
   const { error } = await db.from('inscripciones').upsert(
     [{
       user_id: userId,
@@ -33,6 +42,13 @@ export async function inscribir(db, { userId, courseId, origen, stripeSessionId 
   );
 
   if (error) throw new Error(error.message);
+
+  // Aviso "inscrito a un curso", solo la primera vez. Al activar una cuenta
+  // no se manda: el correo de cuenta activada ya lista sus cursos.
+  if (!previa && avisar) {
+    await notificar(db, 'inscrito_curso', { userId, courseId, clave: `inscripcion:${courseId}` });
+  }
+  return { nueva: !previa };
 }
 
 // Un cobro solo inscribe si de verdad está pagado y es de este curso. Sirve

@@ -1,0 +1,80 @@
+/* Analíticas de la plataforma y línea de tiempo general. Usa los tokens de
+   MetricasCursos.css (--m-*) y del panel (--text-dark, --border-color…).
+   Los colores de estado siempre van con su nombre en la leyenda. */
+
+.inf-contenedor { display: flex; flex-direction: column; gap: 16px; }
+.inf-pestanas { display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; }
+.inf-pestanas button {
+  flex-shrink: 0; padding: 10px 14px; border: 0; border-bottom: 2px solid transparent;
+  background: none; color: var(--text-muted); font: inherit; font-size: 0.9rem; cursor: pointer;
+}
+.inf-pestanas button.activa { border-bottom-color: var(--m-acento); color: var(--text-dark); font-weight: 700; }
+
+.inf { display: flex; flex-direction: column; gap: 14px; }
+.inf-acciones { display: flex; justify-content: flex-end; }
+
+.inf-rejilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.inf-tarjeta { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-main); }
+.inf-tarjeta--ancha { grid-column: 1 / -1; }
+.inf-tarjeta h3 { display: flex; justify-content: space-between; margin: 0; color: var(--text-dark); font-size: 0.95rem; }
+.inf-tarjeta h3 small { color: var(--text-muted); font-weight: 600; }
+.inf-nota { color: var(--text-muted); font-size: 0.74rem; line-height: 1.4; }
+
+.inf-estados { display: flex; flex-direction: column; gap: 10px; }
+.inf-estados-barra { display: flex; gap: 2px; height: 16px; border-radius: 4px; overflow: hidden; background: var(--m-reticula); }
+.inf-seg { display: block; height: 100%; }
+.inf-seg.completado, .inf-punto.completado { background: var(--m-ok); }
+.inf-seg.en_curso, .inf-punto.en_curso { background: var(--m-curso); }
+.inf-seg.no_empezado, .inf-punto.no_empezado { background: var(--m-base); }
+.inf-seg.vencido, .inf-punto.vencido { background: var(--m-mal); }
+.inf-leyenda { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; color: var(--text-dark); font-size: 0.84rem; }
+.inf-leyenda li { display: flex; align-items: center; gap: 8px; }
+.inf-leyenda strong { margin-left: auto; font-variant-numeric: tabular-nums; }
+.inf-leyenda small { color: var(--text-muted); }
+.inf-punto { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; }
+.inf-total { color: var(--text-muted); font-size: 0.78rem; }
+
+.inf-cifras { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.inf-cifras div { padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; }
+.inf-cifras dd { margin: 0; color: var(--text-dark); font-size: 1.15rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.inf-cifras dt { color: var(--text-muted); font-size: 0.76rem; }
+
+.inf-lista { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 0.86rem; }
+.inf-lista li { display: flex; justify-content: space-between; gap: 10px; color: var(--text-dark); }
+.inf-lista strong { font-variant-numeric: tabular-nums; }
+
+.inf-formacion { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.inf-formacion li { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(80px, 1fr) 90px; align-items: center; gap: 12px; }
+.inf-formacion-curso { color: var(--text-dark); font-size: 0.84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inf-formacion-pista { height: 12px; border-radius: 0 4px 4px 0; background: var(--m-reticula); overflow: hidden; }
+.inf-formacion-pista span { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--m-acento); }
+.inf-formacion-valor { color: var(--text-muted); font-size: 0.8rem; text-align: right; font-variant-numeric: tabular-nums; }
+
+.inf-filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.inf-buscar {
+  display: inline-flex; align-items: center; gap: 6px; flex: 1; min-width: 180px;
+  padding: 7px 10px; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-muted); background: var(--bg-main);
+}
+.inf-buscar input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text-dark); font: inherit; font-size: 0.86rem; }
+
+.inf-eventos { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.inf-evento { display: flex; gap: 12px; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-main); }
+.inf-evento-icono {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%; background: var(--m-acento-lavado); color: var(--m-acento);
+}
+.inf-evento.evaluacion .inf-evento-icono, .inf-evento.certificado .inf-evento-icono { background: rgba(46, 125, 50, 0.12); color: var(--m-ok); }
+.inf-evento.mal .inf-evento-icono { background: rgba(198, 40, 40, 0.12); color: var(--m-mal); }
+.inf-evento.admin .inf-evento-icono { background: var(--bg-gray); color: var(--text-muted); }
+.inf-evento small { color: var(--text-muted); font-size: 0.74rem; }
+.inf-evento p { margin: 2px 0 0; color: var(--text-dark); font-size: 0.86rem; line-height: 1.4; overflow-wrap: anywhere; }
+.inf-pie { display: flex; align-items: center; gap: 12px; margin: 0; color: var(--text-muted); font-size: 0.8rem; }
+
+@media (max-width: 860px) {
+  .inf-rejilla { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .inf-formacion li { grid-template-columns: minmax(0, 1fr) auto; }
+  .inf-formacion-pista { grid-column: 1 / -1; grid-row: 2; }
+  .inf-filtros .m-select { width: 100%; }
+}

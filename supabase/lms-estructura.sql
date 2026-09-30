@@ -31,7 +31,7 @@ create table if not exists public.curso_lecciones (
 
 alter table public.curso_lecciones drop constraint if exists curso_lecciones_tipo_check;
 alter table public.curso_lecciones
-  add constraint curso_lecciones_tipo_check check (tipo in ('video', 'pdf', 'texto', 'tarea'));
+  add constraint curso_lecciones_tipo_check check (tipo in ('video', 'pdf', 'texto', 'tarea', 'web', 'examen', 'encuesta', 'seccion', 'sesion'));
 
 create index if not exists curso_lecciones_curso_idx on public.curso_lecciones (course_id, orden);
 
@@ -48,6 +48,8 @@ create table if not exists public.leccion_contenido (
   texto text,
   actualizado_en timestamptz not null default now()
 );
+-- Video que no es de YouTube, o página web insertada (ver lms-enlaces.sql).
+alter table public.leccion_contenido add column if not exists enlace text;
 
 create table if not exists public.leccion_progreso (
   user_id uuid not null references auth.users(id) on delete cascade,

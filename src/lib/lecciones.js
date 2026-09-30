@@ -6,13 +6,43 @@
 
 import { supabase } from './supabase';
 import { esTablaFaltante } from './cursos';
+import { registrarDescarga } from './actividad';
 
 export const TIPOS_LECCION = {
   video: 'Video',
   pdf: 'Documento PDF',
   texto: 'Lectura',
   tarea: 'Tarea',
+  web: 'Página web',
+  examen: 'Examen',
+  encuesta: 'Encuesta',
+  sesion: 'Sesión en vivo',
+  seccion: 'Sección',
 };
+
+// Una sección es solo un título que agrupa lecciones en el temario ("Módulo I").
+// No tiene contenido ni avance: no cuenta en el progreso ni en los reportes.
+export const esSeccion = (leccion) => leccion?.tipo === 'seccion';
+export const leccionesConContenido = (lista) => lista.filter((l) => !esSeccion(l));
+
+// Exámenes, encuestas y sesiones en vivo solo los completa el servidor.
+export const TIPOS_DEL_SERVIDOR = ['examen', 'encuesta', 'sesion'];
+
+// `enlace` llega con lms-enlaces.sql (videos de Vimeo u otras plataformas y
+// páginas web). Antes de correrla se cargan las columnas de siempre.
+const COLUMNAS_CONTENIDO = 'leccion_id, youtube_video_id, archivo_path, texto';
+
+export const falta = (error, codigo) => error?.code === codigo || (codigo === '42703' && /enlace/.test(error?.message || ''));
+
+export async function cargarContenidos(ids) {
+  if (!ids.length) return { data: [], error: null };
+  const consulta = (columnas) => supabase.from('leccion_contenido').select(columnas).in('leccion_id', ids);
+  const res = await consulta(`${COLUMNAS_CONTENIDO}, enlace`);
+  return falta(res.error, '42703') ? consulta(COLUMNAS_CONTENIDO) : res;
+}
+
+/** El video de una lección: YouTube va en su columna de siempre; lo demás, en `enlace`. */
+export const videoDeLeccion = (contenido) => contenido?.enlace || contenido?.youtube_video_id || '';
 
 // Se considera vista una lección de video a partir de aquí, igual que el curso
 // completo antes de las lecciones.
@@ -50,10 +80,7 @@ export async function cargarLecciones(courseId) {
   }
   if (!data?.length) return [];
 
-  const { data: contenidos, error: errContenido } = await supabase
-    .from('leccion_contenido')
-    .select('leccion_id, youtube_video_id, archivo_path, texto')
-    .in('leccion_id', data.map((l) => l.id));
+  const { data: contenidos, error: errContenido } = await cargarContenidos(data.map((l) => l.id));
   if (errContenido && !esTablaFaltante(errContenido)) throw errContenido;
 
   const porLeccion = new Map((contenidos || []).map((c) => [c.leccion_id, c]));
@@ -88,7 +115,7 @@ export async function guardarProgresoLeccion({ userId, courseId, leccionId, porc
  * nada. Con una sola clase de video equivale al avance del video, como antes.
  */
 export function avanceDelCurso(lecciones, progreso, porcentajeImplicito = 0) {
-  const obligatorias = lecciones.filter((l) => l.obligatoria !== false);
+  const obligatorias = leccionesConContenido(lecciones).filter((l) => l.obligatoria !== false);
   if (!obligatorias.length) return 0;
 
   const suma = obligatorias.reduce((total, l) => {
@@ -101,7 +128,7 @@ export function avanceDelCurso(lecciones, progreso, porcentajeImplicito = 0) {
 }
 
 export function leccionesCompletas(lecciones, progreso, porcentajeImplicito = 0) {
-  return lecciones
+  return leccionesConContenido(lecciones)
     .filter((l) => l.obligatoria !== false)
     .every((l) => (l.implicita ? porcentajeImplicito >= UMBRAL_VIDEO : progreso[l.id]?.completada));
 }
@@ -148,4 +175,53 @@ export async function entregarTarea({ userId, courseId, leccionId, texto, archiv
     archivo_path: archivoPath,
   }]);
   if (error) throw error;
+}
+
+// ---- Biblioteca del curso -------------------------------------------------------
+
+export const BUCKET_BIBLIOTECA = 'curso-biblioteca';
+
+/** Archivos del curso que ve el usuario (al alumno solo le llegan los compartidos). */
+export async function cargarBiblioteca(courseId) {
+  const { data, error } = await supabase
+    .from('curso_archivos')
+    .select('id, course_id, leccion_id, nombre, ruta, tamano, tipo, etiquetas, compartido, subido_en')
+    .eq('course_id', Number(courseId))
+    .order('subido_en', { ascending: false });
+  if (error) {
+    if (esTablaFaltante(error)) return null;
+    throw error;
+  }
+  return data || [];
+}
+
+export function formatoTamano(bytes) {
+  if (!bytes) return '—';
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function formatoArchivo(archivo) {
+  const ext = String(archivo.nombre || '').split('.').pop();
+  return ext && ext !== archivo.nombre ? ext.toUpperCase().slice(0, 5) : 'ARCHIVO';
+}
+
+/** Abre (o descarga) un archivo de la biblioteca con un enlace que caduca en una hora. */
+export async function abrirArchivoBiblioteca(archivo, { descargar = false } = {}) {
+  // La pestaña se abre en el mismo clic: si se abriera después de esperar el
+  // enlace, el navegador la bloquearía como ventana emergente.
+  const pestana = window.open('', '_blank');
+  if (pestana) pestana.opener = null;
+  try {
+    const { data, error } = await supabase.storage
+      .from(BUCKET_BIBLIOTECA)
+      .createSignedUrl(archivo.ruta, 60 * 60, descargar ? { download: archivo.nombre } : undefined);
+    if (error) throw error;
+    if (pestana) pestana.location.href = data.signedUrl;
+    else window.location.href = data.signedUrl;
+    void registrarDescarga(archivo);
+  } catch (err) {
+    pestana?.close();
+    throw err;
+  }
 }

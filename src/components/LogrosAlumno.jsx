@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Trophy, Award, Lock, Eye, EyeOff } from 'lucide-react';
+import { Trophy, Award, Lock, Eye, EyeOff, Gift } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { insigniasDe, REGLAS_PUNTOS } from '../lib/logros';
+import { insigniasPorCategoria, totalInsignias, nivelDe, recompensasDe, REGLAS_PUNTOS } from '../lib/logros';
 
 // Puntos, insignias y tabla de posiciones del alumno.
 //
@@ -10,15 +10,17 @@ import { insigniasDe, REGLAS_PUNTOS } from '../lib/logros';
 // quiera aparecer en la tabla se oculta con un clic.
 
 export function LogrosVista({ logros, tabla, onCambiarVisibilidad, cambiando }) {
-  const insignias = insigniasDe(logros);
-  const obtenidas = insignias.filter((i) => i.obtenida).length;
+  const categorias = insigniasPorCategoria(logros);
+  const obtenidas = totalInsignias(categorias);
+  const nivel = nivelDe(logros.puntos, logros.puntos_por_nivel);
+  const recompensas = recompensasDe(logros.recompensas, nivel.nivel);
 
   return (
     <section className="logros-card">
       <header className="logros-cabecera">
         <div>
           <h2><Trophy size={18} /> Tus logros</h2>
-          <p>{obtenidas} de {insignias.length} insignias</p>
+          <p>{obtenidas} de {categorias.length * 8} insignias</p>
         </div>
         <div className="logros-puntos">
           <span className="logros-puntos-valor">{Number(logros.puntos || 0).toLocaleString('es-MX')}</span>
@@ -28,17 +30,48 @@ export function LogrosVista({ logros, tabla, onCambiarVisibilidad, cambiando }) 
         </div>
       </header>
 
+      <div className="logros-nivel">
+        <span className="logros-nivel-numero">Nivel {nivel.nivel}</span>
+        <span className="logros-nivel-barra" aria-hidden="true"><span style={{ width: `${(nivel.enNivel / nivel.paso) * 100}%` }} /></span>
+        <span className="logros-nivel-falta">{nivel.paraSiguiente} pts para el nivel {nivel.nivel + 1}</span>
+      </div>
+
       <ul className="logros-insignias">
-        {insignias.map((ins) => (
-          <li key={ins.id} className={`logros-insignia${ins.obtenida ? ' logros-insignia--obtenida' : ''}`} title={ins.requisito}>
+        {categorias.map((c) => (
+          <li
+            key={c.id}
+            className={`logros-insignia${c.alcanzados ? ' logros-insignia--obtenida' : ''}`}
+            title={c.siguiente != null ? `Siguiente: ${c.siguienteNombre} con ${c.siguiente} ${c.unidad}` : 'Nivel máximo'}
+          >
             <span className="logros-insignia-icono" aria-hidden="true">
-              {ins.obtenida ? <Award size={20} /> : <Lock size={16} />}
+              {c.alcanzados ? <Award size={20} /> : <Lock size={16} />}
             </span>
-            <span className="logros-insignia-nombre">{ins.nombre}</span>
-            <span className="logros-insignia-req">{ins.obtenida ? 'Obtenida' : ins.avance || ins.requisito}</span>
+            <span className="logros-insignia-nombre">{c.nombre}</span>
+            <span className="logros-insignia-escalon">{c.escalon || 'Sin empezar'}</span>
+            <span className="logros-escalones" aria-label={`${c.alcanzados} de 8`}>
+              {c.metas.map((m, i) => <span key={m} className={i < c.alcanzados ? 'lleno' : ''} />)}
+            </span>
+            <span className="logros-insignia-req">
+              {c.siguiente != null ? `${Math.min(c.valor, c.siguiente)} de ${c.siguiente} ${c.unidad}` : 'Nivel máximo'}
+            </span>
           </li>
         ))}
       </ul>
+
+      {recompensas.length > 0 && (
+        <div className="logros-recompensas">
+          <h3><Gift size={16} /> Recompensas</h3>
+          <ul>
+            {recompensas.map((r) => (
+              <li key={r.nivel} className={r.alcanzada ? 'alcanzada' : ''}>
+                <span>Nivel {r.nivel}</span>
+                <strong>{r.descuento}% de descuento en cursos de pago</strong>
+                <small>{r.alcanzada ? '✓ Ya la tienes: se aplica sola al pagar' : `Te faltan ${Math.max(0, (r.nivel - 1) * nivel.paso - Number(logros.puntos || 0))} pts`}</small>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="logros-inferior">
         <div className="logros-tabla">

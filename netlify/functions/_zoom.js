@@ -142,3 +142,36 @@ export function minutosPorCorreo(participantes) {
   }
   return resultado;
 }
+
+// Datos de la reunión o seminario: tema, inicio y duración. Sirve para que el
+// administrador no tenga que capturar el horario a mano.
+export async function obtenerReunion(zoomId, tipo) {
+  const recurso = tipo === 'webinar' ? 'webinars' : 'meetings';
+  const data = await zoomFetch(`/${recurso}/${zoomId}`);
+  return {
+    tema: data?.topic || '',
+    iniciaEn: data?.start_time || null,
+    duracionMin: data?.duration || null,
+    zonaHoraria: data?.timezone || null,
+    requiereRegistro: [0, 1].includes(Number(data?.settings?.approval_type)),
+  };
+}
+
+// Deja la reunión lista para las clases del portal: registro obligatorio con
+// aprobación automática, un solo dispositivo por registro (si alguien reenvía
+// su enlace, al entrar el otro saca al primero) y sin el correo de Zoom con el
+// enlace, para que solo exista dentro del portal.
+export async function configurarRegistroPortal(zoomId, tipo) {
+  const recurso = tipo === 'webinar' ? 'webinars' : 'meetings';
+  await zoomFetch(`/${recurso}/${zoomId}`, {
+    method: 'PATCH',
+    body: {
+      settings: {
+        approval_type: 0,
+        registrants_restrict_number_of_devices: true,
+        registrants_email_notification: false,
+        registrants_confirmation_email: false,
+      },
+    },
+  });
+}

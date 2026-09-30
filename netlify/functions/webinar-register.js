@@ -5,9 +5,9 @@
 // que reciba su enlace personal, guardar la fila y meterla a la lista de Brevo
 // que dispara el correo de confirmacion.
 
-import { admin, usuarioDesdeToken, json, isConfigured as supabaseListo } from './_supabase.js';
+import { admin, usuarioDesdeToken, cuentaHabilitada, json, isConfigured as supabaseListo } from './_supabase.js';
 import { agregarRegistrante, isConfigured as zoomListo } from './_zoom.js';
-import { isConfigured as brevoListo, upsertContact, addToList, removeFromList } from './_brevo.js';
+import { LISTS, isConfigured as brevoListo, upsertContact, addToList, removeFromList } from './_brevo.js';
 
 function partirNombre(nombreCompleto, email) {
   const limpio = (nombreCompleto || '').trim();
@@ -30,6 +30,9 @@ export const handler = async (event) => {
   try {
     const user = await usuarioDesdeToken(event.headers);
     if (!user) return json(401, { error: 'Sesion no valida. Vuelve a entrar al portal.' });
+
+    const cuenta = await cuentaHabilitada(user.id);
+    if (!cuenta.habilitada) return json(403, { error: cuenta.error, estado: 'cuenta-no-habilitada' });
 
     const { webinarId } = JSON.parse(event.body || '{}');
     if (!webinarId) return json(400, { error: 'Falta el webinar.' });
@@ -105,12 +108,14 @@ export const handler = async (event) => {
 
     if (errInsert) throw new Error(errInsert.message);
 
-    // Brevo: no bloquea la respuesta. Si la lista no esta configurada se salta.
+    // Brevo: si falla, el registro sigue valiendo. Todos los webinars usan la
+    // lista general (flujo "zoom"), salvo que uno tenga la suya.
     //
     // El enlace personal viaja como atributo del contacto para que la plantilla
     // de Brevo lo inserte con {{ contact.WEBINAR_LINK }}. Asi el alumno recibe
     // un solo correo, con la marca de HCE, en vez del de Zoom por separado.
-    if (brevoListo() && webinar.brevo_lista_id) {
+    const listaWebinar = webinar.brevo_lista_id || LISTS.WEBINARS;
+    if (brevoListo()) {
       const atributos = {
         WEBINAR_NOMBRE: webinar.title || '',
         WEBINAR_LINK: joinUrl || '',
@@ -124,9 +129,11 @@ export const handler = async (event) => {
       // en la lista, y con una sola lista para todos los webinars eso dejaria
       // sin correo a quien ya asistio a uno antes. Se le saca y se le vuelve a
       // meter: la salida no dispara nada y la entrada si.
-      upsertContact(email, atributos)
-        .then(() => removeFromList(email, webinar.brevo_lista_id))
-        .then(() => addToList(email, webinar.brevo_lista_id))
+      // Se espera a que termine: si la función responde antes, Netlify la
+      // congela y el correo podría no salir.
+      await upsertContact(email, atributos)
+        .then(() => removeFromList(email, listaWebinar))
+        .then(() => addToList(email, listaWebinar))
         .catch((err) => console.error('Brevo webinar error:', err.message));
     }
 

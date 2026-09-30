@@ -320,7 +320,7 @@ export default function Inscripciones() {
             gap: '15px',
             flexWrap: 'wrap'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1, minWidth: '280px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1, minWidth: 'min(280px, 100%)' }}>
               <div style={{
                 background: '#e31837',
                 color: '#fff',

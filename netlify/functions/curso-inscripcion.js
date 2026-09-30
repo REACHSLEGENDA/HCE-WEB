@@ -12,8 +12,12 @@
 //   admin-quitar    un administrador da de baja una inscripción
 //   admin-inscribir-correos   inscribe una lista de correos pegada de golpe
 //   admin-grupo-sincronizar   inscribe a los miembros de un grupo en sus cursos
+//   admin-solicitud-resolver  aprueba o rechaza una solicitud de inscripción
+//
+// Antes de inscribir o cobrar se revisan las reglas del curso (lms-reglas.sql):
+// visibilidad, cupo, prerrequisitos y solicitud de inscripción.
 
-import { admin, usuarioDesdeToken, adminDesdeToken, json, isConfigured as supabaseListo } from './_supabase.js';
+import { admin, usuarioDesdeToken, adminDesdeToken, cuentaHabilitada, registrarAccionAdmin, json, isConfigured as supabaseListo } from './_supabase.js';
 import { getStripe } from './_stripe.js';
 import { inscribir, inscribirDesdeSesion, importeEnMoneda, TIPO_COBRO } from './_inscripciones.js';
 
@@ -26,6 +30,65 @@ async function cargarCurso(db, courseId) {
 
   if (error || !data) return null;
   return data;
+}
+
+// Reglas del curso; sin la migración (o sin fila) no hay restricciones.
+async function cargarReglas(db, courseId) {
+  const { data, error } = await db.from('curso_reglas').select('*').eq('course_id', courseId).maybeSingle();
+  if (error) return null;
+  return data;
+}
+
+// Revisa si el alumno puede inscribirse. Devuelve null si puede, o la respuesta
+// de error que hay que dar.
+async function revisarReglas(db, curso, reglas, userId) {
+  if (!reglas) return null;
+
+  if (reglas.oculto_catalogo) {
+    return json(403, { error: 'Este curso se asigna por invitación. Escríbenos si te interesa.', estado: 'solo-invitacion' });
+  }
+
+  if (reglas.cupo) {
+    const { count } = await db.from('inscripciones').select('id', { count: 'exact', head: true }).eq('course_id', curso.id);
+    if ((count || 0) >= reglas.cupo) {
+      return json(409, { error: 'Este curso ya no tiene lugares disponibles.', estado: 'cupo-lleno' });
+    }
+  }
+
+  const requeridos = (reglas.prerrequisitos || []).map(Number).filter((id) => id && id !== curso.id);
+  if (requeridos.length) {
+    const { data: certs } = await db.from('certificates').select('course_id').eq('user_id', userId).in('course_id', requeridos);
+    const tiene = new Set((certs || []).map((c) => Number(c.course_id)));
+    const faltan = requeridos.filter((id) => !tiene.has(id));
+    if (faltan.length) {
+      const { data: nombres } = await db.from('courses').select('id, title').in('id', faltan);
+      const lista = (nombres || []).map((c) => c.title).join(', ');
+      return json(409, {
+        error: `Antes de este curso necesitas terminar: ${lista || 'otro curso'}.`,
+        estado: 'prerrequisitos',
+        faltan,
+      });
+    }
+  }
+  return null;
+}
+
+// Recompensa por nivel (gamificacion.sql): el mayor % de descuento que el
+// alumno ya se ganó con sus puntos. Sin la migración, no hay descuento.
+async function descuentoPorNivel(db, userId) {
+  try {
+    const [{ data: config }, { data: puntos, error }] = await Promise.all([
+      db.from('gamificacion_config').select('activo, puntos_por_nivel, recompensas').eq('id', 1).maybeSingle(),
+      db.rpc('puntos_de_usuario', { p_user: userId }),
+    ]);
+    if (error || !config?.activo) return 0;
+    const nivel = Math.floor((Number(puntos) || 0) / Math.max(1, config.puntos_por_nivel || 200)) + 1;
+    return (Array.isArray(config.recompensas) ? config.recompensas : [])
+      .filter((r) => Number(r.nivel) > 0 && nivel >= Number(r.nivel))
+      .reduce((m, r) => Math.max(m, Math.min(90, Number(r.descuento) || 0)), 0);
+  } catch {
+    return 0;
+  }
 }
 
 function origenDe(event) {
@@ -106,6 +169,25 @@ export const handler = async (event) => {
       return json(200, { ok: true, nuevas });
     }
 
+    // ---- Solicitudes de inscripción (administrador) --------------------------
+    if (accion === 'admin-solicitud-resolver') {
+      const administrador = await adminDesdeToken(event.headers);
+      if (!administrador) return json(403, { error: 'Solo un administrador puede hacer esto.' });
+
+      const { solicitudId, aprobar } = cuerpo;
+      const { data: solicitud } = await db.from('solicitudes_inscripcion').select('*').eq('id', Number(solicitudId)).maybeSingle();
+      if (!solicitud) return json(404, { error: 'Esa solicitud ya no existe.' });
+
+      if (aprobar) await inscribir(db, { userId: solicitud.user_id, courseId: solicitud.course_id, origen: 'admin' });
+      await registrarAccionAdmin({ adminId: administrador.id, accion: aprobar ? 'solicitud_aprobada' : 'solicitud_rechazada', objetivoUserId: solicitud.user_id, courseId: solicitud.course_id });
+      const { error } = await db
+        .from('solicitudes_inscripcion')
+        .update({ estado: aprobar ? 'aprobada' : 'rechazada', resuelta_en: new Date().toISOString() })
+        .eq('id', solicitud.id);
+      if (error) throw new Error(error.message);
+      return json(200, { ok: true });
+    }
+
     // ---- Acciones de administrador ------------------------------------------
     if (accion === 'admin-inscribir' || accion === 'admin-quitar') {
       const administrador = await adminDesdeToken(event.headers);
@@ -121,6 +203,7 @@ export const handler = async (event) => {
           .eq('user_id', userId)
           .eq('course_id', Number(courseId));
         if (error) throw new Error(error.message);
+        await registrarAccionAdmin({ adminId: administrador.id, accion: 'baja_curso', objetivoUserId: userId, courseId: Number(courseId) });
         return json(200, { ok: true });
       }
 
@@ -128,12 +211,16 @@ export const handler = async (event) => {
       if (!curso) return json(404, { error: 'Ese curso ya no existe.' });
 
       await inscribir(db, { userId, courseId: curso.id, origen: 'admin' });
+      await registrarAccionAdmin({ adminId: administrador.id, accion: 'inscripcion_admin', objetivoUserId: userId, courseId: curso.id });
       return json(200, { ok: true });
     }
 
     // ---- Acciones del alumno ------------------------------------------------
     const user = await usuarioDesdeToken(event.headers);
     if (!user) return json(401, { error: 'Tu sesión expiró. Vuelve a entrar al portal.' });
+
+    const cuenta = await cuentaHabilitada(user.id);
+    if (!cuenta.habilitada) return json(403, { error: cuenta.error, estado: 'cuenta-no-habilitada' });
 
     if (accion === 'confirmar') {
       const { sessionId, moneda = 'mxn' } = cuerpo;
@@ -176,9 +263,25 @@ export const handler = async (event) => {
 
     if (previa) return json(200, { ok: true, yaInscrito: true, courseId: curso.id });
 
+    const reglas = await cargarReglas(db, curso.id);
+    if (accion === 'gratis' || accion === 'checkout') {
+      const rechazo = await revisarReglas(db, curso, reglas, user.id);
+      if (rechazo) return rechazo;
+    }
+
     if (accion === 'gratis') {
       if (curso.tipo === 'pago') {
         return json(402, { error: 'Este curso es de pago.', estado: 'requiere-pago' });
+      }
+
+      // Con solicitud de inscripción, el alumno queda en espera hasta que un
+      // administrador la apruebe.
+      if (reglas?.requiere_solicitud) {
+        const { error } = await db
+          .from('solicitudes_inscripcion')
+          .upsert([{ user_id: user.id, course_id: curso.id, estado: 'pendiente', creada_en: new Date().toISOString(), resuelta_en: null }], { onConflict: 'user_id,course_id' });
+        if (error) throw new Error(error.message);
+        return json(200, { ok: true, estado: 'solicitud-enviada', courseId: curso.id });
       }
 
       await inscribir(db, { userId: user.id, courseId: curso.id, origen: 'gratis' });
@@ -192,7 +295,9 @@ export const handler = async (event) => {
 
       const moneda = cuerpo.moneda === 'usd' ? 'usd' : 'mxn';
       const { stripe, pasarela } = getStripe(moneda);
-      const importe = importeEnMoneda(curso.precio_mxn, moneda);
+      const descuento = await descuentoPorNivel(db, user.id);
+      const precioFinal = descuento ? Math.round(curso.precio_mxn * (1 - descuento / 100)) : curso.precio_mxn;
+      const importe = importeEnMoneda(precioFinal, moneda);
       const origen = origenDe(event);
 
       const metadata = {
@@ -205,6 +310,7 @@ export const handler = async (event) => {
         // `curso` es lo que lee el módulo de Pagos del panel para clasificar el
         // cobro; sin él un pago en dólares se confundiría con los de CNADOT.
         curso: curso.title,
+        ...(descuento ? { descuento_nivel: String(descuento) } : {}),
       };
 
       const session = await stripe.checkout.sessions.create({
@@ -219,7 +325,7 @@ export const handler = async (event) => {
             currency: moneda,
             unit_amount: importe * 100,
             product_data: {
-              name: curso.title,
+              name: descuento ? `${curso.title} (${descuento}% de descuento por tu nivel)` : curso.title,
               description: 'Curso en línea · Portal Académico HCE',
               ...(curso.image_url && /^https:\/\//.test(curso.image_url) ? { images: [curso.image_url] } : {}),
             },

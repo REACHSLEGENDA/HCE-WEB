@@ -51,6 +51,14 @@ import './Dashboard.css';
 import '../components/Experiences.css';
 import { generarConstancia, descargarConstancia } from '../lib/constancia';
 import LogrosAlumno from '../components/LogrosAlumno';
+import Mensajes from '../components/Mensajes';
+import Comunicados from '../components/Comunicados';
+import { contarNoLeidos } from '../lib/mensajes';
+import CalendarioAlumno from '../components/CalendarioAlumno';
+import { ZONAS, zonaDelEquipo, recordarZona, fechaEnZona, formatearFechaHora } from '../lib/zonaHoraria';
+import { FranjaVistaAlumno } from '../components/CambioVista';
+import { cargarReglasCursos, cargarLugaresOcupados, cargarMisSolicitudes, reglasDe } from '../lib/reglas';
+import { leerVistaAlumno } from '../lib/vista';
 import {
   cargarMisInscripciones,
   llamarInscripcion,
@@ -124,12 +132,13 @@ const Dashboard = () => {
   const { showToast } = useNotification();
   const navigate = useNavigate();
 
-  // Redirect to admin portal if role is admin
+  // Un administrador va a su panel, salvo que haya elegido la vista de alumno.
+  const esAdmin = profile?.rol === 'admin';
   useEffect(() => {
-    if (profile && profile.rol === 'admin') {
+    if (esAdmin && !leerVistaAlumno()) {
       navigate('/admin', { replace: true });
     }
-  }, [profile, navigate]);
+  }, [esAdmin, navigate]);
   
   // Sidebar states. En móvil el menú es un cajón que se superpone al contenido,
   // así que debe arrancar cerrado; en escritorio sigue abierto como siempre.
@@ -413,6 +422,35 @@ const Dashboard = () => {
     void fetchMisInscripciones();
   }, [fetchMisInscripciones]);
 
+  // Mensajes sin leer: contador del menú. Se revisa al entrar y cada 2 minutos.
+  const [mensajesNoLeidos, setMensajesNoLeidos] = useState(0);
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    let vigente = true;
+    const revisar = () => contarNoLeidos(user.id).then((n) => { if (vigente) setMensajesNoLeidos(n); });
+    void revisar();
+    const t = setInterval(revisar, 120000);
+    return () => { vigente = false; clearInterval(t); };
+  }, [user?.id]);
+
+  // Reglas de los cursos (catálogo, cupo, prerrequisitos, solicitud).
+  const [reglasCursos, setReglasCursos] = useState({});
+  const [lugaresOcupados, setLugaresOcupados] = useState({});
+  const [misSolicitudes, setMisSolicitudes] = useState({});
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    let vigente = true;
+    Promise.all([cargarReglasCursos(), cargarLugaresOcupados(), cargarMisSolicitudes(user.id)])
+      .then(([reglas, lugares, solicitudes]) => {
+        if (!vigente) return;
+        setReglasCursos(reglas);
+        setLugaresOcupados(lugares);
+        setMisSolicitudes(solicitudes);
+      })
+      .catch((err) => console.warn('No se pudieron cargar las reglas de los cursos:', err.message));
+    return () => { vigente = false; };
+  }, [user?.id]);
+
   const abrirAula = (courseId) => {
     // Dentro de la app instalada la clase se abre sin salir; en el navegador,
     // en pestaña nueva, igual que el resto de accesos al aula.
@@ -436,7 +474,12 @@ const Dashboard = () => {
         return;
       }
 
-      await llamarInscripcion('gratis', { courseId: course.id });
+      const respuesta = await llamarInscripcion('gratis', { courseId: course.id });
+      if (respuesta?.estado === 'solicitud-enviada') {
+        setMisSolicitudes((prev) => ({ ...prev, [Number(course.id)]: 'pendiente' }));
+        showToast('Enviamos tu solicitud. Te avisaremos cuando un administrador la apruebe.', 'success');
+        return;
+      }
       await fetchMisInscripciones();
       showToast(`Te inscribiste a ${course.title}.`, 'success');
       // Después de esperar al servidor el navegador ya no permite abrir una
@@ -688,6 +731,8 @@ const Dashboard = () => {
       case 'courses': return 'Mis Cursos';
       case 'webinars': return 'Webinars';
       case 'certificates': return 'Certificados';
+      case 'mensajes': return 'Mensajes';
+      case 'calendario': return 'Calendario';
       case 'profile': return 'Mi Perfil';
       case 'settings': return 'Configuración';
       default: return 'Portal HCE';
@@ -829,6 +874,7 @@ const Dashboard = () => {
         case 'explore': return 'Explorando: Catálogo de Cursos';
         case 'courses': return 'Navegando: Mis Cursos';
         case 'certificates': return 'Revisando: Certificados';
+        case 'mensajes': return 'Leyendo: Mensajes';
         case 'profile': return 'Editando: Mi Perfil';
         case 'settings': return 'Ajustando: Configuración';
         default: return 'Activo en el Portal';
@@ -928,12 +974,27 @@ const Dashboard = () => {
     // deduciendo del avance, como siempre.
     const inscrito = misInscripciones ? misInscripciones.has(Number(course.id)) : false;
     const enrolled = inscrito || completed || inProgress;
+
+    const reglas = reglasDe(reglasCursos, course.id);
+    const ocupados = lugaresOcupados[Number(course.id)] ?? 0;
+    const lugaresRestantes = reglas.cupo ? Math.max(0, reglas.cupo - ocupados) : null;
+    const certificados = new Set(myCertificates.map((c) => Number(c.course_id)));
+    const faltanPrerrequisitos = (reglas.prerrequisitos || [])
+      .map(Number)
+      .filter((id) => id !== Number(course.id) && !certificados.has(id))
+      .map((id) => catalogCourses.find((c) => Number(c.id) === id)?.title)
+      .filter(Boolean);
     return {
       ...course,
       progress,
       completed,
       inProgress,
-      enrolled
+      enrolled,
+      oculto: reglas.oculto_catalogo,
+      requiereSolicitud: reglas.requiere_solicitud && !esCursoDePago(course),
+      solicitud: misSolicitudes[Number(course.id)] || null,
+      lugaresRestantes,
+      faltanPrerrequisitos,
     };
   });
 
@@ -943,8 +1004,9 @@ const Dashboard = () => {
 
   // Catálogo separado por tipo. Lo gratuito que se sugiere como primer paso
   // tiene que ser de verdad gratuito y tomarse en el aula.
-  const cursosGratis = processedCourses.filter(c => !esCursoDePago(c));
-  const cursosDePago = processedCourses.filter(c => esCursoDePago(c));
+  const visibles = processedCourses.filter(c => !c.oculto || c.enrolled);
+  const cursosGratis = visibles.filter(c => !esCursoDePago(c));
+  const cursosDePago = visibles.filter(c => esCursoDePago(c));
   const cursoSugerido = cursosGratis.find(c => c.tiene_video) || null;
 
   // Tarjeta de un curso del catálogo del portal. Toda la tarjeta es la acción:
@@ -976,10 +1038,17 @@ const Dashboard = () => {
 
     const dePago = esCursoDePago(course);
     const ocupado = cursoOcupado === course.id;
+    // Lo que impide inscribirse, en orden: prerrequisitos, cupo y solicitud.
+    const bloqueo = course.enrolled ? null
+      : course.faltanPrerrequisitos.length ? `Primero termina: ${course.faltanPrerrequisitos.join(', ')}`
+        : course.lugaresRestantes === 0 ? 'Cupo lleno'
+          : course.solicitud === 'pendiente' ? 'Solicitud enviada · en revisión'
+            : course.solicitud === 'rechazada' ? 'Solicitud no aprobada'
+              : null;
     const accion = course.enrolled
       ? 'Entrar al curso'
-      : dePago ? 'Comprar curso' : 'Inscribirme gratis';
-    const activar = () => { if (!ocupado) handleAbrirCurso(course, course.enrolled); };
+      : bloqueo || (dePago ? 'Comprar curso' : course.requiereSolicitud ? 'Solicitar inscripción' : 'Inscribirme gratis');
+    const activar = () => { if (!ocupado && !bloqueo) handleAbrirCurso(course, course.enrolled); };
 
     return (
       <div
@@ -987,7 +1056,8 @@ const Dashboard = () => {
         role="button"
         tabIndex={0}
         aria-busy={ocupado}
-        className={`exp-premium-card curso-tarjeta${ocupado ? ' curso-tarjeta--ocupada' : ''}`}
+        aria-disabled={!!bloqueo}
+        className={`exp-premium-card curso-tarjeta${ocupado ? ' curso-tarjeta--ocupada' : ''}${bloqueo ? ' curso-tarjeta--bloqueada' : ''}`}
         onClick={activar}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); }
@@ -1003,10 +1073,13 @@ const Dashboard = () => {
         </div>
         <div className="exp-content-body">
           <h3 className="exp-title-premium">{course.title}</h3>
+          {!course.enrolled && course.lugaresRestantes > 0 && course.lugaresRestantes <= 10 && (
+            <span className="curso-lugares">{course.lugaresRestantes === 1 ? 'Queda 1 lugar' : `Quedan ${course.lugaresRestantes} lugares`}</span>
+          )}
           <div className="exp-footer-premium">
             <span className="exp-link-action">
               <span>{ocupado ? 'Un momento…' : accion}</span>
-              {!ocupado && <ArrowRight size={18} />}
+              {!ocupado && !bloqueo && <ArrowRight size={18} />}
             </span>
           </div>
         </div>
@@ -1051,6 +1124,7 @@ const Dashboard = () => {
 
   return (
     <div className="crm-layout" data-theme={effectiveTheme}>
+      {esAdmin && <FranjaVistaAlumno />}
       {/* Fondo oscuro para cerrar el cajón tocando fuera. Solo visible en móvil. */}
       {!isSidebarCollapsed && (
         <div
@@ -1123,6 +1197,25 @@ const Dashboard = () => {
           >
             <Award size={20} className="menu-icon" />
             <span className="menu-label">Certificados</span>
+          </button>
+
+          <button
+            className={`menu-item ${activeTab === 'calendario' ? 'active' : ''}`}
+            onClick={() => setActiveTab('calendario')}
+            title="Calendario"
+          >
+            <Calendar size={20} className="menu-icon" />
+            <span className="menu-label">Calendario</span>
+          </button>
+
+          <button
+            className={`menu-item ${activeTab === 'mensajes' ? 'active' : ''}`}
+            onClick={() => setActiveTab('mensajes')}
+            title="Mensajes"
+          >
+            <MessageSquare size={20} className="menu-icon" />
+            <span className="menu-label">Mensajes</span>
+            {mensajesNoLeidos > 0 && <span className="menu-contador">{mensajesNoLeidos}</span>}
           </button>
 
           <button 
@@ -1222,6 +1315,18 @@ const Dashboard = () => {
 
         {/* Content View */}
         <main className="crm-content-area">
+          <Comunicados tipo="interno" />
+
+          {/* Cuenta nueva: entra al portal, pero sus cursos se abren hasta que la activen. */}
+          {profile?.rol !== 'admin' && profile?.aprobado === false && profile?.activo !== false && (
+            <div className="cuenta-revision-aviso" role="status">
+              <Clock size={18} />
+              <div>
+                <strong>Tu cuenta está en revisión.</strong>
+                <span> Puedes explorar el portal e inscribirte a cursos; se abrirán cuando un administrador te dé acceso y te asigne tu grupo.</span>
+              </div>
+            </div>
+          )}
           
           {/* VIEW: DASHBOARD */}
           {activeTab === 'dashboard' && (
@@ -1723,6 +1828,26 @@ const Dashboard = () => {
           )}
 
           {/* VIEW: WEBINARS (registro, acceso a Zoom y constancia) */}
+          {activeTab === 'calendario' && (
+            <div className="dashboard-view">
+              <CalendarioAlumno
+                cursosInscritos={misInscripciones || new Set()}
+                cursos={catalogCourses}
+                onAbrirEvento={(e) => (e.tipo === 'sesion' && e.courseId ? abrirAula(e.courseId) : setActiveTab('webinars'))}
+              />
+            </div>
+          )}
+
+          {activeTab === 'mensajes' && user?.id && (
+            <div className="dashboard-view">
+              <Mensajes
+                userId={user.id}
+                notificar={showToast}
+                onLeidos={() => contarNoLeidos(user.id).then(setMensajesNoLeidos)}
+              />
+            </div>
+          )}
+
           {activeTab === 'webinars' && (
             <div className="webinars-portal-view">
               <div className="section-title-row">
@@ -1755,7 +1880,11 @@ const Dashboard = () => {
                           <h3>{webinar.title}</h3>
                           <p className="webinar-portal-fecha">
                             <Calendar size={14} />
-                            <span>{webinar.date}{webinar.time ? ` · ${webinar.time}` : ''}</span>
+                            <span>
+                              {fechaEnZona(webinar.fecha_inicio)
+                                ? formatearFechaHora(fechaEnZona(webinar.fecha_inicio))
+                                : `${webinar.date || ''}${webinar.time ? ` · ${webinar.time} (hora del centro de México)` : ''}`}
+                            </span>
                           </p>
 
                           {!registro ? (
@@ -2425,6 +2554,30 @@ const Dashboard = () => {
                   <span>{errorMsg}</span>
                 </div>
               )}
+
+              <div className="settings-card" style={{ marginBottom: '20px' }}>
+                <div className="settings-card-header">
+                  <h3>Zona horaria</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '4px' }}>Las sesiones en vivo, los webinars y tu calendario se muestran en esta hora.</p>
+                </div>
+                <select
+                  className="zona-select"
+                  value={profile?.zona_horaria || ''}
+                  onChange={async (e) => {
+                    const zona = e.target.value || null;
+                    try {
+                      await updateProfile({ zona_horaria: zona });
+                      recordarZona(zona);
+                      showToast('Zona horaria guardada.', 'success');
+                    } catch (err) {
+                      showToast(/zona_horaria/.test(err.message) ? 'La zona horaria se activa al actualizar el portal. Intenta más tarde.' : err.message, 'error');
+                    }
+                  }}
+                >
+                  <option value="">Automática (la de este equipo: {zonaDelEquipo()})</option>
+                  {ZONAS.map(([id, nombre]) => <option key={id} value={id}>{nombre}</option>)}
+                </select>
+              </div>
 
               {/* Theme Selector */}
               <div className="settings-card" style={{ marginBottom: '20px' }}>

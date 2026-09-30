@@ -1051,8 +1051,14 @@
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
+  /* minmax(0, 1fr): con 1fr a secas, el contenido más ancho del formulario
+     impedía que la columna se encogiera y la página se desbordaba a 320px. */
   .ins-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ins-main,
+  .ins-sidebar {
+    min-width: 0;
   }
   .ins-sidebar {
     position: static;

@@ -24,7 +24,20 @@ import {
   entregarTarea,
   UMBRAL_VIDEO,
   TIPOS_LECCION,
+  videoDeLeccion,
+  cargarBiblioteca,
+  abrirArchivoBiblioteca,
+  formatoTamano,
+  formatoArchivo,
+  leccionesConContenido,
+  TIPOS_DEL_SERVIDOR,
 } from '../lib/lecciones';
+import EvaluacionLeccion from '../components/EvaluacionLeccion';
+import SesionEnVivo from '../components/SesionEnVivo';
+import { cargarReglasCurso, venceAcceso, cursoTerminado, REGLAS_BASE } from '../lib/reglas';
+import { leerVistaAlumno, fijarVistaAlumno } from '../lib/vista';
+import { FranjaVistaAlumno } from '../components/CambioVista';
+import { detectarVideo, detectarPagina, midePorcentaje, crearReproductorVimeo, adaptarVideoHtml } from '../lib/videos';
 import TextoLeccion from '../components/TextoLeccion';
 import {
   ArrowLeft,
@@ -44,12 +57,29 @@ import {
   Lock,
   ChevronRight,
   ExternalLink,
-  Upload
+  Upload,
+  Globe,
+  FolderOpen,
+  Download,
+  Search,
+  X,
+  Eye,
+  FileCheck,
+  MessageSquareText,
+  Video
 } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
 import './Classroom.css';
 
-const ICONO_LECCION = { video: PlayCircle, pdf: FileText, texto: BookOpen, tarea: ClipboardList };
+const ICONO_LECCION = { video: PlayCircle, pdf: FileText, texto: BookOpen, tarea: ClipboardList, web: Globe, examen: FileCheck, encuesta: MessageSquareText, sesion: Video };
+
+// Enlace para abrir el video fuera del aula cuando no se puede insertar.
+const enlaceExterno = (video) => {
+  if (!video) return null;
+  if (video.proveedor === 'youtube') return `https://www.youtube.com/watch?v=${video.id}`;
+  if (video.proveedor === 'vimeo') return `https://vimeo.com/${video.id}${video.hash ? `/${video.hash}` : ''}`;
+  return video.url;
+};
 
 async function calificarEnServidor(courseId, respuestas) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -101,6 +131,7 @@ const Classroom = () => {
   const currentUserAvatarUrl = getSafeAvatarUrl(profile?.avatar_url, user?.user_metadata?.avatar_url);
 
   const playerRef = useRef(null);
+  const vimeoRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const maxTimeWatchedRef = useRef(0);
 
@@ -116,6 +147,18 @@ const Classroom = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [catalogCourses, setCatalogCourses] = useState([]);
+  // Reglas del curso (finalización, días de acceso) y si ya tiene certificado.
+  const [reglasCurso, setReglasCurso] = useState(REGLAS_BASE);
+  const [tieneCertificado, setTieneCertificado] = useState(false);
+
+  // Biblioteca del curso: archivos compartidos, generales o ligados a una clase.
+  const [biblioteca, setBiblioteca] = useState([]);
+  const [bibliotecaAbierta, setBibliotecaAbierta] = useState(false);
+  const [busquedaBiblioteca, setBusquedaBiblioteca] = useState('');
+
+  // Un administrador puede ver el aula como alumno: sin botones de admin y con
+  // los candados puestos. Su avance nunca se guarda en ninguna de las dos vistas.
+  const [vistaAlumno, setVistaAlumno] = useState(leerVistaAlumno);
 
   // Control de acceso: null mientras se verifica; { permitido: false, curso }
   // cuando el alumno no está inscrito. En ese caso `course` se queda vacío a
@@ -195,11 +238,42 @@ const Classroom = () => {
   }, [watchPercent]);
 
   // ---- Lecciones ------------------------------------------------------------
-  const esAdmin = profile?.rol === 'admin';
+  const esAdminReal = profile?.rol === 'admin';
+  const esAdmin = esAdminReal && !vistaAlumno;
+  const cambiarVista = (alumno) => {
+    fijarVistaAlumno(alumno);
+    setVistaAlumno(alumno);
+    if (alumno) setShowExam(false);
+  };
+  const archivosDeLeccion = leccionActual && !leccionActual.implicita
+    ? biblioteca.filter((a) => a.leccion_id === leccionActual.id)
+    : [];
+  const abrirArchivo = async (archivo, descargar = false) => {
+    try {
+      await abrirArchivoBiblioteca(archivo, { descargar });
+    } catch (err) {
+      showToast(`No se pudo abrir el archivo: ${err.message}`, 'error');
+    }
+  };
   const leccionActual = lecciones.find((l) => l.id === leccionActualId) || null;
-  const videoActual = leccionActual?.tipo === 'video' ? (leccionActual.contenido?.youtube_video_id || '') : '';
+  const videoActual = leccionActual?.tipo === 'video' ? videoDeLeccion(leccionActual.contenido) : '';
+  // YouTube, Vimeo, un archivo de video o cualquier otra plataforma.
+  const fuenteVideo = detectarVideo(videoActual);
+  const proveedorVideo = fuenteVideo?.proveedor || null;
+  const videoYoutube = proveedorVideo === 'youtube' ? videoActual : '';
+  const videoMedible = !leccionActual || (leccionActual.tipo === 'video' && midePorcentaje(fuenteVideo));
+  const paginaActual = leccionActual?.tipo === 'web' ? detectarPagina(leccionActual.contenido?.enlace) : null;
   const avanceCurso = avanceDelCurso(lecciones, progresoLec, watchPercent);
   const examenDisponible = lecciones.length > 0 && leccionesCompletas(lecciones, progresoLec, watchPercent);
+  // Con regla "lecciones" o "porcentaje" no hay examen final: el certificado
+  // sale al cumplir la regla.
+  const sinExamenFinal = reglasCurso.regla_finalizacion !== 'examen_final';
+  const conContenidoCurso = leccionesConContenido(lecciones);
+  const porcentajeLecciones = conContenidoCurso.length
+    ? (conContenidoCurso.filter((l) => (l.implicita ? watchPercent >= UMBRAL_VIDEO : progresoLec[l.id]?.completada)).length / conContenidoCurso.length) * 100
+    : 0;
+  const cursoCumplido = sinExamenFinal && lecciones.length > 0
+    && cursoTerminado(reglasCurso, { leccionesCompletas: examenDisponible, porcentajeLecciones });
 
   const progresoLecRef = useRef({});
   useEffect(() => { progresoLecRef.current = progresoLec; }, [progresoLec]);
@@ -264,7 +338,7 @@ const Classroom = () => {
   // Avance del video de la lección: se guarda cada 5 puntos y al llegar al
   // umbral, que es cuando la lección cuenta como vista.
   useEffect(() => {
-    if (!leccionActual || leccionActual.implicita || leccionActual.tipo !== 'video' || esAdmin) return;
+    if (!leccionActual || leccionActual.implicita || leccionActual.tipo !== 'video' || esAdminReal) return;
     const guardado = ultimoGuardadoRef.current[leccionActual.id] ?? progresoLecRef.current[leccionActual.id]?.porcentaje ?? 0;
     const yaCompleta = progresoLecRef.current[leccionActual.id]?.completada;
     const cruzaUmbral = watchPercent >= UMBRAL_VIDEO && !yaCompleta;
@@ -280,8 +354,10 @@ const Classroom = () => {
     if (showExam && lecciones.length && !examenDisponible && !esAdmin) setShowExam(false);
   }, [showExam, lecciones.length, examenDisponible, esAdmin]);
 
-  const indiceActual = lecciones.findIndex((l) => l.id === leccionActualId);
-  const siguienteLeccion = indiceActual >= 0 ? lecciones[indiceActual + 1] : null;
+  const navegables = leccionesConContenido(lecciones);
+  const indiceActual = navegables.findIndex((l) => l.id === leccionActualId);
+  const siguienteLeccion = indiceActual >= 0 ? navegables[indiceActual + 1] : null;
+  const numeroDe = (leccionId) => navegables.findIndex((l) => l.id === leccionId) + 1;
 
   const irALeccion = (leccionId) => {
     setShowExam(false);
@@ -441,7 +517,36 @@ const Classroom = () => {
           errorVerificando = true;
         }
 
-        if (permitido) {
+        // Una cuenta nueva puede inscribirse o comprar, pero sus cursos se
+        // abren hasta que un administrador le da acceso (y le asigna grupo).
+        const enRevision = permitido && profile?.rol !== 'admin' && profile?.aprobado === false;
+
+        // Reglas del curso y certificado previo: deciden si el acceso ya venció
+        // y cómo se termina el curso.
+        const reglas = (await cargarReglasCurso(cursoCargado.id).catch(() => null)) || REGLAS_BASE;
+        const { data: certPrevio } = await supabase
+          .from('certificates')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('course_id', cursoCargado.id)
+          .limit(1);
+        const yaCertificado = !!certPrevio?.length;
+        setReglasCurso(reglas);
+        setTieneCertificado(yaCertificado);
+
+        let vencido = null;
+        if (permitido && !enRevision && profile?.rol !== 'admin' && reglas.dias_acceso) {
+          const { data: inscripcion } = await supabase
+            .from('inscripciones')
+            .select('created_at')
+            .eq('user_id', user.id)
+            .eq('course_id', cursoCargado.id)
+            .maybeSingle();
+          const vence = venceAcceso(reglas, inscripcion?.created_at);
+          if (vence && vence < new Date() && !(reglas.conservar_acceso && yaCertificado)) vencido = vence;
+        }
+
+        if (permitido && !enRevision && !vencido) {
           const video = await cargarVideoCurso(cursoCargado.id, cursoCargado.youtube_video_id);
 
           // Lecciones y avance. Si falla la carga, el curso sigue funcionando
@@ -474,17 +579,23 @@ const Classroom = () => {
           setLecciones(lista);
           setProgresoLec(progreso);
           // Se abre la primera lección pendiente: el alumno retoma donde se quedó.
-          const pendiente = lista.find((l) => !l.implicita && !progreso[l.id]?.completada);
-          setLeccionActualId((pendiente || lista[0]).id);
+          const conContenido = leccionesConContenido(lista);
+          const pendiente = conContenido.find((l) => !l.implicita && !progreso[l.id]?.completada);
+          setLeccionActualId((pendiente || conContenido[0] || lista[0]).id);
 
           setCourse({ ...cursoCargado, youtube_video_id: video });
           setQuestions(preguntasCargadas);
           setAcceso({ permitido: true });
+          cargarBiblioteca(cursoCargado.id)
+            .then((lista) => setBiblioteca(lista || []))
+            .catch((err) => console.warn('No se pudo cargar la biblioteca:', err.message));
         } else {
           setCourse(null);
           setAcceso({
             permitido: false,
             errorVerificando,
+            enRevision,
+            vencido,
             curso: {
               id: cursoCargado.id,
               title: cursoCargado.title,
@@ -523,7 +634,7 @@ const Classroom = () => {
     if (id && user?.id) {
       loadClassroomData();
     }
-  }, [id, user?.id, profile?.rol]);
+  }, [id, user?.id, profile?.rol, profile?.aprobado]);
 
   // Classroom Comments/Doubts Logic
   const fetchComments = useCallback(async () => {
@@ -804,18 +915,13 @@ const Classroom = () => {
     let checkYoutubeAPI;
     let fallbackTimeout;
 
-    if (course && videoActual && !showExam) {
+    if (course && videoYoutube && !showExam) {
       setYtApiFailed(false);
       setYoutubeError(null);
 
-      if (!getYouTubeVideoId(videoActual)) {
-        setYoutubeError({ code: 2, fatal: true, message: getYouTubePlayerError(2) });
-        return undefined;
-      }
-
       checkYoutubeAPI = setInterval(() => {
         if (window.YT && window.YT.Player) {
-          initYoutubePlayer(videoActual);
+          initYoutubePlayer(videoYoutube);
           clearInterval(checkYoutubeAPI);
           clearTimeout(fallbackTimeout);
         }
@@ -833,12 +939,56 @@ const Classroom = () => {
       if (checkYoutubeAPI) clearInterval(checkYoutubeAPI);
       if (fallbackTimeout) clearTimeout(fallbackTimeout);
       stopTrackingProgress();
-      if (playerRef.current) {
+      // Solo se desmonta el reproductor de YouTube: el de Vimeo o el de un
+      // archivo se limpian solos.
+      if (videoYoutube && playerRef.current) {
         playerRef.current.destroy();
         playerRef.current = null;
       }
     };
-  }, [course, videoActual, showExam, initYoutubePlayer, stopTrackingProgress]);
+  }, [course, videoYoutube, showExam, initYoutubePlayer, stopTrackingProgress]);
+
+  // Vimeo: mismo registro de avance que YouTube, con su propio reproductor.
+  useEffect(() => {
+    const fuente = detectarVideo(videoActual);
+    if (!course || showExam || fuente?.proveedor !== 'vimeo' || !vimeoRef.current) return undefined;
+    let cancelado = false;
+    let reproductor = null;
+
+    crearReproductorVimeo(vimeoRef.current, fuente, {
+      alReproducir: startTrackingProgress,
+      alDetener: stopTrackingProgress,
+      alFallar: (message) => {
+        stopTrackingProgress();
+        setYoutubeError({ fatal: true, message });
+      },
+    })
+      .then((r) => {
+        if (cancelado) { r.destroy(); return; }
+        reproductor = r;
+        playerRef.current = r;
+      })
+      .catch(() => setYoutubeError({ fatal: true, message: 'No se pudo cargar el reproductor de Vimeo.' }));
+
+    return () => {
+      cancelado = true;
+      stopTrackingProgress();
+      if (reproductor) {
+        reproductor.destroy();
+        if (playerRef.current === reproductor) playerRef.current = null;
+      }
+    };
+  }, [course, videoActual, showExam, startTrackingProgress, stopTrackingProgress]);
+
+  // Archivo de video (.mp4): el <video> del navegador, con el mismo registro.
+  const conectarVideoHtml = useCallback((elemento) => {
+    if (!elemento) return undefined;
+    const adaptador = adaptarVideoHtml(elemento);
+    playerRef.current = adaptador;
+    return () => {
+      if (playerRef.current === adaptador) playerRef.current = null;
+    };
+  }, []);
 
   // Persist local player states
   useEffect(() => {
@@ -1092,6 +1242,28 @@ const Classroom = () => {
     }
   };
 
+  // Calificación del curso sin examen final: el promedio de la mejor
+  // calificación de cada examen de lección, o 100 si no tiene exámenes.
+  const obtenerCertificadoPorRegla = async () => {
+    if (!course || !user || isGeneratingCert) return;
+    let calificacion = 100;
+    const { data: intentos } = await supabase
+      .from('evaluacion_intentos')
+      .select('leccion_id, calificacion')
+      .eq('user_id', user.id)
+      .eq('course_id', course.id);
+    const mejores = new Map();
+    (intentos || []).forEach((i) => {
+      if (i.calificacion == null) return;
+      mejores.set(i.leccion_id, Math.max(mejores.get(i.leccion_id) ?? 0, Number(i.calificacion)));
+    });
+    if (mejores.size) calificacion = Math.round([...mejores.values()].reduce((t, c) => t + c, 0) / mejores.size);
+    setShowExam(true);
+    setExamScore(calificacion);
+    await generateCertificate(calificacion);
+    setTieneCertificado(true);
+  };
+
   const generateCertificate = async (scoreToUse = 100) => {
     if (!course || !user) return;
     setIsGeneratingCert(true);
@@ -1281,7 +1453,17 @@ const Classroom = () => {
             </span>
             <h1>{cursoBloqueado.title}</h1>
 
-            {acceso.errorVerificando ? (
+            {acceso.vencido ? (
+              <>
+                <p className="aula-puerta-revision"><Clock size={16} /> Tu acceso a este curso terminó</p>
+                <p>El acceso duraba hasta el {acceso.vencido.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}. Si necesitas más tiempo, escríbenos.</p>
+              </>
+            ) : acceso.enRevision ? (
+              <>
+                <p className="aula-puerta-revision"><Clock size={16} /> Tu acceso está en revisión</p>
+                <p>Ya estás inscrito en este curso. Un administrador revisará tu cuenta, te asignará tu grupo y abrirá el curso. Te avisaremos cuando esté listo.</p>
+              </>
+            ) : acceso.errorVerificando ? (
               <p>No pudimos verificar tu inscripción. Revisa tu conexión e intenta de nuevo.</p>
             ) : dePago ? (
               <p>Para entrar al aula necesitas inscribirte. El acceso se activa en cuanto se confirma tu pago.</p>
@@ -1290,7 +1472,7 @@ const Classroom = () => {
             )}
 
             <div className="aula-puerta-acciones">
-              {acceso.errorVerificando ? (
+              {acceso.enRevision || acceso.vencido ? null : acceso.errorVerificando ? (
                 <button className="aula-puerta-btn" onClick={() => window.location.reload()}>
                   Reintentar
                 </button>
@@ -1335,12 +1517,22 @@ const Classroom = () => {
       {/* Navbar Header */}
       <header className="classroom-header">
         <div className="header-left">
-          <button onClick={() => navigate('/dashboard')} className="back-btn">
-            <ArrowLeft size={16} /> Volver al Portal
+          <button onClick={() => navigate('/dashboard')} className="back-btn" aria-label="Volver al Portal">
+            <ArrowLeft size={16} /> <span className="aula-btn-texto">Volver al Portal</span>
           </button>
           <img src="/assets/componentes/firma-hce.png" alt="HCE Logo" className="header-logo" />
         </div>
         <div className="header-right">
+          {biblioteca.length > 0 && (
+            <button type="button" className="back-btn aula-biblioteca-btn" onClick={() => setBibliotecaAbierta(true)} aria-label={`Biblioteca del curso (${biblioteca.length} archivos)`}>
+              <FolderOpen size={16} /> <span className="aula-btn-texto">Biblioteca</span> <span className="aula-biblioteca-num">{biblioteca.length}</span>
+            </button>
+          )}
+          {esAdminReal && !vistaAlumno && (
+            <button type="button" className="back-btn" onClick={() => cambiarVista(true)} title="Ver el aula como la ve un alumno" aria-label="Vista de alumno">
+              <Eye size={16} /> <span className="aula-btn-texto">Vista de alumno</span>
+            </button>
+          )}
           <div className="classroom-user-profile">
             <span style={{ fontSize: '0.9rem' }}>Estás cursando como <strong>{getFirstName()}</strong></span>
             <div className="classroom-user-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1358,6 +1550,60 @@ const Classroom = () => {
         </div>
       </header>
 
+      {esAdminReal && vistaAlumno && (
+        <FranjaVistaAlumno
+          texto="Estás viendo el aula como alumno. Tu avance no se guarda."
+          onVolver={() => cambiarVista(false)}
+        />
+      )}
+
+      {bibliotecaAbierta && (
+        <div className="aula-biblioteca-fondo" onClick={() => setBibliotecaAbierta(false)}>
+          <aside className="aula-biblioteca" role="dialog" aria-modal="true" aria-label="Biblioteca del curso" onClick={(e) => e.stopPropagation()}>
+            <header>
+              <h2><FolderOpen size={18} /> Biblioteca del curso</h2>
+              <button type="button" className="aula-biblioteca-cerrar" onClick={() => setBibliotecaAbierta(false)} aria-label="Cerrar"><X size={18} /></button>
+            </header>
+            <label className="aula-biblioteca-buscar">
+              <Search size={15} />
+              <input type="search" placeholder="Buscar archivo" value={busquedaBiblioteca} onChange={(e) => setBusquedaBiblioteca(e.target.value)} autoFocus />
+            </label>
+            {(() => {
+              const q = busquedaBiblioteca.trim().toLowerCase();
+              const filtrados = biblioteca.filter((a) => !q || a.nombre.toLowerCase().includes(q));
+              const grupos = [
+                { clave: 'general', titulo: 'Material general', archivos: filtrados.filter((a) => !a.leccion_id || !lecciones.some((l) => l.id === a.leccion_id)) },
+                ...navegables.map((l, i) => ({ clave: l.id, titulo: `${i + 1}. ${l.titulo}`, leccionId: l.id, archivos: filtrados.filter((a) => a.leccion_id === l.id) })),
+              ].filter((g) => g.archivos.length);
+              if (!grupos.length) return <p className="aula-biblioteca-vacia">Ningún archivo coincide con la búsqueda.</p>;
+              return grupos.map((g) => (
+                <section key={g.clave} className="aula-biblioteca-grupo">
+                  <h3>
+                    {g.leccionId ? (
+                      <button type="button" onClick={() => { setBibliotecaAbierta(false); irALeccion(g.leccionId); }} title="Ir a la clase">{g.titulo}</button>
+                    ) : g.titulo}
+                  </h3>
+                  <ul>
+                    {g.archivos.map((a) => (
+                      <li key={a.id}>
+                        <button type="button" className="leccion-archivo" onClick={() => abrirArchivo(a)}>
+                          <span className="leccion-archivo-formato">{formatoArchivo(a)}</span>
+                          <span className="leccion-archivo-nombre">{a.nombre}</span>
+                          <span className="leccion-archivo-tamano">{formatoTamano(a.tamano)}</span>
+                        </button>
+                        <button type="button" className="leccion-archivo-descargar" onClick={() => abrirArchivo(a, true)} title="Descargar" aria-label={`Descargar ${a.nombre}`}>
+                          <Download size={15} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ));
+            })()}
+          </aside>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <main className="classroom-container">
         <div className="classroom-grid">
@@ -1371,7 +1617,7 @@ const Classroom = () => {
                 {lecciones.length > 1 && leccionActual && (
                   <div className="leccion-cabecera">
                     <span className="leccion-numero">
-                      Lección {indiceActual + 1} de {lecciones.length} · {TIPOS_LECCION[leccionActual.tipo]}
+                      Lección {indiceActual + 1} de {navegables.length} · {TIPOS_LECCION[leccionActual.tipo]}
                     </span>
                     <h2>{leccionActual.titulo}</h2>
                     {leccionActual.descripcion && <p>{leccionActual.descripcion}</p>}
@@ -1381,26 +1627,48 @@ const Classroom = () => {
                 {(!leccionActual || leccionActual.tipo === 'video') && (
                   <div className="video-container-wrapper">
                     {videoActual ? (
-                      youtubeError?.fatal || !getYouTubeVideoId(videoActual) ? (
+                      youtubeError?.fatal || !fuenteVideo ? (
                         <div className="video-player-error" role="alert">
                           <AlertCircle size={36} />
                           <strong>No se pudo cargar el video</strong>
-                          <span>{youtubeError?.message || 'El enlace de YouTube configurado no es válido.'}</span>
-                          {getYouTubeVideoId(videoActual) && (
-                            <a
-                              href={`https://www.youtube.com/watch?v=${getYouTubeVideoId(videoActual)}`}
-                              target="_blank"
-                              rel="noopener"
-                            >
-                              Abrir directamente en YouTube
+                          <span>{youtubeError?.message || 'El enlace del video configurado no es válido.'}</span>
+                          {enlaceExterno(fuenteVideo) && (
+                            <a href={enlaceExterno(fuenteVideo)} target="_blank" rel="noopener">
+                              {proveedorVideo === 'youtube' ? 'Abrir directamente en YouTube' : 'Abrir el video en otra pestaña'}
                             </a>
                           )}
                         </div>
+                      ) : proveedorVideo === 'vimeo' ? (
+                        <div ref={vimeoRef} className="video-iframe-target video-vimeo"></div>
+                      ) : proveedorVideo === 'archivo' ? (
+                        <video
+                          ref={conectarVideoHtml}
+                          src={fuenteVideo.url}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          controlsList="nodownload"
+                          onContextMenu={(e) => e.preventDefault()}
+                          onPlay={startTrackingProgress}
+                          onPause={stopTrackingProgress}
+                          onEnded={stopTrackingProgress}
+                          onError={() => setYoutubeError({ fatal: true, message: 'No se pudo reproducir el archivo de video.' })}
+                          className="video-iframe-target"
+                        />
+                      ) : proveedorVideo === 'otro' ? (
+                        <iframe
+                          src={fuenteVideo.url}
+                          title={leccionActual?.titulo || course.title}
+                          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write"
+                          allowFullScreen
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          className="video-iframe-target"
+                        ></iframe>
                       ) : ytApiFailed ? (
                         <iframe
                           width="100%"
                           height="100%"
-                          src={getYouTubeEmbedUrl(videoActual)}
+                          src={getYouTubeEmbedUrl(videoYoutube)}
                           title={leccionActual?.titulo || course.title}
                           frameBorder="0"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -1436,11 +1704,61 @@ const Classroom = () => {
                   </div>
                 )}
 
+                {leccionActual?.tipo === 'web' && (
+                  <div className="leccion-material leccion-web">
+                    {leccionActual.contenido?.texto && <TextoLeccion texto={leccionActual.contenido.texto} />}
+                    {paginaActual ? (
+                      <>
+                        <iframe
+                          src={paginaActual}
+                          title={leccionActual.titulo}
+                          className="leccion-pdf leccion-pagina"
+                          allow="fullscreen; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                          allowFullScreen
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-downloads"
+                        />
+                        <a href={paginaActual} target="_blank" rel="noopener noreferrer" className="leccion-enlace">
+                          <ExternalLink size={14} /> ¿No se ve? Abrir la página en otra pestaña
+                        </a>
+                      </>
+                    ) : (
+                      <div className="video-loading-placeholder">Esta lección todavía no tiene página.</div>
+                    )}
+                  </div>
+                )}
+
                 {leccionActual?.tipo === 'texto' && (
                   <div className="leccion-material leccion-lectura">
                     {leccionActual.contenido?.texto
                       ? <TextoLeccion texto={leccionActual.contenido.texto} />
                       : <p className="leccion-vacia">Esta lección todavía no tiene contenido.</p>}
+                  </div>
+                )}
+
+                {(leccionActual?.tipo === 'examen' || leccionActual?.tipo === 'encuesta') && (
+                  <div className="leccion-material">
+                    <EvaluacionLeccion
+                      key={leccionActual.id}
+                      leccion={leccionActual}
+                      userId={user?.id}
+                      esAdmin={esAdminReal}
+                      notificar={showToast}
+                      onCompletada={() => setProgresoLec((prev) => ({ ...prev, [leccionActual.id]: { porcentaje: 100, completada: true } }))}
+                    />
+                  </div>
+                )}
+
+                {leccionActual?.tipo === 'sesion' && (
+                  <div className="leccion-material">
+                    <SesionEnVivo
+                      key={leccionActual.id}
+                      leccion={leccionActual}
+                      curso={course.title}
+                      esAdmin={esAdminReal}
+                      notificar={showToast}
+                      onCompletada={() => setProgresoLec((prev) => ({ ...prev, [leccionActual.id]: { porcentaje: 100, completada: true } }))}
+                    />
                   </div>
                 )}
 
@@ -1498,9 +1816,29 @@ const Classroom = () => {
                   </div>
                 )}
 
+                {archivosDeLeccion.length > 0 && (
+                  <div className="leccion-archivos">
+                    <h3><FolderOpen size={16} /> Archivos de esta clase</h3>
+                    <ul>
+                      {archivosDeLeccion.map((a) => (
+                        <li key={a.id}>
+                          <button type="button" className="leccion-archivo" onClick={() => abrirArchivo(a)}>
+                            <span className="leccion-archivo-formato">{formatoArchivo(a)}</span>
+                            <span className="leccion-archivo-nombre">{a.nombre}</span>
+                            <span className="leccion-archivo-tamano">{formatoTamano(a.tamano)}</span>
+                          </button>
+                          <button type="button" className="leccion-archivo-descargar" onClick={() => abrirArchivo(a, true)} title="Descargar" aria-label={`Descargar ${a.nombre}`}>
+                            <Download size={15} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div className="classroom-player-controls">
                   <div className="classroom-progress-info">
-                    {leccionActual?.tipo === 'video' || !leccionActual ? (
+                    {videoMedible ? (
                       <>
                         <span className="progress-label">Avance del video:</span>
                         <span className="progress-value">{watchPercent}%</span>
@@ -1528,7 +1866,7 @@ const Classroom = () => {
                       </button>
                     )}
 
-                    {(leccionActual?.tipo === 'pdf' || leccionActual?.tipo === 'texto') && !progresoLec[leccionActual.id]?.completada && (
+                    {leccionActual && !leccionActual.implicita && !videoMedible && leccionActual.tipo !== 'tarea' && !TIPOS_DEL_SERVIDOR.includes(leccionActual.tipo) && !progresoLec[leccionActual.id]?.completada && (
                       <button type="button" className="back-btn leccion-btn-principal" onClick={() => completarLeccion(leccionActual)}>
                         <CheckCircle size={15} /> Marcar como completada
                       </button>
@@ -1538,6 +1876,20 @@ const Classroom = () => {
                       <button type="button" className="back-btn" onClick={() => irALeccion(siguienteLeccion.id)}>
                         Siguiente lección <ChevronRight size={15} />
                       </button>
+                    ) : sinExamenFinal ? (
+                      tieneCertificado ? (
+                        <span className="progress-label">✓ Ya tienes tu certificado en la pestaña Certificados</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="back-btn leccion-btn-principal"
+                          disabled={!cursoCumplido || isGeneratingCert || esAdmin}
+                          onClick={obtenerCertificadoPorRegla}
+                          title={cursoCumplido ? '' : 'Completa las lecciones para obtener tu certificado'}
+                        >
+                          <Award size={15} /> {isGeneratingCert ? 'Generando…' : 'Obtener mi certificado'}
+                        </button>
+                      )
                     ) : (
                       <button
                         type="button"
@@ -1906,7 +2258,10 @@ const Classroom = () => {
                 <div className="temario-barra" aria-hidden="true"><span style={{ width: `${avanceCurso}%` }} /></div>
 
                 <ol className="temario-lista">
-                  {lecciones.map((l, i) => {
+                  {lecciones.map((l) => {
+                    if (l.tipo === 'seccion') {
+                      return <li key={l.id} className="temario-seccion">{l.titulo}</li>;
+                    }
                     const Icono = ICONO_LECCION[l.tipo] || PlayCircle;
                     const hecha = progresoLec[l.id]?.completada;
                     const actual = !showExam && l.id === leccionActualId;
@@ -1922,7 +2277,7 @@ const Classroom = () => {
                             {hecha ? <CheckCircle size={16} /> : <Icono size={16} />}
                           </span>
                           <span className="temario-texto">
-                            <span className="temario-titulo">{i + 1}. {l.titulo}</span>
+                            <span className="temario-titulo">{numeroDe(l.id)}. {l.titulo}</span>
                             <span className="temario-meta">
                               {TIPOS_LECCION[l.tipo]}
                               {l.duracion_min ? ` · ${l.duracion_min} min` : ''}
@@ -1934,7 +2289,7 @@ const Classroom = () => {
                       </li>
                     );
                   })}
-                  <li>
+                  {!sinExamenFinal && <li>
                     <button
                       type="button"
                       className={`temario-item${showExam ? ' temario-item--actual' : ''}`}
@@ -1949,7 +2304,7 @@ const Classroom = () => {
                         </span>
                       </span>
                     </button>
-                  </li>
+                  </li>}
                 </ol>
               </nav>
             )}

@@ -9,7 +9,7 @@
 // lecciones obligatorias completas. El intento queda registrado aquí, no en el
 // navegador, para que las métricas no dependan de lo que este reporte.
 
-import { admin, usuarioDesdeToken, json, isConfigured as supabaseListo } from './_supabase.js';
+import { admin, usuarioDesdeToken, cuentaHabilitada, json, isConfigured as supabaseListo } from './_supabase.js';
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -22,6 +22,9 @@ export const handler = async (event) => {
   try {
     const user = await usuarioDesdeToken(event.headers);
     if (!user) return json(401, { error: 'Tu sesión expiró. Vuelve a entrar al portal.' });
+
+    const cuenta = await cuentaHabilitada(user.id, { exigirAprobacion: true });
+    if (!cuenta.habilitada) return json(403, { error: cuenta.error, estado: 'cuenta-no-habilitada' });
 
     const { courseId, respuestas = {} } = JSON.parse(event.body || '{}');
     if (!courseId) return json(400, { error: 'Falta el curso.' });
