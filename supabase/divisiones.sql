@@ -3,8 +3,8 @@
 -- organizaciones dentro del mismo portal. Cada división tiene sus alumnos, sus
 -- cursos y sus grupos, y el panel puede ver reportes solo de esa división.
 --
--- Por ahora las administra el administrador general. (Un administrador propio
--- por división, que solo vea lo suyo, es un rol aparte y se agrega después.)
+-- Todas las administra el administrador general (no hay un administrador
+-- propio por división).
 --
 -- Supabase -> SQL Editor -> pegar todo -> Run. Es idempotente y solo agrega.
 -- Requiere cuentas-aprobacion.sql y lms-estructura.sql (grupos).

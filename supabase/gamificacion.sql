@@ -164,7 +164,7 @@ as $$
     'participantes', (select count(*) from ranking),
     'mostrar_en_ranking', coalesce((select mostrar_en_ranking from public.profiles where id = auth.uid()), true),
     'puntos_por_nivel', coalesce((select puntos_por_nivel from cfg), 200),
-    'recompensas', coalesce((select recompensas from cfg), '[]'::json),
+    'recompensas', coalesce((select recompensas from cfg), '[]'::jsonb),
     'gamificacion_activa', coalesce((select activo from cfg), true)
   );
 $$;
