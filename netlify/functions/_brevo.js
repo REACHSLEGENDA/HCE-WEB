@@ -25,7 +25,7 @@ export const LISTS = {
 
 export const isConfigured = () => Boolean(process.env.BREVO_API_KEY);
 
-async function brevoFetch(path, { method = 'POST', body } = {}) {
+async function brevoFetch(path, { method = 'POST', body, signal } = {}) {
   const res = await fetch(`${BREVO_API}${path}`, {
     method,
     headers: {
@@ -34,6 +34,7 @@ async function brevoFetch(path, { method = 'POST', body } = {}) {
       accept: 'application/json',
     },
     body: body ? JSON.stringify(body) : undefined,
+    signal,
   });
 
   // 204 No Content (actualizaciones y altas/bajas de lista) no traen cuerpo.
@@ -78,8 +79,9 @@ export function buildAttributes({
 // Crea el contacto o actualiza sus atributos si ya existe.
 // Siempre se llama ANTES de moverlo de lista, para que la automatización
 // encuentre los atributos poblados al renderizar el correo.
-export async function upsertContact(email, attributes = {}) {
+export async function upsertContact(email, attributes = {}, opciones = {}) {
   return brevoFetch('/contacts', {
+    signal: opciones.signal,
     body: { email, attributes, updateEnabled: true },
   });
 }
@@ -96,9 +98,10 @@ export async function upsertContact(email, attributes = {}) {
 //
 // Ojo: si ya estaba en la lista, Brevo NO vuelve a disparar la automatización.
 // Para repetir una prueba hay que sacar antes al contacto de la lista.
-export async function addToList(email, listId) {
+export async function addToList(email, listId, opciones = {}) {
   try {
     return await brevoFetch(`/contacts/lists/${listId}/contacts/add`, {
+      signal: opciones.signal,
       body: { emails: [email] },
     });
   } catch (err) {
@@ -109,9 +112,10 @@ export async function addToList(email, listId) {
 
 // Sacar de una lista no es un error si el contacto no estaba en ella:
 // pasa siempre que alguien paga sin haber abandonado el carrito antes.
-export async function removeFromList(email, listId) {
+export async function removeFromList(email, listId, opciones = {}) {
   try {
     return await brevoFetch(`/contacts/lists/${listId}/contacts/remove`, {
+      signal: opciones.signal,
       body: { emails: [email] },
     });
   } catch (err) {

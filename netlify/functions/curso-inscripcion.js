@@ -17,7 +17,7 @@
 // Antes de inscribir o cobrar se revisan las reglas del curso (lms-reglas.sql):
 // visibilidad, cupo, prerrequisitos y solicitud de inscripción.
 
-import { admin, usuarioDesdeToken, adminDesdeToken, cuentaHabilitada, registrarAccionAdmin, json, isConfigured as supabaseListo } from './_supabase.js';
+import { admin, usuarioDesdeToken, adminDesdeToken, cuentaHabilitada, esEsquemaFaltante, registrarAccionAdmin, json, isConfigured as supabaseListo } from './_supabase.js';
 import { getStripe } from './_stripe.js';
 import { inscribir, inscribirDesdeSesion, importeEnMoneda, TIPO_COBRO } from './_inscripciones.js';
 
@@ -35,7 +35,10 @@ async function cargarCurso(db, courseId) {
 // Reglas del curso; sin la migración (o sin fila) no hay restricciones.
 async function cargarReglas(db, courseId) {
   const { data, error } = await db.from('curso_reglas').select('*').eq('course_id', courseId).maybeSingle();
-  if (error) return null;
+  if (error) {
+    if (esEsquemaFaltante(error)) return null;
+    throw new Error(error.message);
+  }
   return data;
 }
 
@@ -91,6 +94,29 @@ async function descuentoPorNivel(db, userId) {
   }
 }
 
+// Supabase devuelve como máximo 1000 filas por consulta: se pide por páginas
+// (con orden estable) hasta traerlo todo.
+async function traerTodo(armarConsulta) {
+  const filas = [];
+  for (let desde = 0; ; desde += 1000) {
+    const { data, error } = await armarConsulta().range(desde, desde + 999);
+    if (error) throw new Error(error.message);
+    filas.push(...(data || []));
+    if (!data || data.length < 1000) break;
+  }
+  return filas;
+}
+
+// Corre las altas de 10 en 10 en paralelo: una por una, una lista grande
+// pasaba el límite de 10 segundos de Netlify.
+async function enLotes(lista, fn, tamano = 10) {
+  const resultados = [];
+  for (let i = 0; i < lista.length; i += tamano) {
+    resultados.push(...await Promise.all(lista.slice(i, i + tamano).map(fn)));
+  }
+  return resultados;
+}
+
 function origenDe(event) {
   return (
     event.headers.origin ||
@@ -129,14 +155,14 @@ export const handler = async (event) => {
         const buscados = [...new Set(correos.map((c) => String(c).trim().toLowerCase()).filter(Boolean))];
         if (!buscados.length) return json(400, { error: 'No hay correos en la lista.' });
 
-        const { data: perfiles, error } = await db.from('profiles').select('id, email').range(0, 9999);
-        if (error) throw new Error(error.message);
-        const porCorreo = new Map((perfiles || []).map((p) => [String(p.email || '').toLowerCase(), p.id]));
+        const perfiles = await traerTodo(() => db.from('profiles').select('id, email').order('id'));
+        const porCorreo = new Map(perfiles.map((p) => [String(p.email || '').toLowerCase(), p.id]));
 
+        // Sin correo por cada alta: en una lista grande serían cientos de
+        // envíos y la función no alcanzaría a terminar.
         const encontrados = buscados.filter((c) => porCorreo.has(c));
-        for (const correo of encontrados) {
-          await inscribir(db, { userId: porCorreo.get(correo), courseId: curso.id, origen: 'admin' });
-        }
+        await enLotes(encontrados, (correo) =>
+          inscribir(db, { userId: porCorreo.get(correo), courseId: curso.id, origen: 'admin', avisar: false }));
         return json(200, {
           ok: true,
           inscritos: encontrados.length,
@@ -147,25 +173,33 @@ export const handler = async (event) => {
       // Inscribe a todos los miembros del grupo en todos sus cursos. Se llama
       // cada vez que cambia el grupo; es idempotente, así que no duplica nada.
       const { grupoId } = cuerpo;
-      const [{ data: miembros }, { data: cursos }] = await Promise.all([
-        db.from('grupo_miembros').select('user_id').eq('grupo_id', Number(grupoId)),
-        db.from('grupo_cursos').select('course_id').eq('grupo_id', Number(grupoId)),
+      const [miembros, cursos] = await Promise.all([
+        traerTodo(() => db.from('grupo_miembros').select('user_id').eq('grupo_id', Number(grupoId)).order('user_id')),
+        traerTodo(() => db.from('grupo_cursos').select('course_id').eq('grupo_id', Number(grupoId)).order('course_id')),
       ]);
 
-      let nuevas = 0;
-      for (const m of miembros || []) {
-        for (const c of cursos || []) {
-          const { data: previa } = await db
-            .from('inscripciones')
-            .select('id')
-            .eq('user_id', m.user_id)
-            .eq('course_id', c.course_id)
-            .maybeSingle();
-          if (previa) continue;
-          await inscribir(db, { userId: m.user_id, courseId: c.course_id, origen: 'grupo' });
-          nuevas += 1;
+      // Las inscripciones que ya existen se traen de una vez (por tandas de
+      // alumnos) en lugar de preguntar par por par.
+      const idsAlumnos = [...new Set((miembros || []).map((m) => m.user_id))];
+      const idsCursos = [...new Set((cursos || []).map((c) => c.course_id))];
+      const existentes = new Set();
+      if (idsAlumnos.length && idsCursos.length) {
+        for (let i = 0; i < idsAlumnos.length; i += 100) {
+          const tanda = idsAlumnos.slice(i, i + 100);
+          const filas = await traerTodo(() => db.from('inscripciones').select('id, user_id, course_id')
+            .in('user_id', tanda).in('course_id', idsCursos).order('id'));
+          filas.forEach((f) => existentes.add(`${f.user_id}:${f.course_id}`));
         }
       }
+      const pendientes = [];
+      for (const userId of idsAlumnos) {
+        for (const courseId of idsCursos) {
+          if (!existentes.has(`${userId}:${courseId}`)) pendientes.push({ userId, courseId });
+        }
+      }
+      const altas = await enLotes(pendientes, (p) =>
+        inscribir(db, { userId: p.userId, courseId: p.courseId, origen: 'grupo', avisar: false }));
+      const nuevas = altas.filter((a) => a?.nueva).length;
       return json(200, { ok: true, nuevas });
     }
 

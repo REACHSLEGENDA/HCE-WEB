@@ -97,7 +97,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // Cuenta suspendida por un administrador: no entra al portal. (Una cuenta
   // nueva sin aprobar sí entra; lo que se le cierra son los cursos.)
-  if (profile && profile.rol !== 'admin' && profile.activo === false) {
+  if (profile?.activo === false) {
     return (
       <div style={{
         minHeight: '100vh',

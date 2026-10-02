@@ -31,7 +31,7 @@ async function cargarEventos(cursosInscritos, cursos) {
       }
     }
   }
-  const { data: webinars } = await supabase.from('webinars').select('id, title, fecha_inicio, fecha_fin, activo').not('fecha_inicio', 'is', null);
+  const { data: webinars } = await supabase.from('webinars').select('id, title, fecha_inicio, fecha_fin, activo').eq('registro_portal', true).not('fecha_inicio', 'is', null);
   for (const w of webinars || []) {
     if (w.activo === false) continue;
     const inicio = fechaEnZona(w.fecha_inicio);

@@ -4,7 +4,7 @@ import { MessageSquare, Quote, Star, CheckCircle, Stethoscope } from 'lucide-rea
 import { Link } from 'react-router-dom';
 import './Testimonials.css';
 
-const TestimonialCard = ({ img, name, role, text, delay }) => {
+const TestimonialCard = ({ img, name, role, text }) => {
   return (
     <div className="premium-testimonial-card">
       <div className="testi-glass-blur"></div>

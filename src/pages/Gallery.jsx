@@ -43,34 +43,23 @@ const Gallery = () => {
   const tabParam = searchParams.get('tab');
   const subParam = searchParams.get('sub');
 
-  const [activeTab, setActiveTab] = useState(galleryData[0]?.id || '');
-  const [activeSubfolder, setActiveSubfolder] = useState('diploma'); // defaults to diploma for INER
+  const activeTab = tabParam && galleryData.some(g => g.id === tabParam) ? tabParam : (galleryData[0]?.id || '');
+  const activeSubfolder = ['diploma', 'simulacion'].includes(subParam) ? subParam : 'diploma';
   const [visibleCount, setVisibleCount] = useState(24); // load 24 images initially for performance
   const [lightboxIndex, setLightboxIndex] = useState(null); // active image index for lightbox
+  const selection = `${activeTab}:${activeSubfolder}`;
+  const [previousSelection, setPreviousSelection] = useState(selection);
+  // Ajuste condicionado a la URL: también se reinicia al usar Atrás/Adelante.
+  if (previousSelection !== selection) {
+    setPreviousSelection(selection);
+    setVisibleCount(24);
+    setLightboxIndex(null);
+  }
 
   const { ref: headerRef, inView: headerInView } = useInView({ triggerOnce: true, threshold: 0.1 });
   const { ref: contentRef, inView: inViewContent } = useInView({ triggerOnce: true, threshold: 0.05 });
 
-  // Sync state with URL search param
-  useEffect(() => {
-    if (tabParam && galleryData.some(g => g.id === tabParam)) {
-      setActiveTab(tabParam);
-    } else if (!tabParam && galleryData[0]) {
-      setActiveTab(galleryData[0].id);
-    }
-  }, [tabParam]);
-
-  // Sync subfolder state with URL search param
-  useEffect(() => {
-    if (subParam && ['diploma', 'simulacion'].includes(subParam)) {
-      setActiveSubfolder(subParam);
-    } else {
-      setActiveSubfolder('diploma');
-    }
-  }, [subParam, activeTab]);
-
   const handleTabChange = (id) => {
-    setActiveTab(id);
     const target = galleryData.find(g => g.id === id);
     if (target && target.hasSubfolders) {
       setSearchParams({ tab: id, sub: 'diploma' });
@@ -80,7 +69,6 @@ const Gallery = () => {
   };
 
   const handleSubfolderChange = (subKey) => {
-    setActiveSubfolder(subKey);
     setSearchParams({ tab: activeTab, sub: subKey });
   };
 
@@ -92,28 +80,23 @@ const Gallery = () => {
     ? activeGallery.subfolders[activeSubfolder]?.images || []
     : activeGallery.images || [];
 
-  // Reset page size when switching galleries or subfolders
-  useEffect(() => {
-    setVisibleCount(24);
-    setLightboxIndex(null);
-  }, [activeTab, activeSubfolder]);
-
+  const imageCount = activeImages.length;
   // Handle keyboard events in lightbox
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (lightboxIndex === null) return;
       if (e.key === 'ArrowRight') {
-        handleNextImage();
+        setLightboxIndex(prev => (prev + 1) % imageCount);
       } else if (e.key === 'ArrowLeft') {
-        handlePrevImage();
+        setLightboxIndex(prev => (prev - 1 + imageCount) % imageCount);
       } else if (e.key === 'Escape') {
-        closeLightbox();
+        setLightboxIndex(null);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxIndex, activeImages]);
+  }, [lightboxIndex, imageCount]);
 
   const loadMore = () => {
     setVisibleCount(prev => Math.min(prev + 24, activeImages.length));

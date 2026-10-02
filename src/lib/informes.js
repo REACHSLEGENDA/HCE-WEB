@@ -3,6 +3,82 @@
 
 const DIA = 24 * 60 * 60 * 1000;
 
+/**
+ * Tasa de finalización: certificados ÷ inscripciones, en porcentaje y con
+ * tope de 100%. Es la ÚNICA definición del portal (Analíticas, Divisiones,
+ * Reporte del alumno): si cambia, cambia aquí.
+ *
+ * Solo cuenta los certificados que corresponden a una inscripción (mismo
+ * alumno y curso), para que un certificado sin inscripción no infle la tasa.
+ * Acepta listas de filas { user_id, course_id } o, si no hay forma de
+ * cruzarlas, dos números.
+ */
+export function tasaFinalizacion(certificados, inscripciones) {
+  if (typeof certificados === 'number' || typeof inscripciones === 'number') {
+    const c = Number(certificados) || 0;
+    const i = Number(inscripciones) || 0;
+    return i ? Math.min(100, (c / i) * 100) : 0;
+  }
+  const inscritas = new Set((inscripciones || []).map((i) => `${i.user_id}:${Number(i.course_id)}`));
+  if (!inscritas.size) return 0;
+  const completas = new Set((certificados || [])
+    .map((c) => `${c.user_id}:${Number(c.course_id)}`)
+    .filter((clave) => inscritas.has(clave)));
+  return Math.min(100, (completas.size / inscritas.size) * 100);
+}
+
+/** Matriz alumnos × cursos de un grupo o división, con historial acumulado. */
+export function reporteColectivo({ alumnos, cursos, cursosAsignados = [], inscripciones = [], certificados = [], lecciones = [], progreso = [], examenes = [], intentos = [] }) {
+  const cursoIds = new Set([...cursosAsignados.map(Number), ...inscripciones.map((i) => Number(i.course_id))]);
+  const columnas = cursos.filter((c) => cursoIds.has(Number(c.id)));
+  const clave = (fila) => `${fila.user_id}:${Number(fila.course_id)}`;
+  const inscritas = new Set(inscripciones.map(clave));
+  const certDe = new Map(certificados.map((c) => [clave(c), c]));
+  const agrupar = (filas) => {
+    const mapa = new Map();
+    for (const fila of filas) {
+      const par = clave(fila);
+      if (!mapa.has(par)) mapa.set(par, []);
+      mapa.get(par).push(fila);
+    }
+    return mapa;
+  };
+  const progresoDe = agrupar(progreso);
+  const examenesDe = agrupar(examenes);
+  const intentosDe = agrupar(intentos);
+  const baseDe = new Map(columnas.map((c) => {
+    const contenido = lecciones.filter((l) => Number(l.course_id) === Number(c.id) && l.tipo !== 'seccion');
+    const obligatorias = contenido.filter((l) => l.obligatoria !== false);
+    return [Number(c.id), obligatorias.length ? obligatorias : contenido];
+  }));
+  return { columnas, filas: alumnos.map((alumno) => ({
+    alumno,
+    celdas: columnas.map((curso) => {
+      const courseId = Number(curso.id);
+      const par = `${alumno.id}:${courseId}`;
+      const cert = certDe.get(par);
+      if (!inscritas.has(par)) return { courseId, estado: 'Sin inscripción', avance: null, calificacion: null, certificado: cert?.folio || (cert ? 'Sí' : '') };
+      const base = baseDe.get(courseId);
+      const propios = progresoDe.get(par) || [];
+      const completas = new Set(propios.filter((p) => p.completada).map((p) => p.leccion_id));
+      const avance = cert ? 100 : base.length ? Math.round(100 * base.filter((l) => completas.has(l.id)).length / base.length) : 0;
+      const finales = examenesDe.get(par) || [];
+      const evaluaciones = intentosDe.get(par) || [];
+      const notas = (finales.length ? finales.map((e) => e.datos?.calificacion) : evaluaciones.map((i) => i.calificacion))
+        .filter((n) => n != null && Number.isFinite(Number(n))).map(Number);
+      const aprobado = finales.some((e) => e.datos?.aprobado);
+      const reprobo = finales.length > 0 && !aprobado;
+      const actividad = propios.some((p) => p.completada || Number(p.porcentaje) > 0) || evaluaciones.length > 0;
+      return {
+        courseId, avance,
+        estado: cert ? 'Certificado' : aprobado ? 'Aprobó' : reprobo ? 'Reprobó' : actividad ? 'Cursando' : 'Sin empezar',
+        calificacion: cert?.score ?? (notas.length ? Math.max(...notas) : null),
+        certificado: cert?.folio || (cert ? 'Sí' : ''),
+      };
+    }),
+  })) };
+}
+
 // ---- Analíticas -----------------------------------------------------------------
 
 export function analiticasPlataforma({ perfiles, cursos, inscripciones, certificados, lecciones, progreso, visitas, logins, archivos = [] }, ahora = Date.now()) {
@@ -69,14 +145,14 @@ export function analiticasPlataforma({ perfiles, cursos, inscripciones, certific
       total: cursos.length,
       puntuacionMedia: calificaciones.length ? calificaciones.reduce((t, c) => t + c, 0) / calificaciones.length : null,
       tiempoFinalizacionSeg: tiempos.length ? tiempos.reduce((t, c) => t + c, 0) / tiempos.length / 1000 : null,
-      tasaFinalizacion: pct(estados.completado, totalInscripciones),
+      tasaFinalizacion: tasaFinalizacion(certificados, inscripciones),
       actividades: conContenido.filter((l) => ['examen', 'encuesta', 'tarea', 'sesion'].includes(l.tipo)).length,
     },
     analisis: {
       iniciosSesion: pct(idsLogin30.size, alumnos.length),
       inscripciones: pct(idsInscritos.size, alumnos.length),
       participacion: pct([...idsActivos30].filter((id) => idsInscritos.has(id)).length, idsInscritos.size),
-      finalizacion: pct(estados.completado, totalInscripciones),
+      finalizacion: tasaFinalizacion(certificados, inscripciones),
     },
     biblioteca: {
       total: conContenido.length + archivos.length,

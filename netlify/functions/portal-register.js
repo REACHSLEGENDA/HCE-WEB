@@ -19,12 +19,12 @@ async function cuentaPendienteNueva(email) {
   if (!supabaseListo()) return null;
   const { data, error } = await admin()
     .from('profiles')
-    .select('nombre_completo, email, institucion, pais, created_at, aprobado')
-    .eq('email', email.toLowerCase())
+    .select('id, nombre_completo, email, telefono, institucion, pais, especialidad, cargo, created_at, aprobado')
+    .eq('email', email.trim().toLowerCase())
     .maybeSingle();
   if (error || !data || data.aprobado !== false) return null;
   const minutos = (Date.now() - new Date(data.created_at).getTime()) / 60000;
-  return minutos <= 15 ? data : null;
+  return minutos >= 0 && minutos <= 15 ? data : null;
 }
 
 async function avisarAdministradores(email) {
@@ -61,7 +61,7 @@ export const handler = async (event) => {
 
   try {
     const payload = JSON.parse(event.body);
-    const { email } = payload;
+    const email = String(payload.email || '').trim().toLowerCase();
 
     if (!email) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Email requerido' }) };
@@ -71,17 +71,30 @@ export const handler = async (event) => {
       return { statusCode: 500, body: JSON.stringify({ error: 'Missing env vars' }) };
     }
 
-    await upsertContact(email, buildAttributes(payload));
+    // Esta ruta es pública (el registro puede exigir confirmar el correo).
+    // Solo una cuenta real recién creada puede disparar la bienvenida. Los
+    // atributos salen de su perfil; el cuerpo no puede pisar otro contacto.
+    let perfil = await cuentaPendienteNueva(email);
+    if (!perfil) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      perfil = await cuentaPendienteNueva(email);
+    }
+    if (!perfil) return { statusCode: 200, body: JSON.stringify({ ok: true }) };
+    const partes = String(perfil.nombre_completo || '').trim().split(/\s+/);
+    await upsertContact(email, buildAttributes({
+      ...perfil,
+      nombres: partes[0],
+      apellidos: partes.slice(1).join(' '),
+      // Estado y grado no están en el perfil: son del propio registro recién creado.
+      estado: typeof payload.estado === 'string' ? payload.estado.slice(0, 80) : undefined,
+      grado: typeof payload.grado === 'string' ? payload.grado.slice(0, 80) : undefined,
+    }));
     await addToList(email, LISTS.PORTAL);
 
     try {
       await avisarAdministradores(String(email).trim());
       // Notificación configurable "registro nuevo" (bienvenida o aviso a admins).
-      if (supabaseListo()) {
-        const { data: perfil } = await admin().from('profiles').select('id, created_at').eq('email', String(email).trim().toLowerCase()).maybeSingle();
-        const reciente = perfil && Date.now() - new Date(perfil.created_at).getTime() < 15 * 60000;
-        if (reciente) await notificar(admin(), 'registro_nuevo', { userId: perfil.id, clave: 'registro' });
-      }
+      await notificar(admin(), 'registro_nuevo', { userId: perfil.id, clave: `registro:${perfil.id}` });
     } catch (err) {
       // El alta en Brevo ya se hizo; el aviso a los admins es secundario.
       console.error('Aviso de registro a administradores:', err.message);

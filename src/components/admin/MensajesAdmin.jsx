@@ -8,26 +8,42 @@ import './AdminLms.css';
 // Mensajes y comunicados en el panel de administración.
 
 const vacio = { id: null, tipo: 'interno', titulo: '', cuerpo: '', enlace: '', activo: true, desde: '', hasta: '' };
-const aLocal = (iso) => (iso ? iso.slice(0, 10) : '');
+// Fecha AAAA-MM-DD en la zona horaria del navegador: "hasta" se guarda como
+// las 23:59 locales, que en UTC ya es el día siguiente; cortar el texto ISO lo
+// corría un día al volver a editar.
+const aLocal = (iso) => (iso ? new Date(iso).toLocaleDateString('en-CA') : '');
+// Inicio y fin del día elegido, en hora local.
+const inicioDelDia = (dia) => new Date(`${dia}T00:00:00`).toISOString();
+const finDelDia = (dia) => new Date(`${dia}T23:59:59.999`).toISOString();
 
 function ComunicadosAdmin({ notificar, confirmar }) {
   const [lista, setLista] = useState(null);
   const [editando, setEditando] = useState(null);
+  const [errorCarga, setErrorCarga] = useState(null);
+
+  const aplicar = useCallback(({ data, error }) => {
+    if (error && !esTablaFaltante(error)) {
+      // Antes se mostraba "No hay comunicados" aunque la consulta fallara.
+      setErrorCarga(error.message);
+      setLista((l) => (Array.isArray(l) ? l : []));
+      return;
+    }
+    setErrorCarga(null);
+    setLista(error ? 'falta' : data || []);
+  }, []);
 
   const cargar = useCallback(async () => {
-    const { data, error } = await supabase.from('comunicados').select('*').order('creado_en', { ascending: false });
-    if (error) { setLista(esTablaFaltante(error) ? 'falta' : []); return; }
-    setLista(data || []);
-  }, []);
+    aplicar(await supabase.from('comunicados').select('*').order('creado_en', { ascending: false }));
+  }, [aplicar]);
 
   useEffect(() => {
     let vigente = true;
-    supabase.from('comunicados').select('*').order('creado_en', { ascending: false }).then(({ data, error }) => {
-      if (!vigente) return;
-      setLista(error ? (esTablaFaltante(error) ? 'falta' : []) : data || []);
-    });
+    supabase.from('comunicados').select('*').order('creado_en', { ascending: false }).then(
+      (r) => { if (vigente) aplicar(r); },
+      (error) => { if (vigente) aplicar({ error: { message: error?.message || 'Error de conexión' } }); }
+    );
     return () => { vigente = false; };
-  }, []);
+  }, [aplicar]);
 
   const guardar = async (e) => {
     e.preventDefault();
@@ -38,8 +54,8 @@ function ComunicadosAdmin({ notificar, confirmar }) {
       cuerpo: editando.cuerpo.trim() || null,
       enlace: editando.enlace.trim() || null,
       activo: editando.activo,
-      desde: editando.desde ? new Date(`${editando.desde}T00:00:00`).toISOString() : null,
-      hasta: editando.hasta ? new Date(`${editando.hasta}T23:59:59`).toISOString() : null,
+      desde: editando.desde ? inicioDelDia(editando.desde) : null,
+      hasta: editando.hasta ? finDelDia(editando.hasta) : null,
     };
     const { error } = editando.id
       ? await supabase.from('comunicados').update(datos).eq('id', editando.id)
@@ -52,7 +68,9 @@ function ComunicadosAdmin({ notificar, confirmar }) {
 
   const eliminar = async (c) => {
     if (!(await confirmar(`¿Eliminar el comunicado "${c.titulo}"?`, 'Eliminar comunicado'))) return;
-    await supabase.from('comunicados').delete().eq('id', c.id);
+    const { error } = await supabase.from('comunicados').delete().eq('id', c.id);
+    if (error) { notificar(`No se pudo eliminar: ${error.message}`, 'error'); return; }
+    notificar('Comunicado eliminado.', 'success');
     await cargar();
   };
 
@@ -61,6 +79,12 @@ function ComunicadosAdmin({ notificar, confirmar }) {
 
   return (
     <div className="notif">
+      {errorCarga && (
+        <div className="lms-aviso">
+          No se pudieron cargar los comunicados: {errorCarga}{' '}
+          <button type="button" className="btn-crm-action outlined mini" onClick={() => void cargar()}>Reintentar</button>
+        </div>
+      )}
       {!editando && (
         <div className="lms-agregar">
           <small className="lms-ayuda" style={{ margin: 0 }}>Internos: arriba del portal de cada alumno. Externos: en la página de inicio, para quien no ha entrado.</small>
@@ -113,7 +137,7 @@ function ComunicadosAdmin({ notificar, confirmar }) {
             <button type="submit" className="btn-crm-action solid">Guardar</button>
           </div>
         </form>
-      ) : lista.length === 0 ? (
+      ) : lista.length === 0 ? (errorCarga ? null :
         <p className="lms-vacio">No hay comunicados.</p>
       ) : (
         <div className="biblioteca-tabla-scroll">

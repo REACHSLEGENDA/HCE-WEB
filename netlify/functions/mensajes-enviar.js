@@ -14,23 +14,31 @@ const MAX_CUERPO = 20000;
 // Más de esto en un solo envío es un error de dedo, no un mensaje.
 const MAX_DESTINATARIOS = 5000;
 
+async function idsPaginados(consulta, columna) {
+  const ids = [];
+  for (let desde = 0; ; desde += 1000) {
+    const { data, error } = await consulta().range(desde, desde + 999);
+    if (error) throw new Error(error.message);
+    ids.push(...(data || []).map((fila) => fila[columna]));
+    if (ids.length > MAX_DESTINATARIOS || !data || data.length < 1000) break;
+  }
+  return ids;
+}
+
 async function idsDe(db, tipo, id) {
   if (tipo === 'usuario') return [id];
   if (tipo === 'admins') {
-    const { data } = await db.from('profiles').select('id').eq('rol', 'admin');
-    return (data || []).map((p) => p.id);
+    return idsPaginados(() => db.from('profiles').select('id').eq('rol', 'admin').neq('activo', false).order('id'), 'id');
   }
   if (tipo === 'todos') {
-    const { data } = await db.from('profiles').select('id').neq('rol', 'admin').range(0, MAX_DESTINATARIOS);
-    return (data || []).map((p) => p.id);
+    return idsPaginados(() => db.from('profiles').select('id').neq('rol', 'admin')
+      .eq('activo', true).eq('aprobado', true).order('id'), 'id');
   }
   if (tipo === 'grupo') {
-    const { data } = await db.from('grupo_miembros').select('user_id').eq('grupo_id', Number(id));
-    return (data || []).map((m) => m.user_id);
+    return idsPaginados(() => db.from('grupo_miembros').select('user_id').eq('grupo_id', Number(id)).order('user_id'), 'user_id');
   }
   if (tipo === 'curso') {
-    const { data } = await db.from('inscripciones').select('user_id').eq('course_id', Number(id));
-    return (data || []).map((m) => m.user_id);
+    return idsPaginados(() => db.from('inscripciones').select('user_id').eq('course_id', Number(id)).order('id'), 'user_id');
   }
   return [];
 }
@@ -118,10 +126,17 @@ export const handler = async (event) => {
     }]).select('id').single();
     if (error) throw new Error(error.message);
 
-    for (let i = 0; i < destinatarios.length; i += 500) {
-      const { error: errDest } = await db.from('mensaje_destinatarios')
-        .insert(destinatarios.slice(i, i + 500).map((id) => ({ mensaje_id: mensaje.id, user_id: id })));
-      if (errDest) throw new Error(errDest.message);
+    try {
+      for (let i = 0; i < destinatarios.length; i += 500) {
+        const { error: errDest } = await db.from('mensaje_destinatarios')
+          .insert(destinatarios.slice(i, i + 500).map((id) => ({ mensaje_id: mensaje.id, user_id: id })));
+        if (errDest) throw new Error(errDest.message);
+      }
+    } catch (err) {
+      // Sin destinatarios completos no se conserva un envío a medias.
+      const { error: errLimpiar } = await db.from('mensajes').delete().eq('id', mensaje.id);
+      if (errLimpiar) console.error('No se pudo deshacer el mensaje incompleto:', errLimpiar.message);
+      throw err;
     }
 
     // Aviso por correo (si está configurada la notificación "mensaje nuevo").

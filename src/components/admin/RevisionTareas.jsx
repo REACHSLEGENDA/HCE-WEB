@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, ExternalLink, RefreshCw, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { esTablaFaltante } from '../../lib/cursos';
+import { traerTodo } from '../../lib/traerTodo';
 import { enlaceTemporal } from '../../lib/lecciones';
 import TextoLeccion from '../TextoLeccion';
 import './AdminLms.css';
@@ -25,28 +26,33 @@ export default function RevisionTareas({ cursos, perfiles, notificar, onPendient
   const [comentario, setComentario] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [faltaMigracion, setFaltaMigracion] = useState(false);
+  const [errorCarga, setErrorCarga] = useState(null);
 
   const cargar = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('tarea_entregas')
-      .select('id, leccion_id, course_id, user_id, texto, archivo_path, estado, comentario, revisada_en, creada_en')
-      .order('creada_en', { ascending: false })
-      .limit(500);
-    if (error) {
+    try {
+      const columnas = 'id, leccion_id, course_id, user_id, texto, archivo_path, estado, comentario, revisada_en, creada_en';
+      const [pendientes, recientes] = await Promise.all([
+        traerTodo('tarea_entregas', columnas, (q) => q.eq('estado', 'entregada')),
+        supabase.from('tarea_entregas').select(columnas).neq('estado', 'entregada')
+          .order('creada_en', { ascending: false }).order('id').limit(500),
+      ]);
+      if (recientes.error) throw recientes.error;
+      const data = [...pendientes, ...(recientes.data || [])]
+        .sort((a, b) => new Date(b.creada_en) - new Date(a.creada_en));
+      const ids = [...new Set(data.map((e) => e.leccion_id))];
+      const lecs = [];
+      for (let inicio = 0; inicio < ids.length; inicio += 150) {
+        lecs.push(...await traerTodo('curso_lecciones', 'id, titulo', (q) => q.in('id', ids.slice(inicio, inicio + 150))));
+      }
+      setLecciones(new Map(lecs.map((l) => [l.id, l.titulo])));
+      setEntregas(data);
+      setErrorCarga(null);
+      onPendientes?.(pendientes.length);
+    } catch (error) {
       if (esTablaFaltante(error)) setFaltaMigracion(true);
-      else notificar(`No se pudieron cargar las tareas: ${error.message}`, 'error');
-      setEntregas([]);
-      return;
+      else setErrorCarga(error.message || 'Error de conexión');
     }
-    setEntregas(data || []);
-
-    const ids = [...new Set((data || []).map((e) => e.leccion_id))];
-    if (ids.length) {
-      const { data: lecs } = await supabase.from('curso_lecciones').select('id, titulo').in('id', ids);
-      setLecciones(new Map((lecs || []).map((l) => [l.id, l.titulo])));
-    }
-    onPendientes?.((data || []).filter((e) => e.estado === 'entregada').length);
-  }, [notificar, onPendientes]);
+  }, [onPendientes]);
 
   useEffect(() => { void cargar(); }, [cargar]);
 
@@ -76,13 +82,20 @@ export default function RevisionTareas({ cursos, perfiles, notificar, onPendient
         .eq('id', entrega.id);
       if (error) throw error;
 
-      // Pedir corrección reabre la lección: el alumno no puede presentar el
-      // examen hasta volver a entregar. Aprobar la deja completa.
-      await supabase
+      // Antes de endurecimiento.sql actualizamos el avance desde el cliente.
+      // Revisar una entrega antigua no debe reemplazar el estado de una más
+      // reciente; el trigger de la migración usa este mismo criterio.
+      const { data: ultima, error: errorUltima } = await supabase.from('tarea_entregas')
+        .select('estado').eq('user_id', entrega.user_id).eq('leccion_id', entrega.leccion_id)
+        .order('creada_en', { ascending: false }).order('id', { ascending: false }).limit(1).maybeSingle();
+      if (errorUltima) throw new Error(`La revisión se guardó, pero no se pudo consultar la última entrega: ${errorUltima.message}`);
+      const completa = !!ultima && ultima.estado !== 'rechazada';
+      const { error: errorProgreso } = await supabase
         .from('leccion_progreso')
-        .update({ completada: estado === 'aprobada' })
+        .update({ completada: completa, porcentaje: completa ? 100 : 0 })
         .eq('user_id', entrega.user_id)
         .eq('leccion_id', entrega.leccion_id);
+      if (errorProgreso) throw new Error(`La revisión se guardó, pero no se pudo actualizar el avance: ${errorProgreso.message}`);
 
       notificar(estado === 'aprobada' ? 'Tarea aprobada.' : 'Se pidió corrección al alumno.', 'success');
       setAbierta(null);
@@ -115,7 +128,9 @@ export default function RevisionTareas({ cursos, perfiles, notificar, onPendient
         </button>
       </div>
 
-      {entregas === null ? (
+      {errorCarga && <p className="lms-aviso" role="alert">No se pudieron cargar las tareas: {errorCarga}</p>}
+      <p className="lms-vacio">Todas las pendientes y las últimas 500 tareas revisadas.</p>
+      {entregas === null ? (errorCarga ? null :
         <p className="lms-cargando">Cargando tareas…</p>
       ) : visibles.length === 0 ? (
         <p className="lms-vacio">{filtro === 'entregada' ? 'No hay tareas pendientes de revisar.' : 'No hay tareas en esta vista.'}</p>

@@ -18,13 +18,12 @@ const EcmoSim = () => {
   });
 
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.1 });
-  const { ref: featuresRef, inView: featuresInView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
   // Modal, Plan & Promo States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [selectedPlan, setSelectedPlan] = useState('4m'); // '4m' or '12m'
-  const [usdRate, setUsdRate] = useState(18.0);
+  const [usdRate] = useState(18.0);
   // Hasta ahora esta pagina mostraba los dos precios pero SIEMPRE cobraba en
   // pesos, asi que un comprador del extranjero pasaba por la pasarela nacional.
   // La moneda elegida es la que decide el cobro y, con ella, la cuenta de Stripe.
@@ -100,7 +99,7 @@ const EcmoSim = () => {
         setCheckoutError(data.error || 'Ocurrió un error al procesar el pago.');
         setIsSubmitting(false);
       }
-    } catch (err) {
+    } catch {
       setCheckoutError('Error de red. Intenta nuevamente.');
       setIsSubmitting(false);
     }
@@ -207,7 +206,7 @@ const EcmoSim = () => {
           pais: payload.pais
         }),
       }).catch(err => console.error('Error al enriquecer el contacto en Brevo:', err));
-    } catch (err) {
+    } catch {
       setSuccessFormError('Error de red. Por favor revisa tu conexión.');
     } finally {
       setIsSubmittingSuccessForm(false);
@@ -570,7 +569,7 @@ const EcmoSim = () => {
                 {moneda === 'usd' ? (
                   <>💳 El cobro se procesará en <strong>dólares (USD)</strong>, al precio de lista y sin conversión.</>
                 ) : (
-                  <>💡 Tipo de cambio en tiempo real: <strong>1 USD = ${usdRate.toFixed(2)} MXN</strong> (El cobro final se procesará en MXN).</>
+                  <>💡 Tipo de cambio aplicado: <strong>1 USD = ${usdRate.toFixed(2)} MXN</strong> (El cobro final se procesará en MXN).</>
                 )}
               </div>
 

@@ -3,7 +3,20 @@ import { ArrowLeft, Plus, Trash2, Search, UserMinus, Building2 } from 'lucide-re
 import { supabase } from '../../lib/supabase';
 import { esTablaFaltante, extraerCorreos } from '../../lib/cursos';
 import { traerTodo } from '../../lib/traerTodo';
+import { tasaFinalizacion } from '../../lib/informes';
 import './AdminLms.css';
+
+// Filas de una tabla solo de ciertos alumnos, en tandas: una lista enorme de
+// ids no cabe en una sola URL.
+async function deLosAlumnos(tabla, columnas, ids) {
+  const filas = [];
+  const TANDA = 150;
+  for (let i = 0; i < ids.length; i += TANDA) {
+    const parte = ids.slice(i, i + TANDA);
+    filas.push(...await traerTodo(tabla, columnas, (q) => q.in('user_id', parte)));
+  }
+  return filas;
+}
 
 // Divisiones: otras asociaciones dentro del mismo portal, cada una con sus
 // alumnos, sus cursos y sus grupos.
@@ -18,18 +31,27 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
   const [nueva, setNueva] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [correos, setCorreos] = useState('');
-  const [resumen, setResumen] = useState(null);
+  const [resumen, setResumen] = useState(null); // { divisionId, inscripciones, certificados, tasa } | { divisionId, error }
+  const [errorCarga, setErrorCarga] = useState(null);
 
   const cargar = useCallback(async () => {
-    const [d, dc, g] = await Promise.all([
-      supabase.from('divisiones').select('*').order('nombre'),
-      supabase.from('division_cursos').select('division_id, course_id'),
-      supabase.from('grupos').select('id, nombre, division_id').order('nombre'),
-    ]);
-    if (d.error) { if (esTablaFaltante(d.error)) setFalta(true); setDivisiones([]); return; }
-    setDivisiones(d.data || []);
-    setCursosDe(dc.data || []);
-    setGrupos(g.data || []);
+    try {
+      const [d, dc, g] = await Promise.all([
+        supabase.from('divisiones').select('*').order('nombre'),
+        supabase.from('division_cursos').select('division_id, course_id'),
+        supabase.from('grupos').select('id, nombre, division_id').order('nombre'),
+      ]);
+      const error = d.error || dc.error || g.error;
+      if (error) throw error;
+      setErrorCarga(null);
+      setDivisiones(d.data || []);
+      setCursosDe(dc.data || []);
+      setGrupos(g.data || []);
+    } catch (error) {
+      if (esTablaFaltante(error)) setFalta(true);
+      else setErrorCarga(error.message || 'Error de conexión');
+      setDivisiones((previas) => previas || []);
+    }
   }, []);
 
   useEffect(() => {
@@ -40,30 +62,40 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
       supabase.from('grupos').select('id, nombre, division_id').order('nombre'),
     ]).then(([d, dc, g]) => {
       if (!vigente) return;
-      if (d.error) { if (esTablaFaltante(d.error)) setFalta(true); setDivisiones([]); return; }
+      const error = d.error || dc.error || g.error;
+      if (error) {
+        if (esTablaFaltante(error)) setFalta(true);
+        else setErrorCarga(error.message);
+        setDivisiones([]);
+        return;
+      }
       setDivisiones(d.data || []);
       setCursosDe(dc.data || []);
       setGrupos(g.data || []);
+    }, (err) => {
+      if (!vigente) return;
+      setErrorCarga(err?.message || 'Error de conexión');
+      setDivisiones([]);
     });
     return () => { vigente = false; };
   }, []);
 
   const miembros = useMemo(() => (abierta ? perfiles.filter((p) => Number(p.division_id) === abierta.id) : []), [perfiles, abierta]);
 
-  // Resumen de la división: inscripciones y certificados de sus miembros.
+  // Resumen de la división: inscripciones y certificados de sus miembros. Se
+  // piden solo los de sus alumnos, no los de toda la plataforma.
   useEffect(() => {
     if (!abierta || pestana !== 'resumen') return undefined;
     let vigente = true;
-    const ids = new Set(miembros.map((m) => m.id));
+    const divisionId = abierta.id;
+    const ids = miembros.map((m) => m.id);
     Promise.all([
-      traerTodo('inscripciones', 'user_id, course_id'),
-      traerTodo('certificates', 'user_id, course_id'),
-    ]).then(([ins, cer]) => {
+      deLosAlumnos('inscripciones', 'user_id, course_id', ids),
+      deLosAlumnos('certificates', 'user_id, course_id', ids),
+    ]).then(([propias, certs]) => {
       if (!vigente) return;
-      const propias = ins.filter((i) => ids.has(i.user_id));
-      const certs = cer.filter((c) => ids.has(c.user_id));
-      setResumen({ inscripciones: propias.length, certificados: certs.length, tasa: propias.length ? (certs.length / propias.length) * 100 : 0 });
-    }).catch(() => { if (vigente) setResumen(null); });
+      setResumen({ divisionId, inscripciones: propias.length, certificados: certs.length, tasa: tasaFinalizacion(certs, propias) });
+    }).catch((err) => { if (vigente) setResumen({ divisionId, error: err?.message || 'Error desconocido' }); });
     return () => { vigente = false; };
   }, [abierta, pestana, miembros]);
 
@@ -121,9 +153,13 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
 
   if (falta) return <div className="lms-aviso">Las divisiones se activan al correr en Supabase la migración <code>divisiones.sql</code>.</div>;
   if (!divisiones) return <p className="lms-cargando">Cargando…</p>;
+  if (errorCarga) return <div className="lms-aviso" role="alert">No se pudieron cargar las divisiones: {errorCarga} <button type="button" className="btn-crm-action outlined" onClick={cargar}>Reintentar</button></div>;
 
   // ---- Una división abierta ---------------------------------------------------
   if (abierta) {
+    // El resumen guardado puede ser de otra división abierta antes.
+    const resumenVisible = resumen?.divisionId === abierta.id ? resumen : null;
+    const resumenListo = resumenVisible && !resumenVisible.error;
     const q = busqueda.trim().toLowerCase();
     const candidatos = q.length >= 2
       ? perfiles.filter((p) => p.rol !== 'admin' && Number(p.division_id) !== abierta.id && `${p.nombre_completo || ''} ${p.email || ''}`.toLowerCase().includes(q)).slice(0, 8)
@@ -203,14 +239,17 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
           </div>
         )}
 
+        {pestana === 'resumen' && resumenVisible?.error && (
+          <p className="lms-aviso">No se pudo calcular el resumen: {resumenVisible.error}</p>
+        )}
         {pestana === 'resumen' && (
           <dl className="m-analisis-resumen">
             <div><dt>Alumnos</dt><dd>{miembros.length}</dd></div>
             <div><dt>Cursos</dt><dd>{cursosDe.filter((x) => x.division_id === abierta.id).length}</dd></div>
             <div><dt>Grupos</dt><dd>{grupos.filter((g) => g.division_id === abierta.id).length}</dd></div>
-            <div><dt>Inscripciones</dt><dd>{resumen ? resumen.inscripciones : '…'}</dd></div>
-            <div><dt>Certificados</dt><dd>{resumen ? resumen.certificados : '…'}</dd></div>
-            <div><dt>Tasa de finalización</dt><dd>{resumen ? `${Math.round(resumen.tasa)}%` : '…'}</dd></div>
+            <div><dt>Inscripciones</dt><dd>{resumenListo ? resumenVisible.inscripciones : resumenVisible?.error ? '—' : '…'}</dd></div>
+            <div><dt>Certificados</dt><dd>{resumenListo ? resumenVisible.certificados : resumenVisible?.error ? '—' : '…'}</dd></div>
+            <div><dt>Tasa de finalización</dt><dd>{resumenListo ? `${Math.round(resumenVisible.tasa)}%` : resumenVisible?.error ? '—' : '…'}</dd></div>
           </dl>
         )}
         {pestana === 'resumen' && <small className="lms-ayuda" style={{ marginLeft: 0 }}>Para las métricas detalladas de la división, en Informes elige la división en el filtro.</small>}

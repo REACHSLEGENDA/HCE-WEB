@@ -7,6 +7,11 @@
 //   sesiones      -> curso_sesiones (una fila por visita)
 //   eventos       -> curso_eventos  (intentos de examen, certificados)
 //   inscripciones -> inscripciones  (quién tiene acceso y cómo lo obtuvo)
+//   examenes      -> curso_eventos tipo 'examen_enviado', de todo el historial
+//   certificados  -> certificates   (de todo el historial)
+//
+// Lo que dice si un alumno aprobó o se certificó es acumulado (examenes y
+// certificados); el periodo solo afecta visitas y tiempo (sesiones).
 
 // Se considera que alguien vio el video completo a partir de aquí: los
 // créditos finales y la despedida rara vez se ven.
@@ -39,9 +44,11 @@ function avanceMaximoPorAlumno(sesiones) {
 }
 
 /** Una fila por curso, con todo lo que se ve en la tabla general. */
-export function resumenPorCurso({ cursos, sesiones, eventos, inscripciones, desde = null }) {
+export function resumenPorCurso({ cursos, sesiones, eventos = [], examenes = null, certificados = null, inscripciones, desde = null }) {
   const sesionesPorCurso = agruparPor(sesiones, 'course_id');
-  const eventosPorCurso = agruparPor(eventos, 'course_id');
+  // Si llegan los exámenes acumulados se usan ellos; si no, los eventos.
+  const eventosPorCurso = agruparPor(examenes || eventos, (e) => Number(e.course_id));
+  const certificadosPorCurso = certificados ? agruparPor(certificados, (c) => Number(c.course_id)) : null;
   const inscripcionesPorCurso = agruparPor(inscripciones, 'course_id');
 
   return cursos.map((curso) => {
@@ -63,6 +70,9 @@ export function resumenPorCurso({ cursos, sesiones, eventos, inscripciones, desd
     const calificaciones = examenes.map((e) => Number(e.datos?.calificacion)).filter(Number.isFinite);
 
     const enPeriodo = (fecha) => !desde || new Date(fecha) >= desde;
+    const certs = certificadosPorCurso
+      ? certificadosPorCurso.get(id) || []
+      : evs.filter((e) => e.tipo === 'certificado_emitido').map((e) => ({ created_at: e.creado_en }));
     const pagadas = ins.filter((i) => i.origen === 'pago' && enPeriodo(i.created_at));
     const ingresos = { mxn: 0, usd: 0 };
     for (const p of pagadas) {
@@ -97,7 +107,8 @@ export function resumenPorCurso({ cursos, sesiones, eventos, inscripciones, desd
         ? calificaciones.reduce((a, b) => a + b, 0) / calificaciones.length
         : null,
 
-      certificados: evs.filter((e) => e.tipo === 'certificado_emitido').length,
+      certificados: certs.length,
+      certificadosPeriodo: certs.filter((c) => enPeriodo(c.created_at)).length,
       ventas: pagadas.length,
       ingresos,
     };
@@ -112,6 +123,7 @@ export function totales(resumen, sesiones) {
     alumnosActivos: new Set(sesiones.map((s) => s.user_id)).size,
     horasActivas: resumen.reduce((t, r) => t + r.minutosActivos, 0) / 60,
     certificados: resumen.reduce((t, r) => t + r.certificados, 0),
+    certificadosPeriodo: resumen.reduce((t, r) => t + (r.certificadosPeriodo ?? r.certificados), 0),
     ventas: resumen.reduce((t, r) => t + r.ventas, 0),
     ingresos: {
       mxn: resumen.reduce((t, r) => t + r.ingresos.mxn, 0),
@@ -214,16 +226,23 @@ export function distribucionCalificaciones(eventos) {
   return tramos;
 }
 
-/** Una fila por alumno de un curso: lo que se ve en la tabla del detalle. */
-export function porAlumno({ sesiones, eventos, inscripciones, perfiles }) {
+/**
+ * Una fila por alumno de un curso: lo que se ve en la tabla del detalle.
+ * `eventos` deben ser los exámenes de todo el historial y `certificados` las
+ * filas de certificates del curso: así el estado del alumno no depende del
+ * periodo (las visitas y el tiempo sí).
+ */
+export function porAlumno({ sesiones, eventos, inscripciones, perfiles, certificados = null, actividad = [] }) {
   const perfilPorId = new Map(perfiles.map((p) => [p.id, p]));
   const sesionesPorAlumno = agruparPor(sesiones, 'user_id');
   const eventosPorAlumno = agruparPor(eventos, 'user_id');
+  const conCertificado = certificados ? new Set(certificados.map((c) => c.user_id)) : null;
   const inscripcionPorAlumno = new Map(inscripciones.map((i) => [i.user_id, i]));
+  const conActividad = new Set(actividad.map((s) => s.user_id));
 
   // Aparece quien está inscrito y también quien tiene actividad sin inscripción
   // registrada (por ejemplo, un administrador que lo quitó después).
-  const ids = new Set([...inscripcionPorAlumno.keys(), ...sesionesPorAlumno.keys()]);
+  const ids = new Set([...inscripcionPorAlumno.keys(), ...sesionesPorAlumno.keys(), ...conActividad]);
 
   return [...ids].map((userId) => {
     const ses = sesionesPorAlumno.get(userId) || [];
@@ -240,13 +259,14 @@ export function porAlumno({ sesiones, eventos, inscripciones, perfiles }) {
       origen: inscripcionPorAlumno.get(userId)?.origen || null,
       inscritoEn: inscripcionPorAlumno.get(userId)?.created_at || null,
       visitas: ses.length,
+      actividadAcumulada: conActividad.has(userId),
       minutosActivos: minutos(ses.reduce((t, s) => t + (s.segundos_activos || 0), 0)),
       minutosVideo: minutos(ses.reduce((t, s) => t + (s.segundos_video || 0), 0)),
       avanceVideo: ses.reduce((m, s) => Math.max(m, s.porcentaje_max || 0), 0),
       intentos: examenes.length,
       mejorCalificacion: calificaciones.length ? Math.max(...calificaciones) : null,
       aprobado: examenes.some((e) => e.datos?.aprobado),
-      certificado: evs.some((e) => e.tipo === 'certificado_emitido'),
+      certificado: conCertificado ? conCertificado.has(userId) : evs.some((e) => e.tipo === 'certificado_emitido'),
       ultimaVisita: fechas.length ? new Date(Math.max(...fechas)).toISOString() : null,
     };
   });

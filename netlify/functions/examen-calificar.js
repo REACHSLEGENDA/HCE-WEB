@@ -9,7 +9,10 @@
 // lecciones obligatorias completas. El intento queda registrado aquí, no en el
 // navegador, para que las métricas no dependan de lo que este reporte.
 
-import { admin, usuarioDesdeToken, cuentaHabilitada, json, isConfigured as supabaseListo } from './_supabase.js';
+import { admin, usuarioDesdeToken, cuentaHabilitada, accesoVigente, json, isConfigured as supabaseListo } from './_supabase.js';
+
+// Tiempo mínimo entre dos intentos del mismo alumno en el mismo curso.
+const ESPERA_MS = 60 * 1000;
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -51,20 +54,45 @@ export const handler = async (event) => {
         .maybeSingle();
       if (!inscripcion) return json(403, { error: 'No estás inscrito en este curso.' });
 
+      // Con días de acceso vencidos (lms-reglas.sql) ya no se presenta.
+      const acceso = await accesoVigente(user.id, idCurso);
+      if (!acceso.vigente) return json(403, { error: acceso.error, estado: 'acceso-vencido' });
+
+      // Un intento por minuto: evita mandar el examen en ráfaga para ir
+      // adivinando las respuestas.
+      const { data: reciente, error: errReciente } = await db
+        .from('curso_eventos')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('course_id', idCurso)
+        .eq('tipo', 'examen_enviado')
+        .gte('creado_en', new Date(Date.now() - ESPERA_MS).toISOString())
+        .limit(1);
+      if (errReciente) throw new Error(errReciente.message);
+      if (reciente?.length) {
+        return json(429, {
+          error: 'Acabas de enviar este examen. Espera un minuto antes de intentarlo de nuevo.',
+          estado: 'espera',
+        });
+      }
+
       // Lecciones obligatorias pendientes: el examen es el cierre del curso.
-      const { data: obligatorias } = await db
+      const { data: obligatorias, error: errLecciones } = await db
         .from('curso_lecciones')
         .select('id')
         .eq('course_id', idCurso)
+        .neq('tipo', 'seccion')
         .eq('obligatoria', true);
+      if (errLecciones) throw new Error(errLecciones.message);
 
       if (obligatorias?.length) {
-        const { data: completas } = await db
+        const { data: completas, error: errCompletas } = await db
           .from('leccion_progreso')
           .select('leccion_id')
           .eq('user_id', user.id)
           .eq('course_id', idCurso)
           .eq('completada', true);
+        if (errCompletas) throw new Error(errCompletas.message);
         const hechas = new Set((completas || []).map((f) => f.leccion_id));
         const faltan = obligatorias.filter((l) => !hechas.has(l.id)).length;
         if (faltan) {
@@ -85,15 +113,17 @@ export const handler = async (event) => {
     if (errPreguntas) throw new Error(errPreguntas.message);
 
     const total = preguntas?.length || 0;
+    if (!total) return json(409, { error: 'Este examen todavía no tiene preguntas.' });
     let correctas = 0;
-    (preguntas || []).forEach((p, i) => {
-      // Se aceptan respuestas por número de pregunta o por su id.
-      const elegida = respuestas[p.id] ?? respuestas[i];
+    (preguntas || []).forEach((p) => {
+      // El aula manda por id. Mezclar índices e ids reutilizaba la respuesta
+      // de otra pregunta cuando el alumno dejaba una sin contestar.
+      const elegida = respuestas[p.id];
       if (elegida != null && Number(elegida) === Number(p.correct_option_index)) correctas += 1;
     });
 
     const calificacion = total ? Math.floor((correctas / total) * 100) : 100;
-    const minimo = curso.min_aprobacion || 80;
+    const minimo = curso.min_aprobacion ?? 80;
     const aprobado = calificacion >= minimo;
 
     // Los administradores no cuentan en las métricas.
@@ -104,7 +134,7 @@ export const handler = async (event) => {
         tipo: 'examen_enviado',
         datos: { calificacion, minimo, aprobado, preguntas: total, correctas, origen: 'servidor' },
       }]);
-      if (errEvento) console.error('No se pudo registrar el intento:', errEvento.message);
+      if (errEvento) throw new Error(`No se pudo guardar el intento: ${errEvento.message}`);
     }
 
     return json(200, { calificacion, minimo, aprobado, correctas, total });

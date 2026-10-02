@@ -39,6 +39,7 @@ import { leerVistaAlumno, fijarVistaAlumno } from '../lib/vista';
 import { FranjaVistaAlumno } from '../components/CambioVista';
 import { detectarVideo, detectarPagina, midePorcentaje, crearReproductorVimeo, adaptarVideoHtml } from '../lib/videos';
 import TextoLeccion from '../components/TextoLeccion';
+import { emitirCertificado, generarImagenCertificado, descargarArchivo } from '../lib/certificados';
 import {
   ArrowLeft,
   Clock,
@@ -126,7 +127,7 @@ const formatDateSafeShort = (dateStr) => {
 const Classroom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, refetchProfile } = useAuth();
   const { showToast, showAlert, showConfirm } = useNotification();
   const currentUserAvatarUrl = getSafeAvatarUrl(profile?.avatar_url, user?.user_metadata?.avatar_url);
 
@@ -134,6 +135,7 @@ const Classroom = () => {
   const vimeoRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const maxTimeWatchedRef = useRef(0);
+  const retomarVideoRef = useRef(true);
 
   // Event-driven tracking refs to avoid 24/7 database heartbeats
   const initialTimeSpentRef = useRef(0);
@@ -165,6 +167,8 @@ const Classroom = () => {
   // propósito, para que no arranquen el reproductor ni el registro de avance.
   const [acceso, setAcceso] = useState(null);
   const [inscribiendo, setInscribiendo] = useState(false);
+  const [solicitudEnviada, setSolicitudEnviada] = useState(false);
+  const [verificandoCuenta, setVerificandoCuenta] = useState(false);
 
   // Lecciones del curso. Un curso sin lecciones registradas trae una sola,
   // implícita: su video de siempre.
@@ -184,7 +188,7 @@ const Classroom = () => {
 
   // Registro de la visita para las métricas. No mide a los administradores
   // (revisar un curso no es tomarlo) y espera al perfil para saber quién es.
-  const { registrarEvento } = useSesionCurso({
+  useSesionCurso({
     userId: user?.id,
     courseId: course?.id,
     activo: !!course && acceso?.permitido === true && !!profile && profile.rol !== 'admin',
@@ -262,18 +266,19 @@ const Classroom = () => {
   const proveedorVideo = fuenteVideo?.proveedor || null;
   const videoYoutube = proveedorVideo === 'youtube' ? videoActual : '';
   const videoMedible = !leccionActual || (leccionActual.tipo === 'video' && midePorcentaje(fuenteVideo));
+  // Video de YouTube que se ve con el reproductor compatible: no mide avance.
+  const videoSinMedir = !!leccionActual && leccionActual.tipo === 'video' && proveedorVideo === 'youtube' && ytApiFailed && !youtubeError?.fatal;
   const paginaActual = leccionActual?.tipo === 'web' ? detectarPagina(leccionActual.contenido?.enlace) : null;
   const avanceCurso = avanceDelCurso(lecciones, progresoLec, watchPercent);
   const examenDisponible = lecciones.length > 0 && leccionesCompletas(lecciones, progresoLec, watchPercent);
-  // Con regla "lecciones" o "porcentaje" no hay examen final: el certificado
-  // sale al cumplir la regla.
-  const sinExamenFinal = reglasCurso.regla_finalizacion !== 'examen_final';
+  // Si el curso tiene preguntas, el servidor exige aprobar el examen final.
+  const sinExamenFinal = questions.length === 0 && reglasCurso.regla_finalizacion !== 'examen_final';
   const conContenidoCurso = leccionesConContenido(lecciones);
   const porcentajeLecciones = conContenidoCurso.length
     ? (conContenidoCurso.filter((l) => (l.implicita ? watchPercent >= UMBRAL_VIDEO : progresoLec[l.id]?.completada)).length / conContenidoCurso.length) * 100
     : 0;
   const cursoCumplido = sinExamenFinal && lecciones.length > 0
-    && cursoTerminado(reglasCurso, { leccionesCompletas: examenDisponible, porcentajeLecciones });
+    && cursoTerminado(reglasCurso, { leccionesCompletas: examenDisponible, porcentajeLecciones: porcentajeLecciones });
 
   const progresoLecRef = useRef({});
   useEffect(() => { progresoLecRef.current = progresoLec; }, [progresoLec]);
@@ -286,6 +291,7 @@ const Classroom = () => {
     let vigente = true;
 
     maxTimeWatchedRef.current = 0;
+    retomarVideoRef.current = true;
     setYoutubeError(null);
     setMaterialUrl(null);
     setEntregas([]);
@@ -294,12 +300,6 @@ const Classroom = () => {
       const inicial = progresoLecRef.current[leccionActual.id]?.porcentaje || 0;
       setWatchPercent(inicial);
       watchPercentRef.current = inicial;
-    }
-
-    if (leccionActual.tipo === 'pdf' && leccionActual.contenido?.archivo_path) {
-      enlaceTemporal('curso-materiales', leccionActual.contenido.archivo_path)
-        .then((url) => { if (vigente) setMaterialUrl(url); })
-        .catch((err) => console.warn('No se pudo abrir el material:', err.message));
     }
 
     if (leccionActual.tipo === 'tarea') {
@@ -312,6 +312,24 @@ const Classroom = () => {
     // Solo al cambiar de lección; el avance se lee por ref a propósito.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leccionActualId, user?.id]);
+
+  // Documento PDF de la lección: enlace temporal. Si falla, se muestra el
+  // error con "Reintentar" en lugar de quedarse en "Abriendo…".
+  const [materialError, setMaterialError] = useState('');
+  const [intentoMaterial, setIntentoMaterial] = useState(0);
+  const rutaMaterial = leccionActual?.tipo === 'pdf' ? leccionActual.contenido?.archivo_path || '' : '';
+  useEffect(() => {
+    setMaterialError('');
+    if (!rutaMaterial) return undefined;
+    let vigente = true;
+    enlaceTemporal('curso-materiales', rutaMaterial)
+      .then((url) => { if (vigente) setMaterialUrl(url); })
+      .catch((err) => {
+        console.warn('No se pudo abrir el material:', err.message);
+        if (vigente) setMaterialError(err.message || 'No se pudo abrir el documento.');
+      });
+    return () => { vigente = false; };
+  }, [leccionActualId, rutaMaterial, intentoMaterial]);
 
   const marcarProgreso = useCallback(async (leccion, porcentaje, completada) => {
     if (!leccion || leccion.implicita || !user?.id || !course?.id) return;
@@ -366,6 +384,17 @@ const Classroom = () => {
   };
 
   const completarLeccion = async (leccion) => {
+    // Clase única de un curso sin lecciones: su avance es el del video.
+    if (leccion?.implicita) {
+      setWatchPercent(100);
+      watchPercentRef.current = 100;
+      showToast('Lección completada.', 'success');
+      return;
+    }
+    if (leccion?.tipo === 'video' && leccion.id === leccionActualId) {
+      setWatchPercent(100);
+      watchPercentRef.current = 100;
+    }
     await marcarProgreso(leccion, 100, true);
     showToast('Lección completada.', 'success');
   };
@@ -402,6 +431,8 @@ const Classroom = () => {
 
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   const [generatedCertUrl, setGeneratedCertUrl] = useState('');
+  // Certificado que devolvió el servidor (aunque su imagen aún no exista).
+  const [certificadoEmitido, setCertificadoEmitido] = useState(null);
 
   // Reset maxTimeWatchedRef when course changes
   useEffect(() => {
@@ -416,6 +447,17 @@ const Classroom = () => {
         const currentTime = playerRef.current.getCurrentTime();
         const duration = playerRef.current.getDuration();
         if (duration > 0) {
+          // Los reproductores medibles pueden retomar el avance guardado.
+          if (retomarVideoRef.current) {
+            retomarVideoRef.current = false;
+            const guardado = watchPercentRef.current;
+            if (guardado > 0 && guardado < 100) {
+              const segundo = Math.floor((guardado / 100) * duration);
+              maxTimeWatchedRef.current = segundo;
+              playerRef.current.seekTo(segundo, true);
+              return;
+            }
+          }
           // Initialize maxTimeWatchedRef if it is 0 but we have saved progress
           if (maxTimeWatchedRef.current === 0 && watchPercentRef.current > 0) {
             maxTimeWatchedRef.current = (watchPercentRef.current / 100) * duration;
@@ -591,6 +633,16 @@ const Classroom = () => {
             .catch((err) => console.warn('No se pudo cargar la biblioteca:', err.message));
         } else {
           setCourse(null);
+          // Una solicitud pendiente sigue vigente aunque se recargue la página.
+          if (user?.id) {
+            supabase
+              .from('solicitudes_inscripcion')
+              .select('estado')
+              .eq('user_id', user.id)
+              .eq('course_id', cursoCargado.id)
+              .maybeSingle()
+              .then(({ data }) => setSolicitudEnviada(data?.estado === 'pendiente'), () => {});
+          }
           setAcceso({
             permitido: false,
             errorVerificando,
@@ -637,9 +689,42 @@ const Classroom = () => {
   }, [id, user?.id, profile?.rol, profile?.aprobado]);
 
   // Classroom Comments/Doubts Logic
+  // Nombre, foto y rol de los autores: la función perfiles_publicos los da
+  // aunque las reglas de `profiles` no dejen leer el perfil de otros. Si
+  // todavía no existe (antes de endurecimiento.sql), se queda lo que trajo la
+  // consulta, como antes.
+  const completarAutores = async (lista) => {
+    const ids = [...new Set(lista.map((c) => c.user_id).filter(Boolean))];
+    if (!ids.length) return lista;
+    const { data, error } = await supabase.rpc('perfiles_publicos', { p_ids: ids });
+    if (error) {
+      if (!['PGRST202', '42883'].includes(error.code)) console.warn('No se pudieron leer los autores:', error.message);
+      return lista;
+    }
+    const porId = new Map((data || []).map((p) => [p.id, p]));
+    return lista.map((c) => {
+      const pub = porId.get(c.user_id);
+      if (!pub) return c;
+      return {
+        ...c,
+        profiles: {
+          ...(c.profiles || {}),
+          nombre_completo: pub.nombre || c.profiles?.nombre_completo,
+          avatar_url: pub.avatar_url ?? c.profiles?.avatar_url,
+          rol: pub.rol || c.profiles?.rol,
+        },
+      };
+    });
+  };
+
+  const [commentsError, setCommentsError] = useState('');
+  const [commentFormError, setCommentFormError] = useState('');
+  const [replyErrors, setReplyErrors] = useState({});
+
   const fetchComments = useCallback(async () => {
     if (!course?.id) return;
     setLoadingComments(true);
+    setCommentsError('');
     try {
       const { data, error } = await supabase
         .from('classroom_comments')
@@ -662,18 +747,10 @@ const Classroom = () => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setComments(data || []);
-      
-      // Save backup
-      localStorage.setItem(`backup_classroom_comments_${course.id}`, JSON.stringify(data || []));
+      setComments(await completarAutores(data || []));
     } catch (err) {
-      console.warn('Error fetching classroom comments, using fallback:', err.message);
-      const backup = localStorage.getItem(`backup_classroom_comments_${course.id}`);
-      if (backup) {
-        setComments(JSON.parse(backup));
-      } else {
-        setComments([]);
-      }
+      console.warn('No se pudieron cargar las dudas del curso:', err.message);
+      setCommentsError(err.message || 'No se pudieron cargar las dudas.');
     } finally {
       setLoadingComments(false);
     }
@@ -685,55 +762,30 @@ const Classroom = () => {
     }
   }, [course?.id, fetchComments]);
 
+  // Si falla, se muestra el error y el texto se conserva para reintentar.
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim() || !user || !course) return;
     setSubmittingComment(true);
-
-    const commentData = {
-      course_id: course.id,
-      user_id: user.id,
-      content: newComment,
-      parent_id: null
-    };
+    setCommentFormError('');
 
     try {
       const { error } = await supabase
         .from('classroom_comments')
-        .insert([commentData]);
+        .insert([{
+          course_id: course.id,
+          user_id: user.id,
+          content: newComment,
+          parent_id: null
+        }]);
 
       if (error) throw error;
       showToast('Pregunta publicada con éxito', 'success');
       setNewComment('');
       fetchComments();
     } catch (err) {
-      console.warn('Failed to insert classroom comment, using local fallback:', err.message);
-      
-      // Fallback local
-      const localComment = {
-        id: 'local_' + Date.now(),
-        course_id: course.id,
-        user_id: user.id,
-        content: newComment,
-        parent_id: null,
-        created_at: new Date().toISOString(),
-        profiles: {
-          nombre_completo: profile?.nombre_completo || user.user_metadata?.nombre_completo || user.email,
-          avatar_url: currentUserAvatarUrl,
-          rol: profile?.rol || 'estudiante',
-          grado: profile?.grado,
-          pais: profile?.pais
-        }
-      };
-
-      const backup = localStorage.getItem(`backup_classroom_comments_${course.id}`);
-      const list = backup ? JSON.parse(backup) : [];
-      const updatedList = [...list, localComment];
-      localStorage.setItem(`backup_classroom_comments_${course.id}`, JSON.stringify(updatedList));
-      setComments(updatedList);
-      
-      showToast('Pregunta guardada localmente', 'success');
-      setNewComment('');
+      console.warn('No se pudo publicar la pregunta:', err.message);
+      setCommentFormError(`No se pudo publicar tu pregunta: ${err.message}. Tu texto sigue aquí; intenta de nuevo.`);
     } finally {
       setSubmittingComment(false);
     }
@@ -745,18 +797,17 @@ const Classroom = () => {
     const replyText = replyTexts[parentId] || '';
     if (!replyText.trim()) return;
     setSubmittingComment(true);
-
-    const replyData = {
-      course_id: course.id,
-      user_id: user.id,
-      content: replyText,
-      parent_id: parentId
-    };
+    setReplyErrors((prev) => ({ ...prev, [parentId]: '' }));
 
     try {
       const { error } = await supabase
         .from('classroom_comments')
-        .insert([replyData]);
+        .insert([{
+          course_id: course.id,
+          user_id: user.id,
+          content: replyText,
+          parent_id: parentId
+        }]);
 
       if (error) throw error;
       showToast('Respuesta publicada con éxito', 'success');
@@ -764,34 +815,8 @@ const Classroom = () => {
       setActiveReplyBox(null);
       fetchComments();
     } catch (err) {
-      console.warn('Failed to insert reply, using local fallback:', err.message);
-      
-      // Fallback local
-      const localReply = {
-        id: 'local_' + Date.now(),
-        course_id: course.id,
-        user_id: user.id,
-        content: replyText,
-        parent_id: parentId,
-        created_at: new Date().toISOString(),
-        profiles: {
-          nombre_completo: profile?.nombre_completo || user.user_metadata?.nombre_completo || user.email,
-          avatar_url: currentUserAvatarUrl,
-          rol: profile?.rol || 'estudiante',
-          grado: profile?.grado,
-          pais: profile?.pais
-        }
-      };
-
-      const backup = localStorage.getItem(`backup_classroom_comments_${course.id}`);
-      const list = backup ? JSON.parse(backup) : [];
-      const updatedList = [...list, localReply];
-      localStorage.setItem(`backup_classroom_comments_${course.id}`, JSON.stringify(updatedList));
-      setComments(updatedList);
-      
-      showToast('Respuesta guardada localmente', 'success');
-      setReplyTexts(prev => ({ ...prev, [parentId]: '' }));
-      setActiveReplyBox(null);
+      console.warn('No se pudo publicar la respuesta:', err.message);
+      setReplyErrors((prev) => ({ ...prev, [parentId]: `No se pudo publicar tu respuesta: ${err.message}. Tu texto sigue aquí; intenta de nuevo.` }));
     } finally {
       setSubmittingComment(false);
     }
@@ -816,18 +841,6 @@ const Classroom = () => {
     if (!confirmed) return;
 
     try {
-      if (typeof commentId === 'string' && commentId.startsWith('local_')) {
-        const backup = localStorage.getItem(`backup_classroom_comments_${course.id}`);
-        if (backup) {
-          const list = JSON.parse(backup);
-          const updatedList = list.filter(item => item.id !== commentId);
-          localStorage.setItem(`backup_classroom_comments_${course.id}`, JSON.stringify(updatedList));
-          setComments(updatedList);
-        }
-        showToast('Comentario eliminado', 'success');
-        return;
-      }
-
       const { error } = await supabase
         .from('classroom_comments')
         .delete()
@@ -1227,7 +1240,7 @@ const Classroom = () => {
       setExamScore(resultado.calificacion);
 
       if (resultado.aprobado) {
-        await generateCertificate(resultado.calificacion);
+        await generateCertificate();
       } else {
         showAlert(
           `Tu calificación fue de ${resultado.calificacion}% (${resultado.correctas} de ${resultado.total}). Necesitas un mínimo de ${resultado.minimo}% para aprobar. Vuelve a intentarlo.`,
@@ -1242,118 +1255,47 @@ const Classroom = () => {
     }
   };
 
-  // Calificación del curso sin examen final: el promedio de la mejor
-  // calificación de cada examen de lección, o 100 si no tiene exámenes.
+  // Sin examen final el servidor calcula la calificación (promedio de la mejor
+  // calificación de cada examen de lección, o 100) al emitir el certificado.
   const obtenerCertificadoPorRegla = async () => {
     if (!course || !user || isGeneratingCert) return;
-    let calificacion = 100;
-    const { data: intentos } = await supabase
-      .from('evaluacion_intentos')
-      .select('leccion_id, calificacion')
-      .eq('user_id', user.id)
-      .eq('course_id', course.id);
-    const mejores = new Map();
-    (intentos || []).forEach((i) => {
-      if (i.calificacion == null) return;
-      mejores.set(i.leccion_id, Math.max(mejores.get(i.leccion_id) ?? 0, Number(i.calificacion)));
-    });
-    if (mejores.size) calificacion = Math.round([...mejores.values()].reduce((t, c) => t + c, 0) / mejores.size);
-    setShowExam(true);
-    setExamScore(calificacion);
-    await generateCertificate(calificacion);
-    setTieneCertificado(true);
+    const certificado = await generateCertificate();
+    if (certificado) setShowExam(true);
   };
 
-  const generateCertificate = async (scoreToUse = 100) => {
-    if (!course || !user) return;
+  const nombreAlumno = () => profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email;
+
+  // El certificado lo emite el servidor (verifica lecciones, examen y acceso);
+  // aquí solo se dibuja la imagen con el nombre del alumno y se sube. Si la
+  // imagen falla, el certificado igual queda emitido.
+  const generateCertificate = async () => {
+    if (!course || !user) return null;
     setIsGeneratingCert(true);
     try {
-      const templateSrc = course.certificado_template_url || 'https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-25-51-449.png';
-      
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = templateSrc;
-      
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = () => reject(new Error('No se pudo cargar la plantilla del certificado.'));
-      });
-      
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      
-      const x = course.certificado_x || (canvas.width / 2);
-      const y = course.certificado_y || (canvas.height / 2);
-      const fontSize = course.certificado_font_size || 40;
-      
-      ctx.font = `bold ${fontSize}px Georgia, serif`;
-      ctx.fillStyle = '#1B2B3C';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      const studentName = profile?.nombre_completo || user.user_metadata?.nombre_completo || user.email;
-      ctx.fillText(studentName, x, y);
-      
-      const blob = await new Promise((resolve) => {
-        canvas.toBlob(resolve, 'image/png');
-      });
+      const { certificado, nuevo } = await emitirCertificado(course.id);
+      setTieneCertificado(true);
+      setCertificadoEmitido(certificado);
+      if (certificado?.score != null) setExamScore(Number(certificado.score));
 
-      const folio = `FOL-${Math.floor(100000 + Math.random() * 900000)}`;
-      const filePath = `${user.id}/${course.id}_${folio}.png`;
-      const dataUrl = canvas.toDataURL('image/png');
-      
-      let finalCertUrl = dataUrl;
-
-      try {
-        const { error: uploadError } = await supabase.storage
-          .from('certificates')
-          .upload(filePath, blob, { upsert: true });
-          
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('certificates')
-          .getPublicUrl(filePath);
-          
-        finalCertUrl = publicUrl;
-
-        // Si el curso tiene vigencia, el certificado vence y habrá que
-        // recertificarse; si no, es permanente.
-        const vigenteHasta = course.vigencia_meses
-          ? new Date(new Date().setMonth(new Date().getMonth() + Number(course.vigencia_meses))).toISOString()
-          : null;
-
-        const registro = {
-          user_id: user.id,
-          course_id: course.id,
-          pdf_url: publicUrl,
-          folio: folio,
-          score: scoreToUse
-        };
-        let { error: dbError } = await supabase
-          .from('certificates')
-          .insert([vigenteHasta ? { ...registro, vigente_hasta: vigenteHasta } : registro]);
-        // Antes de la migración la columna no existe: se guarda sin vigencia.
-        if (dbError && vigenteHasta && /vigente_hasta/.test(dbError.message || '')) {
-          ({ error: dbError } = await supabase.from('certificates').insert([registro]));
+      if (certificado?.pdf_url) {
+        setGeneratedCertUrl(certificado.pdf_url);
+      } else {
+        try {
+          const actualizado = await generarImagenCertificado({ certificado, curso: course, nombre: nombreAlumno() });
+          setCertificadoEmitido(actualizado);
+          setGeneratedCertUrl(actualizado?.pdf_url || '');
+        } catch (errImagen) {
+          console.warn('No se pudo generar la imagen del certificado:', errImagen.message);
+          showToast(`Tu certificado quedó emitido (folio ${certificado.folio}). La imagen se generará cuando lo descargues.`, 'warning');
+          return certificado;
         }
-          
-        if (dbError) throw dbError;
-        void registrarEvento('certificado_emitido', { folio, calificacion: scoreToUse });
-        showToast('¡Certificado generado y guardado en tu perfil con éxito!', 'success');
-      } catch (uploadErr) {
-        console.warn('Storage upload or DB insert failed. Falling back to local Base64 URL. Error:', uploadErr.message);
-        showToast('No se pudo guardar el certificado en el servidor. Podrás descargarlo directamente.', 'warning');
       }
-      
-      setGeneratedCertUrl(finalCertUrl);
+      showToast(nuevo === false ? 'Ya tenías este certificado; lo encuentras en la pestaña Certificados.' : '¡Certificado emitido y guardado en tu perfil!', 'success');
+      return certificado;
     } catch (err) {
-      console.error('Error generating certificate:', err.message);
-      showAlert('Error al generar certificado: ' + err.message, 'Error');
+      console.error('Error al emitir el certificado:', err.message);
+      showAlert(err.message, err.status === 409 ? 'Aún no puedes obtener tu certificado' : 'No se pudo emitir el certificado');
+      return null;
     } finally {
       setIsGeneratingCert(false);
     }
@@ -1362,43 +1304,28 @@ const Classroom = () => {
   const handleDownloadCertificate = async () => {
     if (!course) return;
     const filename = `Certificado_${course.title.replace(/\s+/g, '_')}.png`;
-
-    if (generatedCertUrl === 'local-simulated') {
-      const canvas = document.createElement('canvas');
-      canvas.width = 800;
-      canvas.height = 600;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#f8fafc';
-      ctx.fillRect(0, 0, 800, 600);
-      ctx.font = 'bold 36px Georgia, serif';
-      ctx.fillStyle = '#1e293b';
-      ctx.textAlign = 'center';
-      ctx.fillText(profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email, 400, 300);
-      ctx.font = '20px Georgia, serif';
-      ctx.fillText(`Acreditación de: ${course.title}`, 400, 360);
-      
-      const dataUrl = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = filename;
-      a.click();
-      return;
+    let url = generatedCertUrl;
+    // La imagen no se pudo subir al emitirlo: se intenta de nuevo ahora.
+    if (!url && certificadoEmitido) {
+      setIsGeneratingCert(true);
+      try {
+        const actualizado = await generarImagenCertificado({ certificado: certificadoEmitido, curso: course, nombre: nombreAlumno() });
+        setCertificadoEmitido(actualizado);
+        url = actualizado?.pdf_url || '';
+        setGeneratedCertUrl(url);
+      } catch (err) {
+        showAlert(`Tu certificado está emitido, pero no pudimos generar la imagen: ${err.message}. Intenta de nuevo en un momento.`, 'No se pudo descargar');
+        return;
+      } finally {
+        setIsGeneratingCert(false);
+      }
     }
-
-    try {
-      const response = await fetch(generatedCertUrl);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-      console.warn('Fetch download failed, falling back to window.open:', err);
-      window.open(generatedCertUrl, '_blank');
+    if (url) {
+      try {
+        await descargarArchivo(url, filename);
+      } catch (err) {
+        showAlert(err.message || 'No se pudo descargar el certificado.', 'Descarga');
+      }
     }
   };
 
@@ -1417,7 +1344,14 @@ const Classroom = () => {
         window.location.href = url;
         return;
       }
-      await llamarInscripcion('gratis', { courseId: acceso.curso.id });
+      const respuesta = await llamarInscripcion('gratis', { courseId: acceso.curso.id });
+      // Curso con solicitud: queda pendiente hasta que un administrador la apruebe.
+      if (respuesta?.estado === 'solicitud-enviada') {
+        setSolicitudEnviada(true);
+        setInscribiendo(false);
+        showToast('Enviamos tu solicitud. Te avisaremos cuando un administrador la apruebe.', 'success');
+        return;
+      }
       showToast('¡Listo! Ya estás inscrito.', 'success');
       window.location.reload();
     } catch (err) {
@@ -1425,6 +1359,25 @@ const Classroom = () => {
       setInscribiendo(false);
     }
   };
+
+  // Cuenta en revisión: vuelve a leer el perfil; si ya la aprobaron, el aula
+  // se recarga sola (depende de profile.aprobado).
+  const verificarCuenta = async () => {
+    setVerificandoCuenta(true);
+    try {
+      const perfil = await refetchProfile?.();
+      if (perfil && perfil.aprobado !== false) {
+        showToast('¡Tu cuenta ya está activa! Abriendo el curso…', 'success');
+      } else if (perfil) {
+        showToast('Tu cuenta sigue en revisión. Te avisaremos en cuanto esté lista.', 'info');
+      } else {
+        showToast('No pudimos verificar tu cuenta. Revisa tu conexión e intenta de nuevo.', 'error');
+      }
+    } finally {
+      setVerificandoCuenta(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -1456,12 +1409,17 @@ const Classroom = () => {
             {acceso.vencido ? (
               <>
                 <p className="aula-puerta-revision"><Clock size={16} /> Tu acceso a este curso terminó</p>
-                <p>El acceso duraba hasta el {acceso.vencido.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}. Si necesitas más tiempo, escríbenos.</p>
+                <p>El acceso duraba hasta el {acceso.vencido.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}. Si necesitas más tiempo, escríbenos y lo revisamos contigo.</p>
               </>
             ) : acceso.enRevision ? (
               <>
                 <p className="aula-puerta-revision"><Clock size={16} /> Tu acceso está en revisión</p>
                 <p>Ya estás inscrito en este curso. Un administrador revisará tu cuenta, te asignará tu grupo y abrirá el curso. Te avisaremos cuando esté listo.</p>
+              </>
+            ) : solicitudEnviada ? (
+              <>
+                <p className="aula-puerta-revision"><Clock size={16} /> Solicitud enviada</p>
+                <p>Un administrador revisará tu solicitud. Te avisaremos cuando se apruebe y el curso se abra.</p>
               </>
             ) : acceso.errorVerificando ? (
               <p>No pudimos verificar tu inscripción. Revisa tu conexión e intenta de nuevo.</p>
@@ -1472,7 +1430,15 @@ const Classroom = () => {
             )}
 
             <div className="aula-puerta-acciones">
-              {acceso.enRevision || acceso.vencido ? null : acceso.errorVerificando ? (
+              {acceso.vencido ? (
+                <a className="aula-puerta-btn" href="https://wa.me/5215659271906" target="_blank" rel="noopener noreferrer">
+                  Escríbenos por WhatsApp
+                </a>
+              ) : acceso.enRevision ? (
+                <button className="aula-puerta-btn" onClick={verificarCuenta} disabled={verificandoCuenta}>
+                  {verificandoCuenta ? 'Verificando…' : 'Verificar de nuevo'}
+                </button>
+              ) : solicitudEnviada ? null : acceso.errorVerificando ? (
                 <button className="aula-puerta-btn" onClick={() => window.location.reload()}>
                   Reintentar
                 </button>
@@ -1506,6 +1472,68 @@ const Classroom = () => {
       </div>
     );
   }
+
+  // Temario: se ve en qué lección va, cuáles terminó y cuánto le falta. En
+  // celular se dibuja antes de las dudas (la columna lateral queda al final).
+  const renderTemario = (clase) => (lecciones.length > 1 ? (
+    <nav className={`classroom-card temario ${clase}`} aria-label="Lecciones del curso">
+      <div className="temario-cabecera">
+        <h2>Contenido del curso</h2>
+        <span>{avanceCurso}%</span>
+      </div>
+      <div className="temario-barra" aria-hidden="true"><span style={{ width: `${avanceCurso}%` }} /></div>
+
+      <ol className="temario-lista">
+        {lecciones.map((l) => {
+          if (l.tipo === 'seccion') {
+            return <li key={l.id} className="temario-seccion">{l.titulo}</li>;
+          }
+          const Icono = ICONO_LECCION[l.tipo] || PlayCircle;
+          const hecha = progresoLec[l.id]?.completada;
+          const actual = !showExam && l.id === leccionActualId;
+          return (
+            <li key={l.id}>
+              <button
+                type="button"
+                className={`temario-item${actual ? ' temario-item--actual' : ''}${hecha ? ' temario-item--hecha' : ''}`}
+                aria-current={actual ? 'step' : undefined}
+                onClick={() => irALeccion(l.id)}
+              >
+                <span className="temario-icono">
+                  {hecha ? <CheckCircle size={16} /> : <Icono size={16} />}
+                </span>
+                <span className="temario-texto">
+                  <span className="temario-titulo">{numeroDe(l.id)}. {l.titulo}</span>
+                  <span className="temario-meta">
+                    {TIPOS_LECCION[l.tipo]}
+                    {l.duracion_min ? ` · ${l.duracion_min} min` : ''}
+                    {l.obligatoria === false ? ' · opcional' : ''}
+                    {!hecha && l.tipo === 'video' && progresoLec[l.id]?.porcentaje ? ` · ${progresoLec[l.id].porcentaje}%` : ''}
+                  </span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+        {!sinExamenFinal && <li>
+          <button
+            type="button"
+            className={`temario-item${showExam ? ' temario-item--actual' : ''}`}
+            disabled={!examenDisponible && !esAdmin}
+            onClick={() => setShowExam(true)}
+          >
+            <span className="temario-icono">{examenDisponible ? <Award size={16} /> : <Lock size={16} />}</span>
+            <span className="temario-texto">
+              <span className="temario-titulo">Examen final</span>
+              <span className="temario-meta">
+                {examenDisponible ? 'Disponible' : 'Se abre al completar las lecciones'}
+              </span>
+            </span>
+          </button>
+        </li>}
+      </ol>
+    </nav>
+  ) : null);
 
   // Filter recommended courses sharing same category ID
   const recommendedCourses = catalogCourses.filter(
@@ -1696,6 +1724,15 @@ const Classroom = () => {
                           <ExternalLink size={14} /> Abrir el documento en otra pestaña
                         </a>
                       </>
+                    ) : materialError ? (
+                      <div className="video-player-error" role="alert">
+                        <AlertCircle size={36} />
+                        <strong>No se pudo abrir el documento</strong>
+                        <span>{materialError}</span>
+                        <button type="button" className="back-btn" onClick={() => setIntentoMaterial((n) => n + 1)}>
+                          Reintentar
+                        </button>
+                      </div>
                     ) : (
                       <div className="video-loading-placeholder">
                         {leccionActual.contenido?.archivo_path ? 'Abriendo el documento…' : 'Esta lección todavía no tiene documento.'}
@@ -1842,6 +1879,9 @@ const Classroom = () => {
                       <>
                         <span className="progress-label">Avance del video:</span>
                         <span className="progress-value">{watchPercent}%</span>
+                        {videoSinMedir && watchPercent < UMBRAL_VIDEO && (
+                          <span className="progress-label">· este reproductor no mide el avance; márcala al terminar</span>
+                        )}
                       </>
                     ) : (
                       <span className="progress-label">
@@ -1867,6 +1907,15 @@ const Classroom = () => {
                     )}
 
                     {leccionActual && !leccionActual.implicita && !videoMedible && leccionActual.tipo !== 'tarea' && !TIPOS_DEL_SERVIDOR.includes(leccionActual.tipo) && !progresoLec[leccionActual.id]?.completada && (
+                      <button type="button" className="back-btn leccion-btn-principal" onClick={() => completarLeccion(leccionActual)}>
+                        <CheckCircle size={15} /> Marcar como completada
+                      </button>
+                    )}
+
+                    {/* YouTube bloqueado (bloqueador de anuncios, red): el
+                        reproductor compatible no deja medir el avance, así que
+                        el alumno puede marcar la clase al terminar de verla. */}
+                    {videoSinMedir && !esAdminReal && (leccionActual.implicita ? watchPercent < UMBRAL_VIDEO : !progresoLec[leccionActual.id]?.completada) && (
                       <button type="button" className="back-btn leccion-btn-principal" onClick={() => completarLeccion(leccionActual)}>
                         <CheckCircle size={15} /> Marcar como completada
                       </button>
@@ -1913,7 +1962,7 @@ const Classroom = () => {
             ) : (
               // Exam / Congratulations View
               <div>
-                {!generatedCertUrl ? (
+                {!generatedCertUrl && !certificadoEmitido ? (
                   // Exam sheet card
                   <div className="exam-container-card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '15px' }}>
@@ -1977,7 +2026,7 @@ const Classroom = () => {
                     <div style={{ color: '#10b981', fontSize: '3.5rem', marginBottom: '16px' }}>✓</div>
                     <h3 style={{ fontFamily: 'Sora, sans-serif', fontSize: '1.5rem', fontWeight: '800', margin: '0 0 10px 0' }}>¡Felicitaciones! Has completado el curso</h3>
                     <p style={{ color: '#64748b', fontSize: '0.95rem', maxWidth: '500px', margin: '0 auto 30px auto', lineHeight: '1.5' }}>
-                      Tu calificación fue de <strong>{examScore}%</strong>. Tu certificado ha sido emitido con éxito{course.vigencia_meses ? ` y es válido por ${course.vigencia_meses} ${Number(course.vigencia_meses) === 1 ? 'mes' : 'meses'}` : ''}. Descárgalo ahora: el archivo se queda en tu portal 30 días.
+                      Tu calificación fue de <strong>{examScore}%</strong>. Tu certificado ha sido emitido con éxito{certificadoEmitido?.folio ? ` (folio ${certificadoEmitido.folio})` : ''}{course.vigencia_meses ? ` y es válido por ${course.vigencia_meses} ${Number(course.vigencia_meses) === 1 ? 'mes' : 'meses'}` : ''}. También queda guardado en la pestaña Certificados de tu portal.
                     </p>
 
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -1986,8 +2035,9 @@ const Classroom = () => {
                         className="back-btn"
                         style={{ background: '#00bcd4', borderColor: '#00bcd4', color: '#fff', cursor: 'pointer' }}
                         onClick={handleDownloadCertificate}
+                        disabled={isGeneratingCert}
                       >
-                        Descargar Certificado
+                        {isGeneratingCert ? 'Generando imagen…' : 'Descargar Certificado'}
                       </button>
                       
                       <button onClick={() => navigate('/dashboard')} className="back-btn">
@@ -2014,6 +2064,7 @@ const Classroom = () => {
                                 setExamAnswers({});
                                 setExamScore(null);
                                 setGeneratedCertUrl('');
+                                setCertificadoEmitido(null);
                                 maxTimeWatchedRef.current = 0;
                               }}
                               className="classroom-rec-card"
@@ -2036,6 +2087,8 @@ const Classroom = () => {
                 )}
               </div>
             )}
+            {renderTemario('temario--movil')}
+
             {/* Classroom Doubts and Feedback Section */}
             <div className="classroom-doubts-card">
               <div className="doubts-header">
@@ -2065,6 +2118,7 @@ const Classroom = () => {
                     {submittingComment ? 'Publicando...' : 'Hacer Pregunta'}
                   </button>
                 </div>
+                {commentFormError && <p className="doubts-error" role="alert">{commentFormError}</p>}
               </form>
 
               {/* List of comments */}
@@ -2072,6 +2126,12 @@ const Classroom = () => {
                 <div className="doubts-loading">
                   <div className="spinner-mini"></div>
                   <span>Cargando comentarios...</span>
+                </div>
+              ) : commentsError ? (
+                <div className="doubts-empty" role="alert">
+                  <AlertCircle size={32} />
+                  <p>No se pudieron cargar las dudas: {commentsError}</p>
+                  <button type="button" className="back-btn" onClick={fetchComments}>Reintentar</button>
                 </div>
               ) : comments.length === 0 ? (
                 <div className="doubts-empty">
@@ -2235,6 +2295,7 @@ const Classroom = () => {
                                   <Send size={12} />
                                 </button>
                               </div>
+                              {replyErrors[q.id] && <p className="doubts-error" role="alert">{replyErrors[q.id]}</p>}
                             </form>
                           )}
                         </div>
@@ -2248,66 +2309,7 @@ const Classroom = () => {
 
           {/* Right Column: Detailed course information */}
           <div className="classroom-info-sidebar">
-            {/* Temario: se ve en qué lección va, cuáles terminó y cuánto le falta. */}
-            {lecciones.length > 1 && (
-              <nav className="classroom-card temario" aria-label="Lecciones del curso">
-                <div className="temario-cabecera">
-                  <h2>Contenido del curso</h2>
-                  <span>{avanceCurso}%</span>
-                </div>
-                <div className="temario-barra" aria-hidden="true"><span style={{ width: `${avanceCurso}%` }} /></div>
-
-                <ol className="temario-lista">
-                  {lecciones.map((l) => {
-                    if (l.tipo === 'seccion') {
-                      return <li key={l.id} className="temario-seccion">{l.titulo}</li>;
-                    }
-                    const Icono = ICONO_LECCION[l.tipo] || PlayCircle;
-                    const hecha = progresoLec[l.id]?.completada;
-                    const actual = !showExam && l.id === leccionActualId;
-                    return (
-                      <li key={l.id}>
-                        <button
-                          type="button"
-                          className={`temario-item${actual ? ' temario-item--actual' : ''}${hecha ? ' temario-item--hecha' : ''}`}
-                          aria-current={actual ? 'step' : undefined}
-                          onClick={() => irALeccion(l.id)}
-                        >
-                          <span className="temario-icono">
-                            {hecha ? <CheckCircle size={16} /> : <Icono size={16} />}
-                          </span>
-                          <span className="temario-texto">
-                            <span className="temario-titulo">{numeroDe(l.id)}. {l.titulo}</span>
-                            <span className="temario-meta">
-                              {TIPOS_LECCION[l.tipo]}
-                              {l.duracion_min ? ` · ${l.duracion_min} min` : ''}
-                              {l.obligatoria === false ? ' · opcional' : ''}
-                              {!hecha && l.tipo === 'video' && progresoLec[l.id]?.porcentaje ? ` · ${progresoLec[l.id].porcentaje}%` : ''}
-                            </span>
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                  {!sinExamenFinal && <li>
-                    <button
-                      type="button"
-                      className={`temario-item${showExam ? ' temario-item--actual' : ''}`}
-                      disabled={!examenDisponible && !esAdmin}
-                      onClick={() => setShowExam(true)}
-                    >
-                      <span className="temario-icono">{examenDisponible ? <Award size={16} /> : <Lock size={16} />}</span>
-                      <span className="temario-texto">
-                        <span className="temario-titulo">Examen final</span>
-                        <span className="temario-meta">
-                          {examenDisponible ? 'Disponible' : 'Se abre al completar las lecciones'}
-                        </span>
-                      </span>
-                    </button>
-                  </li>}
-                </ol>
-              </nav>
-            )}
+            {renderTemario('temario--escritorio')}
 
             <div className="classroom-card">
               <h1>{course.title}</h1>
@@ -2349,6 +2351,7 @@ const Classroom = () => {
                         setExamAnswers({});
                         setExamScore(null);
                         setGeneratedCertUrl('');
+                        setCertificadoEmitido(null);
                         maxTimeWatchedRef.current = 0;
                       }}
                       className="classroom-rec-card"

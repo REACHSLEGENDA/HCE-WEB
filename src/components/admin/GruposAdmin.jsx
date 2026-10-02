@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Plus, Trash2, Users, BookOpen, Mail } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { esTablaFaltante, llamarInscripcion, extraerCorreos } from '../../lib/cursos';
+import { traerTodo } from '../../lib/traerTodo';
 import './AdminLms.css';
 
 // Grupos (un hospital, una generación, un equipo) e inscripción masiva.
@@ -12,13 +13,21 @@ import './AdminLms.css';
 // se hacen alumno por alumno, a propósito, para no quitarle el acceso por
 // error a quien ya pagó o ya avanzó.
 
+// Los miembros pasan fácil de 1,000 filas: se piden en tandas (ordenadas por
+// su llave). Nunca rechaza: un fallo vuelve como { error } para mostrarlo.
+const comoRespuesta = (promesa) => promesa.then((data) => ({ data }), (error) => ({ error }));
+
 async function consultarGrupos() {
-  const [g, m, c] = await Promise.all([
-    supabase.from('grupos').select('id, nombre, descripcion, creado_en').order('nombre'),
-    supabase.from('grupo_miembros').select('grupo_id, user_id'),
-    supabase.from('grupo_cursos').select('grupo_id, course_id'),
-  ]);
-  return { g, m, c };
+  try {
+    const [g, m, c] = await Promise.all([
+      supabase.from('grupos').select('id, nombre, descripcion, creado_en').order('nombre'),
+      comoRespuesta(traerTodo('grupo_miembros', 'grupo_id, user_id')),
+      comoRespuesta(traerTodo('grupo_cursos', 'grupo_id, course_id')),
+    ]);
+    return { g, m, c };
+  } catch (error) {
+    return { g: { error }, m: {}, c: {} };
+  }
 }
 
 export default function GruposAdmin({ cursos, perfiles, notificar, confirmar }) {
@@ -183,7 +192,11 @@ function DetalleGrupo({ grupo, cursos, perfiles, notificar, confirmar, onVolver,
   const quitarMiembro = async (userId) => {
     const ok = await confirmar('¿Quitar a esta persona del grupo? Conserva los cursos en que ya está inscrita.', 'Quitar del grupo');
     if (!ok) return;
-    await supabase.from('grupo_miembros').delete().eq('grupo_id', grupo.id).eq('user_id', userId);
+    const { error } = await supabase.from('grupo_miembros').delete().eq('grupo_id', grupo.id).eq('user_id', userId);
+    if (error) {
+      notificar(`No se pudo quitar del grupo: ${error.message}`, 'error');
+      return;
+    }
     await onCambio();
   };
 
@@ -211,14 +224,22 @@ function DetalleGrupo({ grupo, cursos, perfiles, notificar, confirmar, onVolver,
   const quitarCurso = async (courseId) => {
     const ok = await confirmar('¿Quitar el curso del grupo? Nadie pierde el acceso: solo deja de inscribirse a quien entre al grupo después.', 'Quitar curso');
     if (!ok) return;
-    await supabase.from('grupo_cursos').delete().eq('grupo_id', grupo.id).eq('course_id', courseId);
+    const { error } = await supabase.from('grupo_cursos').delete().eq('grupo_id', grupo.id).eq('course_id', courseId);
+    if (error) {
+      notificar(`No se pudo quitar el curso: ${error.message}`, 'error');
+      return;
+    }
     await onCambio();
   };
 
   const eliminarGrupo = async () => {
     const ok = await confirmar(`¿Eliminar el grupo "${grupo.nombre}"? Nadie pierde sus cursos.`, 'Eliminar grupo');
     if (!ok) return;
-    await supabase.from('grupos').delete().eq('id', grupo.id);
+    const { error } = await supabase.from('grupos').delete().eq('id', grupo.id);
+    if (error) {
+      notificar(`No se pudo eliminar el grupo: ${error.message}`, 'error');
+      return;
+    }
     await onCambio();
     onVolver();
   };

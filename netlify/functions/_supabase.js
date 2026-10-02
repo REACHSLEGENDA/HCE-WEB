@@ -12,6 +12,11 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const isConfigured = () => Boolean(url && serviceKey);
 
+// Solo la ausencia de una migración permite usar el comportamiento anterior;
+// una falla de red o de permisos nunca debe abrir un candado de acceso.
+export const esEsquemaFaltante = (error) => Boolean(error &&
+  ['42P01', '42703', 'PGRST205', 'PGRST204', 'PGRST202', '42883'].includes(error.code));
+
 let cliente = null;
 
 export function admin() {
@@ -43,13 +48,15 @@ export async function adminDesdeToken(headers = {}) {
   const user = await usuarioDesdeToken(headers);
   if (!user) return null;
 
-  const { data } = await admin()
+  let { data, error } = await admin()
     .from('profiles')
-    .select('rol, nombre_completo')
+    .select('rol, nombre_completo, activo')
     .eq('id', user.id)
     .single();
-
-  if (data?.rol !== 'admin') return null;
+  if (error?.code === '42703') {
+    ({ data, error } = await admin().from('profiles').select('rol, nombre_completo').eq('id', user.id).single());
+  }
+  if (error || data?.rol !== 'admin' || data.activo === false) return null;
   return { ...user, perfil: data };
 }
 
@@ -69,14 +76,66 @@ export async function cuentaHabilitada(userId, { exigirAprobacion = false } = {}
     if (error.code === '42703') return { habilitada: true };
     throw new Error(error.message);
   }
-  if (data?.rol === 'admin') return { habilitada: true };
+  if (!data) return { habilitada: false, error: 'No se encontró tu perfil. Vuelve a entrar al portal.' };
   if (data?.activo === false) {
     return { habilitada: false, error: 'Tu cuenta está suspendida. Escríbenos si crees que es un error.' };
   }
+  if (data?.rol === 'admin') return { habilitada: true };
   if (exigirAprobacion && data?.aprobado === false) {
     return { habilitada: false, error: 'Tu acceso a los cursos todavía está en revisión. Te avisaremos cuando quede activo.' };
   }
   return { habilitada: true };
+}
+
+// Si el acceso del alumno a un curso sigue vigente. Es la misma regla que
+// public.acceso_vigente() de lms-reglas.sql (días de acceso desde que se
+// inscribió; si ya tiene certificado y el curso conserva el acceso, sigue
+// vigente). Se calcula aquí para no depender de que la función SQL se pueda
+// llamar. Sin la migración, sin reglas o sin inscripción, no hay vencimiento
+// (la inscripción se revisa aparte).
+export async function accesoVigente(userId, courseId) {
+  const db = admin();
+  const idCurso = Number(courseId);
+  const { data: reglas, error } = await db
+    .from('curso_reglas')
+    .select('dias_acceso, conservar_acceso')
+    .eq('course_id', idCurso)
+    .maybeSingle();
+  if (error) {
+    if (esEsquemaFaltante(error)) return { vigente: true };
+    throw new Error(error.message);
+  }
+  if (reglas?.dias_acceso == null) return { vigente: true };
+
+  const { data: inscripcion, error: errInscripcion } = await db
+    .from('inscripciones')
+    .select('created_at')
+    .eq('user_id', userId)
+    .eq('course_id', idCurso)
+    .maybeSingle();
+  if (errInscripcion) throw new Error(errInscripcion.message);
+  if (!inscripcion?.created_at) return { vigente: true };
+
+  const vence = new Date(new Date(inscripcion.created_at).getTime() + Number(reglas.dias_acceso) * 24 * 60 * 60 * 1000);
+  if (vence > new Date()) return { vigente: true, vence };
+
+  if (reglas.conservar_acceso) {
+    const { data: certificado, error: errCertificado } = await db
+      .from('certificates')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('course_id', idCurso)
+      .limit(1);
+    if (errCertificado) throw new Error(errCertificado.message);
+    if (certificado?.length) return { vigente: true, vence };
+  }
+
+  const fecha = vence.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', day: 'numeric', month: 'long', year: 'numeric' });
+  return {
+    vigente: false,
+    vence,
+    error: `Tu acceso a este curso terminó el ${fecha}. Si necesitas más tiempo, escríbenos.`,
+  };
 }
 
 // Deja constancia de una acción de administrador en la bitácora del portal.

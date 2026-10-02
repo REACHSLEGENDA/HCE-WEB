@@ -12,16 +12,24 @@ export default function GamificacionAdmin({ notificar }) {
   const [config, setConfig] = useState(null);
   const [falta, setFalta] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState(null);
+  const [recarga, setRecarga] = useState(0);
 
   useEffect(() => {
     let vigente = true;
-    supabase.from('gamificacion_config').select('*').eq('id', 1).maybeSingle().then(({ data, error }) => {
+    supabase.from('gamificacion_config').select('*').eq('id', 1).maybeSingle().then(({ data, error: err }) => {
       if (!vigente) return;
-      if (error) { if (esTablaFaltante(error)) setFalta(true); return; }
-      setConfig(data || { activo: true, puntos_por_nivel: 200, recompensas: [] });
-    });
+      if (err) {
+        if (esTablaFaltante(err)) setFalta(true);
+        // Antes se quedaba en "Cargando…" para siempre.
+        else setError(err.message);
+        return;
+      }
+      const base = data || { activo: true, puntos_por_nivel: 200, recompensas: [] };
+      setConfig({ ...base, recompensas: Array.isArray(base.recompensas) ? base.recompensas : [] });
+    }, (err) => { if (vigente) setError(err?.message || 'Error de conexión'); });
     return () => { vigente = false; };
-  }, []);
+  }, [recarga]);
 
   const guardar = async () => {
     setGuardando(true);
@@ -45,6 +53,14 @@ export default function GamificacionAdmin({ notificar }) {
   };
 
   if (falta) return <div className="lms-aviso">Para niveles y recompensas corre en Supabase la migración <code>gamificacion.sql</code>.</div>;
+  if (error) {
+    return (
+      <div className="lms-aviso">
+        No se pudo cargar la gamificación: {error}{' '}
+        <button type="button" className="btn-crm-action outlined mini" onClick={() => { setError(null); setRecarga((n) => n + 1); }}>Reintentar</button>
+      </div>
+    );
+  }
   if (!config) return <p className="lms-cargando">Cargando…</p>;
 
   return (
@@ -52,7 +68,7 @@ export default function GamificacionAdmin({ notificar }) {
       <section className="reglas-grupo">
         <h5>Ajustes</h5>
         <label className="lms-check">
-          <input type="checkbox" checked={config.activo} onChange={(e) => setConfig({ ...config, activo: e.target.checked })} />
+          <input type="checkbox" checked={!!config.activo} onChange={(e) => setConfig({ ...config, activo: e.target.checked })} />
           Recompensas activas (el descuento se aplica solo al pagar)
         </label>
         <label className="crm-input-group reglas-campo">

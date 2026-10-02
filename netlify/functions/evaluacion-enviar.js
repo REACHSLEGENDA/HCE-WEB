@@ -11,7 +11,7 @@
 // Un administrador puede presentarlo para revisarlo: recibe la calificación,
 // pero no se guarda nada.
 
-import { admin, usuarioDesdeToken, cuentaHabilitada, json, isConfigured as supabaseListo } from './_supabase.js';
+import { admin, usuarioDesdeToken, cuentaHabilitada, accesoVigente, json, isConfigured as supabaseListo } from './_supabase.js';
 import { notificar } from './_notificaciones.js';
 
 const CONFIG_BASE = { min_aprobacion: 80, intentos_max: null, mostrar_respuestas: false };
@@ -90,16 +90,22 @@ export const handler = async (event) => {
         .eq('course_id', leccion.course_id)
         .maybeSingle();
       if (!inscripcion) return json(403, { error: 'No estás inscrito en este curso.' });
+
+      // Con días de acceso vencidos (lms-reglas.sql) ya no se presenta.
+      const acceso = await accesoVigente(user.id, leccion.course_id);
+      if (!acceso.vigente) return json(403, { error: acceso.error, estado: 'acceso-vencido' });
     }
 
-    const [{ data: configFila }, { data: preguntas, error: errPreguntas }, { data: previos }] = await Promise.all([
+    const [{ data: configFila, error: errConfig }, { data: preguntas, error: errPreguntas }, { data: previos, error: errPrevios }] = await Promise.all([
       db.from('evaluacion_config').select('*').eq('leccion_id', leccion.id).maybeSingle(),
       db.from('evaluacion_preguntas').select('id, tipo, texto, opciones, puntos, obligatoria').eq('leccion_id', leccion.id).order('orden').order('id'),
       esAdmin
         ? Promise.resolve({ data: [] })
-        : db.from('evaluacion_intentos').select('id, aprobado').eq('leccion_id', leccion.id).eq('user_id', user.id),
+        : db.from('evaluacion_intentos').select('id, aprobado, numero').eq('leccion_id', leccion.id).eq('user_id', user.id),
     ]);
     if (errPreguntas) throw new Error(errPreguntas.message);
+    if (errConfig) throw new Error(errConfig.message);
+    if (errPrevios) throw new Error(errPrevios.message);
     if (!preguntas?.length) return json(409, { error: 'Esta evaluación todavía no tiene preguntas.' });
 
     const config = { ...CONFIG_BASE, ...(configFila || {}) };
@@ -107,9 +113,17 @@ export const handler = async (event) => {
 
     if (!esAdmin) {
       if (!esExamen && intentosPrevios) {
+        const { error: errReparar } = await db.from('leccion_progreso').upsert([{
+          user_id: user.id, leccion_id: leccion.id, course_id: leccion.course_id, porcentaje: 100, completada: true,
+        }], { onConflict: 'user_id,leccion_id' });
+        if (errReparar) throw new Error(`No se pudo recuperar el avance de tu encuesta: ${errReparar.message}`);
         return json(409, { error: 'Ya enviaste esta encuesta. ¡Gracias!', estado: 'ya-enviada' });
       }
       if (esExamen && previos.some((p) => p.aprobado)) {
+        const { error: errReparar } = await db.from('leccion_progreso').upsert([{
+          user_id: user.id, leccion_id: leccion.id, course_id: leccion.course_id, porcentaje: 100, completada: true,
+        }], { onConflict: 'user_id,leccion_id' });
+        if (errReparar) throw new Error(`No se pudo recuperar el avance de tu examen: ${errReparar.message}`);
         return json(409, { error: 'Ya aprobaste este examen.', estado: 'ya-aprobado' });
       }
       if (esExamen && config.intentos_max && intentosPrevios >= config.intentos_max) {
@@ -117,10 +131,11 @@ export const handler = async (event) => {
       }
     }
 
-    const { data: claves } = await db
+    const { data: claves, error: errClaves } = await db
       .from('evaluacion_claves')
       .select('pregunta_id, correctas')
       .in('pregunta_id', preguntas.map((p) => p.id));
+    if (errClaves) throw new Error(errClaves.message);
     const clavePorPregunta = new Map((claves || []).map((c) => [c.pregunta_id, (c.correctas || []).map(Number)]));
 
     // Respuestas limpias y preguntas obligatorias sin contestar.
@@ -161,7 +176,8 @@ export const handler = async (event) => {
       : null;
     const minimo = config.min_aprobacion ?? 80;
     const aprobado = esExamen ? calificacion >= minimo : null;
-    const numero = intentosPrevios + 1;
+    // Con el mayor número y no con el conteo: si se borró un intento, no choca.
+    const numero = Math.max(intentosPrevios, ...(previos || []).map((p) => Number(p.numero) || 0)) + 1;
 
     if (!esAdmin) {
       const inicio = iniciadoEn ? new Date(iniciadoEn) : null;
@@ -180,6 +196,7 @@ export const handler = async (event) => {
         iniciado_en: duracion != null ? inicio.toISOString() : null,
         duracion_seg: duracion,
       }]);
+      if (errIntento?.code === '23505') return json(409, { error: 'Este intento ya se recibió. Actualiza la evaluación antes de volver a enviarla.', estado: 'intento-recibido' });
       if (errIntento) throw new Error(errIntento.message);
 
       if (!esExamen || aprobado) {
@@ -190,7 +207,7 @@ export const handler = async (event) => {
           porcentaje: 100,
           completada: true,
         }], { onConflict: 'user_id,leccion_id' });
-        if (errAvance) console.error('No se pudo marcar la lección:', errAvance.message);
+        if (errAvance) throw new Error(`Tu resultado se guardó, pero no el avance de la lección. Reintenta para recuperarlo: ${errAvance.message}`);
       }
 
       if (esExamen && aprobado) {

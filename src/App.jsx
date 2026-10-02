@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 /* ---------------------------------------------------------------------------
  * Code splitting por ruta.
@@ -188,6 +189,13 @@ const PortalPWA = () => {
   return null;
 };
 
+// Un error al dibujar una pantalla muestra un aviso con "Recargar" en vez de
+// dejar todo en blanco; al cambiar de ruta se limpia.
+const LimiteDeErrores = ({ children }) => {
+  const { pathname } = useLocation();
+  return <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>;
+};
+
 /* ------------------------------------------------------------------------ */
 
 function App() {
@@ -202,6 +210,7 @@ function App() {
             <ChatBot />
             <InstallApp />
           </Suspense>
+          <LimiteDeErrores>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -253,6 +262,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </LimiteDeErrores>
         </NotificationProvider>
       </AuthProvider>
     </Router>

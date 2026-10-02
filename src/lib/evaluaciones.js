@@ -101,10 +101,14 @@ export async function cargarEvaluacionAdmin(leccionId) {
 }
 
 export async function guardarConfigEvaluacion(leccionId, config) {
+  const minimo = Number(config.min_aprobacion ?? 80);
+  if (!Number.isFinite(minimo) || minimo < 0 || minimo > 100 || config.min_aprobacion === '') throw new Error('El mínimo para aprobar debe estar entre 0 y 100.');
+  const intentos = config.intentos_max === '' || config.intentos_max == null ? null : Number(config.intentos_max);
+  if (intentos != null && (!Number.isInteger(intentos) || intentos < 1)) throw new Error('Los intentos permitidos deben ser un entero mayor a cero.');
   const { error } = await supabase.from('evaluacion_config').upsert([{
     leccion_id: leccionId,
-    min_aprobacion: Math.min(100, Math.max(0, Number(config.min_aprobacion) || 0)),
-    intentos_max: config.intentos_max ? Math.max(1, Number(config.intentos_max)) : null,
+    min_aprobacion: minimo,
+    intentos_max: intentos,
     mostrar_respuestas: !!config.mostrar_respuestas,
     aleatorio: !!config.aleatorio,
     cuenta_calificacion: config.cuenta_calificacion !== false,
@@ -137,7 +141,7 @@ export async function guardarPregunta(leccionId, pregunta) {
 
   const correctas = ['opcion', 'multiple'].includes(pregunta.tipo) ? (pregunta.correctas || []).map(Number) : [];
   const { error: errClave } = await supabase.from('evaluacion_claves').upsert([{ pregunta_id: id, correctas }], { onConflict: 'pregunta_id' });
-  if (errClave) throw errClave;
+  if (errClave) { errClave.preguntaId = id; errClave.preguntaOrden = datos.orden; throw errClave; }
   return id;
 }
 
@@ -147,5 +151,7 @@ export async function borrarPregunta(id) {
 }
 
 export async function reordenarPreguntas(ids) {
-  await Promise.all(ids.map((id, i) => supabase.from('evaluacion_preguntas').update({ orden: i + 1 }).eq('id', id)));
+  const resultados = await Promise.all(ids.map((id, i) => supabase.from('evaluacion_preguntas').update({ orden: i + 1 }).eq('id', id)));
+  const fallo = resultados.find((r) => r.error);
+  if (fallo) throw fallo.error;
 }

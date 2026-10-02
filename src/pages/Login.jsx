@@ -131,7 +131,12 @@ const Login = () => {
   // If user is already logged in, redirect them once profile has resolved
   useEffect(() => {
     if (user && !authLoading) {
-      const targetPath = location.state?.from?.pathname || (profile?.rol === 'admin' ? '/admin' : '/dashboard');
+      // Se conserva también la búsqueda (?curso_pago=ok&session_id=…, ?webinar=…)
+      // para que el regreso de Stripe o de un webinar no se pierda.
+      const desde = location.state?.from;
+      const targetPath = desde?.pathname
+        ? `${desde.pathname}${desde.search || ''}${desde.hash || ''}`
+        : (profile?.rol === 'admin' ? '/admin' : '/dashboard');
       navigate(targetPath, { replace: true });
     }
   }, [user, profile, authLoading, navigate, location.state]);

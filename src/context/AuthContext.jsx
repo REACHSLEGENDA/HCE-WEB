@@ -69,7 +69,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Fetch profiles table linked to the authenticated user
-  const fetchProfile = useCallback(async (userId, authUser = null) => {
+  // Con `conservarSiFalla` (relectura en segundo plano) un error de red no
+  // borra el perfil que ya se tenía.
+  const fetchProfile = useCallback(async (userId, authUser = null, { conservarSiFalla = false } = {}) => {
     if (!userId) {
       setProfile(null);
       return null;
@@ -84,6 +86,7 @@ export const AuthProvider = ({ children }) => {
 
       if (error) {
         console.warn('No se pudo cargar el perfil:', error.message);
+        if (conservarSiFalla) return null;
         setProfile(null);
         return null;
       }
@@ -126,10 +129,15 @@ export const AuthProvider = ({ children }) => {
 
       const safeProfile = await migrateLegacyAvatar(userId, data, authUser);
       recordarZona(safeProfile?.zona_horaria || null);
-      setProfile(safeProfile);
+      // En una relectura sin cambios se conserva el mismo objeto, para no
+      // disparar de nuevo los efectos que dependen del perfil.
+      setProfile((previo) => (
+        conservarSiFalla && previo && JSON.stringify(previo) === JSON.stringify(safeProfile) ? previo : safeProfile
+      ));
       return safeProfile;
     } catch (err) {
       console.error('Error de red al cargar el perfil:', err);
+      if (conservarSiFalla) return null;
       setProfile(null);
       return null;
     }
@@ -247,6 +255,26 @@ export const AuthProvider = ({ children }) => {
       subscription.unsubscribe();
     };
   }, [applySession]);
+
+  // Al regresar a la pestaña se vuelve a leer el perfil: si el administrador
+  // aprobó la cuenta mientras tanto, los cursos se abren sin recargar.
+  useEffect(() => {
+    let ultimaLectura = 0;
+    const alVolver = () => {
+      if (document.visibilityState !== 'visible') return;
+      const userId = currentUserIdRef.current;
+      if (!userId || Date.now() - ultimaLectura < 15000) return;
+      ultimaLectura = Date.now();
+      void fetchProfile(userId, null, { conservarSiFalla: true });
+    };
+    document.addEventListener('visibilitychange', alVolver);
+    return () => document.removeEventListener('visibilitychange', alVolver);
+  }, [fetchProfile]);
+
+  const refetchProfile = useCallback(
+    () => fetchProfile(currentUserIdRef.current, null, { conservarSiFalla: true }),
+    [fetchProfile]
+  );
 
   // Sign Up function
   const signUp = async (
@@ -406,7 +434,7 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     updateProfile,
     updateUserMetadata,
-    refetchProfile: () => fetchProfile(user?.id, user)
+    refetchProfile
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

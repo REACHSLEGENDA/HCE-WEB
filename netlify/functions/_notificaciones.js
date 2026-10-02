@@ -131,7 +131,18 @@ export async function notificar(db, evento, { userId = null, courseId = null, cl
     for (const n of lista) {
       for (const persona of await destinatarios(db, n, userId)) {
         // Primero se aparta el envío: si ya existía, otra ejecución lo mandó.
-        const claveEnvio = `${clave || evento}:${persona.id}`;
+        // La clave lleva al alumno del hecho: sin él, a un admin solo le
+        // llegaba el primer aviso de cada tipo (p. ej. "registro" de la
+        // primera cuenta nueva) y los demás se daban por enviados.
+        const claveEnvio = `${clave || evento}:${userId ?? '-'}:${persona.id}`;
+        // Avisos enviados antes de este cambio quedaron con la clave vieja.
+        const { data: previo } = await db
+          .from('notificaciones_enviadas')
+          .select('id')
+          .eq('notificacion_id', n.id)
+          .eq('clave', `${clave || evento}:${persona.id}`)
+          .maybeSingle();
+        if (previo) continue;
         const { data: apartado, error: errApartado } = await db
           .from('notificaciones_enviadas')
           .insert([{ notificacion_id: n.id, clave: claveEnvio, user_id: persona.id, email: persona.email }])

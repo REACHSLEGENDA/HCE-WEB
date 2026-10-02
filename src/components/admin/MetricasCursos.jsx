@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Download, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Download, RefreshCw, ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { esTablaFaltante, formatoPrecio } from '../../lib/cursos';
+import { LLAVES_SIN_ID } from '../../lib/traerTodo';
 import {
   resumenPorCurso,
   totales,
@@ -24,6 +25,7 @@ import {
 import { GraficaColumnas, GraficaRetencion, BarrasHorizontales } from './GraficasMetricas';
 import MatrizUnidades from './MatrizUnidades';
 import AnalisisEvaluaciones from './AnalisisEvaluaciones';
+import ReporteAlumno from './ReporteAlumno';
 import './MetricasCursos.css';
 
 // Panel de métricas de los cursos del portal: la vista general de todos los
@@ -37,7 +39,26 @@ const PERIODOS = [
 ];
 
 const NOMBRE_DISPOSITIVO = { escritorio: 'Computadora', movil: 'Celular', tablet: 'Tablet' };
-const NOMBRE_ORIGEN = { gratis: 'Gratis', pago: 'Pagó', admin: 'Beca / admin', previo: 'Antes del registro' };
+const NOMBRE_ORIGEN = { gratis: 'Gratis', pago: 'Pagó', admin: 'Asignado', grupo: 'Por su grupo', previo: 'Antes del registro' };
+
+// En qué va cada alumno. El orden es el del filtro y el de la tarjeta.
+const ESTADOS = [
+  { id: 'sin-empezar', etiqueta: 'Sin empezar', clase: 'apagado' },
+  { id: 'cursando', etiqueta: 'Cursando', clase: '' },
+  { id: 'reprobo', etiqueta: 'Reprobó', clase: 'aviso' },
+  { id: 'aprobo', etiqueta: 'Aprobó', clase: 'ok' },
+  { id: 'certificado', etiqueta: 'Certificado', clase: 'ok' },
+];
+const ESTADO_POR_ID = Object.fromEntries(ESTADOS.map((e) => [e.id, e]));
+
+function estadoDe(a) {
+  if (a.certificado) return 'certificado';
+  if (a.aprobado) return 'aprobo';
+  if (a.intentos) return 'reprobo';
+  // Las lecciones son acumuladas: quien avanzó antes del periodo sigue cursando.
+  if (a.actividadAcumulada || a.visitas || a.lecciones) return 'cursando';
+  return 'sin-empezar';
+}
 
 function inicioDelPeriodo(periodoId) {
   const periodo = PERIODOS.find((p) => p.id === periodoId);
@@ -48,15 +69,17 @@ function inicioDelPeriodo(periodoId) {
   return d;
 }
 
-// Supabase entrega 1,000 filas por petición; se piden en tandas hasta agotar.
-async function traerTodo(tabla, columnas, filtrar) {
+// Supabase entrega 1,000 filas por petición; se piden en tandas hasta agotar,
+// siempre con orden estable (las tablas sin `id` van por su llave). Las tablas
+// base (sesiones, eventos, inscripciones) son obligatorias: si faltan, avisa.
+async function traerTodo(tabla, columnas, filtrar = (q) => q) {
   const filas = [];
   const TANDA = 1000;
+  const orden = LLAVES_SIN_ID[tabla] || ['id'];
   for (let desde = 0; ; desde += TANDA) {
-    const conId = !['leccion_progreso', 'grupo_miembros'].includes(tabla);
-    const base = supabase.from(tabla).select(columnas);
-    const consulta = filtrar((conId ? base.order('id') : base).range(desde, desde + TANDA - 1));
-    const { data, error } = await consulta;
+    let base = supabase.from(tabla).select(columnas);
+    for (const col of orden) base = base.order(col, { ascending: true });
+    const { data, error } = await filtrar(base).range(desde, desde + TANDA - 1);
     if (error) throw error;
     filas.push(...data);
     if (data.length < TANDA) break;
@@ -64,11 +87,11 @@ async function traerTodo(tabla, columnas, filtrar) {
   return filas;
 }
 
-// Lecciones y grupos llegaron después: si su migración no corre, el panel
-// funciona igual, solo sin esas vistas.
+// Lecciones, grupos y certificados llegaron después o pueden no existir: si su
+// migración no corre, el panel funciona igual, solo sin esas vistas.
 async function traerOpcional(tabla, columnas) {
   try {
-    return await traerTodo(tabla, columnas, (q) => q);
+    return await traerTodo(tabla, columnas);
   } catch (err) {
     if (esTablaFaltante(err)) return [];
     throw err;
@@ -145,57 +168,98 @@ const tablaDeVisitas = (dias) => ({
   filas: dias.map((d) => [fechaCorta(d.fecha), d.visitas, d.alumnos]),
 });
 
-export default function MetricasCursos({ cursos, perfiles }) {
+export default function MetricasCursos({ cursos, perfiles, abrirCurso, notificar, confirmar }) {
   const [periodo, setPeriodo] = useState('30');
-  const [datos, setDatos] = useState(null);
-  const [cargando, setCargando] = useState(false);
-  const [estado, setEstado] = useState(null); // null | 'sin-migracion' | mensaje de error
-  const [cursoAbierto, setCursoAbierto] = useState(null);
+  // Lo acumulado (inscripciones, avance, exámenes, certificados…) se trae una
+  // vez; al cambiar de periodo solo se vuelven a pedir las visitas.
+  const [acumulado, setAcumulado] = useState(null);
+  const [delPeriodo, setDelPeriodo] = useState(null); // { sesiones }
+  const [cargandoAcumulado, setCargandoAcumulado] = useState(false);
+  const [cargandoPeriodo, setCargandoPeriodo] = useState(false);
+  const [estadoAcumulado, setEstado] = useState(null); // null | 'sin-migracion' | mensaje de error
+  const [estadoPeriodo, setEstadoPeriodo] = useState(null);
+  const estado = estadoAcumulado || estadoPeriodo;
+  const peticionPeriodo = useRef(0);
+  const cargando = cargandoAcumulado || cargandoPeriodo;
+  const datos = useMemo(
+    () => (acumulado && delPeriodo ? { ...acumulado, ...delPeriodo } : null),
+    [acumulado, delPeriodo]
+  );
+  const [cursoAbierto, setCursoAbierto] = useState(abrirCurso?.id != null ? Number(abrirCurso.id) : null);
   const [grupoFiltro, setGrupoFiltro] = useState('');
+  const [alumnoReporte, setAlumnoReporte] = useState(null);
 
   const desde = useMemo(() => inicioDelPeriodo(periodo), [periodo]);
 
-  const cargar = useCallback(async () => {
-    setCargando(true);
+  // Desde la lista de cursos se puede saltar directo a las métricas de uno.
+  const [cursoVisto, setCursoVisto] = useState(abrirCurso);
+  if (abrirCurso !== cursoVisto) {
+    setCursoVisto(abrirCurso);
+    if (abrirCurso?.id != null) setCursoAbierto(Number(abrirCurso.id));
+  }
+
+  // Todo lo que no depende del periodo: quién está inscrito, qué avanzó, si
+  // aprobó o se certificó. Es lo que dice "en qué va" cada alumno.
+  const cargarAcumulado = useCallback(async () => {
+    setCargandoAcumulado(true);
     setEstado(null);
     try {
-      const desdeIso = desde ? desde.toISOString() : null;
-      const [sesiones, eventos, inscripciones] = await Promise.all([
-        traerTodo(
-          'curso_sesiones',
-          'id, user_id, course_id, iniciada_en, ultima_senal_en, segundos_activos, segundos_video, posicion_max_seg, duracion_video_seg, porcentaje_max, dispositivo',
-          (q) => (desdeIso ? q.gte('iniciada_en', desdeIso) : q)
-        ),
-        traerTodo(
-          'curso_eventos',
-          'id, user_id, course_id, tipo, datos, creado_en',
-          (q) => (desdeIso ? q.gte('creado_en', desdeIso) : q)
-        ),
-        // Las inscripciones van completas: "inscritos" es un total, no del periodo.
-        traerTodo('inscripciones', 'id, user_id, course_id, origen, monto, moneda, created_at', (q) => q),
+      const [inscripciones, examenes, actividad] = await Promise.all([
+        // "Inscritos" es un total, no del periodo.
+        traerTodo('inscripciones', 'id, user_id, course_id, origen, monto, moneda, created_at'),
+        // Intentos y mejor calificación son de todo el historial.
+        traerTodo('curso_eventos', 'id, user_id, course_id, tipo, datos, creado_en', (q) => q.eq('tipo', 'examen_enviado')),
+        // Quien visitó antes del periodo sigue cursando, incluso en cursos
+        // antiguos sin leccion_progreso. Solo descargamos las dos llaves.
+        traerTodo('curso_sesiones', 'user_id, course_id'),
       ]);
-      // El avance por lección es acumulado: no se corta por periodo.
-      const [lecciones, progreso, grupos, miembros, entregas, examenes, intentosEval, divisiones] = await Promise.all([
+      const [lecciones, progreso, grupos, miembros, entregas, intentosEval, divisiones, certificados] = await Promise.all([
         traerOpcional('curso_lecciones', 'id, course_id, orden, titulo, tipo, obligatoria'),
         traerOpcional('leccion_progreso', 'user_id, leccion_id, course_id, porcentaje, completada'),
         traerOpcional('grupos', 'id, nombre'),
         traerOpcional('grupo_miembros', 'grupo_id, user_id'),
         traerOpcional('tarea_entregas', 'id, user_id, leccion_id, course_id, estado, creada_en'),
-        // La matriz muestra si aprobó el examen alguna vez, no solo en el periodo.
-        traerTodo('curso_eventos', 'id, user_id, course_id, tipo, datos, creado_en', (q) => q.eq('tipo', 'examen_enviado')),
         traerOpcional('evaluacion_intentos', 'id, leccion_id, course_id, user_id, numero, respuestas, calificacion, aprobado, enviado_en, duracion_seg'),
         traerOpcional('divisiones', 'id, nombre'),
+        // Los certificados se cuentan de su tabla, no de los eventos.
+        traerOpcional('certificates', 'id, user_id, course_id, created_at'),
       ]);
-      setDatos({ sesiones, eventos, inscripciones, lecciones, progreso, grupos, miembros, entregas, examenes, intentosEval, divisiones });
+      setAcumulado({ inscripciones, lecciones, progreso, grupos, miembros, entregas, examenes, intentosEval, divisiones, certificados, actividad });
     } catch (err) {
       if (esTablaFaltante(err)) setEstado('sin-migracion');
       else setEstado(err.message || 'No se pudieron cargar las métricas.');
     } finally {
-      setCargando(false);
+      setCargandoAcumulado(false);
+    }
+  }, []);
+
+  // Solo las visitas (y su tiempo) dependen del periodo.
+  const cargarPeriodo = useCallback(async () => {
+    const numero = ++peticionPeriodo.current;
+    setCargandoPeriodo(true);
+    setEstadoPeriodo(null);
+    try {
+      const desdeIso = desde ? desde.toISOString() : null;
+      const sesiones = await traerTodo(
+        'curso_sesiones',
+        'id, user_id, course_id, iniciada_en, ultima_senal_en, segundos_activos, segundos_video, posicion_max_seg, duracion_video_seg, porcentaje_max, dispositivo',
+        (q) => (desdeIso ? q.gte('iniciada_en', desdeIso) : q)
+      );
+      // Si el usuario ya eligió otro periodo, esta respuesta llegó tarde.
+      if (numero === peticionPeriodo.current) setDelPeriodo({ sesiones });
+    } catch (err) {
+      if (numero !== peticionPeriodo.current) return;
+      if (esTablaFaltante(err)) setEstadoPeriodo('sin-migracion');
+      else setEstadoPeriodo(err.message || 'No se pudieron cargar las visitas del periodo.');
+    } finally {
+      if (numero === peticionPeriodo.current) setCargandoPeriodo(false);
     }
   }, [desde]);
 
-  useEffect(() => { void cargar(); }, [cargar]);
+  useEffect(() => { void cargarAcumulado(); }, [cargarAcumulado]);
+  useEffect(() => { void cargarPeriodo(); }, [cargarPeriodo]);
+
+  const cargar = () => { void cargarAcumulado(); void cargarPeriodo(); };
 
   // Con un grupo elegido, todo el panel se limita a sus miembros: sirve para
   // ver cómo va un hospital o una generación en particular.
@@ -210,12 +274,13 @@ export default function MetricasCursos({ cursos, perfiles }) {
     return {
       ...datos,
       sesiones: soloMiembros(datos.sesiones),
-      eventos: soloMiembros(datos.eventos),
+      actividad: soloMiembros(datos.actividad || []),
       inscripciones: soloMiembros(datos.inscripciones),
       progreso: soloMiembros(datos.progreso),
       entregas: soloMiembros(datos.entregas || []),
       examenes: soloMiembros(datos.examenes || []),
       intentosEval: soloMiembros(datos.intentosEval || []),
+      certificados: soloMiembros(datos.certificados || []),
     };
   }, [datos, grupoFiltro, perfiles]);
 
@@ -240,6 +305,7 @@ export default function MetricasCursos({ cursos, perfiles }) {
 
   return (
     <div className={`metricas${cargando && datos ? ' metricas--recargando' : ''}`}>
+      {alumnoReporte && <ReporteAlumno alumno={alumnoReporte} cursos={cursos} notificar={notificar} confirmar={confirmar} onCerrar={() => setAlumnoReporte(null)} />}
       {/* Filtros: una sola fila arriba, y afectan todo lo de abajo. */}
       <div className="m-filtros">
         <div className="m-periodos" role="group" aria-label="Periodo">
@@ -256,6 +322,17 @@ export default function MetricasCursos({ cursos, perfiles }) {
           ))}
         </div>
         <div className="m-filtros-derecha">
+          <select
+            className="m-select"
+            value={cursoAbierto ?? ''}
+            onChange={(e) => setCursoAbierto(e.target.value ? Number(e.target.value) : null)}
+            aria-label="Curso"
+          >
+            <option value="">Todos los cursos</option>
+            {cursos.filter((c) => !Number.isNaN(Number(c.id))).map((c) => (
+              <option key={c.id} value={Number(c.id)}>{c.title}</option>
+            ))}
+          </select>
           {(datos?.grupos?.length > 0 || datos?.divisiones?.length > 0) && (
             <select className="m-select" value={grupoFiltro} onChange={(e) => setGrupoFiltro(e.target.value)} aria-label="Filtrar por grupo o división">
               <option value="">Todos los alumnos</option>
@@ -271,7 +348,7 @@ export default function MetricasCursos({ cursos, perfiles }) {
               )}
             </select>
           )}
-          <button type="button" className="m-boton" onClick={() => void cargar()} disabled={cargando}>
+          <button type="button" className="m-boton" onClick={cargar} disabled={cargando}>
             <RefreshCw size={15} className={cargando ? 'm-girando' : ''} /> Actualizar
           </button>
         </div>
@@ -290,6 +367,7 @@ export default function MetricasCursos({ cursos, perfiles }) {
           minimoAprobacion={cursos.find((c) => Number(c.id) === cursoDetalle.courseId)?.minAprobacion || 80}
           conExamen={(cursos.find((c) => Number(c.id) === cursoDetalle.courseId)?.questions?.length || 0) > 0}
           onVolver={() => setCursoAbierto(null)}
+          onReporte={notificar && confirmar ? (userId) => setAlumnoReporte(perfiles.find((p) => p.id === userId) || { id: userId, nombre_completo: 'Alumno' }) : null}
         />
       ) : (
         <VistaGeneral resumen={resumen} datos={datosVista} desde={desde} onAbrir={setCursoAbierto} />
@@ -322,7 +400,7 @@ function VistaGeneral({ resumen, datos, desde, onAbrir }) {
         <Indicador etiqueta="Visitas" valor={formatoEntero(t.visitas)} />
         <Indicador etiqueta="Alumnos activos" valor={formatoEntero(t.alumnosActivos)} detalle="entraron al menos una vez" />
         <Indicador etiqueta="Tiempo de estudio" valor={formatoMinutos(t.horasActivas * 60)} detalle="con el aula en pantalla" />
-        <Indicador etiqueta="Certificados emitidos" valor={formatoEntero(t.certificados)} />
+        <Indicador etiqueta="Certificados emitidos" valor={formatoEntero(t.certificados)} detalle={desde ? `${formatoEntero(t.certificadosPeriodo)} en el periodo` : 'desde el inicio'} />
         <Indicador etiqueta="Ingresos por cursos" {...ingresosParaIndicador(t.ingresos, t.ventas)} />
       </div>
 
@@ -395,19 +473,25 @@ const COLUMNAS_ALUMNO = [
   { id: 'visitas', etiqueta: 'Visitas', num: true },
   { id: 'minutosActivos', etiqueta: 'Tiempo activo', num: true },
   { id: 'avanceVideo', etiqueta: 'Avance del video', num: true },
-  { id: 'lecciones', etiqueta: 'Lecciones', num: true },
+  { id: 'avanceCurso', etiqueta: 'Avance del curso', num: true },
   { id: 'intentos', etiqueta: 'Intentos', num: true },
   { id: 'mejorCalificacion', etiqueta: 'Mejor calif.', num: true },
   { id: 'ultimaVisita', etiqueta: 'Última visita', num: true },
 ];
 
-function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExamen, onVolver }) {
+function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExamen, onVolver, onReporte }) {
   const [orden, setOrden] = useState({ columna: 'ultimaVisita', desc: true });
   const [alumnoAbierto, setAlumnoAbierto] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
 
   const id = fila.courseId;
   const sesiones = useMemo(() => datos.sesiones.filter((s) => s.course_id === id), [datos, id]);
-  const eventos = useMemo(() => datos.eventos.filter((e) => e.course_id === id), [datos, id]);
+  const actividad = useMemo(() => (datos.actividad || []).filter((s) => Number(s.course_id) === id), [datos, id]);
+  // Exámenes y certificados son de todo el historial: el estado del alumno no
+  // cambia con el periodo (las visitas y el tiempo sí).
+  const eventos = useMemo(() => (datos.examenes || []).filter((e) => Number(e.course_id) === id), [datos, id]);
+  const certificados = useMemo(() => (datos.certificados || []).filter((c) => Number(c.course_id) === id), [datos, id]);
   const inscripciones = useMemo(() => datos.inscripciones.filter((i) => i.course_id === id), [datos, id]);
   const lecciones = useMemo(() => (datos.lecciones || []).filter((l) => Number(l.course_id) === id), [datos, id]);
   const progreso = useMemo(() => (datos.progreso || []).filter((p) => Number(p.course_id) === id), [datos, id]);
@@ -417,18 +501,22 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExame
   const [videoElegido, setVideoElegido] = useState(null);
   const videoCurva = videos.find((v) => v.id === videoElegido) || videos[0] || null;
   const embudo = lecciones.length > 1 ? avancePorLeccion({ lecciones, progreso, inscritos: inscripciones.length }) : [];
-  const leccionesDe = leccionesCompletadasPorAlumno(progreso);
+  const contenido = lecciones.filter((l) => l.tipo !== 'seccion');
+  const requeridas = contenido.filter((l) => l.obligatoria !== false);
+  const baseAvance = requeridas.length ? requeridas : contenido;
+  const idsBase = new Set(baseAvance.map((l) => l.id));
+  const leccionesDe = leccionesCompletadasPorAlumno(progreso.filter((p) => idsBase.has(p.leccion_id)));
   const matriz = useMemo(() => matrizDeUnidades({
     lecciones,
     progreso,
     entregas: (datos.entregas || []).filter((e) => Number(e.course_id) === id),
-    examenes: (datos.examenes || []).filter((e) => Number(e.course_id) === id),
+    examenes: eventos,
     intentosEval: (datos.intentosEval || []).filter((e) => Number(e.course_id) === id),
     inscripciones,
     perfiles,
-    conExamen: conExamen || (datos.examenes || []).some((e) => Number(e.course_id) === id),
-  }), [lecciones, progreso, datos, id, inscripciones, perfiles, conExamen]);
-  const obligatorias = lecciones.filter((l) => l.obligatoria !== false).length || lecciones.length;
+    conExamen: conExamen || eventos.length > 0,
+  }), [lecciones, progreso, datos, id, eventos, inscripciones, perfiles, conExamen]);
+  const obligatorias = baseAvance.length;
 
   const dias = visitasPorDia(sesiones, desde);
   const curva = videoCurva
@@ -439,9 +527,44 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExame
   const porDispositivo = dispositivos(sesiones);
   const calificaciones = distribucionCalificaciones(eventos);
 
+  // Nombre de los grupos de cada alumno, para ubicarlo de un vistazo.
+  const gruposDe = useMemo(() => {
+    const nombre = new Map((datos.grupos || []).map((g) => [g.id, g.nombre]));
+    const mapa = {};
+    for (const m of datos.miembros || []) {
+      if (!nombre.has(m.grupo_id)) continue;
+      (mapa[m.user_id] ||= []).push(nombre.get(m.grupo_id));
+    }
+    return mapa;
+  }, [datos]);
+
+  const todosLosAlumnos = useMemo(() => porAlumno({ sesiones, eventos, inscripciones, perfiles, certificados, actividad })
+    .map((f) => {
+      const leccionesHechas = leccionesDe[f.userId] || 0;
+      const fila = {
+        ...f,
+        lecciones: leccionesHechas,
+        // Con lecciones, el avance es el del curso; sin ellas, el del video.
+        avanceCurso: f.certificado ? 100 : contenido.length
+          ? Math.min(100, Math.round((leccionesHechas / (obligatorias || 1)) * 100))
+          : f.avanceVideo,
+        grupos: (gruposDe[f.userId] || []).join(', '),
+      };
+      return { ...fila, estado: estadoDe(fila) };
+    }),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [sesiones, actividad, eventos, certificados, inscripciones, perfiles, progreso, gruposDe, lecciones, obligatorias]);
+
+  const conteoEstados = useMemo(() => {
+    const c = Object.fromEntries(ESTADOS.map((e) => [e.id, 0]));
+    for (const a of todosLosAlumnos) c[a.estado] += 1;
+    return c;
+  }, [todosLosAlumnos]);
+
   const alumnos = useMemo(() => {
-    const filas = porAlumno({ sesiones, eventos, inscripciones, perfiles })
-      .map((f) => ({ ...f, lecciones: leccionesDe[f.userId] || 0 }));
+    const texto = busqueda.trim().toLowerCase();
+    const filas = todosLosAlumnos.filter((a) => (!filtroEstado || a.estado === filtroEstado)
+      && (!texto || `${a.nombre} ${a.email} ${a.grupos}`.toLowerCase().includes(texto)));
     const { columna, desc } = orden;
     return filas.sort((a, b) => {
       const va = a[columna] ?? -1;
@@ -449,8 +572,7 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExame
       const cmp = typeof va === 'string' && columna === 'nombre' ? va.localeCompare(vb, 'es') : va > vb ? 1 : va < vb ? -1 : 0;
       return desc ? -cmp : cmp;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sesiones, eventos, inscripciones, perfiles, orden, progreso]);
+  }, [todosLosAlumnos, busqueda, filtroEstado, orden]);
 
   const aTiempo = (punto) => {
     if (!duracionSeg) return `el ${punto}% del video`;
@@ -462,9 +584,9 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExame
 
   const exportar = () => descargarCsv(
     `Alumnos_${fila.titulo.replace(/\s+/g, '_')}.csv`,
-    ['Alumno', 'Correo', 'Acceso', 'Visitas', 'Minutos activos', 'Minutos de video', 'Avance del video %', 'Intentos de examen', 'Mejor calificación', 'Aprobó', 'Certificado', 'Última visita'],
+    ['Alumno', 'Correo', 'Grupo', 'Acceso', 'Estado', 'Avance del curso %', 'Lecciones completadas', 'Visitas', 'Minutos activos', 'Minutos de video', 'Avance del video %', 'Intentos de examen', 'Mejor calificación', 'Aprobó', 'Certificado', 'Última visita'],
     alumnos.map((a) => [
-      a.nombre, a.email, NOMBRE_ORIGEN[a.origen] || '', a.visitas, Math.round(a.minutosActivos), Math.round(a.minutosVideo),
+      a.nombre, a.email, a.grupos, NOMBRE_ORIGEN[a.origen] || '', ESTADO_POR_ID[a.estado].etiqueta, a.avanceCurso, a.lecciones, a.visitas, Math.round(a.minutosActivos), Math.round(a.minutosVideo),
       a.avanceVideo, a.intentos, a.mejorCalificacion ?? '', a.aprobado ? 'Sí' : 'No', a.certificado ? 'Sí' : 'No',
       a.ultimaVisita ? new Date(a.ultimaVisita).toLocaleString('es-MX') : '',
     ])
@@ -495,9 +617,37 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExame
         {fila.tipo === 'pago' ? (
           <Indicador etiqueta="Ingresos" {...ingresosParaIndicador(fila.ingresos, fila.ventas)} />
         ) : (
-          <Indicador etiqueta="Certificados" valor={formatoEntero(fila.certificados)} detalle="emitidos en el periodo" />
+          <Indicador etiqueta="Certificados" valor={formatoEntero(fila.certificados)} detalle={desde ? `${formatoEntero(fila.certificadosPeriodo)} en el periodo` : 'emitidos'} />
         )}
       </div>
+
+      {todosLosAlumnos.length > 0 && (
+        <Tarjeta
+          titulo="¿En qué va cada alumno?"
+          subtitulo="Es acumulado: aprobó, reprobó o se certificó en cualquier momento. Toca un estado para ver solo a esos alumnos en la tabla de abajo."
+          ancha
+        >
+          <div className="m-estados" role="group" aria-label="Filtrar alumnos por estado">
+            {ESTADOS.map((e) => {
+              const n = conteoEstados[e.id];
+              const pct = Math.round((n / todosLosAlumnos.length) * 100);
+              return (
+                <button
+                  key={e.id}
+                  type="button"
+                  className={`m-estado-boton${filtroEstado === e.id ? ' activo' : ''}`}
+                  aria-pressed={filtroEstado === e.id}
+                  onClick={() => setFiltroEstado(filtroEstado === e.id ? '' : e.id)}
+                >
+                  <span className={`m-estado ${e.clase}`}>{e.etiqueta}</span>
+                  <strong>{formatoEntero(n)}</strong>
+                  <span className="m-estado-pct">{pct}%</span>
+                </button>
+              );
+            })}
+          </div>
+        </Tarjeta>
+      )}
 
       {sesiones.length === 0 ? (
         <Tarjeta titulo="Sin actividad" ancha>
@@ -556,7 +706,7 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExame
           {fila.intentos > 0 && (
             <Tarjeta
               titulo="Calificaciones del examen"
-              subtitulo={`${fila.intentos} intentos · promedio ${Math.round(fila.promedioCalificacion)} · se aprueba con ${minimoAprobacion}`}
+              subtitulo={`${fila.intentos} intentos desde el inicio · promedio ${Math.round(fila.promedioCalificacion)} · se aprueba con ${minimoAprobacion}`}
               ancha
             >
               <GraficaColumnas
@@ -610,8 +760,23 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExame
         </Tarjeta>
       )}
 
-      <Tarjeta titulo="Alumnos" subtitulo="Abre un alumno para ver cada una de sus visitas." ancha>
+      <Tarjeta titulo="Alumnos" subtitulo="Visitas y tiempo son del periodo; intentos, calificación y resultado, de todo el historial. Abre un alumno para ver sus visitas." ancha>
         <div className="m-tabla-acciones">
+          <label className="m-buscar">
+            <Search size={15} aria-hidden="true" />
+            <input
+              type="search"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar por nombre, correo o grupo"
+              aria-label="Buscar alumno"
+            />
+          </label>
+          {filtroEstado && (
+            <button type="button" className="m-boton" onClick={() => setFiltroEstado('')}>
+              {ESTADO_POR_ID[filtroEstado].etiqueta} · quitar filtro
+            </button>
+          )}
           <button type="button" className="m-boton" onClick={exportar} disabled={!alumnos.length}>
             <Download size={15} /> Exportar
           </button>
@@ -643,8 +808,10 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExame
                         <span className="m-alumno">
                           {abierto ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                           <span>
-                            <span className="m-curso-nombre">{a.nombre}</span>
-                            <span className="m-alumno-sub">{NOMBRE_ORIGEN[a.origen] || 'Sin inscripción'}{a.email ? ` · ${a.email}` : ''}</span>
+                            {onReporte ? <button type="button" className="m-orden m-curso-nombre" title={`Ver reporte de ${a.nombre}`}
+                              onClick={(e) => { e.stopPropagation(); onReporte(a.userId); }} onKeyDown={(e) => e.stopPropagation()}>{a.nombre}</button>
+                              : <span className="m-curso-nombre">{a.nombre}</span>}
+                            <span className="m-alumno-sub">{NOMBRE_ORIGEN[a.origen] || 'Sin inscripción'}{a.grupos ? ` · ${a.grupos}` : ''}{a.email ? ` · ${a.email}` : ''}</span>
                           </span>
                         </span>
                       </td>
@@ -656,16 +823,19 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExame
                           {a.avanceVideo}%
                         </span>
                       </td>
-                      <td className="num">{lecciones.length ? `${a.lecciones} de ${obligatorias}` : '—'}</td>
+                      <td className="num">
+                        <span className="m-avance" title={lecciones.length ? `${a.lecciones} de ${obligatorias} lecciones` : 'Avance del video'}>
+                          <span className="m-avance-pista"><span style={{ width: `${a.avanceCurso}%` }} /></span>
+                          {a.avanceCurso}%
+                        </span>
+                      </td>
                       <td className="num">{a.intentos || '—'}</td>
                       <td className="num">{a.mejorCalificacion ?? '—'}</td>
                       <td className="num">{fechaHora(a.ultimaVisita)}</td>
                       <td>
-                        {a.certificado ? <span className="m-estado ok">✓ Certificado</span>
-                          : a.aprobado ? <span className="m-estado ok">✓ Aprobó</span>
-                            : a.intentos ? <span className="m-estado aviso">Reprobó</span>
-                              : a.visitas ? <span className="m-estado">Cursando</span>
-                                : <span className="m-estado apagado">Sin entrar</span>}
+                        <span className={`m-estado ${ESTADO_POR_ID[a.estado].clase}`}>
+                          {a.estado === 'certificado' || a.estado === 'aprobo' ? '✓ ' : ''}{ESTADO_POR_ID[a.estado].etiqueta}
+                        </span>
                       </td>
                     </tr>
                     {abierto && (
@@ -679,7 +849,7 @@ function DetalleCurso({ fila, datos, perfiles, desde, minimoAprobacion, conExame
                 );
               })}
               {alumnos.length === 0 && (
-                <tr><td colSpan={9} className="m-sin-datos">Todavía no hay alumnos en este curso.</td></tr>
+                <tr><td colSpan={9} className="m-sin-datos">{todosLosAlumnos.length ? 'Ningún alumno coincide con la búsqueda.' : 'Todavía no hay alumnos en este curso.'}</td></tr>
               )}
             </tbody>
           </table>

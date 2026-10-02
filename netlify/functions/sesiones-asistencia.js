@@ -33,7 +33,7 @@ export default async () => {
   const resumen = { revisadas: 0, asistencias: 0 };
   for (const s of sesiones || []) {
     const { fin } = ventana(s);
-    if (ahora < fin) continue;
+    if (ahora < fin || ahora - fin > 2 * DIA) continue;
     // Ya revisada con el reporte final (más de un día después del cierre).
     if (s.sincronizado_en && new Date(s.sincronizado_en).getTime() > fin + DIA) continue;
 

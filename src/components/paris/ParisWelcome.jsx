@@ -1,3 +1,4 @@
+import { useInView } from 'react-intersection-observer';
 import { Target, Users, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './ParisWelcome.css';

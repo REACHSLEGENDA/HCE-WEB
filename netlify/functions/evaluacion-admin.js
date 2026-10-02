@@ -4,7 +4,7 @@
 //              encuesta y reabre la lección, para que la vuelva a presentar
 //              (el botón ↻ del reporte del alumno en TalentLMS).
 
-import { admin, adminDesdeToken, json, isConfigured as supabaseListo } from './_supabase.js';
+import { admin, adminDesdeToken, registrarAccionAdmin, json, isConfigured as supabaseListo } from './_supabase.js';
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -23,6 +23,10 @@ export const handler = async (event) => {
     if (!userId || !leccionId) return json(400, { error: 'Falta el alumno o la evaluación.' });
 
     const db = admin();
+    const { data: leccion, error: errLeccion } = await db.from('curso_lecciones')
+      .select('course_id, tipo').eq('id', Number(leccionId)).maybeSingle();
+    if (errLeccion) throw new Error(errLeccion.message);
+    if (!leccion || !['examen', 'encuesta'].includes(leccion.tipo)) return json(404, { error: 'Esa evaluación ya no existe.' });
     const { error: errBorrar } = await db
       .from('evaluacion_intentos')
       .delete()
@@ -32,10 +36,13 @@ export const handler = async (event) => {
 
     const { error: errAvance } = await db
       .from('leccion_progreso')
-      .update({ completada: false })
+      .update({ completada: false, porcentaje: 0 })
       .eq('user_id', userId)
       .eq('leccion_id', Number(leccionId));
     if (errAvance) throw new Error(errAvance.message);
+
+    await registrarAccionAdmin({ adminId: administrador.id, accion: 'evaluacion_reiniciada',
+      objetivoUserId: userId, courseId: leccion.course_id, detalle: { leccion_id: Number(leccionId) } });
 
     return json(200, { ok: true });
   } catch (err) {

@@ -11,17 +11,22 @@ const fecha = (iso) => new Date(iso).toLocaleDateString('es-MX', { day: 'numeric
 export default function SolicitudesInscripcion({ perfiles, cursos, notificar }) {
   const [solicitudes, setSolicitudes] = useState([]);
   const [ocupado, setOcupado] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState('');
 
   const cargar = useCallback(async () => {
-    try { setSolicitudes(await cargarSolicitudesPendientes()); }
-    catch (err) { notificar(`No se pudieron cargar las solicitudes: ${err.message}`, 'error'); }
+    setCargando(true);
+    try { setSolicitudes(await cargarSolicitudesPendientes()); setErrorCarga(''); }
+    catch (err) { setErrorCarga(err.message); notificar(`No se pudieron cargar las solicitudes: ${err.message}`, 'error'); }
+    finally { setCargando(false); }
   }, [notificar]);
 
   useEffect(() => {
     let vigente = true;
     cargarSolicitudesPendientes()
       .then((lista) => { if (vigente) setSolicitudes(lista); })
-      .catch(() => {});
+      .catch((err) => { if (vigente) setErrorCarga(err.message); })
+      .finally(() => { if (vigente) setCargando(false); });
     return () => { vigente = false; };
   }, []);
 
@@ -38,6 +43,8 @@ export default function SolicitudesInscripcion({ perfiles, cursos, notificar }) 
     }
   };
 
+  if (cargando) return <p className="lms-cargando" role="status">Cargando solicitudes de inscripción…</p>;
+  if (errorCarga) return <div className="lms-aviso lms-aviso--error" role="alert">No se pudieron cargar las solicitudes: {errorCarga} <button type="button" className="btn-crm-action outlined" onClick={cargar}>Reintentar</button></div>;
   if (!solicitudes.length) return null;
 
   const perfil = (id) => perfiles.find((p) => p.id === id);

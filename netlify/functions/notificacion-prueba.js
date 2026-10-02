@@ -21,6 +21,9 @@ const EJEMPLO = {
   estado: 'aprobada',
   comentario: '¡Muy buen trabajo!',
   folio: 'FOL-123456',
+  acceso: 'Ya puedes empezar cuando quieras.',
+  remitente: 'Coordinación Académica HCE',
+  asunto: 'Bienvenida a tu curso',
   enlace: 'https://healthcareexp.com/dashboard',
   portal: 'https://healthcareexp.com/dashboard',
 };

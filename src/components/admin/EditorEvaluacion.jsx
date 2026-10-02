@@ -28,24 +28,54 @@ const preguntaVacia = (tipo) => ({
   obligatoria: true,
 });
 
-export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerrar }) {
+export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerrar, onCambios }) {
   const esExamen = leccion.tipo === 'examen';
   const [datos, setDatos] = useState(null);
   const [config, setConfig] = useState(null);
   const [faltaMigracion, setFaltaMigracion] = useState(false);
   const [editando, setEditando] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [guardandoConfig, setGuardandoConfig] = useState(false);
+  const [preguntaOriginal, setPreguntaOriginal] = useState(null);
+  const cambiosConfig = !!datos && JSON.stringify(config) !== JSON.stringify(datos.config);
+  const cambiosPregunta = !!editando && JSON.stringify(editando) !== JSON.stringify(preguntaOriginal);
+  const cambios = cambiosConfig || cambiosPregunta;
 
-  const aplicar = useCallback((r) => {
+  useEffect(() => {
+    onCambios?.(cambios);
+    const salir = (e) => { if (cambios) { e.preventDefault(); e.returnValue = ''; } };
+    window.addEventListener('beforeunload', salir);
+    return () => { onCambios?.(false); window.removeEventListener('beforeunload', salir); };
+  }, [cambios, onCambios]);
+
+  const cerrar = async () => {
+    if (guardando || guardandoConfig) return;
+    if (cambios && !(await confirmar('Hay cambios sin guardar. ¿Salir de la evaluación y descartarlos?', 'Cambios sin guardar'))) return;
+    onCerrar();
+  };
+  const cancelarPregunta = async () => {
+    if (guardando) return;
+    if (cambiosPregunta && !(await confirmar('¿Descartar los cambios de esta pregunta?', 'Cambios sin guardar'))) return;
+    setEditando(null);
+    setPreguntaOriginal(null);
+  };
+  const abrirPregunta = async (pregunta) => {
+    if (guardando) return;
+    if (cambiosPregunta && !(await confirmar('¿Descartar los cambios de la pregunta actual?', 'Cambios sin guardar'))) return;
+    setPreguntaOriginal(pregunta);
+    setEditando(pregunta);
+  };
+
+  const aplicar = useCallback((r, mantenerConfig = false) => {
     if (r === null) { setFaltaMigracion(true); return; }
     setDatos(r);
-    setConfig(r.config);
+    if (!mantenerConfig) setConfig(r.config);
   }, []);
 
-  const cargar = useCallback(async () => {
-    try { aplicar(await cargarEvaluacionAdmin(leccion.id)); }
+  const cargar = useCallback(async (mantenerConfig = cambiosConfig) => {
+    try { aplicar(await cargarEvaluacionAdmin(leccion.id), mantenerConfig); }
     catch (err) { notificar(`No se pudo cargar la evaluación: ${err.message}`, 'error'); }
-  }, [leccion.id, notificar, aplicar]);
+  }, [leccion.id, notificar, aplicar, cambiosConfig]);
 
   useEffect(() => {
     let vigente = true;
@@ -56,11 +86,15 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
   }, [leccion.id, notificar, aplicar]);
 
   const guardarConfig = async () => {
+    setGuardandoConfig(true);
     try {
       await guardarConfigEvaluacion(leccion.id, config);
+      setDatos((actual) => ({ ...actual, config: { ...config } }));
       notificar('Reglas guardadas.', 'success');
     } catch (err) {
       notificar(`No se pudieron guardar las reglas: ${err.message}`, 'error');
+    } finally {
+      setGuardandoConfig(false);
     }
   };
 
@@ -76,14 +110,16 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
     }
     setGuardando(true);
     try {
-      const orden = p.id ? p.orden : (datos.preguntas.reduce((m, x) => Math.max(m, x.orden || 0), 0) + 1);
+      const orden = p.id ? p.orden : (datos.preguntas.reduce((m, x) => Math.max(m, x.orden ?? 0), 0) + 1);
       // En encuestas no hay respuestas correctas.
-      await guardarPregunta(leccion.id, { ...p, orden, correctas: esExamen ? p.correctas : [] });
       // Primera pregunta: se guardan también las reglas, para que existan.
       if (!datos.preguntas.length) await guardarConfigEvaluacion(leccion.id, config);
+      const id = await guardarPregunta(leccion.id, { ...p, orden, correctas: esExamen ? p.correctas : [] });
+      setEditando((actual) => actual ? { ...actual, id, orden } : actual);
       setEditando(null);
-      await cargar();
+      await cargar(datos.preguntas.length > 0 && cambiosConfig);
     } catch (err) {
+      if (err.preguntaId) setEditando((actual) => actual ? { ...actual, id: err.preguntaId, orden: err.preguntaOrden } : actual);
       notificar(`No se pudo guardar la pregunta: ${err.message}`, 'error');
     } finally {
       setGuardando(false);
@@ -103,8 +139,9 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
     if (j < 0 || j >= lista.length) return;
     [lista[i], lista[j]] = [lista[j], lista[i]];
     setDatos({ ...datos, preguntas: lista });
-    await reordenarPreguntas(lista.map((p) => p.id));
-    await cargar();
+    try { await reordenarPreguntas(lista.map((p) => p.id)); }
+    catch (err) { notificar(`No se pudo cambiar el orden: ${err.message}`, 'error'); }
+    finally { await cargar(); }
   };
 
   const alternarCorrecta = (indice) => {
@@ -126,7 +163,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
     return (
       <div className="lms-aviso">
         Para los exámenes y encuestas de lección corre en Supabase la migración <code>lms-evaluaciones.sql</code>.
-        <button type="button" className="btn-crm-action outlined" style={{ marginLeft: 10 }} onClick={onCerrar}>Volver</button>
+        <button type="button" className="btn-crm-action outlined" style={{ marginLeft: 10 }} onClick={cerrar}>Volver</button>
       </div>
     );
   }
@@ -134,8 +171,9 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
 
   return (
     <div className="eval-editor">
+      {cambios && <p className="lms-alerta" role="status">Cambios sin guardar</p>}
       <div className="eval-editor-cabecera">
-        <button type="button" className="btn-crm-action outlined" onClick={onCerrar}><ArrowLeft size={14} /> Lecciones</button>
+        <button type="button" className="btn-crm-action outlined" disabled={guardando || guardandoConfig} onClick={cerrar}><ArrowLeft size={14} /> Lecciones</button>
         <div>
           <span className="eval-etiqueta">{esExamen ? 'Examen' : 'Encuesta'}</span>
           <h4>{leccion.titulo}</h4>
@@ -163,7 +201,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
           <input type="checkbox" checked={config.aleatorio} onChange={(e) => setConfig({ ...config, aleatorio: e.target.checked })} />
           Preguntas en orden aleatorio
         </label>
-        <button type="button" className="btn-crm-action solid" onClick={guardarConfig}>Guardar reglas</button>
+        <button type="button" className="btn-crm-action solid" disabled={guardandoConfig || guardando} onClick={guardarConfig}>{guardandoConfig ? 'Guardando…' : 'Guardar reglas'}</button>
       </div>
 
       {datos.preguntas.length === 0 && !editando && (
@@ -183,7 +221,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
                 <span className="lms-acciones">
                   <button type="button" className="icon-action-btn" title="Subir" disabled={i === 0} onClick={() => mover(i, -1)}><ArrowUp size={15} /></button>
                   <button type="button" className="icon-action-btn" title="Bajar" disabled={i === datos.preguntas.length - 1} onClick={() => mover(i, 1)}><ArrowDown size={15} /></button>
-                  <button type="button" className="icon-action-btn edit" title="Editar" onClick={() => setEditando({ ...p, opciones: [...(p.opciones || [])], correctas: [...(p.correctas || [])] })}><Edit size={15} /></button>
+                  <button type="button" className="icon-action-btn edit" title="Editar" onClick={() => abrirPregunta({ ...p, opciones: [...(p.opciones || [])], correctas: [...(p.correctas || [])] })}><Edit size={15} /></button>
                   <button type="button" className="icon-action-btn delete" title="Eliminar" onClick={() => eliminar(p)}><Trash2 size={15} /></button>
                 </span>
               </div>
@@ -211,7 +249,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
         <div className="lms-agregar">
           <span>Agregar pregunta:</span>
           {TIPOS_POR_EVALUACION[leccion.tipo].map((tipo) => (
-            <button key={tipo} type="button" className="btn-crm-action outlined" onClick={() => setEditando(preguntaVacia(tipo))}>
+            <button key={tipo} type="button" className="btn-crm-action outlined" onClick={() => abrirPregunta(preguntaVacia(tipo))}>
               <Plus size={14} /> {TIPOS_PREGUNTA[tipo]}
             </button>
           ))}
@@ -222,7 +260,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
         <form className="lms-editor" onSubmit={guardar}>
           <div className="lms-editor-cabecera">
             <h4>{editando.id ? 'Editar pregunta' : `Nueva pregunta · ${TIPOS_PREGUNTA[editando.tipo]}`}</h4>
-            <button type="button" className="icon-action-btn" title="Cancelar" onClick={() => setEditando(null)}><X size={16} /></button>
+            <button type="button" className="icon-action-btn" title="Cancelar" disabled={guardando} onClick={cancelarPregunta}><X size={16} /></button>
           </div>
 
           <div className="crm-input-group">
@@ -287,7 +325,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
           )}
 
           <div className="lms-editor-acciones">
-            <button type="button" className="btn-crm-action outlined" onClick={() => setEditando(null)}>Cancelar</button>
+            <button type="button" className="btn-crm-action outlined" disabled={guardando} onClick={cancelarPregunta}>Cancelar</button>
             <button type="submit" className="btn-crm-action solid" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar pregunta'}</button>
           </div>
         </form>

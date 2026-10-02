@@ -76,7 +76,7 @@ from (values
    E'Hola {nombre}:\n\nTu cuenta ya tiene acceso. {acceso}\n\nYa puedes entrar a tu portal y empezar.'),
   ('Inscrito a un curso', 'inscrito_curso', 'alumno',
    'Ya estás inscrito en {curso}',
-   E'Hola {nombre}:\n\nYa tienes acceso a {curso}. Puedes empezar cuando quieras.'),
+   E'Hola {nombre}:\n\nQuedaste inscrito en {curso}. {acceso}'),
   ('Registro a sesión en vivo', 'sesion_registro', 'alumno',
    'Registro confirmado: {sesion}',
    E'Hola {nombre}:\n\nQuedaste registrado a {sesion}, el {fecha}.\n\nPara entrar, abre la lección en tu aula: el botón "Unirse" se activa 15 minutos antes.'),

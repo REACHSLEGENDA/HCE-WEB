@@ -9,7 +9,7 @@ import { insigniasPorCategoria, totalInsignias, nivelDe, recompensasDe, REGLAS_P
 // ver: sus propios números y, de los demás, nombre corto y puntos. Quien no
 // quiera aparecer en la tabla se oculta con un clic.
 
-export function LogrosVista({ logros, tabla, onCambiarVisibilidad, cambiando }) {
+export function LogrosVista({ logros, tabla, onCambiarVisibilidad, cambiando, errorVisibilidad }) {
   const categorias = insigniasPorCategoria(logros);
   const obtenidas = totalInsignias(categorias);
   const nivel = nivelDe(logros.puntos, logros.puntos_por_nivel);
@@ -89,6 +89,7 @@ export function LogrosVista({ logros, tabla, onCambiarVisibilidad, cambiando }) 
               ))}
             </ol>
           )}
+          {errorVisibilidad && <p className="logros-nota" role="alert">{errorVisibilidad}</p>}
           <button type="button" className="logros-visibilidad" onClick={onCambiarVisibilidad} disabled={cambiando}>
             {logros.mostrar_en_ranking ? <EyeOff size={14} /> : <Eye size={14} />}
             {logros.mostrar_en_ranking ? 'Ocultarme de la tabla' : 'Aparecer en la tabla'}
@@ -112,6 +113,7 @@ export default function LogrosAlumno({ userId }) {
   const [logros, setLogros] = useState(null);
   const [tabla, setTabla] = useState([]);
   const [cambiando, setCambiando] = useState(false);
+  const [errorVisibilidad, setErrorVisibilidad] = useState('');
 
   useEffect(() => {
     if (!userId) return undefined;
@@ -122,22 +124,28 @@ export default function LogrosAlumno({ userId }) {
         if (!vigente || mios.error) return;
         setLogros(mios.data);
         setTabla(posiciones.error ? [] : posiciones.data || []);
-      });
+      }).catch(() => {});
     return () => { vigente = false; };
   }, [userId]);
 
   const cambiarVisibilidad = async () => {
     setCambiando(true);
-    const nuevo = !logros.mostrar_en_ranking;
-    const { error } = await supabase.from('profiles').update({ mostrar_en_ranking: nuevo }).eq('id', userId);
-    if (!error) {
+    setErrorVisibilidad('');
+    try {
+      const nuevo = !logros.mostrar_en_ranking;
+      const { error } = await supabase.from('profiles').update({ mostrar_en_ranking: nuevo }).eq('id', userId);
+      if (error) throw error;
+      setLogros((previo) => ({ ...previo, mostrar_en_ranking: nuevo }));
       const [mios, posiciones] = await Promise.all([supabase.rpc('mis_logros'), supabase.rpc('tabla_posiciones', { limite: 5 })]);
-      if (!mios.error) setLogros(mios.data);
-      setTabla(posiciones.error ? [] : posiciones.data || []);
-    }
-    setCambiando(false);
+      if (mios.error) throw mios.error;
+      if (posiciones.error) throw posiciones.error;
+      setLogros(mios.data);
+      setTabla(posiciones.data || []);
+    } catch (err) {
+      setErrorVisibilidad('No se pudo actualizar la tabla: ' + (err.message || 'Revisa tu conexión e intenta de nuevo.'));
+    } finally { setCambiando(false); }
   };
 
-  if (!logros) return null;
-  return <LogrosVista logros={logros} tabla={tabla} onCambiarVisibilidad={cambiarVisibilidad} cambiando={cambiando} />;
+  if (!logros || logros.gamificacion_activa === false) return null;
+  return <LogrosVista logros={logros} tabla={tabla} onCambiarVisibilidad={cambiarVisibilidad} cambiando={cambiando} errorVisibilidad={errorVisibilidad} />;
 }

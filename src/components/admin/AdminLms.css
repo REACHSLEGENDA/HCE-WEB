@@ -539,3 +539,35 @@
 .lms-copiar-lista li small { color: var(--text-muted); font-size: 0.74rem; }
 .lms-copiar-lista .btn-crm-action { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .lms-input-nueva { flex: 1; min-width: 220px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main); color: var(--text-dark); font: inherit; }
+
+/* Inscripciones y asistencia mantienen las tablas dentro de su tarjeta. */
+.inscritos { min-width: 0; }
+.inscritos-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+.inscritos-contador { color: var(--text-muted); font-size: .86rem; }
+.inscritos-barra .biblioteca-buscar { flex: 1 1 220px; }
+.inscritos-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.inscritos-botones .btn-crm-action { display: inline-flex; align-items: center; gap: 6px; }
+.inscritos-alta { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 16px; }
+.inscritos-correos .btn-crm-action { align-self: flex-start; margin-top: 8px; }
+.inscritos-alumno strong, .inscritos-alumno small { display: block; overflow-wrap: anywhere; }
+.inscritos-alumno small { color: var(--text-muted); margin-top: 3px; }
+.inscritos-fecha { white-space: nowrap; }
+.lms-candidatos li { display: flex; align-items: center; gap: 10px; }
+.lms-candidatos li > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.crm-input-group .lms-check { display: flex; align-items: center; justify-content: flex-start; gap: 8px; min-height: 44px; font-weight: 400; }
+.crm-input-group .lms-check input { flex: 0 0 16px; width: 16px; height: 16px; padding: 0; margin: 0; }
+.lms-aviso--error { color: var(--text-dark); border-left: 3px solid var(--accent-orange); overflow-wrap: anywhere; }
+.biblioteca-tabla-scroll { max-width: 100%; overflow-x: auto; }
+.biblioteca-buscar:focus-within { outline: 2px solid var(--primary-cyan); outline-offset: 2px; }
+.lms-lecciones button:focus-visible, .inscritos button:focus-visible { outline: 2px solid var(--primary-cyan); outline-offset: 3px; }
+@media (max-width: 560px) {
+  .inscritos-barra, .inscritos-alta, .eval-editor { min-width: 0; }
+  .inscritos-barra .biblioteca-buscar, .biblioteca-filtros select { flex-basis: 100%; width: 100%; min-width: 0; }
+  .inscritos-botones .btn-crm-action, .lms-acciones .icon-action-btn, .cuenta-pendiente-acciones button { min-height: 44px; }
+  .inscritos-barra .btn-crm-action:has(svg:only-child) { min-width: 44px; }
+  .cuenta-pendiente-fila, .cuentas-pendientes-cabecera { flex-wrap: wrap; }
+  .cuenta-pendiente-datos { min-width: 0; overflow-wrap: anywhere; }
+  .cuenta-pendiente-acciones { flex-wrap: wrap; }
+  .lms-editor-acciones, .eval-reglas { flex-wrap: wrap; }
+  .biblioteca-tabla { min-width: 620px; }
+}

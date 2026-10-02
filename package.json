@@ -8,6 +8,7 @@
     "prebuild": "node scripts/verificar-promos.mjs",
     "build": "vite build",
     "lint": "eslint .",
+    "check:lms": "node --experimental-vm-modules scripts/verificar-lms.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

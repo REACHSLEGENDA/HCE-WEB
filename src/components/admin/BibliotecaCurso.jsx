@@ -26,12 +26,17 @@ export default function BibliotecaCurso({ courseId, notificar, confirmar }) {
   const [subiendo, setSubiendo] = useState(null);
   const [arrastrando, setArrastrando] = useState(false);
   const entradaRef = useRef(null);
+  const refrescarLecciones = useCallback(async () => {
+    const { data, error } = await supabase.from('curso_lecciones').select('id, orden, titulo, tipo').eq('course_id', courseId).neq('tipo', 'seccion').order('orden').order('id');
+    if (error) { notificar(`No se pudieron actualizar las clases: ${error.message}`, 'error'); return; }
+    setLecciones(data || []);
+  }, [courseId, notificar]);
 
   const cargar = useCallback(async () => {
     try {
       const [lista, { data: lecs }] = await Promise.all([
         cargarBiblioteca(courseId),
-        supabase.from('curso_lecciones').select('id, orden, titulo').eq('course_id', courseId).order('orden').order('id'),
+        supabase.from('curso_lecciones').select('id, orden, titulo').eq('course_id', courseId).neq('tipo', 'seccion').order('orden').order('id'),
       ]);
       if (lista === null) { setFaltaMigracion(true); return; }
       setArchivos(lista);
@@ -46,7 +51,7 @@ export default function BibliotecaCurso({ courseId, notificar, confirmar }) {
     let vigente = true;
     Promise.all([
       cargarBiblioteca(courseId),
-      supabase.from('curso_lecciones').select('id, orden, titulo').eq('course_id', courseId).order('orden').order('id'),
+      supabase.from('curso_lecciones').select('id, orden, titulo').eq('course_id', courseId).neq('tipo', 'seccion').order('orden').order('id'),
     ]).then(([lista, { data: lecs }]) => {
       if (!vigente) return;
       if (lista === null) { setFaltaMigracion(true); return; }
@@ -165,9 +170,9 @@ export default function BibliotecaCurso({ courseId, notificar, confirmar }) {
       <div className="biblioteca-filtros">
         <label className="biblioteca-buscar">
           <Search size={14} />
-          <input type="search" placeholder="Buscar archivo" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+          <input type="search" aria-label="Buscar archivo en biblioteca" placeholder="Buscar archivo" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
         </label>
-        <select value={filtroLeccion} onChange={(e) => setFiltroLeccion(e.target.value)} aria-label="Filtrar por clase">
+        <select value={filtroLeccion} onFocus={refrescarLecciones} onChange={(e) => setFiltroLeccion(e.target.value)} aria-label="Filtrar por clase">
           <option value="">Todos los archivos ({archivos.length})</option>
           <option value="general">Solo biblioteca general</option>
           {lecciones.map((l, i) => <option key={l.id} value={String(l.id)}>{i + 1}. {l.titulo}</option>)}
@@ -199,7 +204,7 @@ export default function BibliotecaCurso({ courseId, notificar, confirmar }) {
                     </button>
                   </td>
                   <td>
-                    <select value={a.leccion_id ? String(a.leccion_id) : ''} onChange={(e) => actualizar(a, { leccion_id: e.target.value ? Number(e.target.value) : null })} aria-label={`Clase de ${a.nombre}`}>
+                    <select value={a.leccion_id ? String(a.leccion_id) : ''} onFocus={refrescarLecciones} onChange={(e) => actualizar(a, { leccion_id: e.target.value ? Number(e.target.value) : null })} aria-label={`Clase de ${a.nombre}`}>
                       <option value="">Biblioteca general</option>
                       {lecciones.map((l, i) => <option key={l.id} value={String(l.id)}>{i + 1}. {l.titulo}</option>)}
                     </select>

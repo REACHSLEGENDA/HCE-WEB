@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { ChevronRight, Calendar, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './ParisHero.css';

@@ -4,6 +4,8 @@ import './Notification.css';
 
 const NotificationContext = createContext(null);
 
+// El hook y su proveedor comparten intencionalmente el contexto.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context) {

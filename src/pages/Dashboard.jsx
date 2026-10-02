@@ -50,6 +50,8 @@ import {
 import './Dashboard.css';
 import '../components/Experiences.css';
 import { generarConstancia, descargarConstancia } from '../lib/constancia';
+import { generarImagenCertificado, descargarArchivo } from '../lib/certificados';
+import { traerTodo } from '../lib/traerTodo';
 import LogrosAlumno from '../components/LogrosAlumno';
 import Mensajes from '../components/Mensajes';
 import Comunicados from '../components/Comunicados';
@@ -63,6 +65,7 @@ import {
   cargarMisInscripciones,
   llamarInscripcion,
   esCursoDePago,
+  esTablaFaltante,
   formatoPrecio,
 } from '../lib/cursos';
 
@@ -147,6 +150,22 @@ const Dashboard = () => {
   );
 
   const [myCertificates, setMyCertificates] = useState([]);
+  const [certificadoOcupado, setCertificadoOcupado] = useState(null);
+  const [mensajeBienvenida, setMensajeBienvenida] = useState('');
+  const [inscritoEn, setInscritoEn] = useState({});
+  const [confirmacionError, setConfirmacionError] = useState('');
+  const [confirmandoPago, setConfirmandoPago] = useState(false);
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    let vigente = true;
+    supabase.from('portal_config').select('valor').eq('clave', 'mensaje_bienvenida').maybeSingle()
+      .then(({ data, error }) => {
+        if (!vigente) return;
+        if (error && !esTablaFaltante(error)) console.warn('No se pudo leer la bienvenida:', error.message);
+        setMensajeBienvenida(error ? '' : String(data?.valor?.texto || '').trim());
+      }).catch(() => { if (vigente) setMensajeBienvenida(''); });
+    return () => { vigente = false; };
+  }, [user?.id]);
   
   // Dashboard Tabs: 'dashboard' | 'courses' | 'certificates' | 'profile' | 'settings'
   const [activeTab, setActiveTabState] = useState(() => {
@@ -156,6 +175,7 @@ const Dashboard = () => {
   const setActiveTab = (tab) => {
     setActiveTabState(tab);
     localStorage.setItem('studentActiveTab', tab);
+    if (window.innerWidth <= 768) setIsSidebarCollapsed(true);
   };
 
   const [theme, setThemeState] = useState(() => {
@@ -367,7 +387,7 @@ const Dashboard = () => {
     try {
       const { data, error } = await supabase
         .from('certificates')
-        .select('*, courses(title)')
+        .select('*, courses(title, certificado_template_url, certificado_x, certificado_y, certificado_font_size)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -412,7 +432,13 @@ const Dashboard = () => {
   const fetchMisInscripciones = useCallback(async () => {
     if (!user?.id) return;
     try {
-      setMisInscripciones(await cargarMisInscripciones(user.id));
+      const ids = await cargarMisInscripciones(user.id);
+      setMisInscripciones(ids);
+      if (ids !== null) {
+        const { data, error } = await supabase.from('inscripciones').select('course_id, created_at').eq('user_id', user.id);
+        if (error) throw error;
+        setInscritoEn(Object.fromEntries((data || []).map((fila) => [Number(fila.course_id), fila.created_at])));
+      }
     } catch (err) {
       console.error('Error cargando inscripciones:', err.message);
     }
@@ -511,22 +537,31 @@ const Dashboard = () => {
     const sessionId = params.get('session_id');
     if (resultado !== 'ok' || !sessionId) return;
 
-    (async () => {
-      try {
-        await llamarInscripcion('confirmar', { sessionId, moneda: params.get('m') || 'mxn' });
-        await fetchMisInscripciones();
-        setActiveTab('courses');
-        showToast('¡Pago confirmado! Tu curso ya está en Mis Cursos.', 'success');
-      } catch (err) {
-        showToast(err.message, err.estado === 'pendiente' ? 'info' : 'error');
-      } finally {
-        limpiarUrl();
-      }
-    })();
-    // Solo al llegar: el resultado del pago viaja una vez en la URL.
+    void confirmarPago();
+    // Conserva el resultado en la URL hasta que el servidor confirme.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
+  const confirmarPago = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    if (!sessionId || confirmandoPago) return;
+    setConfirmandoPago(true);
+    setConfirmacionError('');
+    try {
+      await llamarInscripcion('confirmar', { sessionId, moneda: params.get('m') || 'mxn' });
+      await fetchMisInscripciones();
+      setActiveTab('courses');
+      showToast('¡Pago confirmado! Tu curso ya está en Mis Cursos.', 'success');
+      ['curso_pago', 'session_id', 'm'].forEach((clave) => params.delete(clave));
+      window.history.replaceState({}, '', window.location.pathname + (params.size ? '?' + params.toString() : ''));
+    } catch (err) {
+      setConfirmacionError(err.message || 'No se pudo confirmar tu pago.');
+      showToast(err.message, err.estado === 'pendiente' ? 'info' : 'error');
+    } finally {
+      setConfirmandoPago(false);
+    }
+  };
 
   // ---- Webinars con registro en el portal ---------------------------------
   //
@@ -729,6 +764,7 @@ const Dashboard = () => {
       case 'dashboard': return 'Dashboard';
       case 'explore': return 'Explorar Cursos';
       case 'courses': return 'Mis Cursos';
+      case 'calificaciones': return 'Mis calificaciones';
       case 'webinars': return 'Webinars';
       case 'certificates': return 'Certificados';
       case 'mensajes': return 'Mensajes';
@@ -779,6 +815,37 @@ const Dashboard = () => {
   const premiumCoursesOnly = premiumSponsorCourses.filter(course => course.badge !== 'SIMULADOR');
   const simulatorCoursesOnly = premiumSponsorCourses.filter(course => course.badge === 'SIMULADOR');
 
+  const [busquedaCatalogo, setBusquedaCatalogo] = useState('');
+  const [calificaciones, setCalificaciones] = useState(null);
+  const [errorCalificaciones, setErrorCalificaciones] = useState('');
+  const [intentoCalificaciones, setIntentoCalificaciones] = useState(0);
+  useEffect(() => {
+    if (activeTab !== 'calificaciones' || !user?.id) return undefined;
+    let vigente = true;
+    setErrorCalificaciones('');
+    setCalificaciones(null);
+    Promise.all([
+      traerTodo('evaluacion_intentos', 'course_id, leccion_id, calificacion, aprobado, numero, curso_lecciones(titulo, tipo)', q => q.eq('user_id', user.id)),
+      traerTodo('tarea_entregas', 'course_id, leccion_id, estado, comentario, creada_en, curso_lecciones(titulo)', q => q.eq('user_id', user.id)),
+    ]).then(([evaluaciones, tareas]) => {
+      if (!vigente) return;
+      const porLeccion = new Map();
+      evaluaciones.forEach((fila) => {
+        const previo = porLeccion.get(fila.leccion_id);
+        const notas = [previo?.mejor, fila.calificacion].filter(n => n != null).map(Number);
+        porLeccion.set(fila.leccion_id, { ...fila, intentos: (previo?.intentos || 0) + 1,
+          mejor: notas.length ? Math.max(...notas) : null, aprobado: !!(previo?.aprobado || fila.aprobado) });
+      });
+      const ultimasTareas = new Map();
+      tareas.forEach((fila) => {
+        const previo = ultimasTareas.get(fila.leccion_id);
+        if (!previo || new Date(fila.creada_en) > new Date(previo.creada_en)) ultimasTareas.set(fila.leccion_id, fila);
+      });
+      setCalificaciones({ evaluaciones: [...porLeccion.values()], tareas: [...ultimasTareas.values()] });
+    }).catch(err => { if (vigente) setErrorCalificaciones(err.message || 'No se pudieron cargar tus calificaciones.'); });
+    return () => { vigente = false; };
+  }, [activeTab, user?.id, intentoCalificaciones]);
+
   const [catalogCourses, setCatalogCourses] = useState(() => {
     const saved = localStorage.getItem('courses');
     return saved ? JSON.parse(saved) : [];
@@ -792,26 +859,7 @@ const Dashboard = () => {
         .order('id', { ascending: true });
       if (error) throw error;
       
-      // OPTIMIZACIÓN: Cargar todas las preguntas en una sola llamada (Evita el problema de las N+1 peticiones que crashean la carga)
-      const { data: allQuestions, error: questionsError } = await supabase
-        .from('questions')
-        // Nunca la respuesta correcta: esa solo la conoce el servidor.
-        .select('id, course_id, question_text, options')
-        .order('id', { ascending: true });
-      if (questionsError) throw questionsError;
-      
-      // Agrupar preguntas por curso en memoria
-      const questionsByCourse = {};
-      if (allQuestions) {
-        allQuestions.forEach(q => {
-          if (!questionsByCourse[q.course_id]) {
-            questionsByCourse[q.course_id] = [];
-          }
-          questionsByCourse[q.course_id].push(q);
-        });
-      }
-
-      const coursesWithQuestions = (dbCourses || []).map((c) => {
+      const cursosCatalogo = (dbCourses || []).map((c) => {
         return {
           id: c.id,
           title: c.title,
@@ -833,20 +881,14 @@ const Dashboard = () => {
           precio_mxn: c.precio_mxn,
           // Desde la migración el ID del video ya no viaja en el catálogo; este
           // indicador dice si el curso se toma en el aula.
-          tiene_video: !!(c.tiene_video || c.youtube_video_id),
-          questions: questionsByCourse[c.id] || []
+          tiene_video: !!(c.tiene_video || c.youtube_video_id)
         };
       });
       
-      const activeCourses = coursesWithQuestions.filter(c => c.activo !== false);
+      const activeCourses = cursosCatalogo.filter(c => c.activo !== false);
 
-      if (dbCourses && dbCourses.length > 0) {
-        setCatalogCourses(activeCourses);
-        localStorage.setItem('courses', JSON.stringify(activeCourses));
-      } else {
-        const saved = localStorage.getItem('courses');
-        setCatalogCourses(saved ? JSON.parse(saved) : []);
-      }
+      setCatalogCourses(activeCourses);
+      localStorage.setItem('courses', JSON.stringify(activeCourses));
     } catch (err) {
       console.error('Error fetching courses from Supabase:', err.message);
       const saved = localStorage.getItem('courses');
@@ -934,28 +976,27 @@ const Dashboard = () => {
     };
   }, [user?.id, activeTab]);
 
-  const downloadCertificateFile = async (url, filename) => {
+  const descargarCertificado = async (certificado) => {
+    if (certificadoOcupado) return;
+    setCertificadoOcupado(certificado.id);
     try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
+      let actualizado = certificado;
+      if (!certificado.pdf_url || certificado.pdf_url === 'local-simulated') {
+        actualizado = await generarImagenCertificado({ certificado, curso: certificado.courses,
+          nombre: profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email });
+        setMyCertificates((lista) => lista.map((c) => c.id === actualizado.id ? { ...c, ...actualizado } : c));
+      }
+      if (!actualizado.pdf_url) throw new Error('La imagen del certificado todavía no está disponible.');
+      await descargarArchivo(actualizado.pdf_url, 'Certificado_' + actualizado.folio + '.png');
     } catch (err) {
-      console.warn('Fetch download failed, opening in new tab:', err);
-      window.open(url, '_blank');
-    }
+      showToast('No se pudo descargar el certificado: ' + err.message, 'error');
+    } finally { setCertificadoOcupado(null); }
   };
 
   // Calculate course states dynamically
   const getCourseProgress = (courseId) => {
     // Check if they have a certificate
-    const hasCert = myCertificates.some(cert => cert.course_id === courseId);
+    const hasCert = myCertificates.some(cert => Number(cert.course_id) === Number(courseId));
     if (hasCert) return 100;
 
     // El avance vive en la base; antes solo se leía de este navegador, y en
@@ -968,7 +1009,7 @@ const Dashboard = () => {
 
   const processedCourses = catalogCourses.map(course => {
     const progress = getCourseProgress(course.id);
-    const completed = myCertificates.some(cert => cert.course_id === course.id);
+    const completed = myCertificates.some(cert => Number(cert.course_id) === Number(course.id));
     const inProgress = progress > 0 && !completed;
     // Con inscripciones reales manda la tabla; antes de la migración se sigue
     // deduciendo del avance, como siempre.
@@ -976,6 +1017,12 @@ const Dashboard = () => {
     const enrolled = inscrito || completed || inProgress;
 
     const reglas = reglasDe(reglasCursos, course.id);
+    const fechaInscripcion = inscritoEn[Number(course.id)];
+    const vence = reglas.dias_acceso && fechaInscripcion
+      ? new Date(new Date(fechaInscripcion).getTime() + Number(reglas.dias_acceso) * 86400000) : null;
+    const accesoVencido = !!(vence && vence < new Date() && !(reglas.conservar_acceso && completed));
+    const enRevision = profile?.rol !== 'admin' && profile?.aprobado === false;
+    const estadoCurso = enRevision ? 'En revisión' : accesoVencido ? 'Acceso vencido' : completed ? 'Completado' : progress === 0 ? 'Sin empezar' : 'En progreso';
     const ocupados = lugaresOcupados[Number(course.id)] ?? 0;
     const lugaresRestantes = reglas.cupo ? Math.max(0, reglas.cupo - ocupados) : null;
     const certificados = new Set(myCertificates.map((c) => Number(c.course_id)));
@@ -987,6 +1034,9 @@ const Dashboard = () => {
     return {
       ...course,
       progress,
+      estadoCurso,
+      accesoVencido,
+      enRevision,
       completed,
       inProgress,
       enrolled,
@@ -1000,14 +1050,16 @@ const Dashboard = () => {
 
   const enrolledCourses = processedCourses.filter(c => c.enrolled);
   const completedCourses = processedCourses.filter(c => c.completed);
-  const inProgressCourses = processedCourses.filter(c => c.inProgress);
+  const inProgressCourses = processedCourses.filter(c => c.inProgress && !c.enRevision && !c.accesoVencido);
 
   // Catálogo separado por tipo. Lo gratuito que se sugiere como primer paso
   // tiene que ser de verdad gratuito y tomarse en el aula.
   const visibles = processedCourses.filter(c => !c.oculto || c.enrolled);
-  const cursosGratis = visibles.filter(c => !esCursoDePago(c));
-  const cursosDePago = visibles.filter(c => esCursoDePago(c));
-  const cursoSugerido = cursosGratis.find(c => c.tiene_video) || null;
+  const nombreBuscado = busquedaCatalogo.trim().toLocaleLowerCase('es-MX');
+  const cursosBuscados = visibles.filter(c => !nombreBuscado || c.title.toLocaleLowerCase('es-MX').includes(nombreBuscado));
+  const cursosGratis = cursosBuscados.filter(c => !esCursoDePago(c));
+  const cursosDePago = cursosBuscados.filter(c => esCursoDePago(c));
+  const cursoSugerido = visibles.find(c => !esCursoDePago(c) && c.tiene_video) || null;
 
   // Tarjeta de un curso del catálogo del portal. Toda la tarjeta es la acción:
   // entrar, inscribirse gratis o comprar, según el caso.
@@ -1019,7 +1071,7 @@ const Dashboard = () => {
       return (
         <Link
           key={course.id}
-          to={course.link}
+          to={course.link || `/classroom/${course.id}`}
           target="_blank"
           className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
           style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
@@ -1113,7 +1165,7 @@ const Dashboard = () => {
       tab: 'courses',
     })),
     ...enrolledCourses
-      .filter((course) => course.progress === 0)
+      .filter((course) => course.progress === 0 && !course.enRevision && !course.accesoVencido)
       .slice(0, 2)
       .map((course) => ({
         id: `nuevo-${course.id}`,
@@ -1179,6 +1231,10 @@ const Dashboard = () => {
           >
             <BookOpen size={20} className="menu-icon" />
             <span className="menu-label">Mis Cursos</span>
+          </button>
+
+          <button type="button" className={`menu-item ${activeTab === 'calificaciones' ? 'active' : ''}`} onClick={() => setActiveTab('calificaciones')} title="Mis calificaciones">
+            <CheckSquare size={20} className="menu-icon" /><span className="menu-label">Mis calificaciones</span>
           </button>
 
           <button
@@ -1318,6 +1374,12 @@ const Dashboard = () => {
           <Comunicados tipo="interno" />
 
           {/* Cuenta nueva: entra al portal, pero sus cursos se abren hasta que la activen. */}
+          {confirmacionError && <div className="cuenta-revision-banner" role="alert">
+            <p>{confirmacionError}</p>
+            <button type="button" className="btn-crm-action solid" disabled={confirmandoPago} onClick={confirmarPago}>
+              {confirmandoPago ? 'Confirmando…' : 'Reintentar confirmación'}
+            </button>
+          </div>}
           {profile?.rol !== 'admin' && profile?.aprobado === false && profile?.activo !== false && (
             <div className="cuenta-revision-aviso" role="status">
               <Clock size={18} />
@@ -1345,7 +1407,7 @@ const Dashboard = () => {
                 </div>
                 <div className="welcome-text-details">
                   <h2>¡Bienvenido de vuelta, {profile?.nombre_completo || 'Alumno'}!</h2>
-                  <p>{localStorage.getItem('welcomeMessage') || 'En Healthcare Training Experience seguimos redefiniendo la educación médica continua. ¡No esperes más! Ingresa al material que tenemos para ti.'}</p>
+                  {mensajeBienvenida && <p>{mensajeBienvenida}</p>}
                 </div>
               </div>
 
@@ -1491,47 +1553,13 @@ const Dashboard = () => {
                               <Award size={24} className="cert-icon" />
                               <div>
                                 <h4 style={{ fontSize: '0.9rem', margin: 0 }}>{cert.courses?.title || 'Curso Académico'}</h4>
-                                <p style={{ fontSize: '0.75rem', margin: '4px 0 0 0' }}>Folio: #{cert.folio} • Emitido: {new Date(cert.created_at).toLocaleDateString()}</p>
+                                <p style={{ fontSize: '0.75rem', margin: '4px 0 0 0' }}>Folio: #{cert.folio} • Emitido: {new Date(cert.created_at).toLocaleDateString('es-MX')}</p>
                               </div>
                             </div>
                             <div>
-                              {cert.pdf_url === 'local-simulated' ? (
-                                <button 
-                                  onClick={() => {
-                                    // Local Canvas Redraw and Download
-                                    const canvas = document.createElement('canvas');
-                                    canvas.width = 800;
-                                    canvas.height = 600;
-                                    const ctx = canvas.getContext('2d');
-                                    ctx.fillStyle = '#F8FAFC';
-                                    ctx.fillRect(0, 0, 800, 600);
-                                    ctx.font = 'bold 36px Georgia, serif';
-                                    ctx.fillStyle = '#1E293B';
-                                    ctx.textAlign = 'center';
-                                    ctx.fillText(profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email, 400, 300);
-                                    ctx.font = '20px Georgia, serif';
-                                    ctx.fillText(`Acreditación de: ${cert.courses?.title || 'Curso Académico'}`, 400, 360);
-                                    
-                                    const dataUrl = canvas.toDataURL('image/png');
-                                    const a = document.createElement('a');
-                                    a.href = dataUrl;
-                                    a.download = `Certificado_${cert.folio}.png`;
-                                    a.click();
-                                  }}
-                                  className="btn-crm-action solid mini btn-sm-table"
-                                  style={{ padding: '6px 12px', fontSize: '0.75rem' }}
-                                >
-                                  Descargar
-                                </button>
-                              ) : (
-                                <button 
-                                  onClick={() => downloadCertificateFile(cert.pdf_url, `Certificado_${cert.folio}.png`)}
-                                  className="btn-crm-action solid mini btn-sm-table"
-                                  style={{ padding: '6px 12px', fontSize: '0.75rem', border: 'none', cursor: 'pointer' }}
-                                >
-                                  Descargar
-                                </button>
-                              )}
+                              <button type="button" onClick={() => descargarCertificado(cert)} disabled={certificadoOcupado !== null} className="btn-crm-action solid mini btn-sm-table">
+                                {certificadoOcupado === cert.id ? 'Preparando…' : 'Descargar'}
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -1566,7 +1594,7 @@ const Dashboard = () => {
                     return (
                       <Link
                         key={course.id}
-                        to={course.link}
+                        to={course.link || `/classroom/${course.id}`}
                         target="_blank"
                         className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
                         style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
@@ -1600,7 +1628,7 @@ const Dashboard = () => {
                     return (
                       <Link
                         key={course.id}
-                        to={course.link}
+                        to={course.link || `/classroom/${course.id}`}
                         target="_blank"
                         className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
                         style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
@@ -1654,10 +1682,10 @@ const Dashboard = () => {
                           <div className="exp-img-container" style={{ aspectRatio: '16/9', height: 'auto', backgroundColor: '#0f172a' }}>
                             <img src={course.image} alt={course.title} className="exp-main-img" style={{ objectFit: 'cover' }} />
                             <div className="img-overlay-gradient"></div>
-                            {completed ? (
+                            {completed && !course.enRevision && !course.accesoVencido ? (
                               <div className="status-badge badge-success" style={{ backgroundColor: '#10b981', color: '#fff', position: 'absolute', top: '12px', left: '12px', zIndex: 10 }}>COMPLETADO</div>
                             ) : (
-                              <div className="status-badge badge-info" style={{ backgroundColor: 'var(--primary-cyan)', color: '#fff', position: 'absolute', top: '12px', left: '12px', zIndex: 10 }}>EN PROGRESO</div>
+                              <div className="status-badge badge-info" style={{ backgroundColor: 'var(--primary-cyan)', color: '#fff', position: 'absolute', top: '12px', left: '12px', zIndex: 10 }}>{course.estadoCurso.toUpperCase()}</div>
                             )}
                           </div>
                           <div className="exp-content-body" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
@@ -1698,6 +1726,34 @@ const Dashboard = () => {
             </div>
           )}
 
+          {activeTab === 'calificaciones' && <div className="calificaciones-view">
+            <div className="section-title-row"><h2>Mis calificaciones</h2><p>Consulta tus intentos, entregas y calificación final por curso.</p></div>
+            {errorCalificaciones ? <div role="alert"><p>{errorCalificaciones}</p><button type="button" className="btn-crm-action solid" onClick={() => setIntentoCalificaciones(n => n + 1)}>Reintentar</button></div>
+              : !calificaciones ? <p role="status">Cargando calificaciones…</p>
+              : enrolledCourses.length === 0 ? <p>Tus resultados aparecerán aquí al inscribirte en un curso.</p>
+              : enrolledCourses.map(curso => {
+                const evaluaciones = calificaciones.evaluaciones.filter(e => Number(e.course_id) === Number(curso.id));
+                const tareas = calificaciones.tareas.filter(e => Number(e.course_id) === Number(curso.id));
+                const certificado = myCertificates.find(c => Number(c.course_id) === Number(curso.id));
+                return <section className="sub-section-block" key={curso.id}>
+                  <h3>{curso.title}</h3>
+                  <p>Calificación final: {certificado?.score != null ? certificado.score + '%' : 'Pendiente de emisión del certificado'}</p>
+                  {!evaluaciones.length && !tareas.length ? <p>Aún no tienes evaluaciones ni tareas entregadas.</p> : <div className="table-responsive-container">
+                    <table className="admin-table"><thead><tr><th>Actividad</th><th>Mejor calificación</th><th>Intentos</th><th>Estado</th></tr></thead>
+                      <tbody>{evaluaciones.map(e => <tr key={'e-' + e.leccion_id}>
+                        <td>{e.curso_lecciones?.titulo || (e.calificacion == null ? 'Encuesta' : 'Examen')}</td>
+                        <td>{e.mejor == null ? 'Sin calificación (encuesta)' : e.mejor + '%'}</td><td>{e.intentos}</td>
+                        <td>{e.mejor == null ? 'Enviada' : e.aprobado ? 'Aprobado' : 'Por aprobar'}</td>
+                      </tr>)}{tareas.map(t => <tr key={'t-' + t.leccion_id}>
+                        <td>{t.curso_lecciones?.titulo || 'Tarea'}{t.comentario && <p>{t.comentario}</p>}</td><td>—</td><td>—</td>
+                        <td>{t.estado === 'aprobada' ? 'Aprobada' : t.estado === 'rechazada' ? 'Por corregir' : 'En revisión'}</td>
+                      </tr>)}</tbody>
+                    </table>
+                  </div>}
+                </section>;
+              })}
+          </div>}
+
           {/* VIEW: EXPLORAR CURSOS (Program Catalogue) */}
           {activeTab === 'explore' && (
             <div className="explore-view">
@@ -1706,6 +1762,10 @@ const Dashboard = () => {
                 <p>Explora y solicita tu registro en los entrenamientos de alta especialidad en simulación y soporte de HCE.</p>
               </div>
 
+              <label className="catalogo-buscar" htmlFor="buscar-catalogo">Buscar un curso
+                <input id="buscar-catalogo" type="search" value={busquedaCatalogo} onChange={e => setBusquedaCatalogo(e.target.value)} placeholder="Nombre del curso" />
+              </label>
+              {nombreBuscado && cursosBuscados.length === 0 && <p role="status">No encontramos cursos con ese nombre.</p>}
               {/* Cursos Gratuitos */}
               <div className="catalog-courses-section-wrapper" style={{ marginBottom: '48px' }}>
                 <div className="free-section-header">
@@ -1721,8 +1781,8 @@ const Dashboard = () => {
                   {cursosGratis.length === 0 ? (
                     <div className="crm-empty-state-card mini" style={{ gridColumn: '1 / -1' }}>
                       <PlayCircle size={32} className="empty-state-icon" />
-                      <h4>Próximamente</h4>
-                      <p>Estamos preparando contenido gratuito para ti. ¡Vuelve pronto!</p>
+                      <h4>{nombreBuscado ? 'Sin coincidencias' : 'Próximamente'}</h4>
+                      <p>{nombreBuscado ? 'Prueba con otro nombre de curso.' : 'Estamos preparando contenido gratuito para ti. ¡Vuelve pronto!'}</p>
                     </div>
                   ) : cursosGratis.map(renderTarjetaCurso)}
                 </div>
@@ -1751,7 +1811,7 @@ const Dashboard = () => {
                     return (
                       <Link
                         key={course.id}
-                        to={course.link}
+                        to={course.link || `/classroom/${course.id}`}
                         className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
                         style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
                       >
@@ -1796,7 +1856,7 @@ const Dashboard = () => {
                     return (
                       <Link
                         key={course.id}
-                        to={course.link}
+                        to={course.link || `/classroom/${course.id}`}
                         className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
                         style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
                       >
@@ -2067,8 +2127,7 @@ const Dashboard = () => {
                         <th>Folio</th>
                         <th>Curso</th>
                         <th>Fecha de Emisión</th>
-                        <th>Descarga antes de</th>
-                        <th>Calificación</th>
+                                                <th>Calificación</th>
                         <th>Vigencia</th>
                         <th>Acción</th>
                       </tr>
@@ -2078,15 +2137,7 @@ const Dashboard = () => {
                         <tr key={cert.id}>
                           <td><strong>#{cert.folio}</strong></td>
                           <td><strong>{cert.courses?.title || 'Curso Académico'}</strong></td>
-                          <td>{new Date(cert.created_at).toLocaleDateString()}</td>
-                          <td title="El certificado será eliminado del portal en esta fecha. Descárgalo antes para conservarlo.">
-                            <span style={{ color: '#EF4444', fontWeight: '600', fontSize: '0.85rem' }}>
-                              {cert.expires_at
-                                ? new Date(cert.expires_at).toLocaleDateString()
-                                : new Date(new Date(cert.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
-                            </span>
-                            <span style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>límite de descarga</span>
-                          </td>
+                          <td>{new Date(cert.created_at).toLocaleDateString('es-MX')}</td>
                           <td>{cert.score}%</td>
                           <td>
                             {(() => {
@@ -2099,7 +2150,7 @@ const Dashboard = () => {
                               return (
                                 <>
                                   <span className={`cert-vigencia cert-vigencia--${estado}`}>
-                                    {dias < 0 ? 'Vencido' : `Hasta ${vence.toLocaleDateString()}`}
+                                    {dias < 0 ? 'Vencido' : `Hasta ${vence.toLocaleDateString('es-MX')}`}
                                   </span>
                                   {estado !== 'ok' && (
                                     <Link to={`/classroom/${cert.course_id}`} className="cert-recertificar">
@@ -2111,52 +2162,14 @@ const Dashboard = () => {
                             })()}
                           </td>
                           <td>
-                            {cert.pdf_url === 'local-simulated' ? (
-                              <button 
-                                onClick={() => {
-                                  // Local Canvas Redraw and Download
-                                  const canvas = document.createElement('canvas');
-                                  canvas.width = 800;
-                                  canvas.height = 600;
-                                  const ctx = canvas.getContext('2d');
-                                  ctx.fillStyle = '#F8FAFC';
-                                  ctx.fillRect(0, 0, 800, 600);
-                                  ctx.font = 'bold 36px Georgia, serif';
-                                  ctx.fillStyle = '#1E293B';
-                                  ctx.textAlign = 'center';
-                                  ctx.fillText(profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email, 400, 300);
-                                  ctx.font = '20px Georgia, serif';
-                                  ctx.fillText(`Acreditación de: ${cert.courses?.title || 'Curso Académico'}`, 400, 360);
-                                  
-                                  const dataUrl = canvas.toDataURL('image/png');
-                                  const a = document.createElement('a');
-                                  a.href = dataUrl;
-                                  a.download = `Certificado_${cert.folio}.png`;
-                                  a.click();
-                                }}
-                                className="btn-crm-action solid mini"
-                                style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                              >
-                                Descargar
+                            <button type="button" onClick={() => descargarCertificado(cert)} disabled={certificadoOcupado !== null} className="btn-crm-action solid mini btn-sm-table">
+                                {certificadoOcupado === cert.id ? 'Preparando…' : 'Descargar'}
                               </button>
-                            ) : (
-                              <button 
-                                onClick={() => downloadCertificateFile(cert.pdf_url, `Certificado_${cert.folio}.png`)}
-                                className="btn-crm-action solid mini"
-                                style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '5px', border: 'none', cursor: 'pointer' }}
-                              >
-                                Descargar
-                              </button>
-                            )}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: '#EF4444', fontWeight: '700' }}>⚠</span>
-                    La fecha indica el límite para descargar tu constancia. Después de esa fecha el archivo será eliminado del portal. Salvo que la columna Vigencia indique otra cosa, el certificado como tal <strong>no expira</strong>.
-                  </p>
                 </div>
               )}
 
@@ -2182,7 +2195,7 @@ const Dashboard = () => {
                             <tr key={r.id}>
                               <td><strong>{r.folio ? `#${r.folio}` : '—'}</strong></td>
                               <td><strong>{titulo}</strong></td>
-                              <td>{r.certificado_en ? new Date(r.certificado_en).toLocaleDateString() : '—'}</td>
+                              <td>{r.certificado_en ? new Date(r.certificado_en).toLocaleDateString('es-MX') : '—'}</td>
                               <td>
                                 <button
                                   className="btn-crm-action solid"
@@ -2519,7 +2532,7 @@ const Dashboard = () => {
                             <div className="enrollment-bullet"></div>
                             <div style={{ flex: 1 }}>
                               <strong>{course.title}</strong>
-                              <p>{course.completed ? 'Completado (100%)' : `En Progreso (${course.progress}%)`}</p>
+                              <p>{course.estadoCurso} ({course.progress}%)</p>
                             </div>
                           </div>
                         ))}

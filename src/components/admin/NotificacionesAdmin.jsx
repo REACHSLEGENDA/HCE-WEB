@@ -23,7 +23,7 @@ const EVENTOS = {
 const VARIABLES = {
   registro_nuevo: ['alumno', 'correo_alumno', 'portal'],
   cuenta_activada: ['acceso', 'grupo', 'cursos', 'portal'],
-  inscrito_curso: ['curso', 'enlace'],
+  inscrito_curso: ['acceso', 'curso', 'enlace'],
   sesion_registro: ['sesion', 'fecha', 'curso', 'enlace'],
   sesion_recordatorio: ['sesion', 'fecha', 'curso', 'enlace'],
   examen_aprobado: ['examen', 'calificacion', 'curso', 'enlace'],
@@ -34,7 +34,7 @@ const VARIABLES = {
 
 const PLANTILLAS = {
   cuenta_activada: ['¡Tu cuenta en HCE ya está activa!', 'Hola {nombre}:\n\nTu cuenta ya tiene acceso. {acceso}\n\nYa puedes entrar a tu portal y empezar.'],
-  inscrito_curso: ['Ya estás inscrito en {curso}', 'Hola {nombre}:\n\nYa tienes acceso a {curso}. Puedes empezar cuando quieras:\n{enlace}'],
+  inscrito_curso: ['Ya estás inscrito en {curso}', 'Hola {nombre}:\n\nQuedaste inscrito en {curso}. {acceso}'],
   sesion_registro: ['Registro confirmado: {sesion}', 'Hola {nombre}:\n\nQuedaste registrado a {sesion}, el {fecha}.\n\nPara entrar, abre la lección en tu aula: el botón "Unirse" se activa 15 minutos antes.\n{enlace}'],
   sesion_recordatorio: ['En 1 hora empieza {sesion}', 'Hola {nombre}:\n\nTe recordamos que {sesion} empieza el {fecha}.\n\nEntra desde tu aula con el botón "Unirse":\n{enlace}'],
   examen_aprobado: ['¡Aprobaste {examen}!', 'Hola {nombre}:\n\n¡Felicidades! Aprobaste {examen} de {curso} con {calificacion}.\n\nSigue con tu curso: {enlace}'],
@@ -74,34 +74,44 @@ export default function NotificacionesAdmin({ cursos, notificar, confirmar }) {
   const [faltaMigracion, setFaltaMigracion] = useState(false);
   const [editando, setEditando] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [errorLista, setErrorLista] = useState(null);
+  const [errorHistorial, setErrorHistorial] = useState(null);
+
+  const aplicarHistorial = useCallback(({ data, error }) => {
+    setErrorHistorial(error ? error.message || 'Error de conexión' : null);
+    if (!error) setHistorial(data || []);
+  }, []);
 
   const cargar = useCallback(async () => {
     const { data, error } = await supabase.from('notificaciones').select('*').order('evento').order('nombre');
     if (error) {
       if (esTablaFaltante(error)) setFaltaMigracion(true);
       else notificar(`No se pudieron cargar: ${error.message}`, 'error');
+      setErrorLista(error.message);
       setLista([]);
       return;
     }
     setLista(data || []);
+    setErrorLista(null);
   }, [notificar]);
 
   const cargarHistorial = useCallback(async () => {
-    const { data } = await supabase
+    try {
+      aplicarHistorial(await supabase
       .from('notificaciones_enviadas')
       .select('id, notificacion_id, email, enviado_en, error')
       .order('enviado_en', { ascending: false })
-      .limit(200);
-    setHistorial(data || []);
-  }, []);
+      .limit(200));
+    } catch (error) { aplicarHistorial({ error }); }
+  }, [aplicarHistorial]);
 
   useEffect(() => {
     let vigente = true;
     supabase.from('notificaciones').select('*').order('evento').order('nombre').then(({ data, error }) => {
       if (!vigente) return;
-      if (error) { if (esTablaFaltante(error)) setFaltaMigracion(true); setLista([]); return; }
+      if (error) { if (esTablaFaltante(error)) setFaltaMigracion(true); setErrorLista(error.message); setLista([]); return; }
       setLista(data || []);
-    });
+    }, (error) => { if (vigente) { setErrorLista(error.message || 'Error de conexión'); setLista([]); } });
     return () => { vigente = false; };
   }, []);
 
@@ -110,9 +120,10 @@ export default function NotificacionesAdmin({ cursos, notificar, confirmar }) {
     let vigente = true;
     supabase.from('notificaciones_enviadas').select('id, notificacion_id, email, enviado_en, error')
       .order('enviado_en', { ascending: false }).limit(200)
-      .then(({ data }) => { if (vigente) setHistorial(data || []); });
+      .then((resultado) => { if (vigente) aplicarHistorial(resultado); },
+        (error) => { if (vigente) aplicarHistorial({ error }); });
     return () => { vigente = false; };
-  }, [pestana]);
+  }, [pestana, aplicarHistorial]);
 
   const guardar = async (e) => {
     e.preventDefault();
@@ -171,6 +182,8 @@ export default function NotificacionesAdmin({ cursos, notificar, confirmar }) {
 
   return (
     <div className="notif">
+      {pestana === 'lista' && errorLista && <p className="lms-aviso" role="alert">No se pudieron cargar las notificaciones: {errorLista} <button type="button" className="btn-crm-action outlined mini" onClick={cargar}>Reintentar</button></p>}
+      {pestana === 'historial' && errorHistorial && <p className="lms-aviso" role="alert">No se pudo cargar el historial: {errorHistorial}</p>}
       <nav className="reporte-pestanas notif-pestanas" role="tablist">
         {[['lista', 'Notificaciones'], ['historial', 'Historial']].map(([id, n]) => (
           <button key={id} type="button" role="tab" aria-selected={pestana === id} className={pestana === id ? 'activa' : ''} onClick={() => setPestana(id)}>{n}</button>
@@ -284,7 +297,7 @@ export default function NotificacionesAdmin({ cursos, notificar, confirmar }) {
       )}
 
       {pestana === 'historial' && (
-        historial === null ? <p className="lms-cargando">Cargando…</p> : historial.length === 0 ? <p className="lms-vacio">Todavía no se ha enviado ninguna.</p> : (
+        historial === null ? (errorHistorial ? null : <p className="lms-cargando">Cargando…</p>) : historial.length === 0 ? (errorHistorial ? null : <p className="lms-vacio">Todavía no se ha enviado ninguna.</p>) : (
           <div className="biblioteca-tabla-scroll">
             <table className="biblioteca-tabla">
               <thead><tr><th>Fecha</th><th>Notificación</th><th>Para</th><th>Resultado</th></tr></thead>

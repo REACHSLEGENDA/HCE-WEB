@@ -16,6 +16,9 @@ export const ESTADOS_ACTIVIDAD = {
 
 export const FORMATOS = { examen: 'Test', encuesta: 'Encuesta', tarea: 'Tarea', sesion: 'Sesión en vivo', examen_final: 'Examen final' };
 
+import { tasaFinalizacion } from './informes';
+import { diaLocal } from './metricas';
+
 const porFecha = (a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0);
 const ultimo = (lista, campo) => lista.reduce((m, x) => (!m || new Date(x[campo]) > new Date(m[campo]) ? x : m), null);
 
@@ -118,7 +121,8 @@ export function construirReporte(datos, cursos, ahora = Date.now()) {
   const cuenta = (grupo) => actividades.filter((a) => ESTADOS_ACTIVIDAD[a.estado].grupo === grupo).length;
   const segundosTotales = visitas.reduce((t, v) => t + (v.segundos_activos || 0), 0);
   const indicadores = {
-    tasaFinalizacion: cursosAlumno.length ? (cursosAlumno.filter((c) => c.estado === 'completado').length / cursosAlumno.length) * 100 : 0,
+    // Misma definición que Analíticas y Divisiones (certificados ÷ inscripciones).
+    tasaFinalizacion: tasaFinalizacion(cursosAlumno.filter((c) => c.estado === 'completado').length, cursosAlumno.length),
     completadas: cuenta('completada'),
     enProgreso: cuenta('progreso'),
     noAprobadas: cuenta('no_aprobada'),
@@ -127,7 +131,9 @@ export function construirReporte(datos, cursos, ahora = Date.now()) {
   };
 
   // ---- Logros (mismo criterio que la tabla de posiciones) --------------------------
-  const diasEstudio = new Set(visitas.map((v) => String(v.iniciada_en).slice(0, 10))).size;
+  // Los días se cuentan en la zona horaria del navegador, no en UTC: una visita
+  // a las 8 p. m. en México es del mismo día, no del siguiente.
+  const diasEstudio = new Set(visitas.filter((v) => v.iniciada_en).map((v) => diaLocal(v.iniciada_en))).size;
   const primerIntento = examenesFinales.filter((e) => e.datos?.aprobado && Number(e.datos?.intento || 1) === 1).length
     + new Set(intentos.filter((i) => i.aprobado && i.numero === 1).map((i) => i.leccion_id)).size;
   const perfectos = examenesFinales.filter((e) => Number(e.datos?.calificacion) === 100).length

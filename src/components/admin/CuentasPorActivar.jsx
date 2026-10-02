@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, UserX, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { llamarCuenta } from '../../lib/cursos';
+import { llamarCuenta, esTablaFaltante } from '../../lib/cursos';
 import './AdminLms.css';
 
 // Cuentas nuevas esperando acceso. Ya entran al portal y pueden inscribirse o
@@ -20,6 +20,8 @@ export default function CuentasPorActivar({ pendientes, cursos, onCambio, notifi
   const [grupoId, setGrupoId] = useState('');
   const [elegidos, setElegidos] = useState([]);
   const [ocupado, setOcupado] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState('');
 
   const ids = useMemo(() => pendientes.map((p) => p.id).join(','), [pendientes]);
 
@@ -35,6 +37,11 @@ export default function CuentasPorActivar({ pendientes, cursos, onCambio, notifi
         : Promise.resolve({ data: [] }),
     ]).then(([g, gc, ins]) => {
       if (!vigente) return;
+      // Si solo falta la tabla de grupos (migración sin correr), se puede dar
+      // acceso igual, sin grupo.
+      const error = [g.error, gc.error, ins.error].find((e) => e && !esTablaFaltante(e));
+      if (error) throw error;
+      setErrorCarga('');
       setGrupos((g.data || []).map((grupo) => ({
         ...grupo,
         cursos: (gc.data || []).filter((x) => x.grupo_id === grupo.id).map((x) => Number(x.course_id)),
@@ -42,7 +49,8 @@ export default function CuentasPorActivar({ pendientes, cursos, onCambio, notifi
       const porCuenta = {};
       (ins.data || []).forEach((i) => { (porCuenta[i.user_id] ||= []).push(i); });
       setInscritos(porCuenta);
-    });
+    }).catch((err) => { if (vigente) setErrorCarga(err.message); })
+      .finally(() => { if (vigente) setCargando(false); });
     return () => { vigente = false; };
   }, [ids]);
 
@@ -70,7 +78,7 @@ export default function CuentasPorActivar({ pendientes, cursos, onCambio, notifi
       const yaTenia = (inscritos[cuenta.id] || []).length;
       notificar(
         `${cuenta.nombre_completo || cuenta.email} ya tiene acceso` +
-        (r.cursos || yaTenia ? ` a ${r.cursos + yaTenia} curso(s).` : '. Todavía no tiene cursos asignados.'),
+        (r.cursos || yaTenia ? ` a ${(r.cursos ?? 0) + yaTenia} curso(s).` : '. Todavía no tiene cursos asignados.'),
         'success'
       );
       setAbierta(null);
@@ -109,6 +117,8 @@ export default function CuentasPorActivar({ pendientes, cursos, onCambio, notifi
         <h3>Cuentas por activar <span className="cuentas-pendientes-num">{pendientes.length}</span></h3>
         <p>Ya pueden entrar al portal, pero sus cursos siguen cerrados hasta que les des acceso.</p>
       </header>
+      {cargando && <p className="lms-cargando" role="status">Cargando grupos e inscripciones…</p>}
+      {errorCarga && <p className="lms-aviso lms-aviso--error" role="alert">No se pudieron cargar los grupos e inscripciones: {errorCarga}. Recarga la página para reintentar.</p>}
 
       <ul className="cuentas-pendientes-lista">
         {pendientes.map((cuenta) => {
@@ -134,7 +144,7 @@ export default function CuentasPorActivar({ pendientes, cursos, onCambio, notifi
                   )}
                 </div>
                 <div className="cuenta-pendiente-acciones">
-                  <button type="button" className="btn-crm-action solid mini" onClick={() => abrir(cuenta)} disabled={ocupado === cuenta.id}>
+                  <button type="button" className="btn-crm-action solid mini" onClick={() => abrir(cuenta)} disabled={ocupado === cuenta.id || cargando || !!errorCarga}>
                     Dar acceso {abiertaEsta ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                   <button type="button" className="icon-action-btn delete" title="Rechazar" onClick={() => rechazar(cuenta)} disabled={ocupado === cuenta.id}>

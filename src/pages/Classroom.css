@@ -987,6 +987,8 @@
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
   transition: background 0.2s ease;
 }
 
@@ -1389,3 +1391,36 @@
   text-transform: uppercase;
 }
 .temario-seccion:first-child { margin-top: 0; }
+
+/* Temario: en escritorio vive en la columna lateral; en celular y tableta se
+   dibuja antes de "Dudas" para que el alumno no tenga que bajar hasta el final. */
+.temario--movil { display: none; margin-top: 24px; }
+@media (max-width: 1024px) {
+  .temario--movil { display: block; }
+  .temario--escritorio { display: none; }
+}
+
+/* Avisos dentro de una lección (PDF que no abre, documento cargando): en el
+   flujo de la página, no encima de la tarjeta. */
+.leccion-material .video-loading-placeholder,
+.leccion-material .video-player-error {
+  position: relative;
+  inset: auto;
+  min-height: 220px;
+  border-radius: 12px;
+}
+.leccion-material .video-loading-placeholder { background: #f8fafc; border: 1px dashed #cbd5e1; }
+.video-player-error button.back-btn { margin-top: 4px; }
+
+/* Error al publicar una duda o respuesta: el texto se conserva para reintentar. */
+.doubts-error {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+.reply-form { flex-wrap: wrap; }
+.reply-form .doubts-error { flex-basis: 100%; }

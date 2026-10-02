@@ -139,17 +139,22 @@ export default function Mensajes({ userId, esAdmin = false, perfiles = [], grupo
   const [hilo, setHilo] = useState([]);
   const [respondiendo, setRespondiendo] = useState(false);
   const [busqueda, setBusqueda] = useState('');
+  const [errorCarga, setErrorCarga] = useState('');
+  const [cargando, setCargando] = useState(false);
 
   const cargar = useCallback(async () => {
+    setCargando(true);
+    setErrorCarga('');
+    setFaltaMigracion(false);
     try {
       const [r, e] = await Promise.all([cargarRecibidos(userId), cargarEnviados(userId)]);
       if (r === null || e === null) { setFaltaMigracion(true); return; }
       setRecibidos(r);
       setEnviados(e);
     } catch (err) {
-      notificar(`No se pudieron cargar los mensajes: ${err.message}`, 'error');
-    }
-  }, [userId, notificar]);
+      setErrorCarga(err.message || 'No se pudieron cargar los mensajes.');
+    } finally { setCargando(false); }
+  }, [userId]);
 
   useEffect(() => {
     let vigente = true;
@@ -160,12 +165,13 @@ export default function Mensajes({ userId, esAdmin = false, perfiles = [], grupo
         setRecibidos(r);
         setEnviados(e);
       })
-      .catch(() => {});
+      .catch((err) => { if (vigente) setErrorCarga(err.message || 'No se pudieron cargar los mensajes.'); });
     return () => { vigente = false; };
   }, [userId]);
 
   const abrir = async (m) => {
     setAbierto(m);
+    setHilo([]);
     setRespondiendo(false);
     try {
       const conversacion = await cargarHilo(m);
@@ -275,6 +281,11 @@ export default function Mensajes({ userId, esAdmin = false, perfiles = [], grupo
           notificar={notificar}
           onEnviado={async () => { await cargar(); setVista('enviados'); }}
         />
+      ) : errorCarga ? (
+        <div className="msj-vacio" role="alert">
+          <p>No se pudieron cargar los mensajes: {errorCarga}</p>
+          <button type="button" className="msj-boton" disabled={cargando} onClick={cargar}>{cargando ? 'Cargando…' : 'Reintentar'}</button>
+        </div>
       ) : recibidos === null ? (
         <p className="msj-vacio">Cargando…</p>
       ) : filtrada.length === 0 ? (

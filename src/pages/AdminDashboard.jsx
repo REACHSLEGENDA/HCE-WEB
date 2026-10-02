@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -68,7 +68,11 @@ import RevisionTareas from '../components/admin/RevisionTareas';
 import GruposAdmin from '../components/admin/GruposAdmin';
 import CuentasPorActivar from '../components/admin/CuentasPorActivar';
 import { BotonVerComoAlumno } from '../components/CambioVista';
+import InscritosCurso from '../components/admin/InscritosCurso';
 import { llamarInscripcion, llamarCuenta, llamarClonar, esTablaFaltante, formatoPrecio } from '../lib/cursos';
+import { traerTodo } from '../lib/traerTodo';
+import { tasaFinalizacion } from '../lib/informes';
+import { llamarCertificado } from '../lib/certificados';
 import { useNotification } from '../context/NotificationContext';
 
 // Días sin actividad en la plataforma a partir de los cuales un curso iniciado
@@ -86,6 +90,28 @@ const LISTA_WEBINARS_BREVO = 16;
 // Las miniaturas de YouTube se sirven desde estos dominios y su ruta incluye
 // el ID del video.
 const esMiniaturaYoutube = (url) => /img\.youtube\.com|ytimg\.com/i.test(String(url || ''));
+
+// Vigencia real del certificado: la fecha guardada o "Permanente" si no vence.
+const textoVigencia = (cert) =>
+  cert?.vigente_hasta ? new Date(cert.vigente_hasta).toLocaleDateString('es-MX') : 'Permanente';
+
+// Para los reportes que se arman como HTML: los nombres los escriben los alumnos.
+const escaparHtml = (valor) => String(valor ?? '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+// Escribe un CSV con BOM para que Excel abra bien los acentos.
+const descargarCsv = (filas, nombreArchivo) => {
+  const escapar = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = '﻿' + filas.map((fila) => fila.map(escapar).join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
 const extraerZoomId = (valor) => {
   const texto = String(valor || '').trim();
@@ -123,8 +149,14 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTabState] = useState(() => {
     return localStorage.getItem('adminActiveTab') || 'dashboard';
   });
+  const cambiosCursoRef = useRef({ reglas: false, evaluacion: false });
+  const permitirSalidaCurso = () => !Object.values(cambiosCursoRef.current).some(Boolean)
+    || window.confirm('Hay cambios sin guardar en las reglas o la evaluación. ¿Salir y descartarlos?');
+  const cambiosReglas = React.useCallback((valor) => { cambiosCursoRef.current.reglas = valor; }, []);
+  const cambiosEvaluacion = React.useCallback((valor) => { cambiosCursoRef.current.evaluacion = valor; }, []);
 
   const setActiveTab = (tab) => {
+    if (tab !== activeTab && !permitirSalidaCurso()) return;
     setActiveTabState(tab);
     localStorage.setItem('adminActiveTab', tab);
   };
@@ -219,6 +251,13 @@ const AdminDashboard = () => {
   // Student activity and progress surveillance states
   const [studentActivities, setStudentActivities] = useState([]);
   const [studentProgressList, setStudentProgressList] = useState([]);
+  const [errorTracking, setErrorTracking] = useState('');
+  // Inscripciones de todos los alumnos (dashboard y reportes). `null` = la
+  // tabla aún no existe o no se pudo leer.
+  const [inscripcionesTodas, setInscripcionesTodas] = useState([]);
+  // Lo necesario para saber quién terminó un curso sin certificado: lecciones,
+  // lecciones completadas y exámenes finales aprobados.
+  const [datosCertificables, setDatosCertificables] = useState(null);
   const [reportsSubTab, setReportsSubTab] = useState('dashboard_general');
 
   // Facturacion requests
@@ -261,6 +300,10 @@ const AdminDashboard = () => {
     });
     return () => { vigente = false; };
   }, []);
+
+  // Curso cuyas métricas se abren desde Gestión de Cursos (objeto nuevo en
+  // cada clic, para reabrir el mismo curso).
+  const [metricasDeCurso, setMetricasDeCurso] = useState(null);
 
   // Alumno cuyo reporte completo está abierto.
   const [reporteAlumno, setReporteAlumno] = useState(null);
@@ -616,8 +659,17 @@ const AdminDashboard = () => {
   const fetchRealStripePayments = async () => {
     try {
       setLoadingPayments(true);
-      const res = await fetch('/.netlify/functions/get-stripe-payments');
-      if (!res.ok) throw new Error('Failed to fetch from Netlify function');
+      // Los pagos solo se entregan a un administrador con sesión.
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/.netlify/functions/get-stripe-payments', {
+        headers: { Authorization: `Bearer ${session?.access_token || ''}` }
+      });
+      if (!res.ok) {
+        const detalle = await res.json().catch(() => ({}));
+        throw new Error(detalle.error || (res.status === 401 || res.status === 403
+          ? 'Tu sesión no tiene permiso para ver los pagos. Vuelve a iniciar sesión.'
+          : 'No se pudieron cargar los pagos de Stripe.'));
+      }
       const data = await res.json();
       const merged = [...stripePayments];
       if (data.payments && data.payments.length > 0) {
@@ -715,9 +767,13 @@ const AdminDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // El formulario ya no se guarda en localStorage: llevaba la contraseña.
   const [newStudentForm, setNewStudentForm] = useState(() => {
-    const saved = localStorage.getItem('adminNewStudentForm');
-    return saved ? JSON.parse(saved) : {
+    try {
+      localStorage.removeItem('adminNewStudentForm');
+      localStorage.removeItem('adminNewAdminForm');
+    } catch { /* sin almacenamiento */ }
+    return {
       email: '',
       password: '',
       nombres: '',
@@ -754,7 +810,7 @@ const AdminDashboard = () => {
     redesFacebook: 'https://facebook.com/hce',
     redesLinkedin: 'https://linkedin.com/company/hce',
     redesInstagram: 'https://instagram.com/hce',
-    bienvenidaEstudiante: localStorage.getItem('welcomeMessage') || 'En Healthcare Training Experience seguimos redefiniendo la educación médica continua. ¡No esperes más! Ingresa al material que tenemos para ti.'
+    bienvenidaEstudiante: 'En Healthcare Training Experience seguimos redefiniendo la educación médica continua. ¡No esperes más! Ingresa al material que tenemos para ti.'
   });
 
   // Admin password update states
@@ -768,21 +824,18 @@ const AdminDashboard = () => {
   // Statistics summaries
   const [stats, setStats] = useState({
     alumnosRegistrados: 0,
-    cursosPublicados: 4,
+    cursosPublicados: 0,
     certificadosEmitidos: 0,
     cursosActivos: 0
   });
 
   // Local state for administrative actions
   const [showAddAdminModal, setShowAddAdminModal] = useState(false);
-  const [newAdminForm, setNewAdminForm] = useState(() => {
-    const saved = localStorage.getItem('adminNewAdminForm');
-    return saved ? JSON.parse(saved) : {
-      email: '',
-      password: '',
-      nombres: '',
-      apellidos: ''
-    };
+  const [newAdminForm, setNewAdminForm] = useState({
+    email: '',
+    password: '',
+    nombres: '',
+    apellidos: ''
   });
 
   // Loading state
@@ -792,11 +845,13 @@ const AdminDashboard = () => {
   const fetchProfiles = async () => {
     setLoadingProfiles(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
+      // En tandas: Supabase corta en 1,000 filas por petición.
+      const data = await traerTodo(
+        'profiles',
+        '*',
+        (q) => q.order('created_at', { ascending: false }).order('id'),
+        { orden: 'id' }
+      );
       setProfiles(data || []);
       
       // Update statistics
@@ -815,9 +870,7 @@ const AdminDashboard = () => {
   const fetchCertificates = async () => {
     setLoadingCertificates(true);
     try {
-      const { data, error } = await supabase
-        .from('certificates')
-        .select(`
+      const columnas = `
           id,
           folio,
           score,
@@ -827,9 +880,17 @@ const AdminDashboard = () => {
           course_id,
           profiles:user_id (nombre_completo, email),
           courses:course_id (title)
-        `)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
+        `;
+      const ordenar = (q) => q.order('created_at', { ascending: false }).order('id');
+      // vigente_hasta llega con la migración de vigencias; si aún no existe la
+      // columna, se pide lo de siempre.
+      let data;
+      try {
+        data = await traerTodo('certificates', `${columnas}, vigente_hasta`, ordenar, { orden: null });
+      } catch (errVigencia) {
+        if (!/vigente_hasta/i.test(errVigencia?.message || '')) throw errVigencia;
+        data = await traerTodo('certificates', columnas, ordenar, { orden: null });
+      }
       setCertificates(data || []);
     } catch (err) {
       console.error('Error fetching certificates:', err.message);
@@ -853,15 +914,26 @@ const AdminDashboard = () => {
   }, [webinars]);
 
   useEffect(() => {
-    if (activeTab === 'certificates' || activeTab === 'reports' || activeTab === 'dashboard') {
+    // Alumnos también los necesita: el expediente muestra su historial.
+    if (activeTab === 'certificates' || activeTab === 'reports' || activeTab === 'dashboard' || activeTab === 'students') {
       fetchCertificates();
+    }
+    if (activeTab === 'dashboard' || activeTab === 'reports') {
+      fetchInscripcionesTodas();
     }
   }, [activeTab]);
 
   useEffect(() => {
     if (activeTab !== 'reports') return;
     fetchTrackingData();
-    const interval = setInterval(fetchTrackingData, 15 * 60 * 1000); // Refresh database every 15 minutes
+    fetchDatosCertificables();
+    // Solo el monitoreo en vivo se refresca solo, cada 3 minutos y con la
+    // pestaña a la vista. Certificados e inscripciones se cargan al entrar:
+    // recargarlos cada minuto eran decenas de consultas completas.
+    const interval = setInterval(() => {
+      if (document.hidden) return;
+      void fetchTrackingData();
+    }, 3 * 60 * 1000);
     return () => clearInterval(interval);
   }, [activeTab]);
 
@@ -885,33 +957,6 @@ const AdminDashboard = () => {
     }
   }, [activeTab]);
 
-  // Local ticker to increment session duration of online students in real-time without DB calls
-  useEffect(() => {
-    if (activeTab !== 'reports') return;
-
-    const tickSessionDurations = () => {
-      const now = new Date();
-      setStudentActivities(prevActivities => {
-        return prevActivities.map(act => {
-          if (!act.last_active_at) return act;
-          const diffMs = now - new Date(act.last_active_at);
-          const isOnline = act.current_action !== 'Desconectado' && diffMs < 15 * 60 * 1000;
-          
-          if (isOnline) {
-            return {
-              ...act,
-              session_duration: (act.session_duration || 0) + 1
-            };
-          }
-          return act;
-        });
-      });
-    };
-
-    const timer = setInterval(tickSessionDurations, 1000);
-    return () => clearInterval(timer);
-  }, [activeTab]);
-
   useEffect(() => {
     setStats(prev => ({
       ...prev,
@@ -931,54 +976,35 @@ const AdminDashboard = () => {
     const activeCount = courses.filter(c => c.activo).length;
     setStats(prev => ({
       ...prev,
-      cursosPublicados: courses.length,
+      cursosPublicados: activeCount,
       cursosActivos: activeCount
     }));
   }, [courses]);
 
 
 
+  // El curso en edición y los formularios de alta ya no se copian a
+  // localStorage (llevaban contraseñas y copias viejas de cursos); se limpia
+  // lo que haya quedado de antes.
   useEffect(() => {
-    if (editingCourse) {
-      localStorage.setItem('adminEditingCourse', JSON.stringify(editingCourse));
-    } else {
-      localStorage.removeItem('adminEditingCourse');
-    }
-  }, [editingCourse]);
-
-  useEffect(() => {
-    localStorage.setItem('adminCourseForm', JSON.stringify(courseForm));
-  }, [courseForm]);
-
-  useEffect(() => {
-    localStorage.setItem('adminShowAddStudentModal', showAddStudentModal);
-  }, [showAddStudentModal]);
-
-  useEffect(() => {
-    localStorage.setItem('adminNewStudentForm', JSON.stringify(newStudentForm));
-  }, [newStudentForm]);
-
-  useEffect(() => {
-    localStorage.setItem('adminShowAddAdminModal', showAddAdminModal);
-  }, [showAddAdminModal]);
-
-  useEffect(() => {
-    localStorage.setItem('adminNewAdminForm', JSON.stringify(newAdminForm));
-  }, [newAdminForm]);
+    try {
+      ['adminEditingCourse', 'adminCourseForm', 'adminShowAddStudentModal', 'adminShowAddAdminModal']
+        .forEach((clave) => localStorage.removeItem(clave));
+    } catch { /* sin almacenamiento */ }
+  }, []);
 
 
   // Export certificates report as CSV (opens in Excel)
   const handleExportExcel = () => {
     const rows = [
-      ['Folio', 'Alumno', 'Correo', 'Curso', 'Calificación (%)', 'Fecha de Emisión', 'Vencimiento (30 días)']
+      ['Folio', 'Alumno', 'Correo', 'Curso', 'Calificación (%)', 'Fecha de Emisión', 'Vigente hasta']
     ];
     certificates.forEach(cert => {
       const studentName = cert.profiles?.nombre_completo || cert.profiles?.email || 'Alumno';
       const studentEmail = cert.profiles?.email || '';
       const courseTitle = cert.courses?.title || 'Curso';
       const emitted = new Date(cert.created_at).toLocaleDateString('es-MX');
-      const expires = new Date(new Date(cert.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-MX');
-      rows.push([cert.folio || '', studentName, studentEmail, courseTitle, cert.score || '', emitted, expires]);
+      rows.push([cert.folio || '', studentName, studentEmail, courseTitle, cert.score ?? '', emitted, textoVigencia(cert)]);
     });
     const csvContent = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const BOM = '\uFEFF'; // UTF-8 BOM so Excel shows accents correctly
@@ -1016,7 +1042,7 @@ const AdminDashboard = () => {
     // Section 1: Retention & Abandonment
     const retentionRows = retentionRanked.map(c => `
       <tr>
-        <td style="font-weight:600">${c.title}</td>
+        <td style="font-weight:600">${escaparHtml(c.title)}</td>
         <td style="text-align:center">${c.enrolled}</td>
         <td style="text-align:center">${c.retentionRate}%</td>
         <td style="text-align:center">${c.abandonmentRate}%</td>
@@ -1026,7 +1052,7 @@ const AdminDashboard = () => {
 
     const abandonmentRows = abandonmentRanked.map(c => `
       <tr>
-        <td style="font-weight:600">${c.title}</td>
+        <td style="font-weight:600">${escaparHtml(c.title)}</td>
         <td style="text-align:center">${c.enrolled}</td>
         <td style="text-align:center">${c.abandoned}</td>
         <td style="text-align:center">${c.abandonmentRate}%</td>
@@ -1039,17 +1065,17 @@ const AdminDashboard = () => {
       ? '<tr><td colspan="4" style="text-align:center;padding:15px;color:#64748b">No hay alumnos conectados en vivo en este momento.</td></tr>'
       : liveConnected.map(student => `
       <tr>
-        <td style="font-weight:600">${student.nombre_completo || student.email}</td>
+        <td style="font-weight:600">${escaparHtml(student.nombre_completo || student.email)}</td>
         <td style="text-align:center">${formatDuration(student.activity?.session_duration || 0)}</td>
-        <td style="text-align:center">${student.activity?.current_action || '-'}</td>
-        <td style="text-align:center">${student.pais || '-'}</td>
+        <td style="text-align:center">${escaparHtml(student.activity?.current_action || '-')}</td>
+        <td style="text-align:center">${escaparHtml(student.pais || '-')}</td>
       </tr>
     `).join('');
 
     // Section 3: Detailed performance by course
     const courseStatsRows = courseStatsList.map(c => `
       <tr>
-        <td style="font-weight:600">${c.title}</td>
+        <td style="font-weight:600">${escaparHtml(c.title)}</td>
         <td style="text-align:center">${c.enrolled}</td>
         <td style="text-align:center">${c.active}</td>
         <td style="text-align:center">${c.completed}</td>
@@ -1066,14 +1092,15 @@ const AdminDashboard = () => {
       const name = cert.profiles?.nombre_completo || cert.profiles?.email || 'Alumno';
       const courseTitle = cert.courses?.title || 'Curso';
       const emitted = new Date(cert.created_at).toLocaleDateString('es-MX');
-      const expires = new Date(new Date(cert.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-MX');
+      const expires = textoVigencia(cert);
+      const vencido = cert.vigente_hasta && new Date(cert.vigente_hasta) < new Date();
       return `<tr>
-        <td>${cert.folio || '-'}</td>
-        <td>${name}</td>
-        <td>${courseTitle}</td>
-        <td style="text-align:center">${cert.score || 0}%</td>
+        <td>${escaparHtml(cert.folio || '-')}</td>
+        <td>${escaparHtml(name)}</td>
+        <td>${escaparHtml(courseTitle)}</td>
+        <td style="text-align:center">${cert.score ?? 0}%</td>
         <td style="text-align:center">${emitted}</td>
-        <td style="text-align:center;color:#dc2626">${expires}</td>
+        <td style="text-align:center;${vencido ? 'color:#dc2626' : ''}">${expires}</td>
       </tr>`;
     }).join('');
 
@@ -1084,9 +1111,9 @@ const AdminDashboard = () => {
       ? '<tr><td colspan="4" style="text-align:center;padding:15px;color:#64748b">No hay webinars registrados.</td></tr>'
       : webs.map(w => `
         <tr>
-          <td style="font-weight:600">${w.title}</td>
-          <td style="text-align:center">${w.date || 'Sin fecha'}</td>
-          <td style="text-align:center">${w.time || '-'}</td>
+          <td style="font-weight:600">${escaparHtml(w.title)}</td>
+          <td style="text-align:center">${escaparHtml(w.date || 'Sin fecha')}</td>
+          <td style="text-align:center">${escaparHtml(w.time || '-')}</td>
           <td style="text-align:right">${w.activo ? 'Activo' : 'Inactivo'}</td>
         </tr>
       `).join('');
@@ -1095,7 +1122,7 @@ const AdminDashboard = () => {
       ? '<tr><td colspan="3" style="text-align:center;padding:15px;color:#64748b">No hay datos geográficos registrados.</td></tr>'
       : countriesDisplay.map(country => `
       <tr>
-        <td style="font-weight:600">${country.name}</td>
+        <td style="font-weight:600">${escaparHtml(country.name)}</td>
         <td>${country.count} alumnos</td>
         <td style="text-align:right;font-weight:700;color:#00bcd4">${country.percent}%</td>
       </tr>
@@ -1104,7 +1131,7 @@ const AdminDashboard = () => {
     // Section 7: Alerts
     const alertHtmlItems = alertsList.map(alert => `
       <div class="alert-item ${alert.type || 'info'}">
-        <strong>${(alert.type || 'info').toUpperCase()}:</strong> ${alert.text}
+        <strong>${(alert.type || 'info').toUpperCase()}:</strong> ${escaparHtml(alert.text)}
       </div>
     `).join('');
 
@@ -1122,8 +1149,8 @@ const AdminDashboard = () => {
       .map((student, index) => `
         <tr>
           <td style="font-weight:bold;text-align:center">#${index + 1}</td>
-          <td style="font-weight:600">${student.nombre_completo || student.email}</td>
-          <td>${student.pais || 'México'}</td>
+          <td style="font-weight:600">${escaparHtml(student.nombre_completo || student.email)}</td>
+          <td>${escaparHtml(student.pais || 'México')}</td>
           <td style="text-align:center">${student.enrolled} cursos</td>
           <td style="text-align:center">${student.completed} completados</td>
           <td style="font-weight:bold;text-align:right;color:#00bcd4">${formatDuration(student.totalTime)}</td>
@@ -1218,7 +1245,7 @@ const AdminDashboard = () => {
     <div class="section-title">🟢 Alumnos Conectados en Tiempo Real</div>
     <table>
       <thead>
-        <tr><th>Alumno</th><th style="text-align:center">Tiempo Sesión</th><th style="text-align:center">Acción Actual</th><th style="text-align:center">País</th></tr>
+        <tr><th>Alumno</th><th style="text-align:center">Tiempo acumulado en plataforma</th><th style="text-align:center">Acción Actual</th><th style="text-align:center">País</th></tr>
       </thead>
       <tbody>
         ${liveConnectedRows}
@@ -1241,7 +1268,7 @@ const AdminDashboard = () => {
     <div class="section-title">🏆 Registro de Certificados Emitidos</div>
     <table>
       <thead>
-        <tr><th>Folio</th><th>Alumno</th><th>Curso</th><th style="text-align:center">Calificación</th><th style="text-align:center">Emisión</th><th style="text-align:center">Vencimiento</th></tr>
+        <tr><th>Folio</th><th>Alumno</th><th>Curso</th><th style="text-align:center">Calificación</th><th style="text-align:center">Emisión</th><th style="text-align:center">Vigente hasta</th></tr>
       </thead>
       <tbody>
         ${certRows}
@@ -1304,6 +1331,7 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = async () => {
+    if (!permitirSalidaCurso()) return;
     try {
       await logout();
     } catch (err) {
@@ -1313,10 +1341,59 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleSaveWelcomeMessage = (e) => {
+  // El mensaje de bienvenida vive en portal_config para que lo vean todos los
+  // alumnos (antes solo quedaba en el navegador del administrador).
+  const [guardandoBienvenida, setGuardandoBienvenida] = useState(false);
+  const [faltaPortalConfig, setFaltaPortalConfig] = useState(false);
+
+  useEffect(() => {
+    if (activeTab !== 'settings') return;
+    let vigente = true;
+    supabase
+      .from('portal_config')
+      .select('valor')
+      .eq('clave', 'mensaje_bienvenida')
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!vigente) return;
+        if (error) {
+          if (esTablaFaltante(error)) setFaltaPortalConfig(true);
+          else console.warn('No se pudo leer el mensaje de bienvenida:', error.message);
+          return;
+        }
+        setFaltaPortalConfig(false);
+        if (typeof data?.valor?.texto === 'string') {
+          setPortalSettings((prev) => ({ ...prev, bienvenidaEstudiante: data.valor.texto }));
+        }
+      });
+    return () => { vigente = false; };
+  }, [activeTab]);
+
+  const handleSaveWelcomeMessage = async (e) => {
     e.preventDefault();
-    localStorage.setItem('welcomeMessage', portalSettings.bienvenidaEstudiante);
-    showToast('¡Mensaje de bienvenida de estudiantes actualizado con éxito!', 'success');
+    setGuardandoBienvenida(true);
+    try {
+      const { error } = await supabase
+        .from('portal_config')
+        .upsert({
+          clave: 'mensaje_bienvenida',
+          valor: { texto: portalSettings.bienvenidaEstudiante },
+          actualizado_en: new Date().toISOString()
+        }, { onConflict: 'clave' });
+      if (error) {
+        if (esTablaFaltante(error)) {
+          setFaltaPortalConfig(true);
+          throw new Error('Falta correr la migración endurecimiento.sql en Supabase para guardar el mensaje.');
+        }
+        throw error;
+      }
+      setFaltaPortalConfig(false);
+      showToast('¡Mensaje de bienvenida de estudiantes actualizado con éxito!', 'success');
+    } catch (err) {
+      showToast(err.message || 'No se pudo guardar el mensaje de bienvenida.', 'error');
+    } finally {
+      setGuardandoBienvenida(false);
+    }
   };
 
   const handleUpdatePassword = async (e) => {
@@ -1465,7 +1542,14 @@ const AdminDashboard = () => {
     }
   };
 
+  // Lleva el formulario a la vista (en móvil queda debajo de la tabla).
+  const courseFormRef = useRef(null);
+  const mostrarFormularioCurso = () => {
+    setTimeout(() => courseFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  };
+
   const handleOpenCourseCreate = () => {
+    if (!permitirSalidaCurso()) return;
     setEditingCourse(null);
     setCourseForm({
       title: '',
@@ -1476,7 +1560,8 @@ const AdminDashboard = () => {
       image: '',
       link: '',
       minAprobacion: 80,
-      activo: true,
+      // Un curso nuevo nace como borrador: los alumnos no lo ven hasta activarlo.
+      activo: false,
       youtube_video_id: '',
       certificado_template_url: '',
       certificado_x: 300,
@@ -1489,9 +1574,11 @@ const AdminDashboard = () => {
       questions: []
     });
     setShowCourseForm(true);
+    mostrarFormularioCurso();
   };
 
   const handleOpenCourseEdit = (course) => {
+    if (!permitirSalidaCurso()) return;
     setEditingCourse(course);
     setCourseForm({
       title: course.title,
@@ -1501,23 +1588,27 @@ const AdminDashboard = () => {
       requisitos: course.requisitos,
       image: course.image,
       link: course.link || '',
-      minAprobacion: course.minAprobacion || 80,
+      minAprobacion: course.minAprobacion ?? 80,
       activo: course.activo !== false,
       youtube_video_id: course.youtube_video_id || '',
       certificado_template_url: course.certificado_template_url || '',
-      certificado_x: course.certificado_x || 300,
-      certificado_y: course.certificado_y || 400,
-      certificado_font_size: course.certificado_font_size || 40,
+      certificado_x: course.certificado_x ?? 300,
+      certificado_y: course.certificado_y ?? 400,
+      certificado_font_size: course.certificado_font_size ?? 40,
       category_id: course.category_id || '',
       tipo: course.tipo || 'gratis',
       precio_mxn: course.precio_mxn ?? '',
       vigencia_meses: course.vigencia_meses ?? '',
-      questions: course.questions || []
+      // Copia profunda: editar una pregunta no debe tocar la lista de cursos
+      // hasta que se guarde.
+      questions: (course.questions || []).map(q => ({ ...q, options: [...(q.options || [])] }))
     });
     setShowCourseForm(true);
+    mostrarFormularioCurso();
   };
 
   const handleCloseCourseForm = () => {
+    if (!permitirSalidaCurso()) return;
     setShowCourseForm(false);
     setEditingCourse(null);
     setCourseForm({
@@ -1603,17 +1694,7 @@ const AdminDashboard = () => {
       }));
       showToast('Plantilla de certificado subida correctamente.', 'success');
     } catch (err) {
-      console.warn('Error uploading template to Supabase Storage, falling back to Base64:', err.message);
-      
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setCourseForm(prev => ({
-          ...prev,
-          certificado_template_url: event.target.result
-        }));
-        showAlert('Cargado localmente con éxito (No se pudo subir a Supabase storage, pero funcionará en tu navegador). Asegúrate de crear el bucket "certificates" en tu consola de Supabase.', 'Carga Local');
-      };
-      reader.readAsDataURL(file);
+      showToast(`No se pudo subir la plantilla: ${err.message}`, 'error');
     } finally {
       setActionLoading(false);
     }
@@ -1662,6 +1743,14 @@ const AdminDashboard = () => {
       return;
     }
 
+    const minAprobacion = Number(courseForm.minAprobacion);
+    if (!Number.isFinite(minAprobacion) || minAprobacion < 0 || minAprobacion > 100) {
+      showToast('El porcentaje mínimo de aprobación debe estar entre 0 y 100.', 'error');
+      return;
+    }
+    const preguntaInvalida = (courseForm.questions || []).find((q) => !q.question_text?.trim() || !Array.isArray(q.options) || q.options.length < 2 || q.options.some((o) => !String(o).trim()) || !Number.isInteger(Number(q.correct_option_index)) || Number(q.correct_option_index) < 0 || Number(q.correct_option_index) >= q.options.length);
+    if (preguntaInvalida) { showToast('Revisa las preguntas: necesitan texto, opciones completas y una respuesta correcta válida.', 'error'); return; }
+
     // La miniatura de YouTube lleva el ID del video en su dirección, y la
     // portada es pública: con ella cualquiera vería el curso sin pagar.
     if (esDePago && esMiniaturaYoutube(courseForm.image)) {
@@ -1680,16 +1769,18 @@ const AdminDashboard = () => {
         image_url: courseForm.image || '',
         link: courseForm.link || '',
         certificado_template_url: courseForm.certificado_template_url || '',
-        certificado_x: courseForm.certificado_x || 300,
-        certificado_y: courseForm.certificado_y || 400,
-        certificado_font_size: courseForm.certificado_font_size || 40,
-        min_aprobacion: courseForm.minAprobacion || 80,
-        activo: courseForm.activo !== false,
+        // `??` y no `||`: una posición 0 es válida.
+        certificado_x: courseForm.certificado_x ?? 300,
+        certificado_y: courseForm.certificado_y ?? 400,
+        certificado_font_size: courseForm.certificado_font_size ?? 40,
+        min_aprobacion: minAprobacion,
         category_id: courseForm.category_id || null
       };
 
-      const isMockId = !editingCourse || typeof editingCourse.id === 'string' || isNaN(Number(editingCourse.id));
+      const isMockId = !editingCourse || isNaN(Number(editingCourse.id));
 
+      // Activo/Inactivo se cambia desde la tabla; al editar no se toca. Un
+      // curso nuevo se crea inactivo (borrador).
       const escribirCurso = async (payload) => {
         if (editingCourse && !isMockId) {
           const { data, error } = await supabase
@@ -1699,10 +1790,11 @@ const AdminDashboard = () => {
             .select();
           if (error) throw error;
           if (data && data.length > 0) return data[0].id;
+          throw new Error('No se actualizó ningún curso: puede que ya no exista o que tu sesión no tenga permiso.');
         }
         const { data, error } = await supabase
           .from('courses')
-          .insert([payload])
+          .insert([{ ...payload, activo: false }])
           .select();
         if (error) throw error;
         return data[0].id;
@@ -1719,59 +1811,62 @@ const AdminDashboard = () => {
       let courseId = null;
       for (const intento of [{ ...dbData, ...acceso, ...vigencia }, { ...dbData, ...acceso }, dbData]) {
         try {
+          if (intento === dbData && esDePago) throw new Error('Falta la migración cursos-inscripciones.sql para guardar el precio y acceso del curso de pago.');
           courseId = await escribirCurso(intento);
           break;
         } catch (err) {
+          if (Number(courseForm.vigencia_meses) > 0 && /vigencia_meses/i.test(err?.message || '')) throw new Error('Falta la migración lms-estructura.sql para guardar la vigencia del certificado.');
           if (!columnaFaltante(err) || intento === dbData) throw err;
         }
       }
 
-      if (courseId) {
-        await supabase
-          .from('questions')
-          .delete()
-          .eq('course_id', courseId);
+      // Si el curso nuevo ya existe y algo de abajo falla, reintentar debe
+      // editarlo y no crear un duplicado.
+      if (!editingCourse && courseId) {
+        setEditingCourse({ ...courseForm, activo: false, id: courseId });
+      }
 
-        if (courseForm.questions && courseForm.questions.length > 0) {
-          const questionsToInsert = courseForm.questions.map(q => ({
+      if (courseId) {
+        // Primero se guardan todas las preguntas. Borrar antes de insertar
+        // dejaba el examen vacío si fallaba una petición.
+        const existentes = await traerTodo('questions', 'id', (q) => q.eq('course_id', courseId));
+        const idsExistentes = new Set(existentes.map((q) => q.id));
+        const idsGuardados = [];
+        for (const [indice, q] of (courseForm.questions || []).entries()) {
+          const pregunta = {
             course_id: courseId,
             question_text: q.question_text,
             options: q.options,
             correct_option_index: q.correct_option_index
-          }));
-          const { error: qError } = await supabase
-            .from('questions')
-            .insert(questionsToInsert);
-          if (qError) throw qError;
+          };
+          const { data, error } = idsExistentes.has(q.id)
+            ? await supabase.from('questions').update(pregunta).eq('id', q.id).eq('course_id', courseId).select('id').single()
+            : await supabase.from('questions').insert([pregunta]).select('id').single();
+          if (error) throw new Error(`El curso se guardó, pero el examen quedó pendiente: ${error.message}. Conservamos las preguntas anteriores; vuelve a guardar para terminar.`);
+          idsGuardados.push(data.id);
+          // El reintento actualiza lo ya insertado y no lo duplica.
+          setCourseForm((actual) => ({ ...actual, questions: actual.questions.map((item, i) => i === indice ? { ...item, id: data.id } : item) }));
+        }
+        const eliminar = existentes.map((q) => q.id).filter((id) => !idsGuardados.includes(id));
+        if (eliminar.length) {
+          const { error } = await supabase.from('questions').delete().eq('course_id', courseId).in('id', eliminar);
+          if (error) throw new Error(`Las preguntas se guardaron, pero no se quitaron las anteriores: ${error.message}`);
         }
       }
 
       await fetchCourses();
       if (!editingCourse && courseId) {
-        setEditingCourse({ ...courseForm, id: courseId });
-        showToast('Curso creado. Ahora agrégale sus lecciones abajo.', 'success');
+        setCourseForm(prev => ({ ...prev, activo: false }));
+        showToast('Curso creado como borrador (inactivo). Agrégale sus lecciones abajo y actívalo cuando esté listo.', 'success');
         return;
       }
       showToast('Curso actualizado correctamente', 'success');
       handleCloseCourseForm();
     } catch (err) {
+      // Sin guardado "local": se muestra el error real y el formulario queda
+      // abierto con lo que se escribió para poder reintentar.
       console.error('Error saving course:', err.message);
-      // Fallback local
-      if (editingCourse) {
-        const updated = courses.map(c => c.id === editingCourse.id ? { ...c, ...courseForm } : c);
-        setCourses(updated);
-        localStorage.setItem('courses', JSON.stringify(updated));
-      } else {
-        const newCourse = {
-          id: courses.length > 0 ? Math.max(...courses.map(c => c.id)) + 1 : 1,
-          ...courseForm
-        };
-        const updated = [...courses, newCourse];
-        setCourses(updated);
-        localStorage.setItem('courses', JSON.stringify(updated));
-      }
-      showAlert(`Error al guardar en Supabase: ${err.message}. Se guardó de forma local temporalmente. Para que se guarde en Supabase, asegúrate de crear las tablas ejecutando la Parte 2 y 3 del archivo 'supabase-setup.sql' en el SQL Editor de Supabase.`, 'Aviso');
-      handleCloseCourseForm();
+      showAlert(`No se pudo guardar el curso: ${err.message}`, 'Error al guardar');
     } finally {
       setActionLoading(false);
     }
@@ -1790,23 +1885,61 @@ const AdminDashboard = () => {
     }
   };
 
+  // Cuenta filas de una tabla para un curso. `null` si la tabla aún no existe.
+  const contarDeCurso = async (tabla, courseId) => {
+    const { count, error } = await supabase
+      .from(tabla)
+      .select('*', { count: 'exact', head: true })
+      .eq('course_id', courseId);
+    if (error) {
+      if (esTablaFaltante(error)) return null;
+      throw error;
+    }
+    return count || 0;
+  };
+
+  // Un curso con alumnos o certificados no se borra: se perdería su historial.
+  // Para esos casos está Inactivar.
   const handleDeleteCourse = async (courseId) => {
-    if (await showConfirm('¿Estás seguro de eliminar este curso del catálogo?', 'Eliminar Curso')) {
-      try {
-        const { error } = await supabase
-          .from('courses')
-          .delete()
-          .eq('id', courseId);
-        if (error) throw error;
-        await fetchCourses();
-        showToast('Curso eliminado con éxito', 'success');
-      } catch (err) {
-        console.error('Error deleting course:', err.message);
-        const updated = courses.filter(c => c.id !== courseId);
-        setCourses(updated);
-        localStorage.setItem('courses', JSON.stringify(updated));
-        showToast('Curso eliminado de forma local', 'warning');
-      }
+    const course = courses.find(c => c.id === courseId);
+    const titulo = course?.title || 'este curso';
+    let inscritos;
+    let emitidos;
+    try {
+      [inscritos, emitidos] = await Promise.all([
+        contarDeCurso('inscripciones', courseId),
+        contarDeCurso('certificates', courseId)
+      ]);
+    } catch (err) {
+      showToast(`No se pudo revisar si el curso tiene alumnos: ${err.message}`, 'error');
+      return;
+    }
+
+    if ((inscritos || 0) > 0 || (emitidos || 0) > 0) {
+      const partes = [];
+      if (inscritos > 0) partes.push(`${inscritos} ${inscritos === 1 ? 'alumno inscrito' : 'alumnos inscritos'}`);
+      if (emitidos > 0) partes.push(`${emitidos} ${emitidos === 1 ? 'certificado emitido' : 'certificados emitidos'}`);
+      showAlert(
+        `"${titulo}" tiene ${partes.join(' y ')}. Si lo eliminas se pierde ese historial. ${course?.activo ? 'Usa "Activo" en la tabla para inactivarlo: deja de verse en el catálogo y se conserva todo.' : 'Ya está inactivo, así que los alumnos nuevos no lo ven.'}`,
+        'No se puede eliminar'
+      );
+      return;
+    }
+
+    const detalle = `Se eliminará "${titulo}" con sus lecciones, preguntas del examen, reglas y archivos. No tiene alumnos inscritos ni certificados. Esta acción no se puede deshacer.`;
+    if (!(await showConfirm(detalle, 'Eliminar Curso'))) return;
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', courseId);
+      if (error) throw error;
+      if (editingCourse && Number(editingCourse.id) === Number(courseId)) handleCloseCourseForm();
+      await fetchCourses();
+      showToast('Curso eliminado con éxito', 'success');
+    } catch (err) {
+      console.error('Error deleting course:', err.message);
+      showToast(`No se pudo eliminar el curso: ${err.message}`, 'error');
     }
   };
 
@@ -1814,18 +1947,39 @@ const AdminDashboard = () => {
     const course = courses.find(c => c.id === courseId);
     if (!course) return;
     const nextStatus = !course.activo;
+
+    let mensaje;
+    if (nextStatus) {
+      mensaje = `¿Activar "${course.title}"? Aparecerá en el catálogo y los alumnos podrán inscribirse${course.tipo === 'pago' ? ' y pagarlo' : ''}.`;
+    } else {
+      let inscritos = null;
+      try {
+        inscritos = await contarDeCurso('inscripciones', courseId);
+      } catch (err) {
+        showToast(`No se pudieron contar los inscritos: ${err.message}`, 'error');
+        return;
+      }
+      mensaje = `¿Inactivar "${course.title}"? Deja de verse en el catálogo`
+        + (inscritos > 0
+          ? ` y ${inscritos} ${inscritos === 1 ? 'alumno inscrito dejará' : 'alumnos inscritos dejarán'} de verlo en su portal.`
+          : inscritos === 0 ? '. No tiene alumnos inscritos.' : '.')
+        + ' Se conservan sus inscripciones, avances y certificados.';
+    }
+    if (!(await showConfirm(mensaje, nextStatus ? 'Activar curso' : 'Inactivar curso'))) return;
+
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('courses')
         .update({ activo: nextStatus })
-        .eq('id', courseId);
+        .eq('id', courseId)
+        .select('id');
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('No se actualizó el curso: revisa que tu sesión de administrador siga activa.');
       await fetchCourses();
+      showToast(nextStatus ? 'Curso activado.' : 'Curso inactivado.', 'success');
     } catch (err) {
       console.error('Error toggling course status:', err.message);
-      const updated = courses.map(c => c.id === courseId ? { ...c, activo: nextStatus } : c);
-      setCourses(updated);
-      localStorage.setItem('courses', JSON.stringify(updated));
+      showToast(`No se pudo cambiar el estado: ${err.message}`, 'error');
     }
   };
 
@@ -1899,6 +2053,26 @@ const AdminDashboard = () => {
     }
   };
 
+  // Alta de cuentas desde el servidor: signUp desde el navegador dejaba la
+  // cuenta pendiente y podía cambiar la sesión del administrador.
+  const llamarUsuarioCrear = async (cuerpo) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch('/.netlify/functions/usuario-crear', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.access_token || ''}`
+      },
+      body: JSON.stringify(cuerpo)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (res.status === 404) throw new Error('La función para crear cuentas todavía no está publicada.');
+      throw new Error(data.error || 'No se pudo crear la cuenta.');
+    }
+    return data;
+  };
+
   // Create Student manually
   const handleCreateStudent = async (e) => {
     e.preventDefault();
@@ -1906,73 +2080,34 @@ const AdminDashboard = () => {
 
     try {
       const nombreCompleto = `${newStudentForm.nombres} ${newStudentForm.apellidos}`.trim();
-      
-      // Creamos la cuenta en Supabase Auth. 
-      // NOTA: Para crear un usuario secundario en producción sin cerrar la sesión actual de administrador, 
-      // se utiliza supabase.auth.signUp o un endpoint backend / edge function. 
-      // Para desarrollo de MVP, creamos el perfil en la base de datos directamente o simulamos el registro.
-      const { data: alta, error } = await supabase.auth.signUp({
-        email: newStudentForm.email,
+      // La cuenta que crea un administrador ya nace aprobada y con acceso.
+      const { userId } = await llamarUsuarioCrear({
+        tipo: 'alumno',
+        email: newStudentForm.email.trim(),
         password: newStudentForm.password,
-        options: {
-          emailRedirectTo: 'https://healthcareexp.com/confirmacion',
-          data: {
-            nombre_completo: nombreCompleto,
-            nombres: newStudentForm.nombres,
-            apellidos: newStudentForm.apellidos,
-            telefono: newStudentForm.telefono,
-            pais: newStudentForm.pais,
-            estado: newStudentForm.estado,
-            grado: newStudentForm.grado,
-            especialidad: newStudentForm.especialidad,
-            institucion: newStudentForm.institucion,
-            cargo: newStudentForm.cargo,
-            rol: 'estudiante'
-          }
-        }
+        nombre_completo: nombreCompleto,
+        telefono: newStudentForm.telefono,
+        pais: newStudentForm.pais,
+        especialidad: newStudentForm.especialidad,
+        institucion: newStudentForm.institucion,
+        cargo: newStudentForm.cargo
       });
 
-      if (error) throw error;
-
-      // Las cuentas nuevas quedan en revisión; la que crea un administrador
-      // ya nace con acceso.
-      if (alta?.user?.id) {
-        try {
-          await llamarCuenta('aprobar', { userId: alta.user.id });
-        } catch (errAprobar) {
-          console.warn('No se pudo dar acceso a la cuenta nueva:', errAprobar.message);
-        }
+      // Estado y grado no viajan en el alta; se completan aparte.
+      const extras = {};
+      if (newStudentForm.estado.trim()) extras.estado = newStudentForm.estado.trim();
+      if (newStudentForm.grado.trim()) extras.grado = newStudentForm.grado.trim();
+      if (userId && Object.keys(extras).length > 0) {
+        const { error: extrasError } = await supabase.from('profiles').update(extras).eq('id', userId);
+        if (extrasError) showToast(`La cuenta se creó, pero no se guardó estado/grado: ${extrasError.message}`, 'warning');
       }
 
       showToast(`¡Alumno ${nombreCompleto} registrado correctamente!`, 'success');
       handleCloseAddStudentModal();
       fetchProfiles();
     } catch (err) {
-      // Fallback local si el admin no tiene permisos de creación directa en auth o requiere confirmación
-      console.warn('Error en registro auth:', err.message);
-      
-      // Creamos un registro simulado en el state
-      const mockProfile = {
-        id: 'mock-' + Math.random().toString(36).substr(2, 9),
-        email: newStudentForm.email,
-        nombre_completo: `${newStudentForm.nombres} ${newStudentForm.apellidos}`.trim(),
-        telefono: newStudentForm.telefono,
-        rol: 'estudiante',
-        created_at: new Date().toISOString(),
-        user_metadata: {
-          nombres: newStudentForm.nombres,
-          apellidos: newStudentForm.apellidos,
-          pais: newStudentForm.pais,
-          estado: newStudentForm.estado,
-          grado: newStudentForm.grado,
-          especialidad: newStudentForm.especialidad,
-          institucion: newStudentForm.institucion,
-          cargo: newStudentForm.cargo
-        }
-      };
-      setProfiles([mockProfile, ...profiles]);
-      showToast('Alumno registrado con éxito (Simulación local)', 'warning');
-      handleCloseAddStudentModal();
+      // Se conserva lo escrito para que el administrador corrija y reintente.
+      showToast(err.message, 'error');
     } finally {
       setActionLoading(false);
     }
@@ -1985,36 +2120,17 @@ const AdminDashboard = () => {
 
     try {
       const nombreCompleto = `${newAdminForm.nombres} ${newAdminForm.apellidos}`.trim();
-      const { error } = await supabase.auth.signUp({
-        email: newAdminForm.email,
+      await llamarUsuarioCrear({
+        tipo: 'admin',
+        email: newAdminForm.email.trim(),
         password: newAdminForm.password,
-        options: {
-          emailRedirectTo: 'https://healthcareexp.com/confirmacion',
-          data: {
-            nombre_completo: nombreCompleto,
-            nombres: newAdminForm.nombres,
-            apellidos: newAdminForm.apellidos,
-            rol: 'admin'
-          }
-        }
+        nombre_completo: nombreCompleto
       });
-      if (error) throw error;
       showToast(`Administrador ${nombreCompleto} creado correctamente.`, 'success');
       handleCloseAddAdminModal();
       fetchProfiles();
     } catch (err) {
-      console.warn('Error en registro admin auth:', err.message);
-      // Fallback local
-      const mockAdmin = {
-        id: 'mock-admin-' + Math.random().toString(36).substr(2, 9),
-        email: newAdminForm.email,
-        nombre_completo: `${newAdminForm.nombres} ${newAdminForm.apellidos}`.trim(),
-        rol: 'admin',
-        created_at: new Date().toISOString()
-      };
-      setProfiles([mockAdmin, ...profiles]);
-      showToast('Administrador creado con éxito (Simulación local)', 'warning');
-      handleCloseAddAdminModal();
+      showToast(err.message, 'error');
     } finally {
       setActionLoading(false);
     }
@@ -2069,120 +2185,86 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchInscripcionesTodas = async () => {
+    try {
+      const filas = await traerTodo('inscripciones', 'user_id, course_id, created_at');
+      setInscripcionesTodas(filas);
+    } catch (err) {
+      console.warn('No se pudieron leer las inscripciones:', err.message);
+      setInscripcionesTodas(null);
+    }
+  };
+
+  // Quién terminó un curso (lecciones obligatorias completas) o aprobó el
+  // examen final, para listar los certificados pendientes.
+  const fetchDatosCertificables = async () => {
+    try {
+      const [lecciones, completadas, examenes] = await Promise.all([
+        traerTodo('curso_lecciones', 'id, course_id, tipo, obligatoria'),
+        traerTodo('leccion_progreso', 'user_id, leccion_id, course_id', (q) => q.eq('completada', true).order('user_id').order('leccion_id'), { orden: null }),
+        traerTodo('curso_eventos', 'user_id, course_id, datos', (q) => q.eq('tipo', 'examen_enviado'))
+      ]);
+      setDatosCertificables({ lecciones, completadas, examenes });
+    } catch (err) {
+      console.warn('No se pudieron leer los avances para certificados pendientes:', err.message);
+      setDatosCertificables({ lecciones: [], completadas: [], examenes: [] });
+    }
+  };
+
   const fetchTrackingData = async () => {
     let acts = null;
     let prog = null;
 
     try {
       // 1. Fetch activities
-      const { data, error: actsErr } = await supabase
-        .from('student_activity')
-        .select('*')
-        .order('last_active_at', { ascending: false });
-      if (actsErr) throw actsErr;
-      acts = data || [];
+      acts = await traerTodo(
+        'student_activity',
+        '*',
+        (q) => q.order('last_active_at', { ascending: false, nullsFirst: false }).order('user_id'),
+        { orden: 'user_id' }
+      );
     } catch (err) {
       console.warn('student_activity fetch failed:', err.message);
     }
 
     try {
       // 2. Fetch progress
-      const { data, error: progErr } = await supabase
-        .from('student_progress')
-        .select('*')
-        .order('updated_at', { ascending: false });
-      if (progErr) throw progErr;
-      prog = data || [];
+      prog = await traerTodo(
+        'student_progress',
+        '*',
+        (q) => q.order('updated_at', { ascending: false, nullsFirst: false }).order('user_id').order('course_id'),
+        { orden: ['user_id', 'course_id'] }
+      );
     } catch (err) {
       console.warn('student_progress fetch failed:', err.message);
     }
 
-    let finalActs = [];
-    let finalProg = [];
-
-    // If database queries succeeded, use them. Otherwise, fall back to localStorage
-    if (acts !== null) {
-      finalActs = acts;
-      try {
-        const localActs = {};
-        acts.forEach(item => { localActs[item.user_id] = item; });
-        localStorage.setItem('backup_all_student_activities', JSON.stringify(localActs));
-      } catch (error) {
-        console.warn('No se pudo guardar el respaldo local de actividad:', error.message);
-      }
-    } else {
-      try {
-        const localActs = JSON.parse(localStorage.getItem('backup_all_student_activities') || '{}');
-        finalActs = Object.values(localActs);
-      } catch (error) {
-        console.warn('No se pudo leer el respaldo local de actividad:', error.message);
-      }
-    }
-
-    if (prog !== null) {
-      finalProg = prog;
-      try {
-        const localProg = {};
-        prog.forEach(item => { localProg[`${item.user_id}_${item.course_id}`] = item; });
-        localStorage.setItem('backup_all_student_progress', JSON.stringify(localProg));
-      } catch (error) {
-        console.warn('No se pudo guardar el respaldo local de progreso:', error.message);
-      }
-    } else {
-      try {
-        const localProg = JSON.parse(localStorage.getItem('backup_all_student_progress') || '{}');
-        finalProg = Object.values(localProg);
-      } catch (error) {
-        console.warn('No se pudo leer el respaldo local de progreso:', error.message);
-      }
-    }
-
-    // Set the state
-    setStudentActivities(finalActs);
-    setStudentProgressList(finalProg);
+    const errores = [];
+    if (acts === null) errores.push('actividad');
+    else setStudentActivities(acts);
+    if (prog === null) errores.push('avance');
+    else setStudentProgressList(prog);
+    setErrorTracking(errores.length ? `No se pudo actualizar ${errores.join(' y ')}. Se muestran los últimos datos recibidos.` : '');
   };
 
-  const handleIssueCertificate = async (userId, courseId, score = 100) => {
+  // El certificado lo emite el servidor (folio único, vigencia del curso y
+  // registro de la acción). La imagen la genera el portal del alumno al abrirlo.
+  const handleIssueCertificate = async (userId, courseId) => {
+    const alumno = profiles.find(p => p.id === userId);
+    const curso = courses.find(c => Number(c.id) === Number(courseId));
+    const nombre = alumno?.nombre_completo || alumno?.email || 'este alumno';
+    if (!(await showConfirm(`¿Emitir el certificado de "${curso?.title || 'este curso'}" a ${nombre}? Queda registrado con calificación de 100.`, 'Emitir certificado'))) return;
     try {
       setActionLoading(true);
-      const folio = `FOL-${Math.floor(100000 + Math.random() * 900000)}`;
-      
-      const { error } = await supabase
-        .from('certificates')
-        .insert([{
-          user_id: userId,
-          course_id: courseId,
-          score: score,
-          folio: folio,
-          pdf_url: 'https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-25-51-449.png'
-        }]);
-
-      if (error) throw error;
-      showToast('Certificado emitido con éxito', 'success');
-      
-      // Refresh certificates list
+      const { nuevo, certificado } = await llamarCertificado('emitir', { courseId: Number(courseId), userId });
+      showToast(nuevo === false
+        ? `Ya tenía certificado (folio ${certificado?.folio || '—'}).`
+        : `Certificado emitido (folio ${certificado?.folio || '—'}).`, 'success');
       await fetchCertificates();
     } catch (err) {
-      console.warn('Error issuing certificate, saving local:', err.message);
-      // Fallback local
-      const student = profiles.find(p => p.id === userId) || {};
-      const course = courses.find(c => c.id === courseId) || {};
-      const localCert = {
-        id: 'local_cert_' + Date.now(),
-        user_id: userId,
-        course_id: courseId,
-        score: score,
-        folio: `FOL-${Math.floor(100000 + Math.random() * 900000)}`,
-        pdf_url: 'https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-25-51-449.png',
-        created_at: new Date().toISOString(),
-        profiles: { nombre_completo: student.nombre_completo || student.email || 'Alumno' },
-        courses: { title: course.title || 'Curso Académico' }
-      };
-      
-      // Update local certificates
-      const updated = [localCert, ...certificates];
-      setCertificates(updated);
-      showToast('Certificado emitido localmente con éxito', 'success');
+      showToast(err.status === 404
+        ? 'La función de certificados todavía no está publicada.'
+        : err.message, 'error');
     } finally {
       setActionLoading(false);
     }
@@ -2572,6 +2654,51 @@ const AdminDashboard = () => {
 
       return matchSearch && matchSpecialty && matchCountry && matchDivision;
     });
+  const especialidades = useMemo(() => [...new Set(profiles.filter((p) => p.rol === 'estudiante').map((p) => p.especialidad || p.user_metadata?.especialidad).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')), [profiles]);
+  const paises = useMemo(() => [...new Set(profiles.filter((p) => p.rol === 'estudiante').map((p) => p.pais || p.user_metadata?.pais).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')), [profiles]);
+  const perfilesPorId = useMemo(() => new Map(profiles.map((p) => [p.id, p])), [profiles]);
+  const actividadPorAlumno = useMemo(() => new Map(studentActivities.map((a) => [a.user_id, a])), [studentActivities]);
+  const progresoPorCurso = useMemo(() => new Map(studentProgressList.map((p) => [`${p.user_id}_${p.course_id}`, p])), [studentProgressList]);
+  const certificadosPorCurso = useMemo(() => new Set(certificates.map((c) => `${c.user_id}_${c.course_id}`)), [certificates]);
+  const resumenDashboard = useMemo(() => {
+    const ahora = new Date();
+    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    const delMes = (lista) => lista.filter((p) => new Date(p.created_at) >= inicioMes && new Date(p.created_at) <= ahora).length;
+    const alumnos = profiles.filter((p) => p.rol === 'estudiante');
+    const inscripciones = inscripcionesTodas || [];
+    const conteos = new Map();
+    inscripciones.forEach((i) => conteos.set(Number(i.course_id), (conteos.get(Number(i.course_id)) || 0) + 1));
+    const porCurso = new Map(courses.map((c) => [Number(c.id), c]));
+    const actividades = [
+      ...alumnos.map((p) => ({ id: `perfil-${p.id}`, fecha: p.created_at, etiqueta: 'Nuevo alumno registrado', detalle: p.nombre_completo || p.email })),
+      ...inscripciones.map((i) => ({ id: `inscripcion-${i.user_id}-${i.course_id}`, fecha: i.created_at, etiqueta: 'Inscripción', detalle: `${perfilesPorId.get(i.user_id)?.nombre_completo || perfilesPorId.get(i.user_id)?.email || 'Alumno'} · ${porCurso.get(Number(i.course_id))?.title || 'Curso'}` })),
+      ...certificates.map((c) => ({ id: `certificado-${c.id}`, fecha: c.created_at, etiqueta: 'Certificado emitido', detalle: `${c.profiles?.nombre_completo || c.profiles?.email || 'Alumno'} · ${c.courses?.title || 'Curso'}` })),
+    ].filter((a) => a.fecha).sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 5);
+    return { alumnosMes: delMes(alumnos), certificadosMes: delMes(certificates), finalizacion: Math.round(tasaFinalizacion(certificates, inscripciones)), populares: [...courses].sort((a, b) => (conteos.get(Number(b.id)) || 0) - (conteos.get(Number(a.id)) || 0)).slice(0, 3), conteos, actividades };
+  }, [profiles, courses, certificates, inscripcionesTodas, perfilesPorId]);
+
+  const pendientesCertificables = useMemo(() => {
+    if (!datosCertificables) return [];
+    const obligatorias = new Map();
+    datosCertificables.lecciones.filter((l) => l.tipo !== 'seccion' && l.obligatoria !== false).forEach((l) => {
+      const id = Number(l.course_id);
+      if (!obligatorias.has(id)) obligatorias.set(id, []);
+      obligatorias.get(id).push(l.id);
+    });
+    const avances = new Map();
+    datosCertificables.completadas.forEach((p) => {
+      const llave = `${p.user_id}_${p.course_id}`;
+      if (!avances.has(llave)) avances.set(llave, new Set());
+      avances.get(llave).add(p.leccion_id);
+    });
+    const aprobados = new Set(datosCertificables.examenes.filter((e) => e.datos?.aprobado === true && e.datos?.origen === 'servidor').map((e) => `${e.user_id}_${e.course_id}`));
+    const cursosPorId = new Map(courses.map((c) => [Number(c.id), c]));
+    return (inscripcionesTodas || []).filter((i) => {
+      const llave = `${i.user_id}_${i.course_id}`;
+      const lecciones = obligatorias.get(Number(i.course_id)) || [];
+      return !certificadosPorCurso.has(llave) && (aprobados.has(llave) || (lecciones.length > 0 && lecciones.every((id) => avances.get(llave)?.has(id))));
+    }).map((i) => ({ studentId: i.user_id, studentName: perfilesPorId.get(i.user_id)?.nombre_completo || perfilesPorId.get(i.user_id)?.email || 'Alumno', studentEmail: perfilesPorId.get(i.user_id)?.email || '', courseId: Number(i.course_id), courseTitle: cursosPorId.get(Number(i.course_id))?.title || 'Curso', watchPercent: 100 }));
+  }, [datosCertificables, inscripcionesTodas, courses, certificadosPorCurso, perfilesPorId]);
 
   const adminUsers = profiles.filter(p => p.rol === 'admin');
 
@@ -2874,7 +3001,7 @@ const AdminDashboard = () => {
               <div className="quick-actions-section" style={{ marginTop: '30px' }}>
                 <h3>Acciones Rápidas</h3>
                 <div className="quick-actions-grid">
-                  <button className="quick-action-btn" onClick={handleOpenCourseCreate}>
+                  <button className="quick-action-btn" onClick={() => { setActiveTab('courses'); handleOpenCourseCreate(); }}>
                     <Plus size={16} />
                     <span>Crear Curso</span>
                   </button>
@@ -2904,38 +3031,30 @@ const AdminDashboard = () => {
                       <div className="stats-metric-item">
                         <div className="metric-header-row">
                           <span>Alumnos nuevos este mes</span>
-                          <strong>{stats.alumnosRegistrados}</strong>
+                          <strong>{resumenDashboard.alumnosMes}</strong>
                         </div>
                         <div className="custom-progress-bar">
-                          <div className="progress-fill" style={{ width: stats.alumnosRegistrados > 0 ? '100%' : '0%' }}></div>
+                          <div className="progress-fill" style={{ width: `${stats.alumnosRegistrados ? resumenDashboard.alumnosMes / stats.alumnosRegistrados * 100 : 0}%` }}></div>
                         </div>
                       </div>
 
                       <div className="stats-metric-item" style={{ marginTop: '18px' }}>
                         <div className="metric-header-row">
-                          <span>Certificados emitidos por mes (Promedio)</span>
-                          <strong>{certificates.length}</strong>
+                          <span>Certificados emitidos este mes</span>
+                          <strong>{resumenDashboard.certificadosMes}</strong>
                         </div>
                         <div className="custom-progress-bar">
-                          <div className="progress-fill" style={{ width: certificates.length > 0 ? '100%' : '0%', backgroundColor: 'var(--primary-cyan)' }}></div>
+                          <div className="progress-fill" style={{ width: `${certificates.length ? resumenDashboard.certificadosMes / certificates.length * 100 : 0}%`, backgroundColor: 'var(--primary-cyan)' }}></div>
                         </div>
                       </div>
 
                       <div className="stats-metric-item" style={{ marginTop: '18px' }}>
                         <div className="metric-header-row">
                           <span>Tasa de finalización de cursos</span>
-                          <strong>{(() => {
-                            const totalStudents = profiles.filter(p => p.rol === 'estudiante').length;
-                            const uniqueGraduates = new Set(certificates.map(c => c.user_id)).size;
-                            return totalStudents > 0 ? Math.min(100, Math.floor((uniqueGraduates / totalStudents) * 100)) : 0;
-                          })()}%</strong>
+                          <strong>{resumenDashboard.finalizacion}%</strong>
                         </div>
                         <div className="custom-progress-bar">
-                          <div className="progress-fill" style={{ width: `${(() => {
-                            const totalStudents = profiles.filter(p => p.rol === 'estudiante').length;
-                            const uniqueGraduates = new Set(certificates.map(c => c.user_id)).size;
-                            return totalStudents > 0 ? Math.min(100, Math.floor((uniqueGraduates / totalStudents) * 100)) : 0;
-                          })()}%`, backgroundColor: '#10B981' }}></div>
+                          <div className="progress-fill" style={{ width: `${resumenDashboard.finalizacion}%`, backgroundColor: '#10B981' }}></div>
                         </div>
                       </div>
                     </div>
@@ -2945,8 +3064,8 @@ const AdminDashboard = () => {
                   <div className="sub-section-block" style={{ marginTop: '30px' }}>
                     <h3>Cursos más Populares</h3>
                     <div className="popular-courses-list">
-                      {courses.slice(0, 3).map((course, idx) => {
-                        const graduatesCount = certificates.filter(cert => cert.course_id === course.id).length;
+                      {resumenDashboard.populares.map((course, idx) => {
+                        const graduatesCount = resumenDashboard.conteos.get(Number(course.id)) || 0;
                         return (
                           <div key={course.id} className="popular-course-row" style={idx > 0 ? { marginTop: '12px' } : {}}>
                             <span className="course-rank">{idx + 1}</span>
@@ -2966,17 +3085,17 @@ const AdminDashboard = () => {
                 <div className="dashboard-activity-section">
                   <h3>Actividad Reciente</h3>
                   <div className="activity-feed">
-                    {profiles.filter(p => p.rol === 'estudiante').length === 0 ? (
+                    {resumenDashboard.actividades.length === 0 ? (
                       <div className="crm-empty-state-card mini" style={{ boxShadow: 'none', border: 'none', padding: '10px' }}>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Sin actividad reciente en el portal.</p>
                       </div>
                     ) : (
-                      profiles.filter(p => p.rol === 'estudiante').slice(0, 5).map(student => (
-                        <div key={student.id} className="activity-item">
+                      resumenDashboard.actividades.map(actividad => (
+                        <div key={actividad.id} className="activity-item">
                           <div className="activity-icon-bullet blue"></div>
                           <div className="activity-details">
-                            <p><strong>Nuevo alumno registrado:</strong> {student.nombre_completo || student.email}</p>
-                            <span className="activity-time">{formatDate(student.created_at)}</span>
+                            <p><strong>{actividad.etiqueta}:</strong> {actividad.detalle}</p>
+                            <span className="activity-time">{formatDate(actividad.fecha)}</span>
                           </div>
                         </div>
                       ))
@@ -3261,7 +3380,7 @@ const AdminDashboard = () => {
                 {paymentsError && activePaymentsSubTab === 'stripe' && (
                   <div className="alert-message warning" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', borderRadius: '12px', border: '1px solid #fde047', backgroundColor: '#fef9c3', color: '#854d0e', fontSize: '0.85rem' }}>
                     <AlertCircle size={16} />
-                    <span>Modo Simulación activo (Usando datos de prueba locales). Para sincronizar datos reales, configura la variable <strong>STRIPE_SECRET_KEY</strong> en la consola de Netlify.</span>
+                    <span>No se pudieron actualizar los pagos: {paymentsError}. Se muestran los últimos registros recibidos o importados.</span>
                   </div>
                 )}
 
@@ -3918,9 +4037,10 @@ const AdminDashboard = () => {
               </div>
 
               {showCourseForm ? (
-                <div className="settings-card" style={{ marginBottom: '30px' }}>
+                <div ref={courseFormRef} className="settings-card" style={{ marginBottom: '30px' }}>
                   <h3>{editingCourse ? 'Editar Curso' : 'Crear Nuevo Curso'}</h3>
                   <form onSubmit={handleSaveCourse} className="crm-settings-form" style={{ marginTop: '20px' }}>
+                    <fieldset disabled={actionLoading} className="course-editor-fields">
                     <div className="form-group-row">
                       <div className="crm-input-group">
                         <label>Título del Curso *</label>
@@ -3968,6 +4088,7 @@ const AdminDashboard = () => {
                         <label>Porcentaje Mínimo de Aprobación (%)</label>
                         <input 
                           type="number" 
+                          min="0" max="100" required
                           value={courseForm.minAprobacion} 
                           onChange={(e) => setCourseForm({...courseForm, minAprobacion: parseInt(e.target.value)})}
                         />
@@ -4132,7 +4253,7 @@ const AdminDashboard = () => {
                         <label>Posición X del Nombre (px)</label>
                         <input 
                           type="number" 
-                          value={courseForm.certificado_x || 300} 
+                          value={courseForm.certificado_x ?? 300}
                           onChange={(e) => setCourseForm({...courseForm, certificado_x: parseInt(e.target.value) || 0})}
                         />
                       </div>
@@ -4140,7 +4261,7 @@ const AdminDashboard = () => {
                         <label>Posición Y del Nombre (px)</label>
                         <input 
                           type="number" 
-                          value={courseForm.certificado_y || 400} 
+                          value={courseForm.certificado_y ?? 400}
                           onChange={(e) => setCourseForm({...courseForm, certificado_y: parseInt(e.target.value) || 0})}
                         />
                       </div>
@@ -4178,11 +4299,11 @@ const AdminDashboard = () => {
                             type="range" 
                             min="0" 
                             max={naturalDimensions.width} 
-                            value={courseForm.certificado_x || 300} 
+                            value={courseForm.certificado_x ?? 300}
                             onChange={(e) => setCourseForm({...courseForm, certificado_x: parseInt(e.target.value) || 0})}
                             style={{ flex: 1, accentColor: 'var(--primary-cyan)', cursor: 'pointer' }}
                           />
-                          <span style={{ fontSize: '0.8rem', minWidth: '45px', textAlign: 'right', fontWeight: 'bold' }}>{courseForm.certificado_x || 300}px</span>
+                          <span style={{ fontSize: '0.8rem', minWidth: '45px', textAlign: 'right', fontWeight: 'bold' }}>{courseForm.certificado_x ?? 300}px</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                           <span style={{ fontSize: '0.8rem', minWidth: '100px', fontWeight: '500' }}>Posición Y (Alto):</span>
@@ -4190,11 +4311,11 @@ const AdminDashboard = () => {
                             type="range" 
                             min="0" 
                             max={naturalDimensions.height} 
-                            value={courseForm.certificado_y || 400} 
+                            value={courseForm.certificado_y ?? 400}
                             onChange={(e) => setCourseForm({...courseForm, certificado_y: parseInt(e.target.value) || 0})}
                             style={{ flex: 1, accentColor: 'var(--primary-cyan)', cursor: 'pointer' }}
                           />
-                          <span style={{ fontSize: '0.8rem', minWidth: '45px', textAlign: 'right', fontWeight: 'bold' }}>{courseForm.certificado_y || 400}px</span>
+                          <span style={{ fontSize: '0.8rem', minWidth: '45px', textAlign: 'right', fontWeight: 'bold' }}>{courseForm.certificado_y ?? 400}px</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                           <span style={{ fontSize: '0.8rem', minWidth: '100px', fontWeight: '500' }}>Tamaño de Letra:</span>
@@ -4235,8 +4356,8 @@ const AdminDashboard = () => {
                         />
                         <div style={{
                           position: 'absolute',
-                          left: `${((courseForm.certificado_x || 300) / naturalDimensions.width) * 100}%`,
-                          top: `${((courseForm.certificado_y || 400) / naturalDimensions.height) * 100}%`,
+                          left: `${((courseForm.certificado_x ?? 300) / naturalDimensions.width) * 100}%`,
+                          top: `${((courseForm.certificado_y ?? 400) / naturalDimensions.height) * 100}%`,
                           transform: 'translate(-50%, -50%)',
                           fontSize: `${((courseForm.certificado_font_size || 40) / naturalDimensions.height) * 350}px`,
                           fontFamily: 'Georgia, serif',
@@ -4275,8 +4396,7 @@ const AdminDashboard = () => {
                               required 
                               value={q.question_text} 
                               onChange={(e) => {
-                                const updated = [...courseForm.questions];
-                                updated[qIndex].question_text = e.target.value;
+                                const updated = courseForm.questions.map((pq, i) => i === qIndex ? { ...pq, question_text: e.target.value } : pq);
                                 setCourseForm({ ...courseForm, questions: updated });
                               }}
                               placeholder="Ej. ¿Qué significa ECMO?"
@@ -4292,8 +4412,9 @@ const AdminDashboard = () => {
                                   required 
                                   value={opt} 
                                   onChange={(e) => {
-                                    const updated = [...courseForm.questions];
-                                    updated[qIndex].options[optIndex] = e.target.value;
+                                    const updated = courseForm.questions.map((pq, i) => i === qIndex
+                                      ? { ...pq, options: pq.options.map((o, oi) => oi === optIndex ? e.target.value : o) }
+                                      : pq);
                                     setCourseForm({ ...courseForm, questions: updated });
                                   }}
                                   placeholder={`Opción ${optIndex + 1}`}
@@ -4307,8 +4428,7 @@ const AdminDashboard = () => {
                             <select 
                               value={q.correct_option_index} 
                               onChange={(e) => {
-                                const updated = [...courseForm.questions];
-                                updated[qIndex].correct_option_index = parseInt(e.target.value);
+                                const updated = courseForm.questions.map((pq, i) => i === qIndex ? { ...pq, correct_option_index: parseInt(e.target.value) } : pq);
                                 setCourseForm({ ...courseForm, questions: updated });
                               }}
                               style={{ 
@@ -4346,9 +4466,10 @@ const AdminDashboard = () => {
                       </button>
                       <button type="submit" className="btn-crm-action solid" disabled={actionLoading}>
                         <Save size={16} />
-                        <span>{editingCourse ? 'Guardar Cambios' : 'Publicar Curso'}</span>
+                        <span>{actionLoading ? 'Guardando…' : editingCourse ? 'Guardar Cambios' : 'Guardar borrador'}</span>
                       </button>
                     </div>
+                    </fieldset>
                   </form>
                 </div>
               ) : null}
@@ -4360,6 +4481,8 @@ const AdminDashboard = () => {
                   <h3>Lecciones del curso</h3>
                   {editingCourse?.id && !isNaN(Number(editingCourse.id)) ? (
                     <EditorLecciones
+                      key={editingCourse.id}
+                      onCambios={cambiosEvaluacion}
                       courseId={Number(editingCourse.id)}
                       cursos={courses}
                       onCambio={fetchCourses}
@@ -4368,7 +4491,7 @@ const AdminDashboard = () => {
                     />
                   ) : (
                     <p style={{ color: 'var(--text-muted)', margin: '8px 0 0' }}>
-                      Publica el curso para empezar a agregarle lecciones: videos, documentos PDF, lecturas y tareas.
+                      Guarda el curso como borrador para agregarle lecciones. Actívalo cuando esté listo.
                     </p>
                   )}
                 </div>
@@ -4380,7 +4503,7 @@ const AdminDashboard = () => {
                   <p style={{ color: 'var(--text-muted)', margin: '4px 0 14px', fontSize: '0.86rem' }}>
                     Quién puede entrar, por cuánto tiempo y cuándo se da por terminado.
                   </p>
-                  <ReglasCurso courseId={Number(editingCourse.id)} cursos={courses} tipoCurso={courseForm.tipo} notificar={showToast} />
+                  <ReglasCurso key={editingCourse.id} courseId={Number(editingCourse.id)} cursos={courses} tipoCurso={courseForm.tipo} notificar={showToast} confirmar={showConfirm} onCambios={cambiosReglas} />
                 </div>
               )}
 
@@ -4390,13 +4513,20 @@ const AdminDashboard = () => {
                   <p style={{ color: 'var(--text-muted)', margin: '4px 0 14px', fontSize: '0.86rem' }}>
                     Artículos, manuales, programas… Liga cada archivo a una clase para que aparezca dentro de esa lección, o déjalo en la biblioteca general del curso.
                   </p>
-                  <BibliotecaCurso courseId={Number(editingCourse.id)} notificar={showToast} confirmar={showConfirm} />
+                  <BibliotecaCurso key={editingCourse.id} courseId={Number(editingCourse.id)} notificar={showToast} confirmar={showConfirm} />
+                </div>
+              )}
+
+              {showCourseForm && editingCourse?.id && !isNaN(Number(editingCourse.id)) && (
+                <div className="settings-card" style={{ marginBottom: '30px' }}>
+                  <h3>Alumnos inscritos</h3>
+                  <InscritosCurso key={editingCourse.id} courseId={Number(editingCourse.id)} cursos={courses} perfiles={profiles} notificar={showToast} confirmar={showConfirm} />
                 </div>
               )}
 
               {/* Table of courses */}
               <div className="table-responsive-container">
-                <table className="admin-table">
+                <table className="admin-table courses-table">
                   <thead>
                     <tr>
                       <th>ID</th>
@@ -4424,7 +4554,7 @@ const AdminDashboard = () => {
                         </td>
                         <td>{course.duracion}</td>
                         <td><span className={`status-pill disponible`}>{course.modalidad}</span></td>
-                        <td>{course.minAprobacion || 80}%</td>
+                        <td>{course.minAprobacion ?? 80}%</td>
                         <td>
                           {course.tipo === 'pago' && course.precio_mxn
                             ? <span className="status-pill disponible">{formatoPrecio(course.precio_mxn)}</span>
@@ -4444,6 +4574,16 @@ const AdminDashboard = () => {
                             <button className="icon-action-btn edit" onClick={() => handleOpenCourseEdit(course)} title="Editar">
                               <Edit size={16} />
                             </button>
+                            <a className="icon-action-btn" href={`/classroom/${course.id}`} target="_blank" rel="noopener noreferrer" title="Ver aula" aria-label={`Ver aula de ${course.title}`}><ExternalLink size={16} /></a>
+                            {!isNaN(Number(course.id)) && (
+                              <button
+                                className="icon-action-btn"
+                                onClick={() => { setMetricasDeCurso({ id: Number(course.id) }); setActiveTab('metricas'); }}
+                                title="Métricas del curso: alumnos, avance y calificaciones"
+                              >
+                                <TrendingUp size={16} />
+                              </button>
+                            )}
                             {!isNaN(Number(course.id)) && (
                               <button className="icon-action-btn" onClick={() => handleClonarCourse(course)} title="Clonar curso">
                                 <Copy size={16} />
@@ -4478,6 +4618,7 @@ const AdminDashboard = () => {
             <div className="students-view">
               <div className="section-title-row">
                 <h2>Directorio de Alumnos Registrados</h2>
+                <button className="btn-crm-action outlined" onClick={() => descargarCsv([['Nombre', 'Correo', 'Especialidad', 'País', 'Registro', 'Estado'], ...filteredStudents.map((p) => [p.nombre_completo, p.email, p.especialidad || p.user_metadata?.especialidad, p.pais || p.user_metadata?.pais, formatDate(p.created_at), p.activo === false ? (p.aprobado === false ? 'Rechazado' : 'Bloqueado') : p.aprobado === false ? 'Por activar' : 'Activo'])], 'Alumnos_filtrados.csv')} disabled={!filteredStudents.length}><Download size={16} /> Exportar CSV</button>
                 <button className="btn-crm-action solid" onClick={() => setShowAddStudentModal(true)}>
                   <Plus size={16} />
                   <span>Agregar Alumno</span>
@@ -4511,12 +4652,7 @@ const AdminDashboard = () => {
                     <Filter size={14} className="filter-icon-inside" />
                     <select value={studentSpecialtyFilter} onChange={(e) => setStudentSpecialtyFilter(e.target.value)}>
                       <option value="">Todas las Especialidades</option>
-                      <option value="Enfermería">Enfermería</option>
-                      <option value="Medicina General">Medicina General</option>
-                      <option value="Pediatría">Pediatría</option>
-                      <option value="Terapia Intensiva">Terapia Intensiva</option>
-                      <option value="Urgencias">Urgencias</option>
-                      <option value="Cardiología">Cardiología</option>
+                      {especialidades.map((valor) => <option key={valor} value={valor}>{valor}</option>)}
                     </select>
                   </div>
 
@@ -4533,11 +4669,7 @@ const AdminDashboard = () => {
                   <div className="filter-select-wrapper">
                     <select value={studentCountryFilter} onChange={(e) => setStudentCountryFilter(e.target.value)}>
                       <option value="">Todos los Países</option>
-                      <option value="México">México</option>
-                      <option value="Colombia">Colombia</option>
-                      <option value="Chile">Chile</option>
-                      <option value="Ecuador">Ecuador</option>
-                      <option value="Argentina">Argentina</option>
+                      {paises.map((valor) => <option key={valor} value={valor}>{valor}</option>)}
                     </select>
                   </div>
                 </div>
@@ -4573,7 +4705,7 @@ const AdminDashboard = () => {
                         </div>
                         <div className="crm-input-group">
                           <label>Contraseña Temporal *</label>
-                          <input type="password" required minLength={6} value={newStudentForm.password} onChange={(e) => setNewStudentForm({...newStudentForm, password: e.target.value})} placeholder="mín. 6 caracteres" />
+                          <input type="password" required minLength={8} value={newStudentForm.password} onChange={(e) => setNewStudentForm({...newStudentForm, password: e.target.value})} placeholder="mín. 8 caracteres" />
                         </div>
                       </div>
 
@@ -4672,7 +4804,7 @@ const AdminDashboard = () => {
                         <td>{formatDate(student.created_at)}</td>
                         <td>
                           <span className={`status-pill ${student.activo === false ? 'inactivo' : student.aprobado === false ? 'pendiente' : 'disponible'}`}>
-                            {student.activo === false ? 'Bloqueado' : student.aprobado === false ? 'Por activar' : 'Activo'}
+                            {student.activo === false ? (student.aprobado === false ? 'Rechazado' : 'Bloqueado') : student.aprobado === false ? 'Por activar' : 'Activo'}
                           </span>
                         </td>
                         <td>
@@ -4680,6 +4812,7 @@ const AdminDashboard = () => {
                             <button className="btn-crm-action outlined mini" onClick={() => setSelectedStudent(student)}>
                               Detalle / Matrícula
                             </button>
+                            <button className="btn-crm-action outlined mini" onClick={() => setReporteAlumno(student)}>Reporte completo</button>
                             <button className="icon-action-btn edit" onClick={() => handleToggleBlockStudent(student)} title={student.activo !== false ? 'Bloquear' : 'Activar'}>
                               {student.activo !== false ? <Lock size={14} /> : <Unlock size={14} />}
                             </button>
@@ -4697,7 +4830,7 @@ const AdminDashboard = () => {
                   <div className="admin-modal-card">
                     <div className="modal-header">
                       <h3>Expediente del Alumno</h3>
-                      <button type="button" className="btn-crm-action outlined mini" style={{ marginLeft: 'auto', marginRight: 8 }} onClick={() => setReporteAlumno(selectedStudent)}>
+                      <button type="button" className="btn-crm-action outlined mini" style={{ marginLeft: 'auto', marginRight: 8 }} onClick={() => { setReporteAlumno(selectedStudent); setSelectedStudent(null); }}>
                         Reporte completo
                       </button>
                       <button className="modal-close-btn" onClick={() => setSelectedStudent(null)}>
@@ -5630,7 +5763,7 @@ const AdminDashboard = () => {
                   Visitas, tiempo de estudio, avance en el video y resultados del examen de cada curso y de cada alumno.
                 </p>
               </div>
-              <InformesAdmin cursos={courses} perfiles={profiles} />
+              <InformesAdmin cursos={courses} perfiles={profiles} abrirCurso={metricasDeCurso} notificar={showToast} confirmar={showConfirm} />
             </div>
           )}
 
@@ -5639,23 +5772,9 @@ const AdminDashboard = () => {
             // Scope variables
             const studentProfiles = profiles.filter(p => p.rol === 'estudiante');
             
-            // Local storage activities and progress fallback
-            let localActivities = {};
-            try {
-              localActivities = JSON.parse(localStorage.getItem('backup_all_student_activities') || '{}');
-            } catch (error) {
-              console.warn('Respaldo local de actividad inválido:', error.message);
-            }
-            let localProgress = {};
-            try {
-              localProgress = JSON.parse(localStorage.getItem('backup_all_student_progress') || '{}');
-            } catch (error) {
-              console.warn('Respaldo local de progreso inválido:', error.message);
-            }
-            
             // Map student tracking data
             const studentTrackingList = studentProfiles.map(student => {
-              const activity = studentActivities.find(act => act.user_id === student.id) || localActivities[student.id] || {
+              const activity = actividadPorAlumno.get(student.id) || {
                 session_duration: 0,
                 current_action: 'Ninguna',
                 last_active_at: null
@@ -5663,10 +5782,10 @@ const AdminDashboard = () => {
               
               const progressList = courses.map(c => {
                 const progKey = `${student.id}_${c.id}`;
-                const pItem = studentProgressList.find(p => p.user_id === student.id && p.course_id === c.id) || localProgress[progKey];
+                const pItem = progresoPorCurso.get(progKey);
                 const pct = pItem ? pItem.watch_percent : 0;
                 const timeSpent = pItem ? pItem.time_spent : 0;
-                const completed = certificates.some(cert => cert.user_id === student.id && cert.course_id === c.id) || pct >= 100;
+                const completed = certificadosPorCurso.has(progKey);
                 return {
                   courseId: c.id,
                   courseTitle: c.title,
@@ -5684,17 +5803,17 @@ const AdminDashboard = () => {
             });
 
             // Global stats
-            const totalEnrollments = studentTrackingList.reduce((sum, s) => sum + s.progressList.filter(p => p.watchPercent > 0).length, 0);
+            const totalEnrollments = (inscripcionesTodas || []).length;
             const activeCount = studentTrackingList.filter(s => {
               if (!s.activity.last_active_at) return false;
               const diff = new Date() - new Date(s.activity.last_active_at);
               return diff < 7 * 24 * 60 * 60 * 1000;
             }).length;
-            const completedCount = studentTrackingList.reduce((sum, s) => sum + s.progressList.filter(p => p.completed).length, 0);
+            const completedCount = certificates.length;
             
             // Sin inscripciones no hay tasa que reportar: 0, no 100.
             const approvalRate = totalEnrollments > 0
-              ? Math.round((completedCount / totalEnrollments) * 100)
+              ? Math.round(tasaFinalizacion(certificates, inscripcionesTodas || []))
               : 0;
 
             // Inactive students breakdown
@@ -5737,22 +5856,7 @@ const AdminDashboard = () => {
               });
             }
             
-            // Certificados pendientes logic (watch percent = 100 but no certificates record)
-            const pendingCertificates = [];
-            studentTrackingList.forEach(s => {
-              s.progressList.forEach(p => {
-                if (p.watchPercent === 100 && !certificates.some(cert => cert.user_id === s.id && cert.course_id === p.courseId)) {
-                  pendingCertificates.push({
-                    studentId: s.id,
-                    studentName: s.nombre_completo || s.email || 'Alumno',
-                    studentEmail: s.email,
-                    courseId: p.courseId,
-                    courseTitle: p.courseTitle,
-                    watchPercent: p.watchPercent
-                  });
-                }
-              });
-            });
+            const pendingCertificates = pendientesCertificables;
 
             if (pendingCertificates.length > 0) {
               alertsList.push({
@@ -5793,10 +5897,10 @@ const AdminDashboard = () => {
 
             // Course statistics
             const courseStatsList = courses.map(c => {
-              const enrolledForCourse = studentTrackingList.filter(s => s.progressList.some(p => p.courseId === c.id && p.watchPercent > 0));
-              const completedForCourse = studentTrackingList.filter(s => s.progressList.some(p => p.courseId === c.id && p.completed));
-              const numEnrolled = enrolledForCourse.length;
-              const numCompleted = completedForCourse.length;
+              const inscritosIds = new Set((inscripcionesTodas || []).filter((i) => Number(i.course_id) === Number(c.id)).map((i) => i.user_id));
+              const enrolledForCourse = studentTrackingList.filter(s => inscritosIds.has(s.id));
+                            const numEnrolled = enrolledForCourse.length;
+              const numCompleted = certificates.filter((cert) => Number(cert.course_id) === Number(c.id)).length;
               
               // Fails: count of students with watchPercent > 80 who did exam and did not pass yet.
               const numFailed = enrolledForCourse.filter(s => {
@@ -5817,7 +5921,7 @@ const AdminDashboard = () => {
                   }, 0) / numEnrolled)
                 : 0;
 
-              const rateRetencion = numEnrolled > 0 ? Math.round((numCompleted / numEnrolled) * 100) : 0;
+              const rateRetencion = numEnrolled > 0 ? Math.min(100, Math.round((numCompleted / numEnrolled) * 100)) : 0;
 
               // Abandonment measured from real data: student started the course (watchPercent > 0),
               // never finished it, is below 80% progress, and has had no platform activity for 15+ days
@@ -5886,6 +5990,7 @@ const AdminDashboard = () => {
 
             return (
               <div className="reports-view" style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
+                {errorTracking && <p className="lms-aviso lms-aviso--error" role="alert">{errorTracking}</p>}
                 <style>{`
                   @keyframes fadeIn {
                     from { opacity: 0; transform: translateY(10px); }
@@ -6284,7 +6389,7 @@ const AdminDashboard = () => {
                           <thead>
                             <tr>
                               <th>Alumno</th>
-                              <th>Tiempo Sesión</th>
+                              <th>Tiempo acumulado en plataforma</th>
                               <th>Acción Actual</th>
                               <th>País</th>
                             </tr>
@@ -6505,8 +6610,11 @@ const AdminDashboard = () => {
                     <div className="reports-card-grid">
                       {(() => {
                         const getCertsInPeriod = (days) => {
-                          const limit = new Date(nowTime.getTime() - days * 24 * 60 * 60 * 1000);
-                          return certificates.filter(c => new Date(c.created_at) >= limit).length;
+                          const limit = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate());
+                          if (days === 7) limit.setDate(limit.getDate() - (limit.getDay() + 6) % 7);
+                          if (days === 30) limit.setDate(1);
+                          if (days === 365) limit.setMonth(0, 1);
+                          return certificates.filter(c => new Date(c.created_at) >= limit && new Date(c.created_at) <= nowTime).length;
                         };
                         return (
                           <>
@@ -6607,7 +6715,7 @@ const AdminDashboard = () => {
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{pending.studentEmail}</div>
                                   </td>
                                   <td>{pending.courseTitle}</td>
-                                  <td><span className="badge-hce green">{pending.watchPercent}% completado</span></td>
+                                  <td><span className="badge-hce green">Lecciones completas o examen aprobado</span></td>
                                   <td style={{ textAlign: 'right' }}>
                                     <button
                                       className="btn-crm-action solid"
@@ -6728,9 +6836,9 @@ const AdminDashboard = () => {
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontWeight: 600, color: 'var(--text-dark)', fontSize: '0.95rem' }}>{alert.text}</div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>Requiere supervisión o contacto académico inmediato.</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{alert.type === 'danger' ? 'Revisar y contactar al alumno.' : alert.type === 'warning' ? 'Dar seguimiento académico.' : 'Información de la plataforma.'}</div>
                             </div>
-                            <span className="badge-hce red" style={{ fontSize: '0.7rem' }}>CRÍTICA</span>
+                            <span className={`badge-hce ${alert.type === 'danger' ? 'red' : alert.type === 'warning' ? 'orange' : 'blue'}`} style={{ fontSize: '0.7rem' }}>{alert.type === 'danger' ? 'ALTA' : alert.type === 'warning' ? 'ATENCIÓN' : 'INFORMATIVA'}</span>
                           </div>
                         ))}
                       </div>
@@ -6840,7 +6948,7 @@ const AdminDashboard = () => {
                       </div>
                       <div className="crm-input-group">
                         <label>Contraseña *</label>
-                        <input type="password" required minLength={6} value={newAdminForm.password} onChange={(e) => setNewAdminForm({...newAdminForm, password: e.target.value})} placeholder="mín. 6 caracteres" />
+                        <input type="password" required minLength={8} value={newAdminForm.password} onChange={(e) => setNewAdminForm({...newAdminForm, password: e.target.value})} placeholder="mín. 8 caracteres" />
                       </div>
 
                       <div className="form-action-row" style={{ marginTop: '20px' }}>
@@ -6977,8 +7085,14 @@ const AdminDashboard = () => {
                       />
                     </div>
 
-                    <button type="submit" className="btn-crm-action solid" style={{ marginTop: '10px' }}>
-                      Guardar Mensaje
+                    {faltaPortalConfig && (
+                      <small style={{ display: 'block', color: 'var(--accent-orange)', fontSize: '0.78rem', lineHeight: 1.5 }}>
+                        Falta correr la migración endurecimiento.sql: hasta entonces el mensaje no se puede guardar.
+                      </small>
+                    )}
+
+                    <button type="submit" className="btn-crm-action solid" style={{ marginTop: '10px' }} disabled={guardandoBienvenida}>
+                      {guardandoBienvenida ? 'Guardando…' : 'Guardar Mensaje'}
                     </button>
                   </form>
                 </div>

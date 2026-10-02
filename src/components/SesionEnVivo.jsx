@@ -82,7 +82,10 @@ export default function SesionEnVivo({ leccion, curso, esAdmin, notificar, onCom
   const cierra = new Date(estado.cierraEn).getTime();
   const inicio = new Date(estado.iniciaEn).getTime();
   const enVentana = ahora >= abre && ahora <= cierra;
-  const terminada = ahora > inicio + (estado.duracionMin || 60) * 60000;
+  const fin = inicio + (estado.duracionMin || 60) * 60000;
+  const terminada = ahora > fin;
+  const cerrada = ahora > cierra;
+  const reporteDemorado = ahora > fin + 24 * 60 * 60000;
 
   return (
     <div className="sesion">
@@ -98,15 +101,17 @@ export default function SesionEnVivo({ leccion, curso, esAdmin, notificar, onCom
 
       {estado.asistio ? (
         <p className="sesion-estado ok"><CheckCircle size={18} /> Asistencia confirmada{estado.minutos ? ` · ${estado.minutos} min conectado` : ''}.</p>
+      ) : terminada && estado.registrado && !cerrada ? (
+        <p className="sesion-estado pendiente"><Clock size={18} /> La sesión ya debería estar terminando; si sigue en curso, aún puedes entrar.</p>
       ) : terminada && estado.registrado ? (
-        <p className="sesion-estado pendiente"><Clock size={18} /> La sesión terminó. Estamos esperando el reporte de Zoom para confirmar tu asistencia; puede tardar unas horas.</p>
+        <p className="sesion-estado pendiente"><Clock size={18} /> {reporteDemorado ? 'La sesión terminó. Si asististe y no aparece tu asistencia, escríbenos.' : 'La sesión terminó. Estamos esperando el reporte de Zoom para confirmar tu asistencia; puede tardar unas horas.'}</p>
       ) : terminada ? (
         <p className="sesion-estado mal"><XCircle size={18} /> Esta sesión ya terminó y no te registraste.</p>
       ) : null}
 
-      {!terminada && (
+      {(!cerrada || esAdmin) && (
         <div className="sesion-acciones">
-          {!estado.registrado ? (
+          {!estado.registrado && terminada && !esAdmin ? null : !estado.registrado ? (
             <button type="button" className="back-btn leccion-btn-principal" onClick={registrar} disabled={ocupado}>
               {ocupado ? 'Registrando…' : 'Registrarme a la sesión'}
             </button>
@@ -133,7 +138,7 @@ export default function SesionEnVivo({ leccion, curso, esAdmin, notificar, onCom
         </div>
       )}
 
-      {estado.registrado && !terminada && !enVentana && (
+      {estado.registrado && !cerrada && !enVentana && (
         <p className="sesion-aviso">✓ Estás registrado. El botón para entrar se activa 15 minutos antes. Tu enlace es personal: entra siempre desde aquí.</p>
       )}
       {esAdmin && <p className="sesion-aviso">Vista de administrador: puedes entrar en cualquier momento y tu registro no cuenta.</p>}

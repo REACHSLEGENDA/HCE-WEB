@@ -43,8 +43,12 @@ export async function cargarSesion(db, leccionId) {
 
 // Revisa el reporte de Zoom de la sesión y completa la lección de quien asistió.
 export async function sincronizar(db, { leccion, sesion, secretos }, { forzar = false } = {}) {
+  if (!sesion) return { corrio: false, motivo: 'sin-horario' };
   if (!secretos.zoom_id || !zoomListo()) return { corrio: false, motivo: 'sin-zoom' };
   if (Date.now() < ventana(sesion).fin) return { corrio: false, motivo: 'no-ha-terminado' };
+  // Un ID recurrente devuelve la instancia más reciente. Después de 48 h
+  // hace falta verificar a mano, para no acreditar otra clase por error.
+  if (Date.now() - ventana(sesion).fin > 48 * 60 * 60 * 1000) return { corrio: false, motivo: 'revision-manual' };
   if (!forzar && sesion.sincronizado_en && Date.now() - new Date(sesion.sincronizado_en).getTime() < FRESCURA_MS) {
     return { corrio: false, motivo: 'reciente' };
   }
@@ -59,7 +63,14 @@ export async function sincronizar(db, { leccion, sesion, secretos }, { forzar = 
   }
 
   const minutos = minutosPorCorreo(participantes);
-  const { data: registros } = await db.from('sesion_registros').select('*').eq('leccion_id', leccion.id);
+  const registros = [];
+  for (let desde = 0; ; desde += 1000) {
+    const { data, error } = await db.from('sesion_registros').select('*').eq('leccion_id', leccion.id)
+      .order('id').range(desde, desde + 999);
+    if (error) throw new Error(error.message);
+    registros.push(...(data || []));
+    if (!data || data.length < 1000) break;
+  }
   const minimo = Math.max(sesion.minutos_minimos || 0, 0);
   const ahora = new Date().toISOString();
   let asistieron = 0;
@@ -69,19 +80,22 @@ export async function sincronizar(db, { leccion, sesion, secretos }, { forzar = 
     if (m === undefined) continue;
     const asistio = r.asistio || m >= minimo;
     if (asistio) asistieron += 1;
-    await db.from('sesion_registros').update({ minutos: m, asistio, verificado_en: ahora }).eq('id', r.id);
+    const { error: errRegistro } = await db.from('sesion_registros').update({ minutos: m, asistio, verificado_en: ahora }).eq('id', r.id);
+    if (errRegistro) throw new Error(errRegistro.message);
     if (asistio) {
-      await db.from('leccion_progreso').upsert([{
+      const { error: errProgreso } = await db.from('leccion_progreso').upsert([{
         user_id: r.user_id,
         leccion_id: leccion.id,
         course_id: leccion.course_id,
         porcentaje: 100,
         completada: true,
       }], { onConflict: 'user_id,leccion_id' });
+      if (errProgreso) throw new Error(errProgreso.message);
     }
   }
 
-  await db.from('sesiones_clase').update({ sincronizado_en: ahora }).eq('leccion_id', leccion.id);
+  const { error: errSesion } = await db.from('sesiones_clase').update({ sincronizado_en: ahora }).eq('leccion_id', leccion.id);
+  if (errSesion) throw new Error(errSesion.message);
   return { corrio: true, participantes: minutos.size, asistieron };
 }
 

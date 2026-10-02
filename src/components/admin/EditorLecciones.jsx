@@ -62,7 +62,7 @@ const leccionVacia = (tipo = 'video') => ({
   enlace_respaldo: '',
 });
 
-export default function EditorLecciones({ courseId, cursos = [], onCambio, notificar, confirmar }) {
+export default function EditorLecciones({ courseId, cursos = [], onCambio, notificar, confirmar, onCambios }) {
   const [lecciones, setLecciones] = useState(null);
   const [faltaMigracion, setFaltaMigracion] = useState(false);
   const [editando, setEditando] = useState(null);
@@ -72,24 +72,42 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
   // Sesión en vivo cuya asistencia se está viendo.
   const [asistencia, setAsistencia] = useState(null);
   const [trayendoZoom, setTrayendoZoom] = useState(false);
-  // "Copiar de otro curso": curso elegido y sus lecciones.
+  // "Copiar lección" (de otro curso o de este mismo): curso elegido y sus lecciones.
   const [copiando, setCopiando] = useState(null);
+  // Mientras se guarda un cambio de orden no se permite otro.
+  const [moviendo, setMoviendo] = useState(false);
+  const [copiandoId, setCopiandoId] = useState(null);
 
   const elegirCursoOrigen = async (id) => {
     setCopiando({ cursoId: id, lecciones: null });
     if (!id) return;
-    const { data } = await supabase.from('curso_lecciones').select('id, orden, titulo, tipo').eq('course_id', Number(id)).order('orden').order('id');
+    const { data, error } = await supabase.from('curso_lecciones').select('id, orden, titulo, tipo').eq('course_id', Number(id)).order('orden').order('id');
+    if (error) {
+      notificar(`No se pudieron cargar las lecciones de ese curso: ${error.message}`, 'error');
+      setCopiando({ cursoId: id, lecciones: [] });
+      return;
+    }
     setCopiando({ cursoId: id, lecciones: data || [] });
   };
 
-  const copiarDeOtro = async (leccion) => {
+  // Copia una lección (de otro curso o de este) al final del temario.
+  const copiarLeccion = async (leccion) => {
+    setCopiandoId(leccion.id);
     try {
       await llamarClonar('copiar-leccion', { leccionId: leccion.id, destinoCourseId: courseId });
-      notificar(`"${leccion.titulo}" se copió al final del temario.`, 'success');
+      if (leccion.tipo === 'sesion') {
+        notificar(`"${leccion.titulo}" se copió al final del temario SIN fecha ni reunión de Zoom: edítala y ponle la fecha nueva de la sesión.`, 'warning');
+      } else {
+        notificar(`"${leccion.titulo}" se copió al final del temario.`, 'success');
+      }
       await cargar();
+      // Si se copió dentro del mismo curso, la lista del panel de copiar también cambia.
+      if (copiando && Number(copiando.cursoId) === Number(courseId)) void elegirCursoOrigen(copiando.cursoId);
       onCambio?.();
     } catch (err) {
       notificar(err.message, 'error');
+    } finally {
+      setCopiandoId(null);
     }
   };
 
@@ -110,7 +128,23 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
     const { data: contenidos } = await cargarContenidos(ids);
     const porId = new Map((contenidos || []).map((c) => [c.leccion_id, c]));
     const sesiones = await cargarSesionesAdmin((data || []).filter((l) => l.tipo === 'sesion').map((l) => l.id));
-    setLecciones((data || []).map((l) => ({ ...l, ...(porId.get(l.id) || {}), sesion: sesiones[l.id] || null })));
+    // Cuántas preguntas tiene cada examen o encuesta: sin preguntas no hay nada que contestar.
+    const idsEvaluacion = (data || []).filter((l) => esEvaluacion(l.tipo)).map((l) => l.id);
+    // Si no se pudieron contar (p. ej. sin la migración), se deja en null y no se marca nada.
+    let preguntasPorLeccion = null;
+    if (idsEvaluacion.length) {
+      const { data: preguntas, error: errPreguntas } = await supabase.from('evaluacion_preguntas').select('leccion_id').in('leccion_id', idsEvaluacion);
+      if (!errPreguntas) {
+        preguntasPorLeccion = new Map();
+        (preguntas || []).forEach((p) => preguntasPorLeccion.set(p.leccion_id, (preguntasPorLeccion.get(p.leccion_id) || 0) + 1));
+      }
+    }
+    setLecciones((data || []).map((l) => ({
+      ...l,
+      ...(porId.get(l.id) || {}),
+      sesion: sesiones[l.id] || null,
+      preguntas: esEvaluacion(l.tipo) && preguntasPorLeccion ? (preguntasPorLeccion.get(l.id) || 0) : null,
+    })));
   }, [courseId, notificar]);
 
   useEffect(() => { void cargar(); }, [cargar]);
@@ -141,9 +175,13 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
     }
 
     setGuardando(true);
+    // Es nueva si no tiene id, o si la fila se creó en un intento anterior que
+    // falló después (p. ej. al subir el PDF): ese reintento ya solo actualiza.
+    const nueva = !editando.id || !!editando.recienCreada;
+    let insertadaAhora = false;
     try {
+      // El curso no va aquí: al actualizar, una lección nunca cambia de curso.
       const datos = {
-        course_id: courseId,
         titulo: editando.titulo.trim(),
         tipo: editando.tipo,
         descripcion: editando.descripcion?.trim() || null,
@@ -158,9 +196,13 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
         if (error) throw error;
       } else {
         const orden = (lecciones?.reduce((m, l) => Math.max(m, l.orden || 0), 0) || 0) + 1;
-        const { data, error } = await supabase.from('curso_lecciones').insert([{ ...datos, orden }]).select('id').single();
+        const { data, error } = await supabase.from('curso_lecciones').insert([{ ...datos, course_id: courseId, orden }]).select('id').single();
         if (error) throw error;
         leccionId = data.id;
+        insertadaAhora = true;
+        // Se guarda el id de inmediato: si algo de abajo falla y se reintenta,
+        // se actualiza esta misma fila en vez de crear otra lección.
+        setEditando((ed) => (ed ? { ...ed, id: leccionId, recienCreada: true } : ed));
       }
 
       // El PDF se sube hasta tener el número de la lección, porque va en la ruta.
@@ -170,6 +212,8 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
         archivoPath = `${courseId}/${leccionId}/${Date.now()}_${limpio}`;
         const { error: errSubida } = await supabase.storage.from('curso-materiales').upload(archivoPath, editando.archivoNuevo);
         if (errSubida) throw errSubida;
+        // Ya subido: si lo de abajo falla, el reintento no lo vuelve a subir.
+        setEditando((ed) => (ed ? { ...ed, archivo_path: archivoPath, archivoNuevo: null } : ed));
       }
 
       // YouTube se queda en su columna de siempre; cualquier otro video o
@@ -204,17 +248,22 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
         }
       }
 
-      notificar(editando.id ? 'Lección actualizada.' : 'Lección agregada.', 'success');
-      const nueva = !editando.id;
+      notificar(nueva ? 'Lección agregada.' : 'Lección actualizada.', 'success');
       const tipoGuardado = editando.tipo;
       setEditando(null);
       await cargar();
       // Un examen o encuesta recién creado pasa directo a sus preguntas.
       if (nueva && esEvaluacion(tipoGuardado)) setEvaluando({ id: leccionId, tipo: tipoGuardado, titulo: datos.titulo });
-      await actualizarIndicador((lecciones?.length || 0) + (editando.id ? 0 : 1));
+      await actualizarIndicador((lecciones?.length || 0) + (nueva ? 1 : 0));
     } catch (err) {
       const faltaTipo = err.code === '23514' ? (TIPOS_NUEVOS.includes(editando.tipo) ? FALTA_EVALUACIONES : FALTA_MIGRACION) : null;
-      notificar(faltaTipo || `No se pudo guardar la lección: ${err.message}`, 'error');
+      notificar(
+        faltaTipo ||
+          `No se pudo guardar la lección: ${err.message}${insertadaAhora ? ' La lección ya quedó creada; corrige y vuelve a guardar para terminar.' : ''}`,
+        'error'
+      );
+      // La fila nueva ya existe: se muestra en la lista aunque falte terminarla.
+      if (insertadaAhora) void cargar();
     } finally {
       setGuardando(false);
     }
@@ -222,21 +271,68 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
 
   const mover = async (indice, direccion) => {
     const otro = indice + direccion;
-    if (!lecciones || otro < 0 || otro >= lecciones.length) return;
+    if (moviendo || !lecciones || otro < 0 || otro >= lecciones.length) return;
     const a = lecciones[indice];
     const b = lecciones[otro];
-    // Se reasigna el orden de toda la lista para que quede consecutivo aunque
-    // viniera con huecos o repetidos.
     const nuevaLista = [...lecciones];
     nuevaLista[indice] = b;
     nuevaLista[otro] = a;
-    setLecciones(nuevaLista);
-    await Promise.all(nuevaLista.map((l, i) => supabase.from('curso_lecciones').update({ orden: i + 1 }).eq('id', l.id)));
-    await cargar();
+
+    // Si el orden ya es único, basta con intercambiar el de las dos lecciones.
+    // Si venía con huecos o repetidos, se renumera la lista (solo las que cambian).
+    const ordenes = lecciones.map((l) => l.orden);
+    const unico = ordenes.every((o, i) => o != null && (i === 0 || o > ordenes[i - 1]));
+    const cambios = unico
+      ? [{ id: a.id, orden: b.orden }, { id: b.id, orden: a.orden }]
+      : nuevaLista.map((l, i) => ({ id: l.id, orden: i + 1 })).filter((c, i) => nuevaLista[i].orden !== c.orden);
+
+    setMoviendo(true);
+    setLecciones(nuevaLista.map((l) => ({ ...l, orden: cambios.find((c) => c.id === l.id)?.orden ?? l.orden })));
+    try {
+      const resultados = await Promise.all(cambios.map((c) => supabase.from('curso_lecciones').update({ orden: c.orden }).eq('id', c.id)));
+      const fallo = resultados.find((r) => r.error);
+      if (fallo) throw fallo.error;
+    } catch (err) {
+      notificar(`No se pudo cambiar el orden: ${err.message}`, 'error');
+    } finally {
+      // Siempre se recarga: así la lista muestra el orden real guardado.
+      await cargar();
+      setMoviendo(false);
+    }
+  };
+
+  // Cuántos registros de alumnos se perderían al borrar la lección.
+  const contarImpacto = async (leccionId) => {
+    const contar = async (tabla) => {
+      const { count, error } = await supabase.from(tabla).select('*', { count: 'exact', head: true }).eq('leccion_id', leccionId);
+      if (error) return esTablaFaltante(error) ? 0 : null;
+      return count || 0;
+    };
+    const [avances, intentos, entregas, registros] = await Promise.all([
+      contar('leccion_progreso'),
+      contar('evaluacion_intentos'),
+      contar('tarea_entregas'),
+      contar('sesion_registros'),
+    ]);
+    return { avances, intentos, entregas, registros };
   };
 
   const eliminar = async (leccion) => {
-    const mensaje = `¿Eliminar la lección "${leccion.titulo}"? También se borra el avance de los alumnos en ella.`;
+    const impacto = await contarImpacto(leccion.id);
+    const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+    const partes = [
+      impacto.avances ? plural(impacto.avances, 'avance de alumno', 'avances de alumnos') : '',
+      impacto.intentos ? plural(impacto.intentos, 'intento de examen o encuesta', 'intentos de examen o encuesta') : '',
+      impacto.entregas ? plural(impacto.entregas, 'entrega de tarea', 'entregas de tarea') : '',
+      impacto.registros ? plural(impacto.registros, 'registro a la sesión en vivo', 'registros a la sesión en vivo') : '',
+    ].filter(Boolean);
+    const desconocido = Object.values(impacto).some((v) => v === null);
+    const detalle = partes.length
+      ? `Se borrarían para siempre: ${partes.join(', ')}.`
+      : desconocido
+        ? 'No se pudo revisar si hay avance de alumnos; si lo hay, también se borra.'
+        : 'Ningún alumno tiene avance, intentos, entregas ni registros en ella.';
+    const mensaje = `¿Eliminar la lección "${leccion.titulo}"? ${detalle} Esto no se puede deshacer.`;
     const ok = confirmar ? await confirmar(mensaje, 'Eliminar lección') : window.confirm(mensaje);
     if (!ok) return;
     const { error } = await supabase.from('curso_lecciones').delete().eq('id', leccion.id);
@@ -261,16 +357,18 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
   if (lecciones === null) return <p className="lms-cargando">Cargando lecciones…</p>;
 
   if (asistencia) {
-    return <AsistenciaSesion leccion={asistencia} notificar={notificar} onCerrar={() => setAsistencia(null)} />;
+    return <AsistenciaSesion leccion={asistencia} courseId={courseId} notificar={notificar} confirmar={confirmar} onCerrar={() => setAsistencia(null)} />;
   }
 
+  // Al volver de las preguntas se recarga: cambia si el examen ya tiene preguntas.
   if (evaluando) {
     return (
       <EditorEvaluacion
+        onCambios={onCambios}
         leccion={evaluando}
         notificar={notificar}
         confirmar={confirmar || (async (m) => window.confirm(m))}
-        onCerrar={() => setEvaluando(null)}
+        onCerrar={() => { setEvaluando(null); void cargar(); }}
       />
     );
   }
@@ -291,7 +389,8 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
               (l.tipo === 'pdf' && !l.archivo_path) ||
               (l.tipo === 'texto' && !l.texto) ||
               (l.tipo === 'web' && !l.enlace) ||
-              (l.tipo === 'sesion' && !l.sesion?.inicia_en);
+              (l.tipo === 'sesion' && !l.sesion?.inicia_en) ||
+              (esEvaluacion(l.tipo) && l.preguntas === 0);
             return (
               <li key={l.id} className={`lms-fila${l.tipo === 'seccion' ? ' lms-fila--seccion' : ''}`}>
                 <span className="lms-orden">{l.tipo === 'seccion' ? '' : numero}</span>
@@ -302,12 +401,17 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
                     {TIPOS_LECCION[l.tipo]}
                     {l.duracion_min ? ` · ${l.duracion_min} min` : ''}
                     {l.obligatoria === false && l.tipo !== 'seccion' ? ' · opcional' : ''}
-                    {sinContenido && <span className="lms-alerta"> · sin contenido</span>}
+                    {sinContenido && (
+                      <span className="lms-alerta">
+                        {l.tipo === 'sesion' && !l.sesion?.inicia_en ? ' · sin fecha' : esEvaluacion(l.tipo) && l.preguntas === 0 ? ' · sin preguntas' : ' · sin contenido'}
+                      </span>
+                    )}
                   </small>
                 </span>
                 <span className="lms-acciones">
-                  <button type="button" className="icon-action-btn" title="Subir" disabled={i === 0} onClick={() => mover(i, -1)}><ArrowUp size={15} /></button>
-                  <button type="button" className="icon-action-btn" title="Bajar" disabled={i === lecciones.length - 1} onClick={() => mover(i, 1)}><ArrowDown size={15} /></button>
+                  <button type="button" className="icon-action-btn" title="Subir" disabled={i === 0 || moviendo} onClick={() => mover(i, -1)}><ArrowUp size={15} /></button>
+                  <button type="button" className="icon-action-btn" title="Bajar" disabled={i === lecciones.length - 1 || moviendo} onClick={() => mover(i, 1)}><ArrowDown size={15} /></button>
+                  <button type="button" className="icon-action-btn" title="Duplicar en este curso" disabled={copiandoId !== null} onClick={() => copiarLeccion(l)}><Copy size={15} /></button>
                   {l.tipo === 'sesion' && (
                     <button type="button" className="icon-action-btn edit" title="Registros y asistencia" onClick={() => setAsistencia(l)}><Users size={15} /></button>
                   )}
@@ -339,11 +443,12 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
       {!editando && copiando && (
         <div className="lms-copiar">
           <div className="lms-editor-cabecera">
-            <h4>Copiar una lección de otro curso</h4>
+            <h4>Copiar una lección</h4>
             <button type="button" className="icon-action-btn" title="Cerrar" onClick={() => setCopiando(null)}><X size={16} /></button>
           </div>
           <select value={copiando.cursoId || ''} onChange={(e) => elegirCursoOrigen(e.target.value)} aria-label="Curso de origen">
-            <option value="">Elige el curso</option>
+            <option value="">Elige el curso de donde copiar</option>
+            <option value={String(courseId)}>Este mismo curso</option>
             {cursos.filter((c) => !isNaN(Number(c.id)) && Number(c.id) !== Number(courseId)).map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
           </select>
           {copiando.cursoId && copiando.lecciones === null && <p className="lms-cargando">Cargando…</p>}
@@ -356,13 +461,15 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
                   <li key={l.id}>
                     <Icono size={15} className="lms-icono" />
                     <span>{l.titulo} <small>{TIPOS_LECCION[l.tipo]}</small></span>
-                    <button type="button" className="btn-crm-action outlined mini" onClick={() => copiarDeOtro(l)}><Copy size={13} /> Copiar</button>
+                    <button type="button" className="btn-crm-action outlined mini" disabled={copiandoId !== null} onClick={() => copiarLeccion(l)}>
+                      <Copy size={13} /> {copiandoId === l.id ? 'Copiando…' : 'Copiar'}
+                    </button>
                   </li>
                 );
               })}
             </ul>
           )}
-          <small className="lms-ayuda">Se hace una copia independiente (con su contenido, examen y archivo): si luego cambias una, la otra no cambia.</small>
+          <small className="lms-ayuda">Se hace una copia independiente al final del temario (con su contenido, examen y archivo): si luego cambias una, la otra no cambia. Una sesión en vivo se copia sin fecha ni reunión de Zoom: hay que editarla y ponerle la fecha nueva.</small>
         </div>
       )}
 
@@ -377,9 +484,9 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
               </button>
             );
           })}
-          {cursos.length > 1 && !copiando && (
+          {!copiando && (
             <button type="button" className="btn-crm-action outlined" onClick={() => setCopiando({ cursoId: '', lecciones: null })}>
-              <Copy size={14} /> Copiar de otro curso
+              <Copy size={14} /> Copiar lección
             </button>
           )}
         </div>

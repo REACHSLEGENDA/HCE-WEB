@@ -92,7 +92,20 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      notificar(err.message, 'error');
+      if (err.estado === 'ya-aprobado' || err.estado === 'ya-enviada') {
+        // El servidor reparó el avance de un resultado que ya había guardado
+        // (p. ej. falló la segunda escritura en el intento anterior).
+        onCompletada?.();
+        try {
+          setIntentos(await cargarMisIntentos(userId, leccion.id));
+          setFase('inicio');
+          notificar(err.message, 'success');
+        } catch (errorRecarga) {
+          notificar(`El avance se recuperó, pero no se pudo cargar el resultado: ${errorRecarga.message}`, 'error');
+        }
+      } else {
+        notificar(err.message, 'error');
+      }
     } finally {
       setEnviando(false);
     }

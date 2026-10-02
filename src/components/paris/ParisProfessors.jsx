@@ -1,3 +1,4 @@
+import { useInView } from 'react-intersection-observer';
 import { Award, BookOpen, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './ParisProfessors.css';

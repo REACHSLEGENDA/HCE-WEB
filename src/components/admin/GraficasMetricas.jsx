@@ -287,8 +287,9 @@ export function GraficaRetencion({ curva, caida, duracionSeg, alto = 236 }) {
 }
 
 /** Barras horizontales para pocas categorías (dispositivos). */
-export function BarrasHorizontales({ filas }) {
-  const maximo = Math.max(1, ...filas.map((f) => f.valor));
+export function BarrasHorizontales({ filas, maximo: tope }) {
+  // Con `maximo` las barras se miden contra un total fijo (p. ej. 100%).
+  const maximo = tope || Math.max(1, ...filas.map((f) => f.valor));
   return (
     <ul className="m-barras">
       {filas.map((f) => (

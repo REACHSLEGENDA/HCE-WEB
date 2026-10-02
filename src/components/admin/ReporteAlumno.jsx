@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { X, RotateCcw, Download, Award, Search } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import { esTablaFaltante } from '../../lib/cursos';
+import { traerTodo } from '../../lib/traerTodo';
 import { reiniciarIntentos } from '../../lib/evaluaciones';
 import { insigniasPorCategoria, ESCALONES } from '../../lib/logros';
 import { construirReporte, duracionTexto, ESTADOS_ACTIVIDAD, FORMATOS } from '../../lib/reporteAlumno';
@@ -19,35 +18,59 @@ const PESTANAS = [
 ];
 const ESTADO_CURSO = { completado: 'Completado', en_curso: 'En curso', no_empezado: 'No empezado' };
 const fecha = (iso) => (iso ? new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—');
+// Vigencia de un certificado: "Permanente" si no vence.
+function vigencia(c, ahora = Date.now()) {
+  if (!c.vigente_hasta) return { texto: 'Permanente', clase: 'completado' };
+  const vence = new Date(c.vigente_hasta).getTime();
+  if (vence < ahora) return { texto: `Venció el ${fecha(c.vigente_hasta)}`, clase: 'no_aprobada' };
+  if (vence < ahora + 30 * 86400000) return { texto: `Vence el ${fecha(c.vigente_hasta)}`, clase: 'en_curso' };
+  return { texto: `Hasta el ${fecha(c.vigente_hasta)}`, clase: 'completado' };
+}
 const fechaHora = (iso) => new Date(iso).toLocaleString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-async function opcional(consulta) {
-  const { data, error } = await consulta;
-  if (error) {
-    if (!esTablaFaltante(error) && error.code !== '42703') console.warn('Reporte:', error.message);
-    return [];
+async function filasPorIds(tabla, columnas, columna, ids) {
+  const filas = [];
+  for (let inicio = 0; inicio < ids.length; inicio += 150) {
+    filas.push(...await traerTodo(tabla, columnas, (q) => q.in(columna, ids.slice(inicio, inicio + 150))));
   }
-  return data || [];
+  return filas;
+}
+
+// Certificados con su vigencia; si la columna vigente_hasta todavía no existe
+// (migración sin correr), se piden sin ella y todos se ven permanentes.
+async function certificadosDe(userId) {
+  try {
+    return await traerTodo('certificates', 'id, course_id, folio, score, created_at, pdf_url, vigente_hasta', (q) => q.eq('user_id', userId));
+  } catch (error) {
+    if (error.code !== '42703') throw error;
+    return traerTodo('certificates', 'id, course_id, folio, score, created_at, pdf_url', (q) => q.eq('user_id', userId));
+  }
+}
+
+// Las visitas pueden pasar de 1,000 filas: se piden en tandas.
+async function visitasDe(userId) {
+  return traerTodo('curso_sesiones', 'id, course_id, iniciada_en, segundos_activos', (q) => q.eq('user_id', userId));
 }
 
 async function cargarDatosAlumno(userId) {
-  const inscripciones = await opcional(supabase.from('inscripciones').select('course_id, origen, created_at').eq('user_id', userId));
+  const propias = (q) => q.eq('user_id', userId);
+  const inscripciones = await traerTodo('inscripciones', 'course_id, origen, created_at', propias);
   const cursosIds = inscripciones.map((i) => i.course_id);
   const lecciones = cursosIds.length
-    ? await opcional(supabase.from('curso_lecciones').select('id, course_id, orden, titulo, tipo, obligatoria').in('course_id', cursosIds).order('orden'))
+    ? await filasPorIds('curso_lecciones', 'id, course_id, orden, titulo, tipo, obligatoria', 'course_id', cursosIds)
     : [];
   const sesionIds = lecciones.filter((l) => l.tipo === 'sesion').map((l) => l.id);
 
   const [progreso, intentos, entregas, sesionRegistros, sesionesHorario, certificados, visitas, examenesFinales, webinars] = await Promise.all([
-    opcional(supabase.from('leccion_progreso').select('leccion_id, course_id, porcentaje, completada, completada_en').eq('user_id', userId)),
-    opcional(supabase.from('evaluacion_intentos').select('id, leccion_id, course_id, numero, calificacion, aprobado, enviado_en, duracion_seg').eq('user_id', userId)),
-    opcional(supabase.from('tarea_entregas').select('leccion_id, course_id, estado, creada_en, revisada_en').eq('user_id', userId)),
-    opcional(supabase.from('sesion_registros').select('leccion_id, asistio, minutos, verificado_en').eq('user_id', userId)),
-    sesionIds.length ? opcional(supabase.from('sesiones_clase').select('leccion_id, inicia_en, duracion_min').in('leccion_id', sesionIds)) : [],
-    opcional(supabase.from('certificates').select('id, course_id, folio, score, created_at, pdf_url').eq('user_id', userId)),
-    opcional(supabase.from('curso_sesiones').select('course_id, iniciada_en, segundos_activos').eq('user_id', userId)),
-    opcional(supabase.from('curso_eventos').select('course_id, datos, creado_en').eq('user_id', userId).eq('tipo', 'examen_enviado')),
-    opcional(supabase.from('webinar_registros').select('asistio').eq('user_id', userId)),
+    traerTodo('leccion_progreso', 'leccion_id, course_id, porcentaje, completada, completada_en', propias),
+    traerTodo('evaluacion_intentos', 'id, leccion_id, course_id, numero, calificacion, aprobado, enviado_en, duracion_seg', propias),
+    traerTodo('tarea_entregas', 'leccion_id, course_id, estado, creada_en, revisada_en', propias),
+    traerTodo('sesion_registros', 'leccion_id, asistio, minutos, verificado_en', propias),
+    sesionIds.length ? filasPorIds('sesiones_clase', 'leccion_id, inicia_en, duracion_min', 'leccion_id', sesionIds) : [],
+    certificadosDe(userId),
+    visitasDe(userId),
+    traerTodo('curso_eventos', 'course_id, datos, creado_en', (q) => propias(q).eq('tipo', 'examen_enviado')),
+    traerTodo('webinar_registros', 'asistio', propias),
   ]);
 
   return { inscripciones, lecciones, progreso, intentos, entregas, sesionRegistros, sesionesHorario, certificados, visitas, examenesFinales, webinars };
@@ -80,19 +103,20 @@ export default function ReporteAlumno({ alumno, cursos, notificar, confirmar, on
   const [busqueda, setBusqueda] = useState('');
   const [formato, setFormato] = useState('');
   const [verEventos, setVerEventos] = useState(50);
+  const [errorCarga, setErrorCarga] = useState(null);
 
   const cargar = useCallback(async () => {
-    try { setDatos(await cargarDatosAlumno(alumno.id)); }
-    catch (err) { notificar(`No se pudo cargar el reporte: ${err.message}`, 'error'); }
-  }, [alumno.id, notificar]);
+    try { setDatos(await cargarDatosAlumno(alumno.id)); setErrorCarga(null); }
+    catch (err) { setErrorCarga(err.message || 'Error de conexión'); }
+  }, [alumno.id]);
 
   useEffect(() => {
     let vigente = true;
     cargarDatosAlumno(alumno.id)
       .then((d) => { if (vigente) setDatos(d); })
-      .catch((err) => { if (vigente) notificar(`No se pudo cargar el reporte: ${err.message}`, 'error'); });
+      .catch((err) => { if (vigente) setErrorCarga(err.message || 'Error de conexión'); });
     return () => { vigente = false; };
-  }, [alumno.id, notificar]);
+  }, [alumno.id]);
 
   // Cerrar con Escape.
   useEffect(() => {
@@ -125,6 +149,7 @@ export default function ReporteAlumno({ alumno, cursos, notificar, confirmar, on
   return (
     <div className="reporte-fondo" role="dialog" aria-modal="true" aria-label={`Reporte de ${alumno.nombre_completo || alumno.email}`}>
       <div className="reporte">
+        {errorCarga && <p className="m-error" role="alert">No se pudo cargar el reporte: {errorCarga} <button type="button" className="reporte-boton" onClick={cargar}>Reintentar</button></p>}
         <header className="reporte-cabecera">
           <div>
             <span className="reporte-migas">Informes › Usuarios</span>
@@ -140,7 +165,7 @@ export default function ReporteAlumno({ alumno, cursos, notificar, confirmar, on
           ))}
         </nav>
 
-        {!reporte ? <p className="reporte-vacio">Cargando reporte…</p> : (
+        {!reporte ? (errorCarga ? null : <p className="reporte-vacio">Cargando reporte…</p>) : (
           <div className="reporte-cuerpo">
             {(pestana === 'general' || pestana === 'actividades') && (
               <dl className="reporte-indicadores">
@@ -252,13 +277,14 @@ export default function ReporteAlumno({ alumno, cursos, notificar, confirmar, on
               reporte.certificados.length ? (
                 <div className="reporte-tabla-scroll">
                   <table className="reporte-tabla">
-                    <thead><tr><th>Curso</th><th>Folio</th><th>Emitido</th><th className="num">Calificación</th><th /></tr></thead>
+                    <thead><tr><th>Curso</th><th>Folio</th><th>Emitido</th><th>Vigencia</th><th className="num">Calificación</th><th /></tr></thead>
                     <tbody>
                       {reporte.certificados.map((c) => (
                         <tr key={c.id}>
                           <td className="reporte-fuerte">{cursos.find((x) => Number(x.id) === Number(c.course_id))?.title || `Curso ${c.course_id}`}</td>
                           <td>{c.folio}</td>
                           <td>{fecha(c.created_at)}</td>
+                          <td><span className={`reporte-estado ${vigencia(c).clase}`}>{vigencia(c).texto}</span></td>
                           <td className="num">{c.score != null ? `${c.score}%` : '—'}</td>
                           <td>{c.pdf_url && <a href={c.pdf_url} target="_blank" rel="noopener noreferrer">Ver</a>}</td>
                         </tr>

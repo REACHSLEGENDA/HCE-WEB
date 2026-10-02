@@ -6,6 +6,7 @@
 // cualquiera de los dos basta; si llegan los dos, el segundo no duplica nada.
 
 import { notificar } from './_notificaciones.js';
+import { cuentaHabilitada } from './_supabase.js';
 
 // Debe coincidir con el tipo de cambio que anuncian las páginas de inscripción.
 export const USD_RATE = 17.5;
@@ -46,7 +47,22 @@ export async function inscribir(db, { userId, courseId, origen, stripeSessionId 
   // Aviso "inscrito a un curso", solo la primera vez. Al activar una cuenta
   // no se manda: el correo de cuenta activada ya lista sus cursos.
   if (!previa && avisar) {
-    await notificar(db, 'inscrito_curso', { userId, courseId, clave: `inscripcion:${courseId}` });
+    // Si su cuenta todavía no está aprobada, el curso queda apartado pero
+    // cerrado: el correo se lo dice en vez de invitarlo a empezar.
+    // Si no se puede saber (falla la consulta), una frase neutra: la
+    // inscripción ya quedó y el correo no debe prometer de más.
+    let acceso = 'Encontrarás el curso en tu portal.';
+    try {
+      const { habilitada } = await cuentaHabilitada(userId, { exigirAprobacion: true });
+      acceso = habilitada
+        ? 'Ya puedes empezar cuando quieras.'
+        : 'Tu lugar quedó apartado. En cuanto activemos tu cuenta y te asignemos tu grupo, tu curso se abrirá y te avisaremos por correo.';
+    } catch (err) {
+      console.error('No se pudo revisar la cuenta para el aviso:', err.message);
+    }
+    await notificar(db, 'inscrito_curso', {
+      userId, courseId, clave: `inscripcion:${courseId}`, variables: { acceso },
+    });
   }
   return { nueva: !previa };
 }

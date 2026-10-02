@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { adminDesdeToken, isConfigured } from './_supabase.js';
 
 // HCE opera dos cuentas de Stripe. La principal cobra en pesos; la segunda
 // recibe dos cosas distintas: los cobros en dólares que enruta _stripe.js y los
@@ -126,12 +127,27 @@ function mapearPago(pi, gateway) {
   };
 }
 
+// Solo el mismo origen (el panel del portal) consulta esta función: ya no se
+// responde CORS abierto, porque los cobros traen nombres y correos de alumnos.
 const headers = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
 };
 
-export const handler = async () => {
+export const handler = async (event = {}) => {
+  // Los pagos llevan datos personales: solo un admin con sesión los ve.
+  if (!isConfigured()) {
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Falta configurar Supabase en Netlify.' }) };
+  }
+  let adminUser = null;
+  try {
+    adminUser = await adminDesdeToken(event.headers || {});
+  } catch {
+    adminUser = null;
+  }
+  if (!adminUser) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Solo un administrador puede ver los pagos.' }) };
+  }
+
   const activas = GATEWAYS.filter((g) => process.env[g.envVar]);
 
   if (activas.length === 0) {

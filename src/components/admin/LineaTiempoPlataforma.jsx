@@ -15,6 +15,8 @@ const PERIODOS = [['1', 'Último día'], ['7', 'Últimos 7 días'], ['30', 'Últ
 export default function LineaTiempoPlataforma({ perfiles, cursos }) {
   const [dias, setDias] = useState('7');
   const [datos, setDatos] = useState(null);
+  const [error, setError] = useState(null);
+  const [recarga, setRecarga] = useState(0);
   const [tipo, setTipo] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [mostrar, setMostrar] = useState(50);
@@ -26,7 +28,8 @@ export default function LineaTiempoPlataforma({ perfiles, cursos }) {
     Promise.all([
       traerTodo('actividad_portal', 'user_id, tipo, objetivo_user_id, course_id, detalle, creado_en', desdeCol('creado_en')),
       traerTodo('inscripciones', 'user_id, course_id, origen, created_at', desdeCol('created_at')),
-      traerTodo('leccion_progreso', 'user_id, course_id, leccion_id, completada, completada_en', desdeCol('completada_en'), { orden: null }),
+      // Sin `id`: traerTodo la ordena por su llave (user_id, leccion_id).
+      traerTodo('leccion_progreso', 'user_id, course_id, leccion_id, completada, completada_en', desdeCol('completada_en')),
       traerTodo('evaluacion_intentos', 'user_id, leccion_id, calificacion, aprobado, enviado_en', desdeCol('enviado_en')),
       traerTodo('curso_eventos', 'user_id, course_id, datos, creado_en', (q) => q.eq('tipo', 'examen_enviado').gte('creado_en', desde)),
       traerTodo('tarea_entregas', 'user_id, leccion_id, creada_en', desdeCol('creada_en')),
@@ -37,9 +40,10 @@ export default function LineaTiempoPlataforma({ perfiles, cursos }) {
       .then(([actividad, inscripciones, progreso, intentos, examenesFinales, entregas, asistencias, certificados, lecciones]) => {
         if (vigente) setDatos({ actividad, inscripciones, progreso, intentos, examenesFinales, entregas, asistencias, certificados, lecciones });
       })
-      .catch(() => { if (vigente) setDatos({ lecciones: [] }); });
+      // Antes un error dejaba la línea vacía como si no hubiera pasado nada.
+      .catch((err) => { if (vigente) setError(err.message || 'Error desconocido'); });
     return () => { vigente = false; };
-  }, [dias]);
+  }, [dias, recarga]);
 
   const eventos = useMemo(() => (datos ? eventosPlataforma({ perfiles, cursos, ...datos }) : null), [datos, perfiles, cursos]);
   const filtrados = useMemo(() => {
@@ -53,7 +57,7 @@ export default function LineaTiempoPlataforma({ perfiles, cursos }) {
       <div className="inf-filtros">
         <div className="m-periodos" role="group" aria-label="Periodo">
           {PERIODOS.map(([id, n]) => (
-            <button key={id} type="button" className={dias === id ? 'activo' : ''} aria-pressed={dias === id} onClick={() => { setDatos(null); setDias(id); setMostrar(50); }}>{n}</button>
+            <button key={id} type="button" className={dias === id ? 'activo' : ''} aria-pressed={dias === id} onClick={() => { if (id === dias) return; setDatos(null); setError(null); setDias(id); setMostrar(50); }}>{n}</button>
           ))}
         </div>
         <select className="m-select" value={tipo} onChange={(e) => { setTipo(e.target.value); setMostrar(50); }} aria-label="Tipo de evento">
@@ -63,7 +67,12 @@ export default function LineaTiempoPlataforma({ perfiles, cursos }) {
         <label className="inf-buscar"><Search size={14} /><input type="search" placeholder="Buscar persona o curso" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} /></label>
       </div>
 
-      {!eventos ? <p className="m-cargando">Cargando…</p> : (
+      {error ? (
+        <p className="m-error">
+          No se pudo cargar la línea de tiempo: {error}{' '}
+          <button type="button" className="m-boton" onClick={() => { setError(null); setDatos(null); setRecarga((n) => n + 1); }}>Reintentar</button>
+        </p>
+      ) : !eventos ? <p className="m-cargando">Cargando…</p> : (
         <>
           <ol className="inf-eventos">
             {filtrados.slice(0, mostrar).map((e, i) => {

@@ -2,7 +2,7 @@
    MetricasCursos.css (--m-*) y del panel (--text-dark, --border-color…).
    Los colores de estado siempre van con su nombre en la leyenda. */
 
-.inf-contenedor { display: flex; flex-direction: column; gap: 16px; }
+.inf-contenedor { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .inf-pestanas { display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; }
 .inf-pestanas button {
   flex-shrink: 0; padding: 10px 14px; border: 0; border-bottom: 2px solid transparent;
@@ -70,6 +70,18 @@
 .inf-evento p { margin: 2px 0 0; color: var(--text-dark); font-size: 0.86rem; line-height: 1.4; overflow-wrap: anywhere; }
 .inf-pie { display: flex; align-items: center; gap: 12px; margin: 0; color: var(--text-muted); font-size: 0.8rem; }
 
+.inf-grupos { min-width: 0; }
+.inf-grupo-selector { display: flex; flex-direction: column; gap: 6px; min-width: 0; color: var(--text-dark); font-size: 0.9rem; }
+.inf-grupo-selector .m-select { max-width: 100%; min-height: 44px; }
+.inf-grupos .m-boton { min-height: 44px; }
+.inf-grupos .m-tabla-scroll { max-width: 100%; min-width: 0; overflow-x: auto; }
+.inf-grupos-tabla th, .inf-grupos-tabla td { min-width: 185px; vertical-align: top; }
+.inf-grupos-tabla th:first-child { min-width: 220px; }
+.inf-grupos-tabla th strong, .inf-grupos-tabla th small, .inf-grupos-tabla td > * { display: block; }
+.inf-grupos-tabla small { margin-top: 4px; color: var(--text-muted); font-weight: 400; overflow-wrap: anywhere; }
+.inf-grupos-caption { padding: 8px; text-align: left; color: var(--text-muted); font-size: 0.84rem; }
+.inf-grupos :focus-visible { outline: 3px solid var(--m-acento); outline-offset: 3px; }
+
 @media (max-width: 860px) {
   .inf-rejilla { grid-template-columns: 1fr; }
 }
@@ -77,4 +89,6 @@
   .inf-formacion li { grid-template-columns: minmax(0, 1fr) auto; }
   .inf-formacion-pista { grid-column: 1 / -1; grid-row: 2; }
   .inf-filtros .m-select { width: 100%; }
+  .inf-grupo-selector { width: 100%; }
+  .inf-grupos .inf-buscar { min-width: 0; flex-basis: 100%; min-height: 44px; }
 }

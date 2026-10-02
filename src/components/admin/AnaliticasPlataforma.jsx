@@ -36,9 +36,13 @@ export default function AnaliticasPlataforma({ perfiles, cursos }) {
     let vigente = true;
     Promise.all([
       traerTodo('inscripciones', 'user_id, course_id, created_at'),
-      traerTodo('certificates', 'id, user_id, course_id, score, created_at, vigente_hasta').catch(() => traerTodo('certificates', 'id, user_id, course_id, score, created_at')),
+      traerTodo('certificates', 'id, user_id, course_id, score, created_at, vigente_hasta').catch((error) => {
+        if (error.code !== '42703') throw error;
+        return traerTodo('certificates', 'id, user_id, course_id, score, created_at');
+      }),
       traerTodo('curso_lecciones', 'id, course_id, tipo'),
-      traerTodo('leccion_progreso', 'user_id, course_id, porcentaje, completada', (q) => q, { orden: null }),
+      // Sin `id`: traerTodo la ordena por su llave (user_id, leccion_id).
+      traerTodo('leccion_progreso', 'user_id, course_id, porcentaje, completada'),
       traerTodo('curso_sesiones', 'user_id, course_id, iniciada_en, segundos_activos'),
       traerTodo('actividad_portal', 'user_id, creado_en', (q) => q.eq('tipo', 'login').gte('creado_en', new Date(Date.now() - 30 * 86400000).toISOString())),
       traerTodo('curso_archivos', 'id'),

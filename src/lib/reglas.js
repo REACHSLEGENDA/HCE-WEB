@@ -2,6 +2,7 @@
 
 import { supabase } from './supabase';
 import { esTablaFaltante } from './cursos';
+import { traerTodo } from './traerTodo';
 
 export const REGLAS_BASE = {
   oculto_catalogo: false,
@@ -22,12 +23,13 @@ export const REGLAS_FINALIZACION = {
 
 /** Reglas de todos los cursos: { [courseId]: reglas }. Vacío antes de la migración. */
 export async function cargarReglasCursos() {
-  const { data, error } = await supabase.from('curso_reglas').select('*');
-  if (error) {
-    if (!esTablaFaltante(error)) console.warn('No se pudieron cargar las reglas:', error.message);
+  try {
+    const data = await traerTodo('curso_reglas', '*');
+    return Object.fromEntries((data || []).map((r) => [Number(r.course_id), { ...REGLAS_BASE, ...r }]));
+  } catch (error) {
+    console.warn('No se pudieron cargar las reglas:', error.message);
     return {};
   }
-  return Object.fromEntries((data || []).map((r) => [Number(r.course_id), { ...REGLAS_BASE, ...r }]));
 }
 
 export const reglasDe = (mapa, courseId) => mapa?.[Number(courseId)] || REGLAS_BASE;
@@ -42,7 +44,23 @@ export async function cargarReglasCurso(courseId) {
 }
 
 export async function guardarReglasCurso(courseId, reglas) {
-  const numero = (v) => (v === '' || v == null ? null : Math.max(1, Math.round(Number(v))));
+  const numero = (v) => {
+    if (v === '' || v == null) return null;
+    if (!Number.isInteger(Number(v)) || Number(v) < 1) throw new Error('El cupo y los días de acceso deben ser enteros mayores a cero.');
+    return Number(v);
+  };
+  const porcentaje = Number(reglas.porcentaje_finalizacion ?? 100);
+  if (!Number.isInteger(porcentaje) || porcentaje < 1 || porcentaje > 100) throw new Error('El porcentaje de finalización debe estar entre 1 y 100.');
+  const prerrequisitos = [...new Set((reglas.prerrequisitos || []).map(Number))];
+  const todas = await traerTodo('curso_reglas', 'course_id, prerrequisitos');
+  const mapa = Object.fromEntries(todas.map((r) => [Number(r.course_id), r]));
+  const llegaAlCurso = (id, visitados = new Set()) => {
+    if (id === Number(courseId)) return true;
+    if (visitados.has(id)) return false;
+    visitados.add(id);
+    return (mapa[id]?.prerrequisitos || []).some((otro) => llegaAlCurso(Number(otro), visitados));
+  };
+  if (prerrequisitos.some((id) => !Number.isFinite(id) || llegaAlCurso(id))) throw new Error('Los prerrequisitos crearían un ciclo entre cursos.');
   const { error } = await supabase.from('curso_reglas').upsert([{
     course_id: Number(courseId),
     oculto_catalogo: !!reglas.oculto_catalogo,
@@ -50,9 +68,9 @@ export async function guardarReglasCurso(courseId, reglas) {
     requiere_solicitud: !!reglas.requiere_solicitud,
     dias_acceso: numero(reglas.dias_acceso),
     conservar_acceso: reglas.conservar_acceso !== false,
-    prerrequisitos: (reglas.prerrequisitos || []).map(Number).filter(Boolean),
+    prerrequisitos,
     regla_finalizacion: reglas.regla_finalizacion || 'examen_final',
-    porcentaje_finalizacion: Math.min(100, Math.max(1, Number(reglas.porcentaje_finalizacion) || 100)),
+    porcentaje_finalizacion: porcentaje,
     actualizado_en: new Date().toISOString(),
   }], { onConflict: 'course_id' });
   if (error) throw error;
@@ -99,6 +117,6 @@ export function venceAcceso(reglas, inscritoEn) {
  */
 export function cursoTerminado(reglas, { leccionesCompletas, porcentajeLecciones }) {
   if (reglas.regla_finalizacion === 'lecciones') return leccionesCompletas;
-  if (reglas.regla_finalizacion === 'porcentaje') return porcentajeLecciones >= (reglas.porcentaje_finalizacion || 100);
+  if (reglas.regla_finalizacion === 'porcentaje') return porcentajeLecciones >= (reglas.porcentaje_finalizacion ?? 100);
   return false;
 }

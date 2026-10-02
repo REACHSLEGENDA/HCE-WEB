@@ -6,15 +6,12 @@ import './CookieBanner.css';
 const STORAGE_KEY = 'hce_cookie_consent';
 
 export default function CookieBanner() {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => {
+    try { return !localStorage.getItem(STORAGE_KEY); }
+    catch { return true; }
+  });
   const [expanded, setExpanded] = useState(false);
   const [prefs, setPrefs] = useState({ analysis: true, advertising: true });
-
-  useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) {
-      setVisible(true);
-    }
-  }, []);
 
   // El chatbot es `fixed` en la misma esquina y con mayor z-index, así que en
   // móvil tapaba el botón de aceptar. Marcamos el body para poder ocultarlo

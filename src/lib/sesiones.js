@@ -78,6 +78,23 @@ export function descargarIcs({ titulo, curso, iniciaEn, duracionMin, url }) {
 
 // ---- Administrador -------------------------------------------------------------
 
+/**
+ * Descarga una tabla como CSV que Excel abre con acentos (lleva BOM). La usan
+ * la asistencia de las sesiones y la lista de inscritos del curso.
+ */
+export function descargarCsv(nombreArchivo, encabezado, filas) {
+  const escapar = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = '﻿' + [encabezado, ...filas].map((f) => f.map(escapar).join(',')).join('\r\n');
+  const enlace = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  const a = document.createElement('a');
+  a.href = enlace;
+  a.download = `${String(nombreArchivo || 'reporte').replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '_')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(enlace);
+}
+
 /** Horario y datos de Zoom de las sesiones de estas lecciones: { [leccionId]: {...} }. */
 export async function cargarSesionesAdmin(ids) {
   if (!ids.length) return {};
