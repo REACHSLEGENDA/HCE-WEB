@@ -245,9 +245,6 @@ const Classroom = () => {
     setVistaAlumno(alumno);
     if (alumno) setShowExam(false);
   };
-  const archivosDeLeccion = leccionActual && !leccionActual.implicita
-    ? biblioteca.filter((a) => a.leccion_id === leccionActual.id)
-    : [];
   const abrirArchivo = async (archivo, descargar = false) => {
     try {
       await abrirArchivoBiblioteca(archivo, { descargar });
@@ -256,6 +253,9 @@ const Classroom = () => {
     }
   };
   const leccionActual = lecciones.find((l) => l.id === leccionActualId) || null;
+  const archivosDeLeccion = leccionActual && !leccionActual.implicita
+    ? biblioteca.filter((a) => a.leccion_id === leccionActual.id)
+    : [];
   const videoActual = leccionActual?.tipo === 'video' ? videoDeLeccion(leccionActual.contenido) : '';
   // YouTube, Vimeo, un archivo de video o cualquier otra plataforma.
   const fuenteVideo = detectarVideo(videoActual);
