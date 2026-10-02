@@ -240,13 +240,13 @@ create policy "mensaje destinatarios: leer" on public.mensaje_destinatarios
 
 -- El id de los certificados es uuid: el recordatorio de recertificación no se
 -- podía guardar y el aviso se repetía cada día.
-do $
+do $$
 begin
   if exists (select 1 from information_schema.columns where table_schema = 'public'
       and table_name = 'recordatorios' and column_name = 'certificado_id' and data_type <> 'text') then
     alter table public.recordatorios alter column certificado_id type text using certificado_id::text;
   end if;
-end $;
+end $$;
 
 -- 7. El correo de inscripción respeta cuentas pendientes de aprobación.
 update public.notificaciones
