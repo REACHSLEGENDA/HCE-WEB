@@ -22,7 +22,8 @@ async function consultarGrupos() {
     const [g, m, c] = await Promise.all([
       supabase.from('grupos').select('id, nombre, descripcion, creado_en').order('nombre'),
       comoRespuesta(traerTodo('grupo_miembros', 'grupo_id, user_id')),
-      comoRespuesta(traerTodo('grupo_cursos', 'grupo_id, course_id')),
+      // '*': la fecha de inicio (abre_en) llega con acceso-por-grupo.sql.
+      comoRespuesta(traerTodo('grupo_cursos', '*')),
     ]);
     return { g, m, c };
   } catch (error) {
@@ -50,6 +51,9 @@ export default function GruposAdmin({ cursos, perfiles, notificar, confirmar }) 
       ...grupo,
       miembros: (m.data || []).filter((x) => x.grupo_id === grupo.id).map((x) => x.user_id),
       cursos: (c.data || []).filter((x) => x.grupo_id === grupo.id).map((x) => Number(x.course_id)),
+      // Fecha de inicio por curso; undefined si la migración aún no corre.
+      aperturas: Object.fromEntries((c.data || []).filter((x) => x.grupo_id === grupo.id)
+        .map((x) => [Number(x.course_id), x.abre_en])),
     })));
   }, [notificar]);
 
@@ -221,6 +225,21 @@ function DetalleGrupo({ grupo, cursos, perfiles, notificar, confirmar, onVolver,
     }
   };
 
+  // La fecha se guarda a las 00:00 de la Ciudad de México de ese día.
+  const cambiarInicio = async (courseId, fecha) => {
+    const abreEn = fecha ? `${fecha}T00:00:00-06:00` : null;
+    const { error } = await supabase.from('grupo_cursos').update({ abre_en: abreEn })
+      .eq('grupo_id', grupo.id).eq('course_id', courseId);
+    if (error) {
+      notificar(/abre_en/.test(error.message || '')
+        ? 'Para la fecha de inicio falta correr en Supabase la migración acceso-por-grupo.sql.'
+        : `No se pudo guardar la fecha: ${error.message}`, 'error');
+      return;
+    }
+    notificar(fecha ? 'Fecha de inicio guardada.' : 'Sin fecha: el curso se abre al asignar al grupo.', 'success');
+    await onCambio();
+  };
+
   const quitarCurso = async (courseId) => {
     const ok = await confirmar('¿Quitar el curso del grupo? Nadie pierde el acceso: solo deja de inscribirse a quien entre al grupo después.', 'Quitar curso');
     if (!ok) return;
@@ -256,15 +275,41 @@ function DetalleGrupo({ grupo, cursos, perfiles, notificar, confirmar, onVolver,
         <section className="settings-card">
           <h3><BookOpen size={16} /> Cursos del grupo</h3>
           {grupo.cursos.length === 0 ? (
-            <p className="lms-vacio">Asigna un curso para inscribir a todos los miembros.</p>
+            <p className="lms-vacio">Asigna un curso para inscribir a todos los miembros. En cursos con acceso por grupo, ponle la fecha de inicio: ese día se abre para todos y les llega un correo.</p>
           ) : (
             <ul className="lms-lista-simple">
-              {grupo.cursos.map((id) => (
-                <li key={id}>
-                  <span>{cursos.find((c) => Number(c.id) === id)?.title || `Curso #${id}`}</span>
-                  <button type="button" className="icon-action-btn delete" title="Quitar del grupo" onClick={() => quitarCurso(id)}><Trash2 size={14} /></button>
-                </li>
-              ))}
+              {grupo.cursos.map((id) => {
+                const abreEn = grupo.aperturas?.[id];
+                const conFecha = abreEn !== undefined;
+                const fecha = abreEn ? new Date(abreEn) : null;
+                const abierto = !fecha || fecha <= new Date();
+                return (
+                  <li key={id} className="grupo-curso">
+                    <span className="grupo-curso-nombre">
+                      {cursos.find((c) => Number(c.id) === id)?.title || `Curso #${id}`}
+                      {conFecha && (
+                        <small className={`grupo-curso-estado ${abierto ? 'abierto' : 'proximo'}`}>
+                          {fecha
+                            ? (abierto ? 'Abierto desde el ' : 'Abre el ') + fecha.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Mexico_City' })
+                            : 'Abierto (sin fecha de inicio)'}
+                        </small>
+                      )}
+                    </span>
+                    {conFecha && (
+                      <label className="grupo-curso-fecha">
+                        <span>Inicia</span>
+                        <input
+                          type="date"
+                          value={fecha ? fecha.toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }) : ''}
+                          onChange={(e) => cambiarInicio(id, e.target.value)}
+                          aria-label="Fecha de inicio del grupo en este curso"
+                        />
+                      </label>
+                    )}
+                    <button type="button" className="icon-action-btn delete" title="Quitar del grupo" onClick={() => quitarCurso(id)}><Trash2 size={14} /></button>
+                  </li>
+                );
+              })}
             </ul>
           )}
           <form className="lms-inline" onSubmit={asignarCurso}>

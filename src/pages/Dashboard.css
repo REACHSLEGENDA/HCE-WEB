@@ -2763,3 +2763,13 @@
 .catalogo-buscar { display: flex; flex-direction: column; gap: 8px; max-width: 420px; margin: 0 0 24px; color: var(--text-dark); }
 .catalogo-buscar input { min-height: 44px; width: 100%; box-sizing: border-box; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; font: inherit; }
 @media (max-width: 768px) { .calificaciones-view .admin-table { min-width: 550px; } }
+
+/* Curso por generación: aviso en el catálogo antes de inscribirse o pagar. */
+.curso-generacion {
+  display: block;
+  margin: -4px 0 8px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #0e7490;
+}
+.crm-layout[data-theme="dark"] .curso-generacion { color: #67e8f9; }

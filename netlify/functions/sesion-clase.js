@@ -153,7 +153,7 @@ export const handler = async (event) => {
       // entra a la sesión.
       if (accion === 'registrar' || accion === 'unirse') {
         const acceso = await accesoVigente(user.id, leccion.course_id);
-        if (!acceso.vigente) return json(403, { error: acceso.error, estado: 'acceso-vencido' });
+        if (!acceso.vigente) return json(403, { error: acceso.error, estado: acceso.porGrupo ? 'esperando-grupo' : 'acceso-vencido' });
       }
     }
 

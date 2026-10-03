@@ -93,17 +93,37 @@ export async function cuentaHabilitada(userId, { exigirAprobacion = false } = {}
 // vigente). Se calcula aquí para no depender de que la función SQL se pueda
 // llamar. Sin la migración, sin reglas o sin inscripción, no hay vencimiento
 // (la inscripción se revisa aparte).
+//
+// Cursos por generación (acceso-por-grupo.sql): además el alumno debe estar
+// en un grupo con ese curso y ya debe haber llegado la fecha de apertura; los
+// días de acceso cuentan desde esa apertura.
 export async function accesoVigente(userId, courseId) {
   const db = admin();
   const idCurso = Number(courseId);
+  // select('*'): antes de acceso-por-grupo.sql no existe modo_acceso.
   const { data: reglas, error } = await db
     .from('curso_reglas')
-    .select('dias_acceso, conservar_acceso')
+    .select('*')
     .eq('course_id', idCurso)
     .maybeSingle();
   if (error) {
     if (esEsquemaFaltante(error)) return { vigente: true };
     throw new Error(error.message);
+  }
+
+  let apertura = null;
+  if (reglas?.modo_acceso === 'grupo') {
+    const { data: porGrupo, error: errGrupo } = await db.rpc('acceso_por_grupo', { p_course: idCurso, p_user: userId });
+    if (errGrupo && !esEsquemaFaltante(errGrupo)) throw new Error(errGrupo.message);
+    if (!errGrupo && porGrupo === false) {
+      return {
+        vigente: false,
+        porGrupo: true,
+        error: 'Tu lugar está apartado: el curso se abrirá cuando inicie tu grupo. Te avisaremos por correo.',
+      };
+    }
+    const { data: abre } = await db.rpc('apertura_por_grupo', { p_course: idCurso, p_user: userId });
+    if (abre) apertura = new Date(abre);
   }
   if (reglas?.dias_acceso == null) return { vigente: true };
 
@@ -116,7 +136,8 @@ export async function accesoVigente(userId, courseId) {
   if (errInscripcion) throw new Error(errInscripcion.message);
   if (!inscripcion?.created_at) return { vigente: true };
 
-  const vence = new Date(new Date(inscripcion.created_at).getTime() + Number(reglas.dias_acceso) * 24 * 60 * 60 * 1000);
+  const desde = Math.max(new Date(inscripcion.created_at).getTime(), apertura ? apertura.getTime() : 0);
+  const vence = new Date(desde + Number(reglas.dias_acceso) * 24 * 60 * 60 * 1000);
   if (vence > new Date()) return { vigente: true, vence };
 
   if (reglas.conservar_acceso) {

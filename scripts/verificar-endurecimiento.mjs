@@ -112,4 +112,42 @@ await fail(`insert into portal_config(clave,valor) values ('suspendido','{}')`,'
 await db.exec(`update courses set title='Cambio prohibido' where id=11`);
 assert.equal((await row('select title from courses where id=11')).title,'Curso QA');
 console.log('PASS admin suspendido pierde escritura directa RLS');
+
+// Cursos por generación (acceso-por-grupo.sql).
+const porGrupo = await fs.readFile(path.join(root, 'supabase/acceso-por-grupo.sql'), 'utf8');
+await db.exec('reset role');
+await db.exec(porGrupo);
+await db.exec(porGrupo);
+console.log('PASS acceso por grupo aplica e idempotente');
+await db.exec(`reset role; select set_config('request.jwt.claim.role','service_role',false);
+ insert into courses(id,title) values (13,'Curso por generación'),(14,'Curso inmediato');
+ insert into curso_reglas(course_id,modo_acceso) values (13,'grupo');
+ insert into inscripciones(user_id,course_id,origen) values ('${otro}',13,'pago'),('${otro}',14,'pago');
+ insert into grupos(id,nombre) values (900,'Generación QA');`);
+await asUser(otro);
+assert.equal((await row('select esta_inscrito(14) as v')).v, true);
+assert.equal((await row('select esta_inscrito(13) as v')).v, false);
+assert.deepEqual(await row('select modo,con_grupo,abierto from mi_apertura(13)'), { modo: 'grupo', con_grupo: false, abierto: false });
+console.log('PASS pagó sin grupo: lugar apartado y curso inmediato intacto');
+await db.exec(`reset role; insert into grupo_cursos(grupo_id,course_id,abre_en) values (900,13,now()+interval '3 days');
+ insert into grupo_miembros(grupo_id,user_id) values (900,'${otro}');`);
+await asUser(otro);
+assert.equal((await row('select esta_inscrito(13) as v')).v, false);
+const proxima = await row('select con_grupo,abierto,abre_en from mi_apertura(13)');
+assert.equal(proxima.con_grupo, true);
+assert.equal(proxima.abierto, false);
+assert.ok(proxima.abre_en);
+console.log('PASS con grupo antes de la fecha: sigue cerrado y conoce su fecha');
+await db.exec(`reset role; update grupo_cursos set abre_en=now()-interval '1 hour' where grupo_id=900 and course_id=13;`);
+await asUser(otro);
+assert.equal((await row('select esta_inscrito(13) as v')).v, true);
+assert.equal((await row('select abierto from mi_apertura(13)')).abierto, true);
+await fail('select acceso_por_grupo(13,auth.uid())', 'RPC de acceso por grupo ajena bloqueada');
+console.log('PASS al llegar la fecha se abre');
+await db.exec(`reset role; insert into curso_reglas(course_id,modo_acceso,dias_acceso) values (12,'grupo',5)
+   on conflict (course_id) do update set modo_acceso='grupo', dias_acceso=5;
+ insert into inscripciones(user_id,course_id,origen,created_at) values ('${otro}',12,'admin',now()-interval '30 days');`);
+await asUser(otro);
+assert.equal((await row('select esta_inscrito(12) as v')).v, false);
+console.log('PASS inscrito a mano entra directo y los días de acceso se respetan');
 await db.close();

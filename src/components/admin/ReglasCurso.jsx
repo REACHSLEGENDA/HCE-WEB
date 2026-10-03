@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { cargarReglasCurso, guardarReglasCurso, REGLAS_FINALIZACION } from '../../lib/reglas';
+import { cargarReglasCurso, guardarReglasCurso, REGLAS_FINALIZACION, MODOS_ACCESO } from '../../lib/reglas';
 import { traerTodo } from '../../lib/traerTodo';
 import './AdminLms.css';
 
@@ -55,6 +55,27 @@ export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, co
           if (!ok) return;
         }
       }
+      // Pasar a "por grupo" cierra el curso a quien está inscrito sin grupo.
+      if (reglas.modo_acceso === 'grupo' && original?.modo_acceso !== 'grupo') {
+        const idCurso = Number(courseId);
+        const [inscripciones, grupoCursos, certificados] = await Promise.all([
+          traerTodo('inscripciones', 'user_id, origen', (q) => q.eq('course_id', idCurso)),
+          traerTodo('grupo_cursos', 'grupo_id, course_id', (q) => q.eq('course_id', idCurso)),
+          traerTodo('certificates', 'user_id', (q) => q.eq('course_id', idCurso)),
+        ]);
+        const grupos = grupoCursos.map((g) => g.grupo_id);
+        const miembros = grupos.length
+          ? await traerTodo('grupo_miembros', 'grupo_id, user_id', (q) => q.in('grupo_id', grupos))
+          : [];
+        const conGrupo = new Set(miembros.map((m) => m.user_id));
+        const terminaron = new Set(certificados.map((c) => c.user_id));
+        const sinGrupo = inscripciones.filter((i) => i.origen !== 'admin' && !conGrupo.has(i.user_id) && !terminaron.has(i.user_id)).length;
+        if (sinGrupo) {
+          const mensaje = `${sinGrupo} alumno(s) inscritos no están en un grupo con este curso: dejarán de verlo hasta que los asignes a uno. ¿Cambiar a acceso por grupo?`;
+          const ok = confirmar ? await confirmar(mensaje, 'Acceso por grupo') : window.confirm(mensaje);
+          if (!ok) return;
+        }
+      }
       await guardarReglasCurso(courseId, reglas);
       setOriginal({ ...reglas });
       notificar('Reglas del curso guardadas.', 'success');
@@ -86,6 +107,21 @@ export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, co
     <div className="reglas">
       {cambios && <p className="lms-alerta" role="status">Cambios sin guardar</p>}
       <section className="reglas-grupo">
+        <h5>Acceso al curso</h5>
+        <div className="reglas-modos" role="radiogroup" aria-label="Acceso al curso">
+          {Object.entries(MODOS_ACCESO).map(([id, texto]) => (
+            <label key={id} className={`reglas-modo${reglas.modo_acceso === id ? ' activo' : ''}`}>
+              <input type="radio" name={`modo-${courseId}`} checked={reglas.modo_acceso === id} onChange={() => setReglas({ ...reglas, modo_acceso: id })} />
+              <span>{texto}</span>
+            </label>
+          ))}
+        </div>
+        {reglas.modo_acceso === 'grupo' && (
+          <small className="lms-ayuda">Asigna el curso a un grupo y su fecha de inicio en <strong>Grupos</strong>. Quien inscribas tú a mano entra directo.</small>
+        )}
+      </section>
+
+      <section className="reglas-grupo">
         <h5>Disponibilidad</h5>
         <label className="lms-check">
           <input type="checkbox" checked={!reglas.oculto_catalogo} onChange={(e) => setReglas({ ...reglas, oculto_catalogo: !e.target.checked })} />
@@ -113,7 +149,7 @@ export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, co
       <section className="reglas-grupo">
         <h5>Límites</h5>
         <label className="crm-input-group reglas-campo">
-          <span>Días de acceso después de inscribirse</span>
+          <span>{reglas.modo_acceso === 'grupo' ? 'Días de acceso desde que inicia su grupo' : 'Días de acceso después de inscribirse'}</span>
           <input type="number" min="1" placeholder="Sin límite" value={reglas.dias_acceso} onChange={(e) => setReglas({ ...reglas, dias_acceso: e.target.value })} />
         </label>
         {reglas.dias_acceso !== '' && (

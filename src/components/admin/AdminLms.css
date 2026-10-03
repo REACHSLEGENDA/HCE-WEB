@@ -571,3 +571,27 @@
   .lms-editor-acciones, .eval-reglas { flex-wrap: wrap; }
   .biblioteca-tabla { min-width: 620px; }
 }
+
+/* Acceso al curso: inmediato o por grupo (generación). */
+.reglas-modos { display: grid; gap: 8px; }
+.reglas-modo {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color, rgba(148, 163, 184, 0.3));
+  border-radius: 10px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+.reglas-modo input { margin-top: 3px; flex-shrink: 0; }
+.reglas-modo.activo { border-color: var(--primary-cyan, #06b6d4); box-shadow: inset 0 0 0 1px var(--primary-cyan, #06b6d4); }
+
+/* Grupos: fecha de inicio de cada curso. */
+.grupo-curso { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.grupo-curso-nombre { flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.grupo-curso-estado { font-size: 0.78rem; color: var(--text-muted); }
+.grupo-curso-estado.abierto { color: #059669; }
+.grupo-curso-estado.proximo { color: #b45309; }
+.grupo-curso-fecha { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-muted); }
+.grupo-curso-fecha input { padding: 6px 8px; border: 1px solid var(--border-color, rgba(148, 163, 184, 0.3)); border-radius: 8px; background: var(--bg-main); color: var(--text-dark); color-scheme: light dark; }

@@ -6,7 +6,29 @@
 // cualquiera de los dos basta; si llegan los dos, el segundo no duplica nada.
 
 import { notificar } from './_notificaciones.js';
-import { cuentaHabilitada } from './_supabase.js';
+import { cuentaHabilitada, accesoVigente } from './_supabase.js';
+
+/**
+ * La frase del correo de "inscrito" según si el curso ya se le abrió:
+ * cuenta en revisión, curso por generación que abre con su grupo, o abierto.
+ * Si no se puede saber, una frase neutra: el correo no debe prometer de más.
+ */
+export async function textoAcceso(userId, courseId) {
+  try {
+    const { habilitada } = await cuentaHabilitada(userId, { exigirAprobacion: true });
+    if (!habilitada) {
+      return 'Tu lugar quedó apartado. En cuanto activemos tu cuenta y te asignemos tu grupo, tu curso se abrirá y te avisaremos por correo.';
+    }
+    const acceso = await accesoVigente(userId, courseId);
+    if (acceso.porGrupo) {
+      return 'Tu lugar quedó apartado. Te asignaremos a tu grupo y el curso se abrirá en su fecha de inicio; te avisaremos por correo.';
+    }
+    return 'Ya puedes empezar cuando quieras.';
+  } catch (err) {
+    console.error('No se pudo revisar el acceso para el aviso:', err.message);
+    return 'Encontrarás el curso en tu portal.';
+  }
+}
 
 // Debe coincidir con el tipo de cambio que anuncian las páginas de inscripción.
 export const USD_RATE = 17.5;
@@ -47,19 +69,7 @@ export async function inscribir(db, { userId, courseId, origen, stripeSessionId 
   // Aviso "inscrito a un curso", solo la primera vez. Al activar una cuenta
   // no se manda: el correo de cuenta activada ya lista sus cursos.
   if (!previa && avisar) {
-    // Si su cuenta todavía no está aprobada, el curso queda apartado pero
-    // cerrado: el correo se lo dice en vez de invitarlo a empezar.
-    // Si no se puede saber (falla la consulta), una frase neutra: la
-    // inscripción ya quedó y el correo no debe prometer de más.
-    let acceso = 'Encontrarás el curso en tu portal.';
-    try {
-      const { habilitada } = await cuentaHabilitada(userId, { exigirAprobacion: true });
-      acceso = habilitada
-        ? 'Ya puedes empezar cuando quieras.'
-        : 'Tu lugar quedó apartado. En cuanto activemos tu cuenta y te asignemos tu grupo, tu curso se abrirá y te avisaremos por correo.';
-    } catch (err) {
-      console.error('No se pudo revisar la cuenta para el aviso:', err.message);
-    }
+    const acceso = await textoAcceso(userId, courseId);
     await notificar(db, 'inscrito_curso', {
       userId, courseId, clave: `inscripcion:${courseId}`, variables: { acceso },
     });

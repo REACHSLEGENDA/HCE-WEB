@@ -59,7 +59,7 @@ import { contarNoLeidos } from '../lib/mensajes';
 import CalendarioAlumno from '../components/CalendarioAlumno';
 import { ZONAS, zonaDelEquipo, recordarZona, fechaEnZona, formatearFechaHora } from '../lib/zonaHoraria';
 import { FranjaVistaAlumno } from '../components/CambioVista';
-import { cargarReglasCursos, cargarLugaresOcupados, cargarMisSolicitudes, reglasDe } from '../lib/reglas';
+import { cargarReglasCursos, cargarLugaresOcupados, cargarMisSolicitudes, cargarMiApertura, reglasDe } from '../lib/reglas';
 import { leerVistaAlumno } from '../lib/vista';
 import {
   cargarMisInscripciones,
@@ -476,6 +476,21 @@ const Dashboard = () => {
       .catch((err) => console.warn('No se pudieron cargar las reglas de los cursos:', err.message));
     return () => { vigente = false; };
   }, [user?.id]);
+
+  // Cursos por generación en los que está inscrito: si ya abrieron o cuándo.
+  const [aperturas, setAperturas] = useState({});
+  useEffect(() => {
+    if (!user?.id || profile?.rol === 'admin') return undefined;
+    const porGrupo = Object.entries(reglasCursos)
+      .filter(([id, r]) => r.modo_acceso === 'grupo' && misInscripciones.has(Number(id)))
+      .map(([id]) => Number(id));
+    if (!porGrupo.length) return undefined;
+    let vigente = true;
+    Promise.all(porGrupo.map((id) => cargarMiApertura(id).then((a) => [id, a])))
+      .then((lista) => { if (vigente) setAperturas(Object.fromEntries(lista)); })
+      .catch(() => {});
+    return () => { vigente = false; };
+  }, [user?.id, profile?.rol, reglasCursos, misInscripciones]);
 
   const abrirAula = (courseId) => {
     // Dentro de la app instalada la clase se abre sin salir; en el navegador,
@@ -1022,7 +1037,13 @@ const Dashboard = () => {
       ? new Date(new Date(fechaInscripcion).getTime() + Number(reglas.dias_acceso) * 86400000) : null;
     const accesoVencido = !!(vence && vence < new Date() && !(reglas.conservar_acceso && completed));
     const enRevision = profile?.rol !== 'admin' && profile?.aprobado === false;
-    const estadoCurso = enRevision ? 'En revisión' : accesoVencido ? 'Acceso vencido' : completed ? 'Completado' : progress === 0 ? 'Sin empezar' : 'En progreso';
+    // Curso por generación aún cerrado: lugar apartado hasta que inicie su grupo.
+    const apertura = aperturas[Number(course.id)];
+    const esperandoGrupo = !enRevision && !completed && !!apertura && !apertura.abierto;
+    const textoApertura = esperandoGrupo
+      ? (apertura.abreEn ? `Abre el ${apertura.abreEn.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}` : 'Lugar apartado')
+      : null;
+    const estadoCurso = enRevision ? 'En revisión' : textoApertura || (accesoVencido ? 'Acceso vencido' : completed ? 'Completado' : progress === 0 ? 'Sin empezar' : 'En progreso');
     const ocupados = lugaresOcupados[Number(course.id)] ?? 0;
     const lugaresRestantes = reglas.cupo ? Math.max(0, reglas.cupo - ocupados) : null;
     const certificados = new Set(myCertificates.map((c) => Number(c.course_id)));
@@ -1037,10 +1058,12 @@ const Dashboard = () => {
       estadoCurso,
       accesoVencido,
       enRevision,
+      esperandoGrupo,
       completed,
       inProgress,
       enrolled,
       oculto: reglas.oculto_catalogo,
+      porGrupo: reglas.modo_acceso === 'grupo',
       requiereSolicitud: reglas.requiere_solicitud && !esCursoDePago(course),
       solicitud: misSolicitudes[Number(course.id)] || null,
       lugaresRestantes,
@@ -1050,7 +1073,7 @@ const Dashboard = () => {
 
   const enrolledCourses = processedCourses.filter(c => c.enrolled);
   const completedCourses = processedCourses.filter(c => c.completed);
-  const inProgressCourses = processedCourses.filter(c => c.inProgress && !c.enRevision && !c.accesoVencido);
+  const inProgressCourses = processedCourses.filter(c => c.inProgress && !c.enRevision && !c.accesoVencido && !c.esperandoGrupo);
 
   // Catálogo separado por tipo. Lo gratuito que se sugiere como primer paso
   // tiene que ser de verdad gratuito y tomarse en el aula.
@@ -1125,6 +1148,9 @@ const Dashboard = () => {
         </div>
         <div className="exp-content-body">
           <h3 className="exp-title-premium">{course.title}</h3>
+          {!course.enrolled && course.porGrupo && (
+            <span className="curso-generacion">Por generación: al inscribirte apartas tu lugar y el curso se abre en la fecha de inicio de tu grupo.</span>
+          )}
           {!course.enrolled && course.lugaresRestantes > 0 && course.lugaresRestantes <= 10 && (
             <span className="curso-lugares">{course.lugaresRestantes === 1 ? 'Queda 1 lugar' : `Quedan ${course.lugaresRestantes} lugares`}</span>
           )}
@@ -1165,7 +1191,7 @@ const Dashboard = () => {
       tab: 'courses',
     })),
     ...enrolledCourses
-      .filter((course) => course.progress === 0 && !course.enRevision && !course.accesoVencido)
+      .filter((course) => course.progress === 0 && !course.enRevision && !course.accesoVencido && !course.esperandoGrupo)
       .slice(0, 2)
       .map((course) => ({
         id: `nuevo-${course.id}`,

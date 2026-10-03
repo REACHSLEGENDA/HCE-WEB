@@ -56,7 +56,7 @@ export const handler = async (event) => {
 
       // Con días de acceso vencidos (lms-reglas.sql) ya no se presenta.
       const acceso = await accesoVigente(user.id, idCurso);
-      if (!acceso.vigente) return json(403, { error: acceso.error, estado: 'acceso-vencido' });
+      if (!acceso.vigente) return json(403, { error: acceso.error, estado: acceso.porGrupo ? 'esperando-grupo' : 'acceso-vencido' });
 
       // Un intento por minuto: evita mandar el examen en ráfaga para ir
       // adivinando las respuestas.

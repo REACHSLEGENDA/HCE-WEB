@@ -364,7 +364,7 @@ export const handler = async (event) => {
       if (!inscripcion) return json(403, { error: 'No estás inscrito en este curso.' });
 
       const acceso = await accesoVigente(user.id, curso.id);
-      if (!acceso.vigente) return json(403, { error: acceso.error, estado: 'acceso-vencido' });
+      if (!acceso.vigente) return json(403, { error: acceso.error, estado: acceso.porGrupo ? 'esperando-grupo' : 'acceso-vencido' });
 
       const revision = await revisarRequisitos(db, user.id, curso.id);
       if (revision.respuesta) return revision.respuesta;

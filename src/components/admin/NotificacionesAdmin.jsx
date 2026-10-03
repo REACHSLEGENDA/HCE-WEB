@@ -17,6 +17,7 @@ const EVENTOS = {
   tarea_revisada: 'Su tarea fue revisada',
   curso_completado: 'Terminó un curso (certificado emitido)',
   mensaje_nuevo: 'Recibió un mensaje en el portal',
+  curso_abierto: 'Su curso por generación se abrió (inició su grupo)',
 };
 
 // Variables disponibles en cada evento, además de {nombre}, {curso}, {enlace}.
@@ -30,6 +31,7 @@ const VARIABLES = {
   tarea_revisada: ['tarea', 'estado', 'comentario', 'curso', 'enlace'],
   curso_completado: ['curso', 'calificacion', 'folio', 'portal'],
   mensaje_nuevo: ['remitente', 'asunto', 'portal'],
+  curso_abierto: ['curso', 'enlace'],
 };
 
 const PLANTILLAS = {
@@ -41,6 +43,7 @@ const PLANTILLAS = {
   tarea_revisada: ['Tu tarea {tarea} fue revisada', 'Hola {nombre}:\n\nTu tarea {tarea} quedó {estado}.\n\n{comentario}\n\nRevísala en tu aula: {enlace}'],
   curso_completado: ['¡Terminaste {curso}!', 'Hola {nombre}:\n\n¡Felicidades por terminar {curso}! Tu certificado (folio {folio}) ya está en la pestaña Certificados de tu portal:\n{portal}'],
   mensaje_nuevo: ['Tienes un mensaje nuevo: {asunto}', 'Hola {nombre}:\n\n{remitente} te escribió en el portal de HCE: "{asunto}".\n\nLéelo en tu bandeja de mensajes: {portal}'],
+  curso_abierto: ['¡Tu curso {curso} ya está abierto!', 'Hola {nombre}:\n\nTu grupo ya comenzó: {curso} está abierto y puedes empezar cuando quieras.'],
   registro_nuevo: ['Bienvenido al portal de HCE', 'Hola {nombre}:\n\nGracias por registrarte en el portal académico de Healthcare Training Experience.\n\n{portal}'],
 };
 

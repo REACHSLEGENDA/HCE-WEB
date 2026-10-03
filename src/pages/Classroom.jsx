@@ -34,7 +34,7 @@ import {
 } from '../lib/lecciones';
 import EvaluacionLeccion from '../components/EvaluacionLeccion';
 import SesionEnVivo from '../components/SesionEnVivo';
-import { cargarReglasCurso, venceAcceso, cursoTerminado, REGLAS_BASE } from '../lib/reglas';
+import { cargarReglasCurso, cargarMiApertura, venceAcceso, cursoTerminado, REGLAS_BASE } from '../lib/reglas';
 import { leerVistaAlumno, fijarVistaAlumno } from '../lib/vista';
 import { FranjaVistaAlumno } from '../components/CambioVista';
 import { detectarVideo, detectarPagina, midePorcentaje, crearReproductorVimeo, adaptarVideoHtml } from '../lib/videos';
@@ -576,19 +576,32 @@ const Classroom = () => {
         setReglasCurso(reglas);
         setTieneCertificado(yaCertificado);
 
+        // Curso por generación: se abre cuando el alumno está en un grupo y
+        // llega la fecha de inicio (acceso-por-grupo.sql).
+        let esperandoGrupo = null;
+        let abiertoDesde = null;
+        if (permitido && !enRevision && profile?.rol !== 'admin' && reglas.modo_acceso === 'grupo') {
+          const apertura = await cargarMiApertura(cursoCargado.id);
+          if (!apertura.abierto) esperandoGrupo = { abreEn: apertura.abreEn, conGrupo: apertura.conGrupo };
+          abiertoDesde = apertura.abiertoDesde;
+        }
+
         let vencido = null;
-        if (permitido && !enRevision && profile?.rol !== 'admin' && reglas.dias_acceso) {
+        if (permitido && !enRevision && !esperandoGrupo && profile?.rol !== 'admin' && reglas.dias_acceso) {
           const { data: inscripcion } = await supabase
             .from('inscripciones')
             .select('created_at')
             .eq('user_id', user.id)
             .eq('course_id', cursoCargado.id)
             .maybeSingle();
-          const vence = venceAcceso(reglas, inscripcion?.created_at);
+          // En cursos por generación los días cuentan desde que abrió su grupo.
+          const desde = abiertoDesde && inscripcion?.created_at && abiertoDesde > new Date(inscripcion.created_at)
+            ? abiertoDesde.toISOString() : inscripcion?.created_at;
+          const vence = venceAcceso(reglas, desde);
           if (vence && vence < new Date() && !(reglas.conservar_acceso && yaCertificado)) vencido = vence;
         }
 
-        if (permitido && !enRevision && !vencido) {
+        if (permitido && !enRevision && !vencido && !esperandoGrupo) {
           const video = await cargarVideoCurso(cursoCargado.id, cursoCargado.youtube_video_id);
 
           // Lecciones y avance. Si falla la carga, el curso sigue funcionando
@@ -648,6 +661,7 @@ const Classroom = () => {
             errorVerificando,
             enRevision,
             vencido,
+            esperandoGrupo,
             curso: {
               id: cursoCargado.id,
               title: cursoCargado.title,
@@ -1411,6 +1425,15 @@ const Classroom = () => {
                 <p className="aula-puerta-revision"><Clock size={16} /> Tu acceso a este curso terminó</p>
                 <p>El acceso duraba hasta el {acceso.vencido.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}. Si necesitas más tiempo, escríbenos y lo revisamos contigo.</p>
               </>
+            ) : acceso.esperandoGrupo ? (
+              <>
+                <p className="aula-puerta-revision"><Clock size={16} /> Tu lugar está apartado</p>
+                <p>
+                  {acceso.esperandoGrupo.abreEn
+                    ? `Tu grupo inicia el ${acceso.esperandoGrupo.abreEn.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}: ese día se abre el curso y te avisaremos por correo.`
+                    : 'Este curso se toma con tu grupo. En cuanto te asignemos a uno y llegue su fecha de inicio, el curso se abrirá y te avisaremos por correo.'}
+                </p>
+              </>
             ) : acceso.enRevision ? (
               <>
                 <p className="aula-puerta-revision"><Clock size={16} /> Tu acceso está en revisión</p>
@@ -1434,6 +1457,10 @@ const Classroom = () => {
                 <a className="aula-puerta-btn" href="https://wa.me/5215659271906" target="_blank" rel="noopener noreferrer">
                   Escríbenos por WhatsApp
                 </a>
+              ) : acceso.esperandoGrupo ? (
+                <button className="aula-puerta-btn" onClick={() => window.location.reload()}>
+                  Verificar de nuevo
+                </button>
               ) : acceso.enRevision ? (
                 <button className="aula-puerta-btn" onClick={verificarCuenta} disabled={verificandoCuenta}>
                   {verificandoCuenta ? 'Verificando…' : 'Verificar de nuevo'}

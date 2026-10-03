@@ -16,6 +16,7 @@ export const EVENTOS = {
   tarea_revisada: 'Su tarea fue revisada',
   curso_completado: 'Terminó un curso (certificado emitido)',
   mensaje_nuevo: 'Recibió un mensaje en el portal',
+  curso_abierto: 'Su curso por generación se abrió (inició su grupo)',
 };
 
 const PORTAL = 'https://healthcareexp.com';

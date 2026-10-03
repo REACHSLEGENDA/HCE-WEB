@@ -76,6 +76,7 @@ export const handler = async (event) => {
 
       // Los cursos del grupo quedan con origen "grupo"; los elegidos a mano, "admin".
       const deGrupo = new Set();
+      let abreEn = null;
       if (grupoId) {
         const { error: errGrupo } = await db
           .from('grupo_miembros')
@@ -84,10 +85,13 @@ export const handler = async (event) => {
 
         const { data: delGrupo, error: errCursos } = await db
           .from('grupo_cursos')
-          .select('course_id')
+          .select('*') // abre_en llega con acceso-por-grupo.sql
           .eq('grupo_id', Number(grupoId));
         if (errCursos) throw new Error(errCursos.message);
         (delGrupo || []).forEach((c) => deGrupo.add(c.course_id));
+        // Próxima fecha de inicio del grupo, para decírsela en el correo.
+        const futuras = (delGrupo || []).map((c) => c.abre_en && new Date(c.abre_en)).filter((f) => f && f > new Date());
+        if (futuras.length) abreEn = new Date(Math.min(...futuras));
       }
 
       const aMano = (courseIds || []).map(Number).filter((id) => id && !deGrupo.has(id));
@@ -111,11 +115,14 @@ export const handler = async (event) => {
       const acceso = grupo && cursos ? `Te asignamos al grupo ${grupo} con estos cursos: ${cursos}.`
         : cursos ? `Ya tienes acceso a: ${cursos}.`
           : grupo ? `Te asignamos al grupo ${grupo}.` : '';
+      const inicio = abreEn
+        ? ` Tu grupo inicia el ${abreEn.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', day: 'numeric', month: 'long', year: 'numeric' })}: ese día se abren tus cursos y te avisaremos por correo.`
+        : '';
       await registrarAccionAdmin({ adminId: administrador.id, accion: 'cuenta_activada', objetivoUserId: userId, detalle: { grupo } });
       await notificar(db, 'cuenta_activada', {
         userId,
         clave: 'cuenta-activada',
-        variables: { grupo, cursos, acceso },
+        variables: { grupo, cursos, acceso: `${acceso}${inicio}`.trim() },
       });
       return json(200, { ok: true, cursos: deGrupo.size + new Set(aMano).size });
     }

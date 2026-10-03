@@ -13,6 +13,14 @@ export const REGLAS_BASE = {
   prerrequisitos: [],
   regla_finalizacion: 'examen_final',
   porcentaje_finalizacion: 100,
+  // 'grupo': el curso se abre cuando el alumno está en un grupo y llega la
+  // fecha de inicio de ese grupo (supabase/acceso-por-grupo.sql).
+  modo_acceso: 'inmediato',
+};
+
+export const MODOS_ACCESO = {
+  inmediato: 'Inmediato: al inscribirse o pagar entra al curso',
+  grupo: 'Por grupo (generación): paga y aparta su lugar; el curso se abre en la fecha de inicio de su grupo',
 };
 
 export const REGLAS_FINALIZACION = {
@@ -61,7 +69,7 @@ export async function guardarReglasCurso(courseId, reglas) {
     return (mapa[id]?.prerrequisitos || []).some((otro) => llegaAlCurso(Number(otro), visitados));
   };
   if (prerrequisitos.some((id) => !Number.isFinite(id) || llegaAlCurso(id))) throw new Error('Los prerrequisitos crearían un ciclo entre cursos.');
-  const { error } = await supabase.from('curso_reglas').upsert([{
+  const fila = {
     course_id: Number(courseId),
     oculto_catalogo: !!reglas.oculto_catalogo,
     cupo: numero(reglas.cupo),
@@ -71,9 +79,35 @@ export async function guardarReglasCurso(courseId, reglas) {
     prerrequisitos,
     regla_finalizacion: reglas.regla_finalizacion || 'examen_final',
     porcentaje_finalizacion: porcentaje,
+    modo_acceso: reglas.modo_acceso === 'grupo' ? 'grupo' : 'inmediato',
     actualizado_en: new Date().toISOString(),
-  }], { onConflict: 'course_id' });
+  };
+  let { error } = await supabase.from('curso_reglas').upsert([fila], { onConflict: 'course_id' });
+  // Antes de acceso-por-grupo.sql la columna no existe: el modo inmediato se
+  // guarda sin ella; el modo por grupo necesita la migración.
+  if (error && /modo_acceso/.test(error.message || '')) {
+    if (fila.modo_acceso === 'grupo') throw new Error('Para el acceso por grupo falta correr en Supabase la migración acceso-por-grupo.sql.');
+    const { modo_acceso: _omitido, ...sinModo } = fila;
+    ({ error } = await supabase.from('curso_reglas').upsert([sinModo], { onConflict: 'course_id' }));
+  }
   if (error) throw error;
+}
+
+/**
+ * Apertura del curso para el alumno (cursos por generación): { modo,
+ * conGrupo, abreEn, abierto }. Sin la migración, como si fuera inmediato.
+ */
+export async function cargarMiApertura(courseId) {
+  const { data, error } = await supabase.rpc('mi_apertura', { p_course: Number(courseId) });
+  if (error || !data?.length) return { modo: 'inmediato', conGrupo: false, abreEn: null, abierto: true, abiertoDesde: null };
+  const f = data[0];
+  return {
+    modo: f.modo,
+    conGrupo: !!f.con_grupo,
+    abreEn: f.abre_en ? new Date(f.abre_en) : null,
+    abierto: f.abierto !== false,
+    abiertoDesde: f.abierto_desde ? new Date(f.abierto_desde) : null,
+  };
 }
 
 /** Lugares ocupados de los cursos con cupo: { [courseId]: inscritos }. */

@@ -8,8 +8,12 @@
 //   inscrito_curso       inscripciones masivas del admin (lista de correos o
 //                        grupo), que no avisan al momento para no pasar el
 //                        límite de tiempo de Netlify
+//   curso_abierto        cursos por generación que se abrieron: llegó la fecha
+//                        de inicio del grupo, o se agregó al alumno a un grupo
+//                        que ya había abierto
 
-import { admin, cuentaHabilitada, isConfigured as supabaseListo } from './_supabase.js';
+import { admin, isConfigured as supabaseListo } from './_supabase.js';
+import { textoAcceso } from './_inscripciones.js';
 import { notificar } from './_notificaciones.js';
 import { fechaMexico } from './_sesiones.js';
 
@@ -24,7 +28,7 @@ export default async () => {
   if (!supabaseListo()) return new Response('Sin configurar', { status: 200 });
   const db = admin();
   const ahora = Date.now();
-  const resumen = { recordatorios: 0, tareas: 0, cursos: 0, inscritos: 0 };
+  const resumen = { recordatorios: 0, tareas: 0, cursos: 0, inscritos: 0, abiertos: 0 };
 
   // Recordatorio 1 hora antes de cada sesión en vivo.
   if (await hayNotificacion(db, 'sesion_recordatorio')) {
@@ -111,13 +115,7 @@ export default async () => {
     for (const ins of inscripciones || []) {
       const aprobada = aprobadoEn.get(ins.user_id);
       if (aprobada && Math.abs(new Date(ins.created_at).getTime() - aprobada) < 15 * MIN) continue;
-      let acceso = 'Encontrarás el curso en tu portal.';
-      try {
-        const { habilitada } = await cuentaHabilitada(ins.user_id, { exigirAprobacion: true });
-        acceso = habilitada
-          ? 'Ya puedes empezar cuando quieras.'
-          : 'Tu lugar quedó apartado. En cuanto activemos tu cuenta y te asignemos tu grupo, tu curso se abrirá y te avisaremos por correo.';
-      } catch { /* se manda la frase neutra */ }
+      const acceso = await textoAcceso(ins.user_id, ins.course_id);
       const res = await notificar(db, 'inscrito_curso', {
         userId: ins.user_id,
         courseId: ins.course_id,
@@ -125,6 +123,49 @@ export default async () => {
         variables: { acceso },
       });
       resumen.inscritos += res.enviadas || 0;
+    }
+  }
+
+  // Cursos por generación que se abrieron en las últimas 2 horas. Una sola
+  // vez por alumno y curso (la clave no lleva el grupo).
+  if (await hayNotificacion(db, 'curso_abierto')) {
+    const desde = new Date(ahora - 120 * MIN).toISOString();
+    const { data: reglasGrupo, error: errReglas } = await db
+      .from('curso_reglas').select('course_id').eq('modo_acceso', 'grupo');
+    const cursosGrupo = new Set((errReglas ? [] : reglasGrupo || []).map((r) => Number(r.course_id)));
+    if (cursosGrupo.size) {
+      const { data: grupoCursos } = await db.from('grupo_cursos').select('grupo_id, course_id, abre_en');
+      const abiertos = (grupoCursos || []).filter((gc) => cursosGrupo.has(Number(gc.course_id))
+        && (!gc.abre_en || new Date(gc.abre_en).getTime() <= ahora));
+      const candidatos = [];
+      for (const gc of abiertos) {
+        const abrioAhora = gc.abre_en && new Date(gc.abre_en).getTime() >= ahora - 120 * MIN;
+        let consulta = db.from('grupo_miembros').select('user_id, agregado_en').eq('grupo_id', gc.grupo_id);
+        // Si el grupo abrió antes, solo los que se agregaron hace poco.
+        if (!abrioAhora) consulta = consulta.gte('agregado_en', desde);
+        const { data: miembros } = await consulta;
+        for (const m of miembros || []) candidatos.push({ userId: m.user_id, courseId: Number(gc.course_id) });
+      }
+      // Quien acaba de ser aprobado ya recibió "cuenta activada" con sus cursos.
+      const ids = [...new Set(candidatos.map((c) => c.userId))];
+      const { data: perfilesAbiertos } = ids.length
+        ? await db.from('profiles').select('id, aprobado_en').in('id', ids)
+        : { data: [] };
+      const recienAprobado = new Set((perfilesAbiertos || [])
+        .filter((p) => p.aprobado_en && ahora - new Date(p.aprobado_en).getTime() < 120 * MIN)
+        .map((p) => p.id));
+      for (const c of candidatos.filter((x) => !recienAprobado.has(x.userId)).slice(0, 80)) {
+        // Solo a quien está inscrito (pagó o se le asignó el curso).
+        const { data: inscripcion } = await db.from('inscripciones').select('id')
+          .eq('user_id', c.userId).eq('course_id', c.courseId).maybeSingle();
+        if (!inscripcion) continue;
+        const res = await notificar(db, 'curso_abierto', {
+          userId: c.userId,
+          courseId: c.courseId,
+          clave: `curso-abierto:${c.courseId}`,
+        });
+        resumen.abiertos += res.enviadas || 0;
+      }
     }
   }
 
