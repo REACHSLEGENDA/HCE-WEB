@@ -38,6 +38,15 @@
   --border-color: #2A3B50;
   --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.35);
   --shadow-hover: 0 6px 20px rgba(0, 188, 212, 0.2);
+  /* Controles con fondo "blanco" en línea: en oscuro también son oscuros. */
+  --bg-white: #1A2535;
+  /* Calendarios y listas nativas del navegador en tema oscuro. */
+  color-scheme: dark;
+}
+
+.admin-layout[data-theme="dark"] option {
+  background-color: #1A2535;
+  color: #E8F0FE;
 }
 
 .admin-layout[data-theme="dark"] input,
