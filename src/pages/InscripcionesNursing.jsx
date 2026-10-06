@@ -146,7 +146,7 @@ export default function InscripcionesNursing() {
     } else if (code === 'HCEGRUPOS' || code === 'HCEGRUPOS15') {
       setAppliedPromo({ code, discount: 0.15, type: 'mixed' });
       setApiError('');
-    } else if (code === 'BECAPARIS26' || code === 'BECANURSING26' || code === 'TRANSFER2026' || code === 'BECAINER26') {
+    } else if (code === 'BECANURSING26' || code === 'TRANSFER2026') {
       // Beca 100% / pago por transferencia — omite pasarela de pago
       setAppliedPromo({ code, discount: 1.0, type: 'free' });
       setApiError('');

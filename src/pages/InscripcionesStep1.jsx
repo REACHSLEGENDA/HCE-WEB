@@ -13,6 +13,9 @@ import './Inscripciones.css';
 
 const USD_RATE = 17.5;
 
+// Sin códigos de descuento por ahora (octubre 2026).
+const ACEPTA_CODIGOS = false;
+
 const EXTRA_CATALOG = {
   ecmo_sim: {
     label: 'Simulador ECMO SIM',
@@ -113,59 +116,11 @@ export default function Inscripciones() {
     });
   };
 
+  // Octubre 2026: este programa no acepta códigos de descuento, meses sin
+  // intereses, becas ni transferencias (el servidor tampoco: ver _promos.js).
   const applyPromo = () => {
-    const code = promoInput.trim().toUpperCase();
-    const now = new Date();
-    // Validar PERFUWEEK del 6 al 10 de Mayo 2026 (Zona horaria MX -06:00 aproximada)
-    const isPerfuweekValid = now >= new Date('2026-05-06T00:00:00-06:00') && now <= new Date('2026-05-10T23:59:59-06:00');
-    // Validar promos VIVAMEX de Septiembre
-    const isSeptPromoValid = now >= new Date('2026-09-01T00:00:00-06:00') && now <= new Date('2026-09-16T23:59:59-06:00');
-
-    // VIVAMEXTEORICO ya no existe como código: ese 30% se aplica solo durante
-    // el Mes Patrio. Quien lo escriba recibe el mismo precio, sin error.
-    if (code === 'VIVAMEXTEORICO' && isSeptPromoValid) {
-      setAppliedPromo(null);
-      setApiError('');
-    } else if (code === 'TEAMPROMO') {
-      setAppliedPromo({ code, discount: 0.3, type: 'discount' });
-      setApiError('');
-    } else if (code === 'PROMO15') {
-      setAppliedPromo({ code, discount: 0.15, type: 'discount' });
-      setApiError('');
-    } else if (code === 'HCE-INERPARIS2026' || code === 'INER30') {
-      setAppliedPromo({ code, discount: 0.3, type: 'discount' });
-      setApiError('');
-    } else if (code === 'HCEMS' || code === 'HCEMESES') {
-      setAppliedPromo({ code, discount: 0, type: 'installments' });
-      setApiError('');
-    } else if (code === 'HCE10MSI') {
-      setAppliedPromo({ code, discount: 0.1, type: 'mixed' });
-      setApiError('');
-    } else if (code === 'HCEGRUPOS' || code === 'HCEGRUPOS15') {
-      setAppliedPromo({ code, discount: 0.15, type: 'mixed' });
-      setApiError('');
-    } else if (code === 'PERFUWEEK') {
-      if (isPerfuweekValid) {
-        setAppliedPromo({ code, discount: 0.15, type: 'discount' });
-        setApiError('');
-      } else {
-        setAppliedPromo(null);
-        setApiError('El código PERFUWEEK solo es válido del 6 al 10 de Mayo.');
-      }
-    } else if (code === 'HCEPRACTICA26') {
-      setAppliedPromo({ code, discount: 0, type: 'fixed_price', fixedPrice: 18500 });
-      setApiError('');
-    } else if (code === 'STEP1EARLY') {
-      setAppliedPromo({ code, discount: 0.5, type: 'discount' });
-      setApiError('');
-    } else if (code === 'BECAPARIS26' || code === 'BECANURSING26' || code === 'TRANSFER2026' || code === 'BECAINER26') {
-      // Beca 100% / pago por transferencia — omite pasarela de pago
-      setAppliedPromo({ code, discount: 1.0, type: 'free' });
-      setApiError('');
-    } else {
-      setAppliedPromo(null);
-      if (promoInput.trim()) setApiError('Código no válido');
-    }
+    setAppliedPromo(null);
+    if (promoInput.trim()) setApiError('Código no válido');
   };
 
   const availableExtras = perfil ? PROFILES[perfil].extras.map((id) => ({ id, ...EXTRA_CATALOG[id] })) : [];
@@ -586,8 +541,8 @@ export default function Inscripciones() {
               </div>
             )}
 
-            {/* Promo code field */}
-            {perfil && (
+            {/* Promo code field: oculto mientras el programa no acepte códigos */}
+            {ACEPTA_CODIGOS && perfil && (
               <div className="ins-promo-wrap" style={{ marginTop: '1rem', borderTop: '1px dashed var(--ins-border)', paddingTop: '1rem' }}>
                 {!appliedPromo ? (
                   <div style={{ display: 'flex', gap: '8px' }}>

@@ -24,13 +24,8 @@ const FORMULARIOS = {
 // Códigos que viven solo en el formulario A PROPÓSITO. Agregar uno aquí es una
 // decisión consciente: tiene que ir con el motivo.
 const SOLO_EN_FORMULARIO = {
-  // No dan descuento propio: el de Mes Patrio ya se aplica solo.
-  VIVAMEX: 'no aplica descuento, el automático de Mes Patrio ya entra',
-  VIVAMEXTEORICO: 'no aplica descuento, el automático de Mes Patrio ya entra',
-  // Becas y transferencias: nunca pasan por Stripe.
-  BECAPARIS26: 'beca, se registra sin pasarela',
+  // Beca y transferencia: nunca pasan por Stripe.
   BECANURSING26: 'beca, se registra sin pasarela',
-  BECAINER26: 'beca, se registra sin pasarela',
   TRANSFER2026: 'transferencia, se registra sin pasarela',
 };
 

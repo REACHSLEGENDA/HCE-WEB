@@ -10,46 +10,31 @@
 // El importe que se cobra sale SIEMPRE de esta tabla. El frontend puede mostrar
 // lo que sea; aqui se decide el dinero.
 
-const VIGENCIAS = {
-  // Del 6 al 10 de mayo de 2026, hora del centro de Mexico.
-  perfuweek: ['2026-05-06T00:00:00-06:00', '2026-05-10T23:59:59-06:00'],
-  // Fiestas patrias: del 1 al 16 de septiembre de 2026.
-  vivamex:   ['2026-09-01T00:00:00-06:00', '2026-09-16T23:59:59-06:00'],
-};
+// Promociones con fechas (ninguna activa por ahora). Formato:
+//   nombre: ['2026-05-06T00:00:00-06:00', '2026-05-10T23:59:59-06:00'],
+const VIGENCIAS = {};
 
 // `programas` limita en que paginas aplica cada codigo.
 // `porcentaje` es el descuento (0.3 = 30%); `precioFijo` lo sustituye por completo.
+// Octubre 2026: Paris y Step 1 no aceptan ningún código (ni descuentos, ni
+// meses sin intereses, ni becas). Los vencidos (PERFUWEEK, VIVAMEXTEAM) se
+// quitaron. Quedan solo los de ECMO Nursing.
 const CODIGOS = {
-  HCEPRACTICA26:       { precioFijo: 18500, programas: ['paris', 'step1'] },
-  'HCE-INERPARIS2026': { porcentaje: 0.30,  programas: ['paris', 'step1'] },
-  // Alias corto del anterior: es el que reparte el INER.
-  INER30:              { porcentaje: 0.30,  programas: ['paris', 'step1'] },
-  HCE10MSI:            { porcentaje: 0.10,  programas: ['paris', 'step1', 'nursing'], meses: true },
-  HCEGRUPOS:           { porcentaje: 0.15,  programas: ['paris', 'step1', 'nursing'], meses: true },
-  HCEGRUPOS15:         { porcentaje: 0.15,  programas: ['paris', 'step1', 'nursing'], meses: true },
-  PERFUWEEK:           { porcentaje: 0.15,  programas: ['paris', 'step1'], vigencia: 'perfuweek' },
-  STEP1EARLY:          { porcentaje: 0.50,  programas: ['step1'] },
+  HCE10MSI:            { porcentaje: 0.10,  programas: ['nursing'], meses: true },
+  HCEGRUPOS:           { porcentaje: 0.15,  programas: ['nursing'], meses: true },
+  HCEGRUPOS15:         { porcentaje: 0.15,  programas: ['nursing'], meses: true },
   // Descuento para equipos: se reparte por WhatsApp a quien pregunta por
   // inscripciones de mas de 3 personas. Sin vigencia.
-  TEAMPROMO:           { porcentaje: 0.30,  programas: ['paris', 'step1', 'nursing'] },
+  TEAMPROMO:           { porcentaje: 0.30,  programas: ['nursing'] },
   // Descuento general de campana. Sin vigencia.
-  PROMO15:             { porcentaje: 0.15,  programas: ['paris', 'step1', 'nursing'] },
-  // Fiestas patrias: el 20% (Paris) y el 30% (Step 1) ya se aplican SOLOS, sin
-  // código (ver AUTOMATICAS). Pedir el código por WhatsApp no estaba
-  // funcionando, así que solo sobrevive el de equipos, que da más que el
-  // descuento directo.
-  VIVAMEXTEAM:         { porcentaje: 0.30,  programas: ['paris'],  vigencia: 'vivamex' },
-  // Sin descuento: solo habilitan meses sin intereses.
-  HCEMS:               { porcentaje: 0,     programas: ['paris', 'step1'], meses: true },
-  HCEMESES:            { porcentaje: 0,     programas: ['paris', 'step1'], meses: true },
+  PROMO15:             { porcentaje: 0.15,  programas: ['nursing'] },
 };
 
 // Descuentos que se aplican sin que el alumno escriba nada. Cada uno con su
 // vigencia: fuera de fechas no existe, y el precio vuelve solo al regular sin
 // tener que desplegar nada.
 const AUTOMATICAS = [
-  { programas: ['step1'], porcentaje: 0.30, vigencia: 'vivamex', etiqueta: 'MESPATRIO30' },
-  { programas: ['paris'], porcentaje: 0.20, vigencia: 'vivamex', etiqueta: 'MESPATRIO20' },
+  // Ejemplo: { programas: ['paris'], porcentaje: 0.20, vigencia: 'nombre', etiqueta: 'ETIQUETA' },
 ];
 
 function enVigencia(nombre, ahora) {
