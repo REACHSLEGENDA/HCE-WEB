@@ -283,12 +283,12 @@ export default function Inscripciones() {
               <div>
                 <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--ins-dark)' }}>Inscripción para Grupos</h4>
                 <p style={{ margin: '3px 0 0 0', fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
-                  ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> para solicitar un descuento especial para grupos mayores de 3 personas.
+                  ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> y te ayudamos con la inscripción de tu grupo.
                 </p>
               </div>
             </div>
             <a 
-              href="https://wa.me/525659271906?text=Hola,%20quiero%20solicitar%20un%20descuento%20especial%20para%20un%20grupo%20en%20el%20Diploma%20de%20Par%C3%ADs%20ECMO."
+              href="https://wa.me/525659271906?text=Hola,%20quiero%20inscribir%20a%20un%20grupo%20en%20el%20Diploma%20de%20Par%C3%ADs%20ECMO."
               target="_blank"
               rel="noreferrer"
               style={{
@@ -693,12 +693,12 @@ export default function Inscripciones() {
                 Inscripción para Grupos
               </h3>
               <p style={{ margin: '8px 0 0 0', fontSize: '0.88rem', color: '#64748b', lineHeight: '1.5' }}>
-                ¿Te inscribes con tu equipo? Ofrecemos descuentos especiales y facilidades de pago para grupos mayores de 3 personas.
+                ¿Te inscribes con tu equipo? Escríbenos y te ayudamos con la inscripción de tu grupo.
               </p>
             </div>
 
             <a 
-              href="https://wa.me/525659271906?text=Hola,%20quiero%20solicitar%20un%20descuento%20especial%20para%20un%20grupo%20en%20el%20Diploma%20de%20Par%C3%ADs%20ECMO."
+              href="https://wa.me/525659271906?text=Hola,%20quiero%20inscribir%20a%20un%20grupo%20en%20el%20Diploma%20de%20Par%C3%ADs%20ECMO."
               target="_blank"
               rel="noreferrer"
               onClick={closePopup}

@@ -12,29 +12,27 @@
 
 // Promociones con fechas (ninguna activa por ahora). Formato:
 //   nombre: ['2026-05-06T00:00:00-06:00', '2026-05-10T23:59:59-06:00'],
-const VIGENCIAS = {};
+const VIGENCIAS = {
+  // Step 1 a $7,000 (30% directo): del 6 al 15 de octubre de 2026.
+  step1oct: ['2026-10-06T00:00:00-06:00', '2026-10-15T23:59:59-06:00'],
+};
 
 // `programas` limita en que paginas aplica cada codigo.
 // `porcentaje` es el descuento (0.3 = 30%); `precioFijo` lo sustituye por completo.
 // Octubre 2026: Paris y Step 1 no aceptan ningún código (ni descuentos, ni
 // meses sin intereses, ni becas). Los vencidos (PERFUWEEK, VIVAMEXTEAM) se
 // quitaron. Quedan solo los de ECMO Nursing.
-const CODIGOS = {
-  HCE10MSI:            { porcentaje: 0.10,  programas: ['nursing'], meses: true },
-  HCEGRUPOS:           { porcentaje: 0.15,  programas: ['nursing'], meses: true },
-  HCEGRUPOS15:         { porcentaje: 0.15,  programas: ['nursing'], meses: true },
-  // Descuento para equipos: se reparte por WhatsApp a quien pregunta por
-  // inscripciones de mas de 3 personas. Sin vigencia.
-  TEAMPROMO:           { porcentaje: 0.30,  programas: ['nursing'] },
-  // Descuento general de campana. Sin vigencia.
-  PROMO15:             { porcentaje: 0.15,  programas: ['nursing'] },
-};
+// Octubre 2026: todos los descuentos con código están desactivados (Paris,
+// Step 1 y Nursing). Para reactivar uno, agregarlo aquí y en su formulario.
+const CODIGOS = {};
 
 // Descuentos que se aplican sin que el alumno escriba nada. Cada uno con su
 // vigencia: fuera de fechas no existe, y el precio vuelve solo al regular sin
 // tener que desplegar nada.
 const AUTOMATICAS = [
-  // Ejemplo: { programas: ['paris'], porcentaje: 0.20, vigencia: 'nombre', etiqueta: 'ETIQUETA' },
+  // Step 1 directo en $7,000 (10,000 − 30%) hasta el 15 de octubre. Debe
+  // coincidir con src/lib/promoMesPatrio.js, que solo lo pinta.
+  { programas: ['step1'], porcentaje: 0.30, vigencia: 'step1oct', etiqueta: 'STEP1OCT30' },
 ];
 
 function enVigencia(nombre, ahora) {

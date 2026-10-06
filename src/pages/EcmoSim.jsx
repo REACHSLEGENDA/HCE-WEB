@@ -9,6 +9,10 @@ import './EcmoSim.css';
 import { useSEO } from '../hooks/useSEO';
 import { useNotification } from '../context/NotificationContext';
 
+// Octubre 2026: sin cupones de descuento. Para reactivar EXPSIM26, true aquí y
+// en netlify/functions/create-sim-checkout.js.
+const CUPON_ACTIVO = false;
+
 const EcmoSim = () => {
   const { showToast } = useNotification();
   useSEO({
@@ -106,7 +110,8 @@ const EcmoSim = () => {
   };
 
   const handleApplyPromo = () => {
-    if (promoInput.trim().toUpperCase() === 'EXPSIM26') {
+    // Octubre 2026: sin cupones (el servidor tampoco aplica EXPSIM26).
+    if (CUPON_ACTIVO && promoInput.trim().toUpperCase() === 'EXPSIM26') {
       setAppliedPromo(true);
       setPromoError('');
     } else {
@@ -526,8 +531,8 @@ const EcmoSim = () => {
                 </div>
               </div>
 
-              {/* Promo Code Input */}
-              <div className="sim-promo-row" style={{ marginTop: '0.25rem' }}>
+              {/* Promo Code Input: oculto mientras no haya cupón activo */}
+              {CUPON_ACTIVO && <div className="sim-promo-row" style={{ marginTop: '0.25rem' }}>
                 {!appliedPromo ? (
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <input
@@ -562,7 +567,7 @@ const EcmoSim = () => {
                   </div>
                 )}
                 {promoError && <div style={{ color: '#e74c3c', fontSize: '0.78rem', marginTop: '4px', fontWeight: 600 }}>{promoError}</div>}
-              </div>
+              </div>}
 
               {/* El tipo de cambio solo importa si el cobro sale en pesos. */}
               <div className="sim-rate-badge">

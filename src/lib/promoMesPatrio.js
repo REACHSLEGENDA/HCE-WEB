@@ -14,13 +14,18 @@
  * ------------------------------------------------------------------------ */
 
 export const PROMO_MES_PATRIO = {
-  desde: new Date('2026-09-01T00:00:00-06:00'),
-  hasta: new Date('2026-09-16T23:59:59-06:00'),
-  vigenciaTexto: '16 de septiembre',
+  // Octubre 2026: solo Step 1, directo en $7,000.
+  nombre: 'Precio especial',
+  desde: new Date('2026-10-06T00:00:00-06:00'),
+  hasta: new Date('2026-10-15T23:59:59-06:00'),
+  vigenciaTexto: '15 de octubre',
   porcentaje: {
     step1: 0.30,
-    paris: 0.20,
+    paris: 0,
   },
+  // El pop-up de la página de París era del Mes Patrio (colores y fechas de
+  // septiembre): no sale con esta promoción.
+  popupParis: false,
 };
 
 export const promoMesPatrioActiva = (ahora = new Date()) =>

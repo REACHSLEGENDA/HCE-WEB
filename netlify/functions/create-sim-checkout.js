@@ -42,7 +42,9 @@ export const handler = async (event) => {
     // Process promo code EXPSIM26 (-$50 USD)
     let baseUsd = plan.usd;
     let discountApplied = false;
-    if (promoCode && promoCode.trim().toUpperCase() === 'EXPSIM26') {
+    // Octubre 2026: cupón desactivado. Para reactivarlo, true (y en EcmoSim.jsx).
+    const EXPSIM26_ACTIVO = false;
+    if (EXPSIM26_ACTIVO && promoCode && promoCode.trim().toUpperCase() === 'EXPSIM26') {
       baseUsd = Math.max(0, baseUsd - 50);
       discountApplied = true;
     }

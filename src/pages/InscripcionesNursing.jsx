@@ -134,19 +134,9 @@ export default function InscripcionesNursing() {
 
   const applyPromo = () => {
     const code = promoInput.trim().toUpperCase();
-    if (code === 'TEAMPROMO') {
-      setAppliedPromo({ code, discount: 0.3, type: 'discount' });
-      setApiError('');
-    } else if (code === 'PROMO15') {
-      setAppliedPromo({ code, discount: 0.15, type: 'discount' });
-      setApiError('');
-    } else if (code === 'HCE10MSI') {
-      setAppliedPromo({ code: 'HCE10MSI', discount: 0.1, type: 'discount' });
-      setApiError('');
-    } else if (code === 'HCEGRUPOS' || code === 'HCEGRUPOS15') {
-      setAppliedPromo({ code, discount: 0.15, type: 'mixed' });
-      setApiError('');
-    } else if (code === 'BECANURSING26' || code === 'TRANSFER2026') {
+    // Octubre 2026: sin códigos de descuento. Solo beca y transferencia,
+    // que no son descuento: registran sin pasar por la pasarela.
+    if (code === 'BECANURSING26' || code === 'TRANSFER2026') {
       // Beca 100% / pago por transferencia — omite pasarela de pago
       setAppliedPromo({ code, discount: 1.0, type: 'free' });
       setApiError('');
@@ -303,12 +293,12 @@ export default function InscripcionesNursing() {
               <div>
                 <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: 'var(--ins-dark)' }}>Inscripción para Grupos</h4>
                 <p style={{ margin: '3px 0 0 0', fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
-                  ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> para solicitar un descuento especial para grupos mayores de 3 personas.
+                  ¿Te inscribes con tu equipo? <strong>Contáctanos</strong> y te ayudamos con la inscripción de tu grupo.
                 </p>
               </div>
             </div>
             <a 
-              href="https://wa.me/525659271906?text=Hola,%20quiero%20solicitar%20un%20descuento%20especial%20para%20un%20grupo%20en%20el%20curso%20de%20ECMO%20Nursing."
+              href="https://wa.me/525659271906?text=Hola,%20quiero%20inscribir%20a%20un%20grupo%20en%20el%20curso%20de%20ECMO%20Nursing."
               target="_blank"
               rel="noreferrer"
               style={{
@@ -724,12 +714,12 @@ export default function InscripcionesNursing() {
                 Inscripción para Grupos
               </h3>
               <p style={{ margin: '8px 0 0 0', fontSize: '0.88rem', color: '#64748b', lineHeight: '1.5' }}>
-                ¿Te inscribes con tu equipo? Ofrecemos descuentos especiales y facilidades de pago para grupos mayores de 3 personas.
+                ¿Te inscribes con tu equipo? Escríbenos y te ayudamos con la inscripción de tu grupo.
               </p>
             </div>
 
             <a 
-              href="https://wa.me/525659271906?text=Hola,%20quiero%20solicitar%20un%20descuento%20especial%20para%20un%20grupo%20en%20el%20curso%20de%20ECMO%20Nursing."
+              href="https://wa.me/525659271906?text=Hola,%20quiero%20inscribir%20a%20un%20grupo%20en%20el%20curso%20de%20ECMO%20Nursing."
               target="_blank"
               rel="noreferrer"
               onClick={closePopup}

@@ -157,7 +157,7 @@ const ParisNewDesign = () => {
     useEffect(() => {
         // Mismo calendario que el descuento directo: cuando se acaba la promo,
         // se acaba el popup. Antes del 1 de septiembre tampoco sale.
-        if (promoMesPatrioActiva()) {
+        if (promoMesPatrioActiva() && PROMO_MES_PATRIO.popupParis) {
             const timer = setTimeout(() => {
                 setShowPromoPopup(true);
             }, 1000);
