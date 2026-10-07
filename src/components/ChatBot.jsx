@@ -531,7 +531,7 @@ export default function ChatBot() {
       { id: Date.now(), type: 'user', text: btn.label },
     ]);
     if (btn.action === 'inscribirse') {
-      navigate('/inscripciones-diploma-paris-ecmo');
+      navigate('/inscripciones-step1');
       setIsOpen(false);
       return;
     }

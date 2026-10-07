@@ -163,7 +163,7 @@ const FAQ_PARIS = [
     a: (
       <>
         Puedes asegurar tu cupo de inmediato directamente en nuestro formulario de inscripción.{' '}
-        <a href="/inscripciones-diploma-paris-ecmo" style={{ color: '#0047ff', fontWeight: 700 }}>Da clic aquí →</a>
+        <a href="/inscripciones-step1" style={{ color: '#0047ff', fontWeight: 700 }}>Da clic aquí →</a>
         <br /><br />
         <em>📩 ¿Tienes otra duda? Escríbenos a <strong>info@healthcareexp.com</strong> o utiliza el botón de WhatsApp. ¡Nuestro equipo de admisiones te atenderá de inmediato!</em>
       </>

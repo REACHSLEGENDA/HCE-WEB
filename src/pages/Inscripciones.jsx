@@ -16,6 +16,10 @@ const USD_RATE = 17.5;
 // Sin códigos de descuento por ahora (octubre 2026).
 const ACEPTA_CODIGOS = false;
 
+// Octubre 2026: el diploma completo no recibe inscripciones; solo Step 1.
+// Para reabrirla, true aquí y en netlify/functions/create-checkout.js.
+const INSCRIPCION_ABIERTA = false;
+
 const EXTRA_CATALOG = {
   ecmo_sim: {
     label: 'Simulador ECMO SIM',
@@ -223,6 +227,24 @@ export default function Inscripciones() {
             <h2>Inversión cancelada</h2>
             <p>No se realizó ningún cargo.</p>
             <a href="/inscripciones-diploma-paris-ecmo" className="ins-btn ins-btn--primary">Intentar de nuevo</a>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Quien ya pagó y regresa de Stripe (status=success) sigue arriba; aquí
+  // solo llega quien quiere inscribirse de nuevo.
+  if (!INSCRIPCION_ABIERTA) {
+    return (
+      <div className="ins-page">
+        <Navbar />
+        <div className="ins-result-wrap">
+          <div className="ins-result-card">
+            <h2>Inscripción al diploma completo cerrada</h2>
+            <p>Por ahora solo está abierta la inscripción a la Certificación Teórica (Step 1).</p>
+            <a href="/inscripciones-step1" className="ins-btn ins-btn--primary">Inscribirme a Step 1</a>
           </div>
         </div>
         <Footer />

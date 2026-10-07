@@ -45,6 +45,13 @@ export const handler = async (event) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
+  // Octubre 2026: inscripción al diploma completo cerrada (solo Step 1).
+  // Para reabrirla, true aquí y en src/pages/Inscripciones.jsx.
+  const INSCRIPCION_ABIERTA = false;
+  if (!INSCRIPCION_ABIERTA) {
+    return { statusCode: 410, body: JSON.stringify({ error: 'La inscripción al diploma completo está cerrada. Por ahora solo está abierta Step 1.' }) };
+  }
+
   try {
     const { perfil, extras = [], moneda = 'mxn', email = '', promoCode = null } = JSON.parse(event.body);
 

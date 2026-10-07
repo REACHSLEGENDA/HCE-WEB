@@ -141,7 +141,7 @@ function SyllabusSection() {
                 {/* CTA */}
                 <div className="syl-cta">
                     <p className="syl-cta-text">¿Listo para dominar el soporte ECMO al más alto nivel?</p>
-                    <a href="/inscripciones-diploma-paris-ecmo" className="syl-cta-btn">
+                    <a href="/inscripciones-step1" className="syl-cta-btn">
                         Inscríbete ahora
                     </a>
                 </div>
@@ -226,7 +226,7 @@ const ParisNewDesign = () => {
                     <div className="h1-style">¡Conviértete en un <br />especialista en <span className="gradient-text">ECMO</span>!</div>
                     <p className="hero-sub">Certifícate con la más alta tecnología de talla internacional.</p>
                     <div className="hero-actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscripción Step 1 y 2</Link>
+                        <Link to="/inscripciones-step1" className="btn btn-primary">Inscripción Step 1</Link>
                         <Link to="/inscripciones-step1" className="btn btn-outline" style={{ background: 'rgba(255,255,255,0.1)', borderColor: '#00d2ff', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.3', padding: '12px 25px' }}>
                             <span>Apertura Inscripciones Sólo Step 1</span>
                             <span style={{ fontSize: '0.75em', opacity: 0.8, marginTop: '4px', textTransform: 'none' }}>28-29 de Octubre • 100% presencial</span>
@@ -468,7 +468,7 @@ const ParisNewDesign = () => {
                         <span className="tag">Terapeutas Respiratorios</span>
                     </div>
                     <div style={{ textAlign: 'center', marginTop: '3rem', position: 'relative', zIndex: 3 }}>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Certifícate</Link>
+                        <Link to="/inscripciones-step1" className="btn btn-primary">Certifícate</Link>
                     </div>
                 </div>
             </section>
@@ -521,7 +521,7 @@ const ParisNewDesign = () => {
                         <p style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '2rem', lineHeight: '1.7' }}>
                             Jefe de la unidad de cuidados intensivos del <strong>Hospital La Pitié-Salpétrière</strong> de París, Francia, quien con su equipo ha entrenado a más de 2000 profesionales de la salud a nivel internacional.
                         </p>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
+                        <Link to="/inscripciones-step1" className="btn btn-primary">Inscríbete ahora</Link>
                     </div>
                     <div className="experience-lead-img">
                         <img src="/assets/paris/DSC_0164.jpg" alt="Prof. Alain Combes Podium" />
@@ -621,7 +621,7 @@ const ParisNewDesign = () => {
                     </div>
                     
                     <div style={{ textAlign: 'center', marginTop: '4rem' }}>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
+                        <Link to="/inscripciones-step1" className="btn btn-primary">Inscríbete ahora</Link>
                     </div>
                 </div>
             </section>
@@ -657,7 +657,7 @@ const ParisNewDesign = () => {
                             <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', lineHeight: '1.8', marginBottom: '3rem' }}>
                                 Sé parte de un entrenamiento revolucionario en Latinoamérica con herramientas de entrenamiento como <strong>ECMO SIM</strong>. Potenciamos tus habilidades para convertirte en un líder en ECMO.
                             </p>
-                            <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary btn-lg">Empezar</Link>
+                            <Link to="/inscripciones-step1" className="btn btn-primary btn-lg">Empezar</Link>
                         </div>
                     </div>
                 </div>
@@ -707,7 +707,7 @@ const ParisNewDesign = () => {
                                 <a href="https://share.google/sHSrTC0wdg5BJAodK" target="_blank" rel="noopener noreferrer" className="btn btn-outline sede-v2-map-btn">
                                     <ExternalLink size={16} /> Ver en Maps
                                 </a>
-                                <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Inscríbete ahora</Link>
+                                <Link to="/inscripciones-step1" className="btn btn-primary">Inscríbete ahora</Link>
                             </div>
                         </div>
 
@@ -730,7 +730,7 @@ const ParisNewDesign = () => {
                         <p style={{ fontSize: '1.3rem', marginBottom: '3.5rem', color: 'var(--text-muted)', maxWidth: '800px', marginInline: 'auto', lineHeight: '1.6' }}>
                             Entrenarte en ECMO te brinda acceso a formación de élite para desarrollar habilidades clave que no solo fortalecen tu perfil, sino que elevan el nivel clínico de todo tu equipo.
                         </p>
-                        <Link to="/inscripciones-diploma-paris-ecmo" className="btn btn-primary">Acceder a formación de élite</Link>
+                        <Link to="/inscripciones-step1" className="btn btn-primary">Acceder a formación de élite</Link>
                     </div>
                 </div>
             </section>
@@ -786,7 +786,7 @@ const ParisNewDesign = () => {
                             Si eres enfermero(a), puedes complementar tu inscripción al Diploma Internacional con el <strong>ECMO Nursing Care Course</strong> con un <strong>20% de descuento</strong>. Próxima edición por confirmar — ideal como preparación teórica y práctica antes de la certificación en París en Octubre.
                         </p>
                         <Link 
-                            to="/inscripciones-diploma-paris-ecmo" 
+                            to="/inscripciones-step1" 
                             className="btn btn-primary"
                             style={{ 
                                 display: 'inline-flex', 
@@ -1050,7 +1050,7 @@ const ParisNewDesign = () => {
                                 Inscribirme a Sólo Step 1
                             </Link>
                             <Link
-                                to="/inscripciones-diploma-paris-ecmo"
+                                to="/inscripciones-step1"
                                 onClick={() => setShowPromoPopup(false)}
                                 style={{
                                     display: 'flex', justifyContent: 'center', alignItems: 'center',
