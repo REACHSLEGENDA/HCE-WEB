@@ -1,0 +1,162 @@
+/* ===========================================================================
+   Programas del Diploma de París — página de enlace privado.
+
+   Prefijo prog- en todas las clases: este CSS comparte bundle con el resto de
+   las páginas y un nombre genérico se fusionaría con el de otro componente.
+   ======================================================================== */
+
+.prog-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.2rem;
+  background: linear-gradient(170deg, #f8fafc 0%, #eef5fb 100%);
+}
+
+.prog-contenido {
+  width: 100%;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.prog-logo {
+  width: clamp(170px, 42vw, 240px);
+  height: auto;
+  margin-bottom: 2.2rem;
+}
+
+.prog-titulo {
+  margin: 0;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: clamp(1.25rem, 4vw, 1.7rem);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.prog-sede {
+  margin: 0.5rem 0 2.2rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* --- Documentos ------------------------------------------------------------ */
+
+.prog-lista {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.prog-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem 1.3rem;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+  text-align: left;
+}
+
+.prog-card-icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(140deg, rgba(0, 202, 228, 0.16), rgba(37, 99, 235, 0.12));
+  color: #0284c7;
+}
+
+.prog-card-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.prog-card-texto h2 {
+  margin: 0;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.prog-card-texto p {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.prog-card-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.prog-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border-radius: 100px;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  color: #0369a1;
+  background: #ffffff;
+  border: 1px solid rgba(3, 105, 161, 0.25);
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.prog-btn:hover {
+  background: #f0f9ff;
+}
+
+.prog-btn--primario {
+  color: #ffffff;
+  background: linear-gradient(120deg, #00bcd4, #0284c7);
+  border: none;
+  box-shadow: 0 8px 18px rgba(2, 132, 199, 0.25);
+}
+
+.prog-btn--primario:hover {
+  background: linear-gradient(120deg, #00cae4, #0369a1);
+}
+
+/* --- Pantallas pequeñas ----------------------------------------------------- */
+
+@media (max-width: 560px) {
+  .prog-card {
+    flex-wrap: wrap;
+  }
+
+  .prog-card-acciones {
+    width: 100%;
+    flex-direction: row;
+  }
+
+  .prog-btn {
+    flex: 1;
+  }
+}
+
+/* --- Sin animación ---------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .prog-btn {
+    transition: none;
+  }
+}
