@@ -35,6 +35,7 @@ const Instructores = lazy(() => import('./pages/Instructores'));
 const Retroalimentacion = lazy(() => import('./pages/Retroalimentacion'));
 const Inscripciones = lazy(() => import('./pages/Inscripciones'));
 const InscripcionesStep1 = lazy(() => import('./pages/InscripcionesStep1'));
+const InscripcionesStep2 = lazy(() => import('./pages/InscripcionesStep2'));
 const SecretPreview = lazy(() => import('./pages/SecretPreview'));
 const InscripcionesNursing = lazy(() => import('./pages/InscripcionesNursing'));
 const SecretNursingPreview = lazy(() => import('./pages/SecretNursingPreview'));
@@ -249,6 +250,8 @@ function App() {
               <Route path="/retroalimentacion" element={<Retroalimentacion />} />
               <Route path="/inscripciones-diploma-paris-ecmo" element={<Inscripciones />} />
               <Route path="/inscripciones-step1" element={<InscripcionesStep1 />} />
+              {/* Enlace privado: no se enlaza desde ningún lado y va con noindex. */}
+              <Route path="/inscripcion-step2-privada-2026" element={<InscripcionesStep2 />} />
               <Route path="/debug-checkout-preview-2026" element={<SecretPreview />} />
               <Route path="/inscripciones-ecmo-nursing" element={<InscripcionesNursing />} />
               <Route path="/debug-checkout-nursing-preview-2026" element={<SecretNursingPreview />} />

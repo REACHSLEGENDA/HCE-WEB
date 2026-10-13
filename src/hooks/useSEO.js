@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export function useSEO({ title, description, keywords }) {
+export function useSEO({ title, description, keywords, noindex = false }) {
   useEffect(() => {
     if (title) {
       document.title = `${title} | HCE Healthcare Training Experience`;
@@ -29,5 +29,16 @@ export function useSEO({ title, description, keywords }) {
         document.head.appendChild(metaKey);
       }
     }
-  }, [title, description, keywords]);
+
+    // Páginas que no deben salir en buscadores (enlaces privados). Se retira
+    // al salir de la página: en una SPA la etiqueta sobreviviría a la
+    // navegación y dejaría medio sitio sin indexar.
+    if (noindex) {
+      const meta = document.createElement('meta');
+      meta.name = 'robots';
+      meta.content = 'noindex, nofollow';
+      document.head.appendChild(meta);
+      return () => meta.remove();
+    }
+  }, [title, description, keywords, noindex]);
 }
