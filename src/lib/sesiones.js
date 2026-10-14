@@ -4,6 +4,7 @@
 
 import { supabase } from './supabase';
 import { formatearFechaHora } from './zonaHoraria';
+import { esTablaFaltante } from './cursos';
 
 export async function llamarSesion(accion, cuerpo = {}) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -102,7 +103,11 @@ export async function cargarSesionesAdmin(ids) {
     supabase.from('sesiones_clase').select('*').in('leccion_id', ids),
     supabase.from('sesion_secretos').select('*').in('leccion_id', ids),
   ]);
-  if (horarios.error || secretos.error) return {};
+  const error = horarios.error || secretos.error;
+  if (error) {
+    if (esTablaFaltante(error)) return {};
+    throw error;
+  }
   const mapa = {};
   (horarios.data || []).forEach((h) => { mapa[h.leccion_id] = { ...h }; });
   (secretos.data || []).forEach((s) => { mapa[s.leccion_id] = { ...(mapa[s.leccion_id] || {}), ...s }; });

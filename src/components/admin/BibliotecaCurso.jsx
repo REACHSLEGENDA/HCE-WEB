@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Search, Upload, Trash2, ExternalLink } from 'lucide-react';
+import { Search, Upload, Trash2, ExternalLink, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import {
   cargarBiblioteca,
@@ -25,6 +25,8 @@ export default function BibliotecaCurso({ courseId, notificar, confirmar }) {
   const [filtroLeccion, setFiltroLeccion] = useState('');
   const [subiendo, setSubiendo] = useState(null);
   const [arrastrando, setArrastrando] = useState(false);
+  const [fallidos, setFallidos] = useState([]);
+  const [errorCarga, setErrorCarga] = useState('');
   const entradaRef = useRef(null);
   const refrescarLecciones = useCallback(async () => {
     const { data, error } = await supabase.from('curso_lecciones').select('id, orden, titulo, tipo').eq('course_id', courseId).neq('tipo', 'seccion').order('orden').order('id');
@@ -34,16 +36,19 @@ export default function BibliotecaCurso({ courseId, notificar, confirmar }) {
 
   const cargar = useCallback(async () => {
     try {
-      const [lista, { data: lecs }] = await Promise.all([
+      const [lista, { data: lecs, error: errorLecciones }] = await Promise.all([
         cargarBiblioteca(courseId),
         supabase.from('curso_lecciones').select('id, orden, titulo').eq('course_id', courseId).neq('tipo', 'seccion').order('orden').order('id'),
       ]);
+      if (errorLecciones) throw errorLecciones;
       if (lista === null) { setFaltaMigracion(true); return; }
       setArchivos(lista);
+      setErrorCarga('');
       setLecciones(lecs || []);
     } catch (err) {
       notificar(`No se pudo cargar la biblioteca: ${err.message}`, 'error');
       setArchivos([]);
+      setErrorCarga(err.message);
     }
   }, [courseId, notificar]);
 
@@ -52,34 +57,39 @@ export default function BibliotecaCurso({ courseId, notificar, confirmar }) {
     Promise.all([
       cargarBiblioteca(courseId),
       supabase.from('curso_lecciones').select('id, orden, titulo').eq('course_id', courseId).neq('tipo', 'seccion').order('orden').order('id'),
-    ]).then(([lista, { data: lecs }]) => {
+    ]).then(([lista, { data: lecs, error: errorLecciones }]) => {
       if (!vigente) return;
+      if (errorLecciones) throw errorLecciones;
       if (lista === null) { setFaltaMigracion(true); return; }
       setArchivos(lista);
       setLecciones(lecs || []);
     }).catch((err) => {
       if (!vigente) return;
       if (esTablaFaltante(err)) setFaltaMigracion(true);
-      else { notificar(`No se pudo cargar la biblioteca: ${err.message}`, 'error'); setArchivos([]); }
+      else { notificar(`No se pudo cargar la biblioteca: ${err.message}`, 'error'); setArchivos([]); setErrorCarga(err.message); }
     });
     return () => { vigente = false; };
   }, [courseId, notificar]);
 
   const subir = async (lista) => {
+    if (subiendo) return;
     const elegidos = [...lista];
     if (!elegidos.length) return;
     const grandes = elegidos.filter((f) => f.size > LIMITE_MB * 1024 * 1024);
-    if (grandes.length) notificar(`Se omitieron ${grandes.length} archivo(s) de más de ${LIMITE_MB} MB.`, 'error');
     const validos = elegidos.filter((f) => f.size <= LIMITE_MB * 1024 * 1024);
+    // Lo que no se pudo subir se queda en una lista con su motivo; los que
+    // fallaron por la conexión o el servidor se pueden reintentar.
+    const nuevosFallidos = grandes.map((archivo) => ({ archivo, motivo: `Pesa más de ${LIMITE_MB} MB.`, reintentable: false }));
+    setFallidos([]);
 
     let listos = 0;
-    for (const archivo of validos) {
-      setSubiendo(`${listos + 1} de ${validos.length}: ${archivo.name}`);
+    for (const [i, archivo] of validos.entries()) {
+      setSubiendo({ actual: i + 1, total: validos.length, nombre: archivo.name, listos });
       const limpio = archivo.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_');
       const ruta = `${courseId}/${Date.now()}_${limpio}`;
       const { error: errSubida } = await supabase.storage.from(BUCKET_BIBLIOTECA).upload(ruta, archivo, { contentType: archivo.type || undefined });
       if (errSubida) {
-        notificar(`No se pudo subir ${archivo.name}: ${errSubida.message}`, 'error');
+        nuevosFallidos.push({ archivo, motivo: `No se pudo subir: ${errSubida.message}`, reintentable: true });
         continue;
       }
       const { error } = await supabase.from('curso_archivos').insert([{
@@ -92,15 +102,30 @@ export default function BibliotecaCurso({ courseId, notificar, confirmar }) {
       }]);
       if (error) {
         await supabase.storage.from(BUCKET_BIBLIOTECA).remove([ruta]);
-        notificar(`No se pudo registrar ${archivo.name}: ${error.message}`, 'error');
+        nuevosFallidos.push({ archivo, motivo: `No se pudo registrar: ${error.message}`, reintentable: true });
         continue;
       }
       listos += 1;
     }
     setSubiendo(null);
+    setFallidos(nuevosFallidos);
     if (entradaRef.current) entradaRef.current.value = '';
     if (listos) notificar(`${listos} archivo(s) agregados a la biblioteca.`, 'success');
+    if (nuevosFallidos.length) notificar(`${nuevosFallidos.length} archivo(s) no se agregaron. Revisa la lista bajo la zona de carga.`, 'error');
     await cargar();
+  };
+
+  // El arrastre sale de la zona solo cuando el puntero deja la zona completa
+  // (no al pasar sobre el texto o el icono que tiene dentro).
+  const alSalirArrastre = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setArrastrando(false);
+  };
+  const alSoltar = (e) => {
+    e.preventDefault();
+    setArrastrando(false);
+    if (subiendo) return;
+    if (!e.dataTransfer.files?.length) { notificar('Suelta archivos de tu computadora (no carpetas ni enlaces).', 'error'); return; }
+    void subir(e.dataTransfer.files);
   };
 
   const actualizar = async (archivo, cambios) => {
@@ -144,28 +169,63 @@ export default function BibliotecaCurso({ courseId, notificar, confirmar }) {
   return (
     <div className="biblioteca">
       <div
-        className={`biblioteca-subir ${arrastrando ? 'arrastrando' : ''}`}
-        onDragOver={(e) => { e.preventDefault(); setArrastrando(true); }}
-        onDragLeave={() => setArrastrando(false)}
-        onDrop={(e) => { e.preventDefault(); setArrastrando(false); void subir(e.dataTransfer.files); }}
+        className={`biblioteca-subir${arrastrando ? ' arrastrando' : ''}${subiendo ? ' ocupada' : ''}`}
+        onDragEnter={(e) => { e.preventDefault(); if (!subiendo) setArrastrando(true); }}
+        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = subiendo ? 'none' : 'copy'; }}
+        onDragLeave={alSalirArrastre}
+        onDrop={alSoltar}
       >
-        <Upload size={18} />
+        <input ref={entradaRef} type="file" multiple hidden onChange={(e) => void subir(e.target.files)} />
         {subiendo ? (
-          <span>Subiendo {subiendo}…</span>
+          <div className="biblioteca-progreso" role="status" aria-live="polite">
+            <div className="biblioteca-progreso-texto">
+              <Loader2 size={16} className="lms-girando" aria-hidden="true" />
+              <span>Subiendo {subiendo.actual} de {subiendo.total}: <strong>{subiendo.nombre}</strong></span>
+            </div>
+            <div className="biblioteca-barra" role="progressbar" aria-valuemin={0} aria-valuemax={subiendo.total} aria-valuenow={subiendo.actual - 1} aria-label="Avance de la carga">
+              <span style={{ width: `${Math.round(((subiendo.actual - 1) / subiendo.total) * 100)}%` }} />
+            </div>
+          </div>
         ) : (
-          <span>
-            Arrastra archivos aquí o{' '}
-            <label className="biblioteca-elegir">
-              elígelos
-              <input ref={entradaRef} type="file" multiple onChange={(e) => void subir(e.target.files)} />
-            </label>
-            {' '}(máx. {LIMITE_MB} MB c/u).
-            {filtroLeccion && filtroLeccion !== 'general'
-              ? ' Quedarán ligados a la clase elegida en el filtro.'
-              : ' Quedan en la biblioteca general; luego puedes ligarlos a una clase.'}
-          </span>
+          <>
+            <span className="biblioteca-subir-icono" aria-hidden="true"><Upload size={20} /></span>
+            <div className="biblioteca-subir-texto">
+              <strong>{arrastrando ? 'Suelta los archivos para subirlos' : 'Arrastra archivos aquí'}</strong>
+              <span>
+                Máx. {LIMITE_MB} MB cada uno.
+                {filtroLeccion && filtroLeccion !== 'general'
+                  ? ' Quedarán ligados a la clase elegida en el filtro.'
+                  : ' Quedan en la biblioteca general; luego puedes ligarlos a una clase.'}
+              </span>
+            </div>
+            <button type="button" className="btn-crm-action outlined" onClick={() => entradaRef.current?.click()}>
+              <Upload size={14} /> Elegir archivos
+            </button>
+          </>
         )}
       </div>
+
+      {fallidos.length > 0 && !subiendo && (
+        <div className="biblioteca-fallidos" role="alert">
+          <div className="biblioteca-fallidos-cabecera">
+            <AlertTriangle size={16} aria-hidden="true" />
+            <strong>{fallidos.length} {fallidos.length === 1 ? 'archivo no se agregó' : 'archivos no se agregaron'}</strong>
+            <span className="biblioteca-fallidos-acciones">
+              {fallidos.some((f) => f.reintentable) && (
+                <button type="button" className="btn-crm-action outlined mini" onClick={() => subir(fallidos.filter((f) => f.reintentable).map((f) => f.archivo))}>
+                  <RefreshCw size={12} /> Reintentar
+                </button>
+              )}
+              <button type="button" className="btn-crm-action outlined mini" onClick={() => setFallidos([])}>Descartar</button>
+            </span>
+          </div>
+          <ul>
+            {fallidos.map((f, i) => (
+              <li key={`${f.archivo.name}-${i}`}><strong>{f.archivo.name}</strong> <span>{f.motivo}</span></li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="biblioteca-filtros">
         <label className="biblioteca-buscar">
@@ -179,8 +239,13 @@ export default function BibliotecaCurso({ courseId, notificar, confirmar }) {
         </select>
       </div>
 
-      {visibles.length === 0 ? (
-        <p className="lms-vacio">{archivos.length ? 'Ningún archivo coincide con la búsqueda.' : 'La biblioteca de este curso está vacía.'}</p>
+      {errorCarga && archivos.length === 0 ? (
+        <p className="lms-aviso lms-aviso--error" role="alert">
+          No se pudo cargar la biblioteca: {errorCarga}{' '}
+          <button type="button" className="btn-crm-action outlined mini" onClick={() => cargar()}><RefreshCw size={12} /> Reintentar</button>
+        </p>
+      ) : visibles.length === 0 ? (
+        <p className="lms-vacio">{archivos.length ? 'Ningún archivo coincide con la búsqueda.' : 'Todavía no hay archivos. Arrástralos a la zona de arriba o usa "Elegir archivos".'}</p>
       ) : (
         <div className="biblioteca-tabla-scroll">
           <table className="biblioteca-tabla">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './ChatBot.css';
 
 const BOT_IMG = 'https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-03-12_01-43-49-485.png';
@@ -476,9 +476,17 @@ export default function ChatBot() {
   const [typing, setTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // Dentro del portal (alumno y admin) la burbuja "¿Necesitas ayuda?" no
+  // aparece: quien está ahí ya conoce el sistema, y la burbuja tapaba el botón
+  // principal de la pantalla cada doce segundos. El robot sigue disponible.
+  const { pathname } = useLocation();
+  const enPortal = /^\/(dashboard|classroom|admin)(\/|$)/.test(pathname);
+  // El inicio del alumno tiene barra inferior en el celular: el robot sube.
+  const sobreBarraInferior = /^\/dashboard(\/|$)/.test(pathname);
+
   // Tooltip pulse cycle when chat is closed
   useEffect(() => {
-    if (isOpen) return;
+    if (isOpen || enPortal) return;
     const timers = [];
     const cycle = (delay) => {
       timers.push(setTimeout(() => setShowTooltip(true), delay));
@@ -490,7 +498,7 @@ export default function ChatBot() {
       setTimeout(() => setShowTooltip(false), 4000);
     }, 12000);
     return () => { timers.forEach(clearTimeout); clearInterval(interval); };
-  }, [isOpen]);
+  }, [isOpen, enPortal]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -601,9 +609,9 @@ export default function ChatBot() {
   };
 
   return (
-    <div className="hce-chat-widget">
+    <div className={`hce-chat-widget${enPortal ? ' hce-chat-widget--portal' : ''}${sobreBarraInferior ? ' hce-chat-widget--sobre-barra' : ''}`}>
       {/* Tooltip */}
-      <div className={`hce-chat-tooltip ${showTooltip && !isOpen ? 'hce-chat-tooltip--visible' : ''}`}>
+      <div className={`hce-chat-tooltip ${showTooltip && !isOpen && !enPortal ? 'hce-chat-tooltip--visible' : ''}`}>
         ¿Necesitas ayuda?
       </div>
 

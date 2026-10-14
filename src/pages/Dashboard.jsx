@@ -11,6 +11,7 @@ import {
   Award,
   User as UserIcon,
   Settings,
+  LifeBuoy,
   LogOut,
   Menu,
   ChevronLeft,
@@ -45,22 +46,25 @@ import {
   Video,
   Lock,
   Download,
+  Search,
   X
 } from 'lucide-react';
 import './Dashboard.css';
+import GuiaUso from '../components/GuiaUso';
 import '../components/Experiences.css';
 import { generarConstancia, descargarConstancia } from '../lib/constancia';
 import { generarImagenCertificado, descargarArchivo } from '../lib/certificados';
 import { traerTodo } from '../lib/traerTodo';
 import LogrosAlumno from '../components/LogrosAlumno';
 import Mensajes from '../components/Mensajes';
-import Comunicados from '../components/Comunicados';
 import { contarNoLeidos } from '../lib/mensajes';
 import CalendarioAlumno from '../components/CalendarioAlumno';
 import { ZONAS, zonaDelEquipo, recordarZona, fechaEnZona, formatearFechaHora } from '../lib/zonaHoraria';
 import { FranjaVistaAlumno } from '../components/CambioVista';
 import { cargarReglasCursos, cargarLugaresOcupados, cargarMisSolicitudes, cargarMiApertura, reglasDe } from '../lib/reglas';
 import { leerVistaAlumno } from '../lib/vista';
+import InicioAlumno, { TarjetaMiCurso } from '../components/InicioAlumno';
+import NavegacionMovil from '../components/NavegacionMovil';
 import {
   cargarMisInscripciones,
   llamarInscripcion,
@@ -85,6 +89,44 @@ const NurseCap = ({ size = 24, ...props }) => (
 import { COUNTRIES as ALL_COUNTRIES, getFlagUrl } from '../data/countries';
 
 /* ---------------------------------------------------------------------------
+ * Menú del portal, agrupado por lo que el alumno viene a hacer. En celular los
+ * destinos de ORDEN_MOVIL van en la barra inferior y el resto en "Más".
+ * ------------------------------------------------------------------------ */
+const MENU_ALUMNO = [
+  { titulo: 'Aprender', items: [
+    { id: 'dashboard', label: 'Inicio', icon: Home },
+    { id: 'courses', label: 'Mis cursos', corto: 'Cursos', icon: BookOpen },
+    { id: 'calendario', label: 'Calendario', icon: Calendar },
+    { id: 'calificaciones', label: 'Mis calificaciones', icon: CheckSquare },
+    { id: 'certificates', label: 'Certificados', icon: Award },
+  ] },
+  { titulo: 'Descubrir', items: [
+    { id: 'explore', label: 'Catálogo', icon: Compass },
+    { id: 'webinars', label: 'Webinars', icon: Video },
+  ] },
+  { titulo: 'Comunicación', items: [
+    { id: 'mensajes', label: 'Mensajes', icon: MessageSquare },
+  ] },
+  { titulo: 'Mi cuenta', items: [
+    { id: 'profile', label: 'Mi perfil', icon: UserIcon },
+    { id: 'settings', label: 'Configuración', icon: Settings },
+    { id: 'ayuda', label: 'Ayuda', icon: LifeBuoy },
+  ] },
+];
+const PESTANAS_ALUMNO = MENU_ALUMNO.flatMap((g) => g.items.map((i) => i.id));
+// Orden de la barra inferior: Inicio, Cursos, Catálogo, Calendario, Mensajes.
+const ORDEN_MOVIL = ['dashboard', 'courses', 'explore', 'calendario', 'mensajes'];
+
+const leerPestana = () => {
+  try {
+    const guardada = localStorage.getItem('studentActiveTab');
+    return PESTANAS_ALUMNO.includes(guardada) ? guardada : 'dashboard';
+  } catch {
+    return 'dashboard';
+  }
+};
+
+/* ---------------------------------------------------------------------------
  * Enlace al aula.
  *
  * En el navegador el aula se abre en pestaña nueva, que es deliberado: el
@@ -102,33 +144,8 @@ const enAppInstalada = () =>
     .some((modo) => window.matchMedia?.(`(display-mode: ${modo})`).matches) ||
   window.navigator.standalone === true;
 
-const EnlaceAula = ({ cursoId, className, style, children }) => {
-  // El modo de presentación no cambia a media sesión: se resuelve al montar.
-  const [instalada] = useState(enAppInstalada);
-
-  if (instalada) {
-    return (
-      <Link to={`/classroom/${cursoId}`} className={className} style={style}>
-        {children}
-      </Link>
-    );
-  }
-
-  return (
-    <a
-      href={`/classroom/${cursoId}`}
-      target="_blank"
-      rel="noreferrer"
-      className={className}
-      style={style}
-    >
-      {children}
-    </a>
-  );
-};
-
 const Dashboard = () => {
-  // Mismo criterio que EnlaceAula, disponible para las tarjetas del catálogo.
+  // En la app instalada el aula se abre sin salir; en el navegador, en pestaña nueva.
   const [appInstalada] = useState(enAppInstalada);
 
   const { user, profile, logout, updateUserMetadata, updateProfile } = useAuth();
@@ -168,15 +185,25 @@ const Dashboard = () => {
   }, [user?.id]);
   
   // Dashboard Tabs: 'dashboard' | 'courses' | 'certificates' | 'profile' | 'settings'
-  const [activeTab, setActiveTabState] = useState(() => {
-    return localStorage.getItem('studentActiveTab') || 'dashboard';
-  });
+  const [activeTab, setActiveTabState] = useState(leerPestana);
+  const [menuMasAbierto, setMenuMasAbierto] = useState(false);
+  const cerrarMenuMas = useCallback(() => setMenuMasAbierto(false), []);
 
   const setActiveTab = (tab) => {
     setActiveTabState(tab);
-    localStorage.setItem('studentActiveTab', tab);
+    try { localStorage.setItem('studentActiveTab', tab); } catch { /* sin almacenamiento: no se recuerda */ }
     if (window.innerWidth <= 768) setIsSidebarCollapsed(true);
+    setMenuMasAbierto(false);
+    // Cada sección empieza arriba: ya no es una sola pantalla larga.
+    window.scrollTo({ top: 0 });
   };
+
+  // En celular la barra inferior tapa la esquina donde flotan el chat y la
+  // invitación a instalar la app; esta clase los sube (ver Dashboard.css).
+  useEffect(() => {
+    document.body.classList.add('portal-barra-inferior');
+    return () => document.body.classList.remove('portal-barra-inferior');
+  }, []);
 
   const [theme, setThemeState] = useState(() => {
     return localStorage.getItem('studentTheme') || 'light';
@@ -429,6 +456,9 @@ const Dashboard = () => {
   }, [user?.id]);
   const [cursoOcupado, setCursoOcupado] = useState(null);
 
+  // Mientras llega la primera carga, el inicio muestra "Cargando…" en vez de
+  // "Aún no tienes cursos".
+  const [cargandoInscripciones, setCargandoInscripciones] = useState(true);
   const fetchMisInscripciones = useCallback(async () => {
     if (!user?.id) return;
     try {
@@ -441,6 +471,8 @@ const Dashboard = () => {
       }
     } catch (err) {
       console.error('Error cargando inscripciones:', err.message);
+    } finally {
+      setCargandoInscripciones(false);
     }
   }, [user?.id]);
 
@@ -492,11 +524,13 @@ const Dashboard = () => {
     return () => { vigente = false; };
   }, [user?.id, profile?.rol, reglasCursos, misInscripciones]);
 
-  const abrirAula = (courseId) => {
+  const abrirAula = (courseId, leccionId = null) => {
     // Dentro de la app instalada la clase se abre sin salir; en el navegador,
-    // en pestaña nueva, igual que el resto de accesos al aula.
-    if (appInstalada) navigate(`/classroom/${courseId}`);
-    else window.open(`/classroom/${courseId}`, '_blank', 'noopener');
+    // en pestaña nueva, igual que el resto de accesos al aula. Con `leccionId`
+    // el aula abre directo esa lección (una tarea pendiente, una sesión).
+    const ruta = `/classroom/${courseId}${leccionId ? `?leccion=${encodeURIComponent(leccionId)}` : ''}`;
+    if (appInstalada) navigate(ruta);
+    else window.open(ruta, '_blank', 'noopener');
   };
 
   // Un solo punto de entrada para cualquier tarjeta de curso: si ya está
@@ -653,10 +687,13 @@ const Dashboard = () => {
 
   // Quien llega desde la landing con ?webinar=12, o desde el asistente con
   // ?tab=webinars, cae directo en la sección en vez de tener que buscarla.
+  // El aula también manda aquí con ?tab=certificates al terminar un curso.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('webinar') || params.get('tab') === 'webinars') {
       setActiveTab('webinars');
+    } else if (PESTANAS_ALUMNO.includes(params.get('tab'))) {
+      setActiveTab(params.get('tab'));
     }
   }, []);
 
@@ -776,8 +813,8 @@ const Dashboard = () => {
 
   const getBreadcrumbTitle = () => {
     switch (activeTab) {
-      case 'dashboard': return 'Dashboard';
-      case 'explore': return 'Explorar Cursos';
+      case 'dashboard': return 'Mi aprendizaje';
+      case 'explore': return 'Catálogo';
       case 'courses': return 'Mis Cursos';
       case 'calificaciones': return 'Mis calificaciones';
       case 'webinars': return 'Webinars';
@@ -786,6 +823,7 @@ const Dashboard = () => {
       case 'calendario': return 'Calendario';
       case 'profile': return 'Mi Perfil';
       case 'settings': return 'Configuración';
+      case 'ayuda': return 'Guía de uso';
       default: return 'Portal HCE';
     }
   };
@@ -831,6 +869,10 @@ const Dashboard = () => {
   const simulatorCoursesOnly = premiumSponsorCourses.filter(course => course.badge === 'SIMULADOR');
 
   const [busquedaCatalogo, setBusquedaCatalogo] = useState('');
+  // Filtro del catálogo: 'todos' | 'gratis' | 'pago' | 'programas'.
+  const [filtroCatalogo, setFiltroCatalogo] = useState('todos');
+  // Filtro de Mis cursos: 'todos' | 'progreso' | 'nuevos' | 'completos'.
+  const [filtroMisCursos, setFiltroMisCursos] = useState('todos');
   const [calificaciones, setCalificaciones] = useState(null);
   const [errorCalificaciones, setErrorCalificaciones] = useState('');
   const [intentoCalificaciones, setIntentoCalificaciones] = useState(0);
@@ -934,6 +976,7 @@ const Dashboard = () => {
         case 'mensajes': return 'Leyendo: Mensajes';
         case 'profile': return 'Editando: Mi Perfil';
         case 'settings': return 'Ajustando: Configuración';
+        case 'ayuda': return 'Leyendo: Guía de uso';
         default: return 'Activo en el Portal';
       }
     };
@@ -1072,16 +1115,21 @@ const Dashboard = () => {
   });
 
   const enrolledCourses = processedCourses.filter(c => c.enrolled);
-  const completedCourses = processedCourses.filter(c => c.completed);
   const inProgressCourses = processedCourses.filter(c => c.inProgress && !c.enRevision && !c.accesoVencido && !c.esperandoGrupo);
 
   // Catálogo separado por tipo. Lo gratuito que se sugiere como primer paso
   // tiene que ser de verdad gratuito y tomarse en el aula.
   const visibles = processedCourses.filter(c => !c.oculto || c.enrolled);
   const nombreBuscado = busquedaCatalogo.trim().toLocaleLowerCase('es-MX');
-  const cursosBuscados = visibles.filter(c => !nombreBuscado || c.title.toLocaleLowerCase('es-MX').includes(nombreBuscado));
-  const cursosGratis = cursosBuscados.filter(c => !esCursoDePago(c));
-  const cursosDePago = cursosBuscados.filter(c => esCursoDePago(c));
+  const coincide = (c) => !nombreBuscado
+    || `${c.title || ''} ${c.description || ''}`.toLocaleLowerCase('es-MX').includes(nombreBuscado);
+  const cursosBuscados = visibles.filter(coincide);
+  const cursosGratis = filtroCatalogo === 'todos' || filtroCatalogo === 'gratis' ? cursosBuscados.filter(c => !esCursoDePago(c)) : [];
+  const cursosDePago = filtroCatalogo === 'todos' || filtroCatalogo === 'pago' ? cursosBuscados.filter(c => esCursoDePago(c)) : [];
+  const verProgramas = filtroCatalogo === 'todos' || filtroCatalogo === 'programas';
+  const programasBuscados = verProgramas ? premiumCoursesOnly.filter(coincide) : [];
+  const simuladoresBuscados = verProgramas ? simulatorCoursesOnly.filter(coincide) : [];
+  const totalCatalogo = cursosGratis.length + cursosDePago.length + programasBuscados.length + simuladoresBuscados.length;
   const cursoSugerido = visibles.find(c => !esCursoDePago(c) && c.tiene_video) || null;
 
   // Tarjeta de un curso del catálogo del portal. Toda la tarjeta es la acción:
@@ -1124,6 +1172,19 @@ const Dashboard = () => {
       ? 'Entrar al curso'
       : bloqueo || (dePago ? 'Comprar curso' : course.requiereSolicitud ? 'Solicitar inscripción' : 'Inscribirme gratis');
     const activar = () => { if (!ocupado && !bloqueo) handleAbrirCurso(course, course.enrolled); };
+    // Estado visible de la tarjeta: lo primero que el alumno necesita saber.
+    const [claveEstado, textoEstado] = course.enrolled
+      ? (course.enRevision ? ['revision', 'En revisión']
+        : course.esperandoGrupo ? ['apartado', course.estadoCurso === 'Lugar apartado' ? 'Lugar apartado' : `Lugar apartado · ${course.estadoCurso}`]
+          : course.completed ? ['completo', 'Completado']
+            : course.accesoVencido ? ['vencido', 'Acceso vencido']
+              : ['inscrito', course.progress > 0 ? `Inscrito · ${course.progress}%` : 'Inscrito'])
+      : course.lugaresRestantes === 0 ? ['lleno', 'Cupo lleno']
+        : course.solicitud === 'pendiente' ? ['solicitud', 'Solicitud enviada']
+          : course.solicitud === 'rechazada' ? ['lleno', 'Solicitud no aprobada']
+            : course.faltanPrerrequisitos.length ? ['requisito', 'Requiere otro curso']
+              : course.requiereSolicitud ? ['solicitud', 'Requiere solicitud']
+                : [null, null];
 
     return (
       <div
@@ -1140,14 +1201,21 @@ const Dashboard = () => {
       >
         <div className="card-glass-glow"></div>
         <div className="exp-img-container" style={{ aspectRatio: '16/9', height: 'auto', backgroundColor: '#0f172a' }}>
-          <span className={`curso-precio-chip ${course.enrolled ? 'inscrito' : dePago ? 'pago' : 'gratis'}`}>
-            {course.enrolled ? 'Inscrito' : dePago ? formatoPrecio(course.precio_mxn) : 'Gratis'}
-          </span>
+          {/* Inscrito ya lo dice la etiqueta de estado; aquí solo el precio. */}
+          {!course.enrolled && (
+            <span className={`curso-precio-chip ${dePago ? 'pago' : 'gratis'}`}>
+              {dePago ? formatoPrecio(course.precio_mxn) : 'Gratis'}
+            </span>
+          )}
           <img src={course.image} alt={course.title} className="exp-main-img" style={{ objectFit: 'cover' }} />
           <div className="img-overlay-gradient"></div>
         </div>
         <div className="exp-content-body">
+          {claveEstado && <span className={`curso-estado curso-estado--${claveEstado}`}>{textoEstado}</span>}
           <h3 className="exp-title-premium">{course.title}</h3>
+          {course.enrolled && course.progress > 0 && !course.completed && (
+            <div className="curso-estado-avance" aria-hidden="true"><span style={{ width: `${course.progress}%` }} /></div>
+          )}
           {!course.enrolled && course.porGrupo && (
             <span className="curso-generacion">Por generación: al inscribirte apartas tu lugar y el curso se abre en la fecha de inicio de tu grupo.</span>
           )}
@@ -1166,15 +1234,31 @@ const Dashboard = () => {
   };
 
   const numEnrolled = enrolledCourses.length;
-  const numCompleted = completedCourses.length;
   const numCertificates = myCertificates.length;
-  const numInProgress = inProgressCourses.length;
 
   // Average progress
   const avgProgress = numEnrolled > 0
     ? Math.round(enrolledCourses.reduce((sum, c) => sum + c.progress, 0) / numEnrolled)
     : 0;
   const avatarUrl = getSafeAvatarUrl(profile?.avatar_url, user?.user_metadata?.avatar_url);
+
+  // Navegación en celular: barra inferior y hoja "Más".
+  const itemsMenu = MENU_ALUMNO.flatMap((g) => g.items);
+  const principalesMovil = ORDEN_MOVIL
+    .map((id) => itemsMenu.find((i) => i.id === id))
+    .map((i) => ({ ...i, contador: i.id === 'mensajes' ? mensajesNoLeidos : 0 }));
+  const secundariosMovil = [
+    ...itemsMenu.filter((i) => !ORDEN_MOVIL.includes(i.id)),
+    { id: 'salir', label: 'Cerrar sesión', icon: LogOut, peligro: true, accion: handleLogout },
+  ];
+
+  // Webinars de la semana para "Próximas clases en vivo" del inicio.
+  const webinarsInicio = webinarsPortal.map((w) => ({
+    id: w.id,
+    title: w.title,
+    inicio: fechaEnZona(w.fecha_inicio),
+    registrado: !!registroDeWebinar(w.id),
+  }));
 
   // Notificaciones derivadas del estado real del alumno. Antes esto era un
   // arreglo fijo con un solo mensaje de bienvenida que nunca cambiaba, así que
@@ -1231,96 +1315,31 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <nav className="sidebar-menu">
-          <button 
-            className={`menu-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-            title="Dashboard"
-          >
-            <Home size={20} className="menu-icon" />
-            <span className="menu-label">Dashboard</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'explore' ? 'active' : ''}`}
-            onClick={() => setActiveTab('explore')}
-            title="Explorar Cursos"
-          >
-            <Compass size={20} className="menu-icon" />
-            <span className="menu-label">Explorar Cursos</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'courses' ? 'active' : ''}`}
-            onClick={() => setActiveTab('courses')}
-            title="Mis Cursos"
-          >
-            <BookOpen size={20} className="menu-icon" />
-            <span className="menu-label">Mis Cursos</span>
-          </button>
-
-          <button type="button" className={`menu-item ${activeTab === 'calificaciones' ? 'active' : ''}`} onClick={() => setActiveTab('calificaciones')} title="Mis calificaciones">
-            <CheckSquare size={20} className="menu-icon" /><span className="menu-label">Mis calificaciones</span>
-          </button>
-
-          <button
-            className={`menu-item ${activeTab === 'webinars' ? 'active' : ''}`}
-            onClick={() => setActiveTab('webinars')}
-            title="Webinars"
-          >
-            <Video size={20} className="menu-icon" />
-            <span className="menu-label">Webinars</span>
-          </button>
-
-          <button
-            className={`menu-item ${activeTab === 'certificates' ? 'active' : ''}`}
-            onClick={() => setActiveTab('certificates')}
-            title="Certificados"
-          >
-            <Award size={20} className="menu-icon" />
-            <span className="menu-label">Certificados</span>
-          </button>
-
-          <button
-            className={`menu-item ${activeTab === 'calendario' ? 'active' : ''}`}
-            onClick={() => setActiveTab('calendario')}
-            title="Calendario"
-          >
-            <Calendar size={20} className="menu-icon" />
-            <span className="menu-label">Calendario</span>
-          </button>
-
-          <button
-            className={`menu-item ${activeTab === 'mensajes' ? 'active' : ''}`}
-            onClick={() => setActiveTab('mensajes')}
-            title="Mensajes"
-          >
-            <MessageSquare size={20} className="menu-icon" />
-            <span className="menu-label">Mensajes</span>
-            {mensajesNoLeidos > 0 && <span className="menu-contador">{mensajesNoLeidos}</span>}
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveTab('profile')}
-            title="Mi Perfil"
-          >
-            <UserIcon size={20} className="menu-icon" />
-            <span className="menu-label">Mi Perfil</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-            title="Configuración"
-          >
-            <Settings size={20} className="menu-icon" />
-            <span className="menu-label">Configuración</span>
-          </button>
+        <nav className="sidebar-menu" aria-label="Menú del portal">
+          {MENU_ALUMNO.map((grupo) => (
+            <div key={grupo.titulo} className="menu-grupo" role="group" aria-label={grupo.titulo}>
+              <span className="menu-grupo-titulo" aria-hidden="true">{grupo.titulo}</span>
+              {grupo.items.map(({ id, label, icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`menu-item ${activeTab === id ? 'active' : ''}`}
+                  aria-current={activeTab === id ? 'page' : undefined}
+                  onClick={() => setActiveTab(id)}
+                  title={label}
+                >
+                  {React.createElement(icon, { size: 20, className: 'menu-icon' })}
+                  <span className="menu-label">{label}</span>
+                  {id === 'mensajes' && mensajesNoLeidos > 0 && <span className="menu-contador" aria-label={`${mensajesNoLeidos} sin leer`}>{mensajesNoLeidos}</span>}
+                </button>
+              ))}
+            </div>
+          ))}
 
           <div className="sidebar-separator"></div>
 
-          <button 
+          <button
+            type="button"
             className="menu-item logout-item"
             onClick={handleLogout}
             title="Cerrar Sesión"
@@ -1337,7 +1356,7 @@ const Dashboard = () => {
         {/* Top Header */}
         <header className="crm-top-header">
           <div className="top-header-left">
-            <button className="sidebar-toggle-btn-header" onClick={toggleSidebar} title={isSidebarCollapsed ? "Expandir" : "Colapsar"}>
+            <button type="button" className="sidebar-toggle-btn-header" onClick={toggleSidebar} title={isSidebarCollapsed ? "Expandir menú" : "Colapsar menú"} aria-label={isSidebarCollapsed ? "Expandir menú" : "Colapsar menú"}>
               <Menu size={20} />
             </button>
             <span className="breadcrumb-main">HCE Portal</span>
@@ -1397,7 +1416,7 @@ const Dashboard = () => {
 
         {/* Content View */}
         <main className="crm-content-area">
-          <Comunicados tipo="interno" />
+          {/* Los comunicados viven en "Avisos" del inicio (InicioAlumno). */}
 
           {/* Cuenta nueva: entra al portal, pero sus cursos se abren hasta que la activen. */}
           {confirmacionError && <div className="cuenta-revision-banner" role="alert">
@@ -1416,341 +1435,129 @@ const Dashboard = () => {
             </div>
           )}
           
-          {/* VIEW: DASHBOARD */}
+          {/* VIEW: INICIO ("Mi aprendizaje"): lo que sigue, pendientes y cursos */}
           {activeTab === 'dashboard' && (
             <div className="dashboard-view">
-              
-              {/* Welcome Section */}
-              <div ref={bannerRef} className="welcome-banner-card">
-                <div className="welcome-avatar-wrapper">
-                  <div className="welcome-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                    ) : (
-                      profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'
-                    )}
-                  </div>
-                </div>
-                <div className="welcome-text-details">
-                  <h2>¡Bienvenido de vuelta, {profile?.nombre_completo || 'Alumno'}!</h2>
-                  {mensajeBienvenida && <p>{mensajeBienvenida}</p>}
-                </div>
-              </div>
-
-              {/* Overview / Stat Cards (Clean empty values) */}
-              <div className="kpi-row">
-                <div className="kpi-card">
-                  <div className="kpi-icon-wrapper blue">
-                    <BookOpen size={20} />
-                  </div>
-                  <div className="kpi-details">
-                    <span className="kpi-label">Cursos Inscritos</span>
-                    <h3 className="kpi-value">{numEnrolled}</h3>
-                  </div>
-                </div>
-
-                <div className="kpi-card">
-                  <div className="kpi-icon-wrapper green">
-                    <CheckSquare size={20} />
-                  </div>
-                  <div className="kpi-details">
-                    <span className="kpi-label">Cursos Completados</span>
-                    <h3 className="kpi-value">{numCompleted}</h3>
-                  </div>
-                </div>
-
-                <div className="kpi-card">
-                  <div className="kpi-icon-wrapper cyan">
-                    <Award size={20} />
-                  </div>
-                  <div className="kpi-details">
-                    <span className="kpi-label">Certificados Obtenidos</span>
-                    <h3 className="kpi-value">{numCertificates}</h3>
-                  </div>
-                </div>
-
-                <div className="kpi-card">
-                  <div className="kpi-icon-wrapper orange">
-                    <TrendingUp size={20} />
-                  </div>
-                  <div className="kpi-details">
-                    <span className="kpi-label">Cursos en Progreso</span>
-                    <h3 className="kpi-value">{numInProgress}</h3>
-                  </div>
-                </div>
-              </div>
-
-              {/* Continue Learning */}
-              <div className="continue-learning-section">
-                <h2>Continuar Aprendiendo</h2>
-                {inProgressCourses.length === 0 ? (
-                  /* Un alumno recién registrado llegaba a un vacío con un botón
-                     genérico. Si hay contenido gratuito disponible se le ofrece
-                     como primer paso concreto, que es el mejor momento para
-                     engancharlo: acaba de decidir entrar. */
-                  cursoSugerido ? (
-                    <div className="crm-empty-state-card empty-state-suggestion">
-                      <PlayCircle size={48} className="empty-state-icon" />
-                      <h3>Empieza por aquí</h3>
-                      <p>
-                        Aún no tienes un programa en curso, pero <strong>{cursoSugerido.title}</strong>{' '}
-                        está disponible sin costo y puedes verlo ahora mismo.
-                      </p>
-                      <div className="empty-state-actions">
-                        <button
-                          className="btn-crm-action solid btn-empty-state"
-                          disabled={cursoOcupado === cursoSugerido.id}
-                          onClick={() => handleAbrirCurso(cursoSugerido, cursoSugerido.enrolled)}
-                        >
-                          {cursoOcupado === cursoSugerido.id ? 'Un momento…' : 'Comenzar ahora'}
-                        </button>
-                        <button className="btn-crm-action btn-empty-state" onClick={() => setActiveTab('explore')}>
-                          Ver todo el catálogo
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="crm-empty-state-card">
-                      <Inbox size={48} className="empty-state-icon" />
-                      <h3>Sin cursos activos</h3>
-                      <p>Actualmente no tienes ninguna materia o diplomado inscrito en progreso.</p>
-                      <button className="btn-crm-action solid btn-empty-state" onClick={() => setActiveTab('explore')}>
-                        Explorar Cursos
-                      </button>
-                    </div>
-                  )
-                ) : (
-                  <div className="dash-exp-grid">
-                    {inProgressCourses.map(course => {
-                      const progress = course.progress;
-                      return (
-                        <div key={course.id} className="exp-premium-card" style={{ display: 'flex', flexDirection: 'column' }}>
-                          <div className="exp-img-container" style={{ aspectRatio: '16/9', height: 'auto', backgroundColor: '#0f172a' }}>
-                            <img src={course.image} alt={course.title} className="exp-main-img" style={{ objectFit: 'cover' }} />
-                            <div className="img-overlay-gradient"></div>
-                          </div>
-                          <div className="exp-content-body" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
-                            <div>
-                              <h3 className="exp-title-premium" style={{ fontSize: '1rem', marginBottom: '8px' }}>{course.title}</h3>
-                              <div className="progress-bar-row" style={{ marginTop: '10px' }}>
-                                <div className="progress-track">
-                                  <div className="progress-fill" style={{ width: `${progress}%`, backgroundColor: 'var(--primary-cyan)', height: '100%' }}></div>
-                                </div>
-                                <span className="progress-percentage">{progress}%</span>
-                              </div>
-                            </div>
-                            <EnlaceAula
-                              cursoId={course.id}
-                              className="btn-crm-action solid"
-                              style={{ textDecoration: 'none', textAlign: 'center' }}
+              <InicioAlumno
+                userId={user?.id}
+                nombre={getFirstName()}
+                mensajeBienvenida={mensajeBienvenida}
+                cursos={processedCourses}
+                cursoSugerido={cursoSugerido}
+                cursoOcupado={cursoOcupado}
+                webinars={webinarsInicio}
+                numCertificados={numCertificates}
+                onAbrirAula={abrirAula}
+                onAbrirCurso={(curso) => handleAbrirCurso(curso, curso.enrolled)}
+                onIr={setActiveTab}
+                cargandoCursos={cargandoInscripciones}
+                extra={(
+                  <>
+                    <LogrosAlumno userId={user?.id} />
+                    {/* Programas de alta especialidad: invitación al final del inicio */}
+                    <div className="sub-section-block">
+                      <h2>Programas de alta especialidad</h2>
+                      <div className="dash-exp-grid" style={{ marginTop: '20px' }}>
+                        {premiumCoursesOnly.map(course => {
+                          const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
+                          return (
+                            <Link
+                              key={course.id}
+                              to={course.link || `/classroom/${course.id}`}
+                              target="_blank"
+                              className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
+                              style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
                             >
-                              Continuar Aprendiendo
-                            </EnlaceAula>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <LogrosAlumno userId={user?.id} />
-
-              {/* Content Grid (Certificates, Recommendations, Activity) */}
-              <div className="dashboard-grid" style={{ marginTop: '40px' }}>
-                
-                {/* Left Area */}
-                <div className="dashboard-left-panel">
-                  
-                  {/* Recent Certificates */}
-                  <div className="sub-section-block">
-                    <h2>Certificados Recientes</h2>
-                    {myCertificates.length === 0 ? (
-                      <div className="crm-empty-state-card mini">
-                        <Award size={32} className="empty-state-icon" />
-                        <h4>Sin certificados emitidos</h4>
-                        <p>Tus diplomas se generarán una vez que completes y apruebes tus cursos.</p>
-                      </div>
-                    ) : (
-                      <div className="certificates-mini-list">
-                        {myCertificates.slice(0, 3).map(cert => (
-                          <div key={cert.id} className="certificate-mini-card">
-                            <div className="cert-mini-left">
-                              <Award size={24} className="cert-icon" />
-                              <div>
-                                <h4 style={{ fontSize: '0.9rem', margin: 0 }}>{cert.courses?.title || 'Curso Académico'}</h4>
-                                <p style={{ fontSize: '0.75rem', margin: '4px 0 0 0' }}>Folio: #{cert.folio} • Emitido: {new Date(cert.created_at).toLocaleDateString('es-MX')}</p>
+                              <div className="card-glass-glow"></div>
+                              <div className={`exp-img-container ${course.containerClass || ''}`}>
+                                <img src={course.image} alt={course.title} className={`exp-main-img ${course.imgClass || ''}`} />
+                                <div className="img-overlay-gradient"></div>
                               </div>
-                            </div>
-                            <div>
-                              <button type="button" onClick={() => descargarCertificado(cert)} disabled={certificadoOcupado !== null} className="btn-crm-action solid mini btn-sm-table">
-                                {certificadoOcupado === cert.id ? 'Preparando…' : 'Descargar'}
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-
-                {/* Right Area: Recent Activity Feed */}
-                <div className="dashboard-activity-section">
-                  <h2>Actividad Reciente</h2>
-                  <div className="activity-feed">
-                    <div className="activity-item">
-                      <div className="activity-icon-bullet"></div>
-                      <div className="activity-details">
-                        <p>Creación de tu cuenta en HCE Portal</p>
-                        <span className="activity-time">{getMemberSinceDate()}</span>
+                              <div className="exp-content-body">
+                                {course.startDate && (
+                                  <div className="exp-start-date">
+                                    <Calendar size={14} className="calendar-icon" />
+                                    <span>{course.startDate}</span>
+                                  </div>
+                                )}
+                                <h3 className="exp-title-premium">{course.title}</h3>
+                              </div>
+                            </Link>
+                          );
+                        })}
                       </div>
                     </div>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Programas Premium Disponibles — full width below the grid */}
-              <div className="sub-section-block" style={{ marginTop: '40px' }}>
-                <h2>Programas Premium Disponibles</h2>
-                <div className="dash-exp-grid" style={{ marginTop: '20px' }}>
-                  {premiumCoursesOnly.map(course => {
-                    const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
-                    return (
-                      <Link
-                        key={course.id}
-                        to={course.link || `/classroom/${course.id}`}
-                        target="_blank"
-                        className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
-                        style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
-                      >
-                        <div className="card-glass-glow"></div>
-                        <div className={`exp-img-container ${course.containerClass || ''}`}>
-                          <img src={course.image} alt={course.title} className={`exp-main-img ${course.imgClass || ''}`} />
-                          <div className="img-overlay-gradient"></div>
-                        </div>
-                        <div className="exp-content-body">
-                          {course.startDate && (
-                            <div className="exp-start-date">
-                              <Calendar size={14} className="calendar-icon" />
-                              <span>{course.startDate}</span>
-                            </div>
-                          )}
-                          <h3 className="exp-title-premium">{course.title}</h3>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Simuladores */}
-              <div className="sub-section-block" style={{ marginTop: '40px' }}>
-                <h2>Simuladores</h2>
-                <div className="dash-exp-grid" style={{ marginTop: '20px' }}>
-                  {simulatorCoursesOnly.map(course => {
-                    const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
-                    return (
-                      <Link
-                        key={course.id}
-                        to={course.link || `/classroom/${course.id}`}
-                        target="_blank"
-                        className={`exp-premium-card${isComingSoon ? ' disabled-card' : ''}`}
-                        style={{ textDecoration: 'none', pointerEvents: isComingSoon ? 'none' : 'auto' }}
-                      >
-                        <div className="card-glass-glow"></div>
-                        <div className={`exp-img-container ${course.containerClass || ''}`}>
-                          <img src={course.image} alt={course.title} className={`exp-main-img ${course.imgClass || ''}`} />
-                          <div className="img-overlay-gradient"></div>
-                        </div>
-                        <div className="exp-content-body">
-                          <h3 className="exp-title-premium">{course.title}</h3>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
+                  </>
+                )}
+              />
             </div>
           )}
 
-          {/* VIEW: MIS CURSOS (Only Enrolled/Active Courses) */}
-          {activeTab === 'courses' && (
-            <div className="courses-view">
-              <div className="section-title-row">
-                <h2>Mis Cursos y Programas Académicos</h2>
-                <p>Gestiona tu avance e ingresa a tus aulas virtuales activas.</p>
-              </div>
+          {/* VIEW: MIS CURSOS: tarjetas con avance y estado, con filtro rápido */}
+          {activeTab === 'courses' && (() => {
+            const filtros = [
+              ['todos', 'Todos', enrolledCourses],
+              ['progreso', 'En progreso', enrolledCourses.filter((c) => c.inProgress && !c.completed)],
+              ['nuevos', 'Sin empezar', enrolledCourses.filter((c) => !c.completed && c.progress === 0)],
+              ['completos', 'Completados', enrolledCourses.filter((c) => c.completed)],
+            ];
+            const lista = (filtros.find(([id]) => id === filtroMisCursos) || filtros[0])[2];
+            return (
+              <div className="courses-view">
+                <div className="section-title-row">
+                  <h2>Mis cursos</h2>
+                  <p>Tu avance en cada curso y el acceso directo a su aula.</p>
+                </div>
 
-              <div className="enrolled-courses-section-wrapper">
-                <h3 className="catalog-subtitle">Matrículas Activas ({enrolledCourses.length})</h3>
                 {enrolledCourses.length === 0 ? (
                   <div className="crm-empty-state-card">
                     <Inbox size={40} className="empty-state-icon" />
-                    <h3>No tienes asignaturas inscritas</h3>
-                    <p>Explora y solicita tu registro a través del catálogo de programas disponibles en la sección "Explorar Cursos".</p>
-                    <button 
-                      className="btn-crm-action solid btn-empty-state" 
+                    <h3>Todavía no tienes cursos</h3>
+                    <p>Inscríbete a un curso del catálogo y aparecerá aquí con tu avance.</p>
+                    <button
+                      type="button"
+                      className="btn-crm-action solid btn-empty-state"
                       onClick={() => setActiveTab('explore')}
                       style={{ marginTop: '15px' }}
                     >
-                      Explorar Cursos
+                      Explora el catálogo
                     </button>
                   </div>
                 ) : (
-                  <div className="dash-exp-grid">
-                    {enrolledCourses.map(course => {
-                      const progress = course.progress;
-                      const completed = course.completed;
-                      return (
-                        <div key={course.id} className="exp-premium-card" style={{ display: 'flex', flexDirection: 'column' }}>
-                          <div className="exp-img-container" style={{ aspectRatio: '16/9', height: 'auto', backgroundColor: '#0f172a' }}>
-                            <img src={course.image} alt={course.title} className="exp-main-img" style={{ objectFit: 'cover' }} />
-                            <div className="img-overlay-gradient"></div>
-                            {completed && !course.enRevision && !course.accesoVencido ? (
-                              <div className="status-badge badge-success" style={{ backgroundColor: '#10b981', color: '#fff', position: 'absolute', top: '12px', left: '12px', zIndex: 10 }}>COMPLETADO</div>
-                            ) : (
-                              <div className="status-badge badge-info" style={{ backgroundColor: 'var(--primary-cyan)', color: '#fff', position: 'absolute', top: '12px', left: '12px', zIndex: 10 }}>{course.estadoCurso.toUpperCase()}</div>
-                            )}
-                          </div>
-                          <div className="exp-content-body" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
-                            <div>
-                              <h3 className="exp-title-premium" style={{ fontSize: '1rem', marginBottom: '8px' }}>{course.title}</h3>
-                              <div className="progress-bar-row" style={{ marginTop: '10px' }}>
-                                <div className="progress-track">
-                                  <div className="progress-fill" style={{ width: `${progress}%`, backgroundColor: completed ? '#10b981' : 'var(--primary-cyan)', height: '100%' }}></div>
-                                </div>
-                                <span className="progress-percentage">{progress}%</span>
-                              </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                              <EnlaceAula
-                                cursoId={course.id}
-                                className="btn-crm-action solid"
-                                style={{ textDecoration: 'none', textAlign: 'center', flex: 1 }}
-                              >
-                                Ir al aula
-                              </EnlaceAula>
-                              {completed && (
-                                <button
-                                  onClick={() => setActiveTab('certificates')}
-                                  className="btn-crm-action outlined"
-                                  style={{ flex: 1, padding: '12px 10px', fontSize: '0.7rem' }}
-                                >
-                                  Ver Certificado
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <>
+                    <div className="filtro-chips" role="tablist" aria-label="Filtrar mis cursos">
+                      {filtros.map(([id, texto, cursos]) => (
+                        <button
+                          key={id}
+                          type="button"
+                          role="tab"
+                          aria-selected={filtroMisCursos === id}
+                          className={`filtro-chip${filtroMisCursos === id ? ' activo' : ''}`}
+                          onClick={() => setFiltroMisCursos(id)}
+                        >
+                          {texto} <span className="filtro-chip-num">{cursos.length}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {lista.length === 0 ? (
+                      <p className="filtro-vacio" role="status">No tienes cursos en esta categoría.</p>
+                    ) : (
+                      <div className="ia-cursos mis-cursos-rejilla">
+                        {lista.map((course) => (
+                          <TarjetaMiCurso
+                            key={course.id}
+                            curso={course}
+                            onAbrir={() => abrirAula(course.id)}
+                            onVerCertificado={() => setActiveTab('certificates')}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {activeTab === 'calificaciones' && <div className="calificaciones-view">
             <div className="section-title-row"><h2>Mis calificaciones</h2><p>Consulta tus intentos, entregas y calificación final por curso.</p></div>
@@ -1780,58 +1587,86 @@ const Dashboard = () => {
               })}
           </div>}
 
-          {/* VIEW: EXPLORAR CURSOS (Program Catalogue) */}
+          {/* VIEW: CATÁLOGO: buscador, filtros y tarjetas con su estado */}
           {activeTab === 'explore' && (
             <div className="explore-view">
               <div className="section-title-row">
-                <h2>Catálogo de Programas Académicos</h2>
-                <p>Explora y solicita tu registro en los entrenamientos de alta especialidad en simulación y soporte de HCE.</p>
+                <h2>Catálogo</h2>
+                <p>Cursos gratuitos, cursos en línea y programas de alta especialidad de HCE.</p>
               </div>
 
-              <label className="catalogo-buscar" htmlFor="buscar-catalogo">Buscar un curso
-                <input id="buscar-catalogo" type="search" value={busquedaCatalogo} onChange={e => setBusquedaCatalogo(e.target.value)} placeholder="Nombre del curso" />
-              </label>
-              {nombreBuscado && cursosBuscados.length === 0 && <p role="status">No encontramos cursos con ese nombre.</p>}
-              {/* Cursos Gratuitos */}
-              <div className="catalog-courses-section-wrapper" style={{ marginBottom: '48px' }}>
-                <div className="free-section-header">
-                  <h3 className="catalog-subtitle">
-                    <span className="free-badge-title">GRATIS</span>
-                    Cursos Gratuitos
-                  </h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px' }}>
-                    Accede sin costo a contenido educativo de HCE.
-                  </p>
-                </div>
-                <div className="dash-exp-grid">
-                  {cursosGratis.length === 0 ? (
-                    <div className="crm-empty-state-card mini" style={{ gridColumn: '1 / -1' }}>
-                      <PlayCircle size={32} className="empty-state-icon" />
-                      <h4>{nombreBuscado ? 'Sin coincidencias' : 'Próximamente'}</h4>
-                      <p>{nombreBuscado ? 'Prueba con otro nombre de curso.' : 'Estamos preparando contenido gratuito para ti. ¡Vuelve pronto!'}</p>
-                    </div>
-                  ) : cursosGratis.map(renderTarjetaCurso)}
+              <div className="catalogo-herramientas">
+                <label className="catalogo-buscar" htmlFor="buscar-catalogo">
+                  <span className="sr-only">Buscar un curso</span>
+                  <Search size={17} aria-hidden="true" />
+                  <input id="buscar-catalogo" type="search" value={busquedaCatalogo} onChange={e => setBusquedaCatalogo(e.target.value)} placeholder="Buscar por nombre o tema" />
+                  {busquedaCatalogo && (
+                    <button type="button" className="catalogo-limpiar" onClick={() => setBusquedaCatalogo('')} aria-label="Borrar búsqueda"><X size={15} /></button>
+                  )}
+                </label>
+                <div className="filtro-chips" role="tablist" aria-label="Filtrar el catálogo">
+                  {[['todos', 'Todos'], ['gratis', 'Gratis'], ['pago', 'De pago'], ['programas', 'Programas']].map(([id, texto]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      role="tab"
+                      aria-selected={filtroCatalogo === id}
+                      className={`filtro-chip${filtroCatalogo === id ? ' activo' : ''}`}
+                      onClick={() => setFiltroCatalogo(id)}
+                    >
+                      {texto}
+                    </button>
+                  ))}
                 </div>
               </div>
+              <p className="catalogo-conteo" role="status">
+                {totalCatalogo === 0
+                  ? (nombreBuscado ? `No encontramos cursos con «${busquedaCatalogo.trim()}».` : 'No hay cursos en esta categoría por ahora.')
+                  : `${totalCatalogo} ${totalCatalogo === 1 ? 'resultado' : 'resultados'}${nombreBuscado ? ` para «${busquedaCatalogo.trim()}»` : ''}`}
+                {(nombreBuscado || filtroCatalogo !== 'todos') && (
+                  <button type="button" className="catalogo-quitar-filtros" onClick={() => { setBusquedaCatalogo(''); setFiltroCatalogo('todos'); }}>
+                    Ver todo
+                  </button>
+                )}
+              </p>
+
+              {/* Cursos gratuitos */}
+              {(filtroCatalogo === 'todos' || filtroCatalogo === 'gratis') && (cursosGratis.length > 0 || !nombreBuscado) && (
+                <div className="catalog-courses-section-wrapper catalogo-seccion">
+                  <h3 className="catalog-subtitle">
+                    <span className="free-badge-title">GRATIS</span>
+                    Cursos gratuitos
+                  </h3>
+                  <p className="catalogo-seccion-nota">Accede sin costo a contenido educativo de HCE.</p>
+                  <div className="dash-exp-grid">
+                    {cursosGratis.length === 0 ? (
+                      <div className="crm-empty-state-card mini" style={{ gridColumn: '1 / -1' }}>
+                        <PlayCircle size={32} className="empty-state-icon" />
+                        <h4>Próximamente</h4>
+                        <p>Estamos preparando contenido gratuito para ti. ¡Vuelve pronto!</p>
+                      </div>
+                    ) : cursosGratis.map(renderTarjetaCurso)}
+                  </div>
+                </div>
+              )}
 
               {/* Cursos de pago del portal: solo aparece la sección si hay alguno */}
               {cursosDePago.length > 0 && (
-                <div className="catalog-courses-section-wrapper" style={{ marginBottom: '48px' }}>
-                  <h3 className="catalog-subtitle">Cursos en Línea</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px' }}>
-                    Pagas una vez y el curso queda en tu portal, con su certificado al aprobar.
-                  </p>
+                <div className="catalog-courses-section-wrapper catalogo-seccion">
+                  <h3 className="catalog-subtitle">Cursos en línea</h3>
+                  <p className="catalogo-seccion-nota">Pagas una vez y el curso queda en tu portal, con su certificado al aprobar.</p>
                   <div className="dash-exp-grid">
                     {cursosDePago.map(renderTarjetaCurso)}
                   </div>
                 </div>
               )}
 
-              {/* Programas Premium */}
-              <div className="catalog-courses-section-wrapper" style={{ marginBottom: '40px' }}>
-                <h3 className="catalog-subtitle">Programas de Alta Especialidad</h3>
-                <div className="dash-exp-grid">
-                  {premiumCoursesOnly.map(course => {
+              {/* Programas de alta especialidad */}
+              {programasBuscados.length > 0 && (
+                <div className="catalog-courses-section-wrapper catalogo-seccion">
+                  <h3 className="catalog-subtitle">Programas de alta especialidad</h3>
+                  <div className="dash-exp-grid">
+                  {programasBuscados.map(course => {
                     const Icon = typeof course.icon === 'function' ? course.icon : BookOpen;
                     const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
                     return (
@@ -1869,14 +1704,16 @@ const Dashboard = () => {
                       </Link>
                     );
                   })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Simuladores */}
-              <div className="catalog-courses-section-wrapper">
-                <h3 className="catalog-subtitle">Simuladores</h3>
-                <div className="dash-exp-grid">
-                  {simulatorCoursesOnly.map(course => {
+              {simuladoresBuscados.length > 0 && (
+                <div className="catalog-courses-section-wrapper catalogo-seccion">
+                  <h3 className="catalog-subtitle">Simuladores</h3>
+                  <div className="dash-exp-grid">
+                  {simuladoresBuscados.map(course => {
                     const Icon = typeof course.icon === 'function' ? course.icon : BookOpen;
                     const isComingSoon = course.badge?.toUpperCase() === 'PRÓXIMAMENTE';
                     return (
@@ -1908,8 +1745,9 @@ const Dashboard = () => {
                       </Link>
                     );
                   })}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -2572,6 +2410,8 @@ const Dashboard = () => {
 
 
 
+          {activeTab === 'ayuda' && <GuiaUso rol="alumno" onIr={setActiveTab} />}
+
           {/* VIEW: CONFIGURACIÓN */}
           {activeTab === 'settings' && (
             <div className="settings-view">
@@ -2733,6 +2573,15 @@ const Dashboard = () => {
         </main>
       </div>
 
+      <NavegacionMovil
+        principales={principalesMovil}
+        secundarios={secundariosMovil}
+        activo={activeTab}
+        onIr={setActiveTab}
+        abierta={menuMasAbierto}
+        onAbrir={() => setMenuMasAbierto(true)}
+        onCerrar={cerrarMenuMas}
+      />
     </div>
   );
 };

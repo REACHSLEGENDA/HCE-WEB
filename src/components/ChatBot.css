@@ -416,3 +416,37 @@
 body.cookie-banner-open .hce-chat-widget {
   display: none;
 }
+
+/* ── Dentro del portal (alumno y admin) ─────────────────────
+   El robot de 108 px está pensado para el sitio público, donde invita a
+   escribir. En el portal estorbaba: tapaba botones y contenido. Aquí se queda
+   más chico y sin burbuja. */
+.hce-chat-widget--portal .hce-chat-fab,
+.hce-chat-widget--portal .hce-fab-img {
+  width: 76px;
+  height: 76px;
+}
+
+@media (max-width: 768px) {
+  .hce-chat-widget--portal {
+    right: 10px;
+    bottom: 12px;
+  }
+  .hce-chat-widget--portal .hce-chat-fab,
+  .hce-chat-widget--portal .hce-fab-img {
+    width: 60px;
+    height: 60px;
+  }
+  /* En el inicio del alumno hay barra inferior fija (~64 px + zona segura):
+     el robot se sienta encima de ella en lugar de taparle un botón. */
+  .hce-chat-widget--sobre-barra {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+  .hce-chat-widget--sobre-barra .hce-chat-window {
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Con la hoja "Más" del portal abierta, el robot se oculta: quedaba encima
+   de las opciones de la última fila (Ayuda). */
+body.nav-movil-abierta .hce-chat-widget { display: none; }

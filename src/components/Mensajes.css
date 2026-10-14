@@ -31,6 +31,7 @@
   background: var(--msj-fondo); color: var(--msj-texto); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer;
 }
 .msj-pestanas button.activa { border-color: var(--msj-acento); background: var(--msj-acento-suave); color: var(--msj-acento); }
+.msj-pestanas button:focus-visible, .msj-boton:focus-visible, .msj-fila:focus-visible { outline: 2px solid var(--msj-acento); outline-offset: 2px; }
 .msj-boton.principal { border-color: var(--msj-acento); background: var(--msj-acento); color: #fff; }
 .msj-boton:disabled { opacity: 0.6; cursor: default; }
 .msj-botones { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -107,6 +108,14 @@
 .msj-adjuntar input { display: none; }
 
 @media (max-width: 640px) {
+  /* Pestañas en un renglón con desplazamiento, sin partirse en dos líneas. */
+  .msj-pestanas { flex-wrap: nowrap; width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .msj-pestanas::-webkit-scrollbar { display: none; }
+  .msj-pestanas button { flex-shrink: 0; }
+  .msj-fila { padding: 12px; }
+  .msj-hilo li { padding: 12px; }
+  .msj-redactar { padding: 12px; }
+  .msj-responder { width: 100%; justify-content: center; }
   .msj-fila { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'de fecha' 'asunto asunto' 'extracto extracto'; row-gap: 2px; }
   .msj-destino { grid-template-columns: 1fr; }
   .msj-buscar { width: 100%; }

@@ -67,7 +67,13 @@ import {
   Eye,
   FileCheck,
   MessageSquareText,
-  Video
+  Video,
+  ChevronLeft,
+  ChevronDown,
+  ListOrdered,
+  Maximize2,
+  Minimize2,
+  PartyPopper
 } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
 import './Classroom.css';
@@ -125,6 +131,24 @@ const formatDateSafeShort = (dateStr) => {
 };
 
 const Classroom = () => {
+  const [temaAula, setTemaAula] = useState(() => {
+    try {
+      const modo = localStorage.getItem('studentTheme') || 'light';
+      return modo === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : modo;
+    } catch { return 'light'; }
+  });
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const actualizar = () => {
+      try {
+        const modo = localStorage.getItem('studentTheme') || 'light';
+        setTemaAula(modo === 'system' ? (media.matches ? 'dark' : 'light') : modo);
+      } catch { /* conserva el tema */ }
+    };
+    window.addEventListener('storage', actualizar);
+    media.addEventListener('change', actualizar);
+    return () => { window.removeEventListener('storage', actualizar); media.removeEventListener('change', actualizar); };
+  }, []);
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, profile, refetchProfile } = useAuth();
@@ -132,6 +156,7 @@ const Classroom = () => {
   const currentUserAvatarUrl = getSafeAvatarUrl(profile?.avatar_url, user?.user_metadata?.avatar_url);
 
   const playerRef = useRef(null);
+  const evaluacionRef = useRef(null);
   const vimeoRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const maxTimeWatchedRef = useRef(0);
@@ -181,6 +206,7 @@ const Classroom = () => {
   const [archivoEntrega, setArchivoEntrega] = useState(null);
   const [entregando, setEntregando] = useState(false);
   const [calificando, setCalificando] = useState(false);
+  const calificandoRef = useRef(false);
   // Último porcentaje guardado de la lección de video, para no escribir en la
   // base en cada segundo de reproducción.
   const ultimoGuardadoRef = useRef({});
@@ -211,6 +237,8 @@ const Classroom = () => {
   
   const [showExam, setShowExam] = useState(false);
   const [examAnswers, setExamAnswers] = useState({});
+  const [preguntaFinalActual, setPreguntaFinalActual] = useState(0);
+  const [revisandoFinal, setRevisandoFinal] = useState(false);
   const [examScore, setExamScore] = useState(null);
 
   // Load from localStorage when user or course id changes
@@ -374,21 +402,77 @@ const Classroom = () => {
 
   const navegables = leccionesConContenido(lecciones);
   const indiceActual = navegables.findIndex((l) => l.id === leccionActualId);
-  const siguienteLeccion = indiceActual >= 0 ? navegables[indiceActual + 1] : null;
+  const siguienteLeccion = indiceActual >= 0 ? navegables[indiceActual + 1] || null : null;
+  const anteriorLeccion = indiceActual > 0 ? navegables[indiceActual - 1] : null;
   const numeroDe = (leccionId) => navegables.findIndex((l) => l.id === leccionId) + 1;
+  // Con más de una lección hay temario, navegación Anterior/Siguiente y atajos.
+  const conNavegacion = navegables.length > 1;
+  const leccionesHechas = navegables.filter((l) => (l.implicita ? watchPercent >= UMBRAL_VIDEO : progresoLec[l.id]?.completada)).length;
 
+  // ---- Interfaz del aula: temario en cajón (celular), modo enfoque y avisos --
+  const [temarioAbierto, setTemarioAbierto] = useState(false);
+  const cajonRef = useRef(null);
+  const [seccionesPlegadas, setSeccionesPlegadas] = useState({});
+  const [modoEnfoque, setModoEnfoque] = useState(() => {
+    try { return localStorage.getItem('aulaModoEnfoque') === '1'; } catch { return false; }
+  });
+  const alternarEnfoque = () => {
+    setModoEnfoque((activo) => {
+      try { localStorage.setItem('aulaModoEnfoque', activo ? '0' : '1'); } catch { /* sin almacenamiento */ }
+      return !activo;
+    });
+  };
+  // Aviso breve al completar una lección o terminar todas: { tipo, ... }.
+  const [avisoAula, setAvisoAula] = useState(null);
+
+  // Sección ("Módulo I") a la que pertenece cada lección, para el temario.
+  const seccionDe = {};
+  lecciones.reduce((seccion, l) => {
+    if (l.tipo === 'seccion') return l.id;
+    if (seccion != null) seccionDe[l.id] = seccion;
+    return seccion;
+  }, null);
+
+  const permitirNavegacionAula = () => {
+    const estado = evaluacionRef.current?.estadoSalida();
+    if (estado?.enviando || calificandoRef.current || isGeneratingCert) {
+      showToast(isGeneratingCert ? 'Espera a que termine la generación de tu certificado.' : 'Espera a que termine el envío de tu evaluación.', 'info');
+      return false;
+    }
+    return !estado?.sinGuardar || window.confirm('No se pudo guardar el borrador de tu evaluación. ¿Salir y perder esas respuestas?');
+  };
+  const irAlPortal = (ruta = '/dashboard') => {
+    if (permitirNavegacionAula()) navigate(ruta);
+  };
+  const abrirExamenFinal = () => {
+    if (!permitirNavegacionAula()) return;
+    setShowExam(true);
+    setTemarioAbierto(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const irALeccion = (leccionId) => {
+    if (!permitirNavegacionAula()) return;
     setShowExam(false);
     setLeccionActualId(leccionId);
+    setTemarioAbierto(false);
+    setAvisoAula(null);
+    // Si la lección está en una sección plegada, se despliega.
+    const seccion = seccionDe[leccionId];
+    setSeccionesPlegadas((prev) => {
+      if (seccion == null || !prev[seccion]) return prev;
+      const siguiente = { ...prev };
+      delete siguiente[seccion];
+      return siguiente;
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const completarLeccion = async (leccion) => {
     // Clase única de un curso sin lecciones: su avance es el del video.
+    // El aviso "¡Lección completada!" lo muestra el aula al detectar el cambio.
     if (leccion?.implicita) {
       setWatchPercent(100);
       watchPercentRef.current = 100;
-      showToast('Lección completada.', 'success');
       return;
     }
     if (leccion?.tipo === 'video' && leccion.id === leccionActualId) {
@@ -396,8 +480,82 @@ const Classroom = () => {
       watchPercentRef.current = 100;
     }
     await marcarProgreso(leccion, 100, true);
-    showToast('Lección completada.', 'success');
   };
+
+  // Atajos: ← y → cambian de lección cuando no se está escribiendo ni
+  // contestando una evaluación (ahí las flechas mueven entre opciones).
+  useEffect(() => {
+    if (!course || showExam) return undefined;
+    const alTeclear = (e) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const el = e.target;
+      if (el?.isContentEditable || /^(INPUT|TEXTAREA|SELECT|VIDEO|AUDIO|IFRAME)$/.test(el?.tagName || '')) return;
+      if (document.querySelector('[role="dialog"], [role="alertdialog"], form.eval-paso') || el?.closest?.('.eval-alumno, [role="slider"]')) return;
+      const destino = e.key === 'ArrowRight' ? siguienteLeccion : anteriorLeccion;
+      if (!destino) return;
+      e.preventDefault();
+      setLeccionActualId(destino.id);
+      setAvisoAula(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('keydown', alTeclear);
+    return () => window.removeEventListener('keydown', alTeclear);
+  }, [course, showExam, siguienteLeccion, anteriorLeccion]);
+
+  // El cajón de lecciones se cierra con Escape.
+  useEffect(() => {
+    if (!temarioAbierto) return undefined;
+    const previo = document.activeElement;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    cajonRef.current?.focus();
+    const alTeclear = (e) => {
+      if (e.key === 'Escape') setTemarioAbierto(false);
+      if (e.key !== 'Tab') return;
+      const lista = [...(cajonRef.current?.querySelectorAll('button:not([disabled]), a[href]') || [])].filter(el => el.offsetParent !== null);
+      const primero = lista[0]; const ultimo = lista[lista.length - 1];
+      if (!primero) return;
+      if (e.shiftKey && (document.activeElement === primero || document.activeElement === cajonRef.current)) { e.preventDefault(); ultimo.focus(); }
+      else if (!e.shiftKey && (document.activeElement === ultimo || document.activeElement === cajonRef.current)) { e.preventDefault(); primero.focus(); }
+    };
+    window.addEventListener('keydown', alTeclear);
+    return () => {
+      window.removeEventListener('keydown', alTeclear);
+      document.body.style.overflow = overflow;
+      if (document.contains(previo)) previo?.focus();
+    };
+  }, [temarioAbierto]);
+
+  // La lección actual queda visible en el temario lateral.
+  useEffect(() => {
+    if (!leccionActualId) return;
+    document.querySelector('.temario--escritorio .temario-item--actual')?.scrollIntoView({ block: 'nearest' });
+  }, [leccionActualId]);
+
+  // Detecta cuándo se completa la lección abierta (o todas) para avisar y
+  // sugerir lo siguiente. Al cambiar de lección solo se toma el estado inicial.
+  const leccionHecha = leccionActual
+    ? (leccionActual.implicita ? watchPercent >= UMBRAL_VIDEO : !!progresoLec[leccionActual.id]?.completada)
+    : false;
+  const estadoVistoRef = useRef({ id: null, hecha: false, todo: false });
+  useEffect(() => {
+    const previo = estadoVistoRef.current;
+    estadoVistoRef.current = { id: leccionActualId, hecha: leccionHecha, todo: examenDisponible };
+    if (!leccionActualId || previo.id !== leccionActualId) return;
+    if (!previo.todo && examenDisponible) {
+      setAvisoAula({ tipo: 'curso' });
+    } else if (!previo.hecha && leccionHecha) {
+      setAvisoAula({ tipo: 'leccion', leccionId: leccionActualId });
+    }
+  }, [leccionActualId, leccionHecha, examenDisponible]);
+
+  // El aviso de lección se va solo; la celebración del curso se queda más.
+  useEffect(() => {
+    if (!avisoAula) return undefined;
+    const t = setTimeout(() => setAvisoAula(null), avisoAula.tipo === 'curso' ? 20000 : 9000);
+    return () => clearTimeout(t);
+  }, [avisoAula]);
 
   const handleEntregarTarea = async (e) => {
     e.preventDefault();
@@ -430,6 +588,13 @@ const Classroom = () => {
   };
 
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
+  useEffect(() => {
+    const salir = (e) => {
+      if (calificandoRef.current || isGeneratingCert) { e.preventDefault(); e.returnValue = ''; }
+    };
+    window.addEventListener('beforeunload', salir);
+    return () => window.removeEventListener('beforeunload', salir);
+  }, [isGeneratingCert]);
   const [generatedCertUrl, setGeneratedCertUrl] = useState('');
   // Certificado que devolvió el servidor (aunque su imagen aún no exista).
   const [certificadoEmitido, setCertificadoEmitido] = useState(null);
@@ -636,7 +801,11 @@ const Classroom = () => {
           // Se abre la primera lección pendiente: el alumno retoma donde se quedó.
           const conContenido = leccionesConContenido(lista);
           const pendiente = conContenido.find((l) => !l.implicita && !progreso[l.id]?.completada);
-          setLeccionActualId((pendiente || conContenido[0] || lista[0]).id);
+          // Desde el inicio del portal se puede abrir una lección concreta
+          // (?leccion=ID: una tarea pendiente, una sesión en vivo).
+          const pedida = new URLSearchParams(window.location.search).get('leccion');
+          const elegida = pedida ? conContenido.find((l) => String(l.id) === pedida) : null;
+          setLeccionActualId((elegida || pendiente || conContenido[0] || lista[0]).id);
 
           setCourse({ ...cursoCargado, youtube_video_id: video });
           setQuestions(preguntasCargadas);
@@ -1242,7 +1411,8 @@ const Classroom = () => {
   // El navegador ya no conoce las respuestas: manda lo que eligió el alumno y
   // el servidor devuelve la calificación (y registra el intento).
   const handleEvaluateExam = async () => {
-    if (!course || calificando) return;
+    if (!course || calificandoRef.current) return;
+    calificandoRef.current = true;
     setCalificando(true);
     try {
       const respuestas = {};
@@ -1261,10 +1431,13 @@ const Classroom = () => {
           'Examen no aprobado'
         );
         setExamAnswers({});
+        setPreguntaFinalActual(0);
+        setRevisandoFinal(false);
       }
     } catch (err) {
       showAlert(err.message, 'No se pudo calificar');
     } finally {
+      calificandoRef.current = false;
       setCalificando(false);
     }
   };
@@ -1395,7 +1568,7 @@ const Classroom = () => {
 
   if (loading) {
     return (
-      <div className="classroom-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <div className="classroom-layout" data-theme={temaAula} style={{ justifyContent: 'center', alignItems: 'center' }}>
         <p style={{ color: '#00bcd4', fontWeight: 'bold', fontSize: '1.2rem' }}>Cargando Aula de Aprendizaje HCE...</p>
       </div>
     );
@@ -1406,7 +1579,7 @@ const Classroom = () => {
     const dePago = esCursoDePago(cursoBloqueado);
 
     return (
-      <div className="classroom-layout aula-puerta">
+      <div className="classroom-layout aula-puerta" data-theme={temaAula}>
         <div className="aula-puerta-tarjeta">
           {cursoBloqueado.image && (
             <div className="aula-puerta-imagen">
@@ -1490,9 +1663,9 @@ const Classroom = () => {
 
   if (!course) {
     return (
-      <div className="classroom-layout" style={{ justifyContent: 'center', alignItems: 'center', padding: '40px', textAlign: 'center' }}>
+      <div className="classroom-layout" data-theme={temaAula} style={{ justifyContent: 'center', alignItems: 'center', padding: '40px', textAlign: 'center' }}>
         <h2 style={{ color: '#ef4444' }}>Curso no encontrado</h2>
-        <p style={{ color: '#64748b', marginTop: '10px', marginBottom: '20px' }}>El programa seleccionado no existe o no se encuentra disponible.</p>
+        <p style={{ color: 'var(--aula-muted, #64748b)', marginTop: '10px', marginBottom: '20px' }}>El programa seleccionado no existe o no se encuentra disponible.</p>
         <button onClick={() => navigate('/dashboard')} className="back-btn">
           <ArrowLeft size={16} /> Volver al Portal
         </button>
@@ -1500,67 +1673,193 @@ const Classroom = () => {
     );
   }
 
-  // Temario: se ve en qué lección va, cuáles terminó y cuánto le falta. En
-  // celular se dibuja antes de las dudas (la columna lateral queda al final).
-  const renderTemario = (clase) => (lecciones.length > 1 ? (
-    <nav className={`classroom-card temario ${clase}`} aria-label="Lecciones del curso">
-      <div className="temario-cabecera">
-        <h2>Contenido del curso</h2>
-        <span>{avanceCurso}%</span>
-      </div>
-      <div className="temario-barra" aria-hidden="true"><span style={{ width: `${avanceCurso}%` }} /></div>
-
-      <ol className="temario-lista">
-        {lecciones.map((l) => {
-          if (l.tipo === 'seccion') {
-            return <li key={l.id} className="temario-seccion">{l.titulo}</li>;
-          }
-          const Icono = ICONO_LECCION[l.tipo] || PlayCircle;
-          const hecha = progresoLec[l.id]?.completada;
-          const actual = !showExam && l.id === leccionActualId;
-          return (
-            <li key={l.id}>
-              <button
-                type="button"
-                className={`temario-item${actual ? ' temario-item--actual' : ''}${hecha ? ' temario-item--hecha' : ''}`}
-                aria-current={actual ? 'step' : undefined}
-                onClick={() => irALeccion(l.id)}
-              >
-                <span className="temario-icono">
-                  {hecha ? <CheckCircle size={16} /> : <Icono size={16} />}
-                </span>
-                <span className="temario-texto">
-                  <span className="temario-titulo">{numeroDe(l.id)}. {l.titulo}</span>
-                  <span className="temario-meta">
-                    {TIPOS_LECCION[l.tipo]}
-                    {l.duracion_min ? ` · ${l.duracion_min} min` : ''}
-                    {l.obligatoria === false ? ' · opcional' : ''}
-                    {!hecha && l.tipo === 'video' && progresoLec[l.id]?.porcentaje ? ` · ${progresoLec[l.id].porcentaje}%` : ''}
-                  </span>
-                </span>
-              </button>
-            </li>
-          );
-        })}
-        {!sinExamenFinal && <li>
-          <button
-            type="button"
-            className={`temario-item${showExam ? ' temario-item--actual' : ''}`}
-            disabled={!examenDisponible && !esAdmin}
-            onClick={() => setShowExam(true)}
-          >
-            <span className="temario-icono">{examenDisponible ? <Award size={16} /> : <Lock size={16} />}</span>
-            <span className="temario-texto">
-              <span className="temario-titulo">Examen final</span>
-              <span className="temario-meta">
-                {examenDisponible ? 'Disponible' : 'Se abre al completar las lecciones'}
-              </span>
+  // Temario: se ve en qué lección va, cuáles terminó y cuánto le falta. Las
+  // secciones ("Módulo I") se pliegan. En escritorio vive en la columna
+  // lateral; en celular y tableta, en un cajón que abre el botón "Lecciones".
+  const renderLeccionTemario = (l) => {
+    const Icono = ICONO_LECCION[l.tipo] || PlayCircle;
+    const hecha = progresoLec[l.id]?.completada;
+    const actual = !showExam && l.id === leccionActualId;
+    const porcentaje = !hecha && l.tipo === 'video' ? progresoLec[l.id]?.porcentaje || 0 : 0;
+    return (
+      <li key={l.id}>
+        <button
+          type="button"
+          className={`temario-item${actual ? ' temario-item--actual' : ''}${hecha ? ' temario-item--hecha' : ''}`}
+          aria-current={actual ? 'step' : undefined}
+          onClick={() => irALeccion(l.id)}
+        >
+          <span className="temario-icono">
+            {hecha ? <CheckCircle size={16} aria-label="Completada" /> : <Icono size={16} aria-hidden="true" />}
+          </span>
+          <span className="temario-texto">
+            <span className="temario-titulo">{numeroDe(l.id)}. {l.titulo}</span>
+            <span className="temario-meta">
+              {actual ? <strong className="temario-aqui">Estás aquí · </strong> : null}
+              {TIPOS_LECCION[l.tipo]}
+              {l.duracion_min ? ` · ${l.duracion_min} min` : ''}
+              {l.obligatoria === false ? ' · opcional' : ''}
+              {porcentaje ? ` · ${porcentaje}%` : ''}
             </span>
-          </button>
-        </li>}
-      </ol>
-    </nav>
-  ) : null);
+            {porcentaje > 0 && <span className="temario-mini-barra" aria-hidden="true"><span style={{ width: `${porcentaje}%` }} /></span>}
+          </span>
+        </button>
+      </li>
+    );
+  };
+
+  const renderTemario = (clase) => {
+    if (lecciones.length <= 1) return null;
+    // Grupos: lo que va antes de la primera sección, y luego cada sección.
+    const grupos = [];
+    lecciones.forEach((l) => {
+      if (l.tipo === 'seccion') grupos.push({ seccion: l, items: [] });
+      else if (grupos.length) grupos[grupos.length - 1].items.push(l);
+      else grupos.push({ seccion: null, items: [l] });
+    });
+    return (
+      <nav className={`classroom-card temario ${clase}`} aria-label="Lecciones del curso">
+        <div className="temario-cabecera">
+          <h2>Contenido del curso</h2>
+          <span>{avanceCurso}%</span>
+        </div>
+        <div className="temario-barra" aria-hidden="true"><span style={{ width: `${avanceCurso}%` }} /></div>
+        <p className="temario-resumen">{leccionesHechas} de {navegables.length} lecciones completadas</p>
+
+        <ol className="temario-lista">
+          {grupos.map((g, i) => {
+            if (!g.seccion) return <React.Fragment key={`suelto-${i}`}>{g.items.map(renderLeccionTemario)}</React.Fragment>;
+            const plegada = !!seccionesPlegadas[g.seccion.id];
+            const hechas = g.items.filter((l) => progresoLec[l.id]?.completada).length;
+            const conActual = !showExam && g.items.some((l) => l.id === leccionActualId);
+            const idLista = `temario-${clase}-${g.seccion.id}`;
+            return (
+              <li key={g.seccion.id} className={`temario-grupo${conActual ? ' temario-grupo--actual' : ''}`}>
+                <button
+                  type="button"
+                  className="temario-seccion"
+                  aria-expanded={!plegada}
+                  aria-controls={idLista}
+                  onClick={() => setSeccionesPlegadas((prev) => ({ ...prev, [g.seccion.id]: !plegada }))}
+                >
+                  <ChevronDown size={15} className="temario-seccion-flecha" aria-hidden="true" />
+                  <span className="temario-seccion-titulo">{g.seccion.titulo}</span>
+                  {g.items.length > 0 && (
+                    <span className={`temario-seccion-cuenta${hechas === g.items.length ? ' completa' : ''}`}>{hechas}/{g.items.length}</span>
+                  )}
+                </button>
+                {!plegada && g.items.length > 0 && (
+                  <ol className="temario-lista temario-sublista" id={idLista}>
+                    {g.items.map(renderLeccionTemario)}
+                  </ol>
+                )}
+              </li>
+            );
+          })}
+          {!sinExamenFinal && <li>
+            <button
+              type="button"
+              className={`temario-item temario-item--examen${showExam ? ' temario-item--actual' : ''}`}
+              disabled={!examenDisponible && !esAdmin}
+              onClick={abrirExamenFinal}
+            >
+              <span className="temario-icono">{examenDisponible ? <Award size={16} /> : <Lock size={16} />}</span>
+              <span className="temario-texto">
+                <span className="temario-titulo">Examen final</span>
+                <span className="temario-meta">
+                  {examenDisponible ? 'Disponible' : 'Se abre al completar las lecciones'}
+                </span>
+              </span>
+            </button>
+          </li>}
+        </ol>
+      </nav>
+    );
+  };
+
+  // Lo que toca al terminar la última lección: examen final o certificado.
+  const renderAccionFinal = (clase = '') => (sinExamenFinal ? (
+    tieneCertificado ? (
+      <button type="button" className={`back-btn ${clase}`} onClick={() => irAlPortal('/dashboard?tab=certificates')}>
+        <Award size={15} /> Ver mis certificados
+      </button>
+    ) : (
+      <button
+        type="button"
+        className={`back-btn leccion-btn-principal ${clase}`}
+        disabled={!cursoCumplido || isGeneratingCert || esAdmin}
+        onClick={obtenerCertificadoPorRegla}
+        title={cursoCumplido ? '' : 'Completa las lecciones para obtener tu certificado'}
+      >
+        <Award size={15} /> {isGeneratingCert ? 'Generando…' : 'Obtener mi certificado'}
+      </button>
+    )
+  ) : (
+    <button
+      type="button"
+      disabled={!examenDisponible}
+      onClick={abrirExamenFinal}
+      className={`back-btn leccion-btn-principal ${clase}`}
+      title={examenDisponible ? '' : 'Completa las lecciones para presentar el examen'}
+    >
+      <Award size={15} /> Tomar examen final
+    </button>
+  ));
+
+  // Aviso flotante: "¡Lección completada!" o la celebración del curso.
+  const renderAvisoAula = () => {
+    if (!avisoAula || showExam) return null;
+    if (avisoAula.tipo === 'curso') {
+      return (
+        <div className="aula-aviso aula-aviso--curso" role="status" aria-live="polite">
+          <div className="aula-confeti" aria-hidden="true">{Array.from({ length: 14 }, (_, i) => <span key={i} />)}</div>
+          <PartyPopper size={30} className="aula-aviso-icono" aria-hidden="true" />
+          <div className="aula-aviso-texto">
+            <strong>¡Terminaste todas las lecciones!</strong>
+            <span>
+              {!sinExamenFinal
+                ? 'Solo te falta el examen final para obtener tu certificado.'
+                : tieneCertificado ? 'Tu certificado ya está en tu portal.' : 'Ya puedes obtener tu certificado.'}
+            </span>
+          </div>
+          <div className="aula-aviso-acciones">
+            {renderAccionFinal()}
+            <button type="button" className="aula-aviso-cerrar" onClick={() => setAvisoAula(null)} aria-label="Cerrar aviso"><X size={16} /></button>
+          </div>
+        </div>
+      );
+    }
+    const pendiente = siguienteLeccion
+      || navegables.find((l) => l.obligatoria !== false && !progresoLec[l.id]?.completada && l.id !== avisoAula.leccionId)
+      || null;
+    return (
+      <div className="aula-aviso" role="status" aria-live="polite">
+        <CheckCircle size={26} className="aula-aviso-icono" aria-hidden="true" />
+        <div className="aula-aviso-texto">
+          <strong>¡Lección completada!</strong>
+          {pendiente && <span>{siguienteLeccion ? 'Sigue' : 'Te falta'}: {pendiente.titulo}</span>}
+        </div>
+        <div className="aula-aviso-acciones">
+          {pendiente && (
+            <button type="button" className="back-btn leccion-btn-principal" onClick={() => irALeccion(pendiente.id)}>
+              {siguienteLeccion ? 'Siguiente lección' : 'Ir a la lección'} <ChevronRight size={15} />
+            </button>
+          )}
+          <button type="button" className="aula-aviso-cerrar" onClick={() => setAvisoAula(null)} aria-label="Cerrar aviso"><X size={16} /></button>
+        </div>
+      </div>
+    );
+  };
+
+  // Examen final: cuántas lleva contestadas y cuáles faltan, antes de enviar.
+  const contestadasExamen = questions.filter((_, i) => examAnswers[i] != null).length;
+  const faltanExamen = questions.length - contestadasExamen;
+  const indicePreguntaFinal = Math.min(preguntaFinalActual, Math.max(0, questions.length - 1));
+  const irAPreguntaFinal = (indice) => {
+    setPreguntaFinalActual(indice);
+    setRevisandoFinal(false);
+    document.querySelector('.exam-container-card')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
 
   // Filter recommended courses sharing same category ID
   const recommendedCourses = catalogCourses.filter(
@@ -1568,16 +1867,47 @@ const Classroom = () => {
   );
 
   return (
-    <div className="classroom-layout">
+    <div className="classroom-layout" data-theme={temaAula} onClickCapture={(e) => {
+      const enlace = e.target.closest?.('a[href]');
+      if (enlace && enlace.target !== '_blank' && !permitirNavegacionAula()) { e.preventDefault(); e.stopPropagation(); }
+    }}>
       {/* Navbar Header */}
       <header className="classroom-header">
         <div className="header-left">
-          <button onClick={() => navigate('/dashboard')} className="back-btn" aria-label="Volver al Portal">
+          <button onClick={() => irAlPortal()} className="back-btn" aria-label="Volver al Portal">
             <ArrowLeft size={16} /> <span className="aula-btn-texto">Volver al Portal</span>
           </button>
           <img src="/assets/componentes/firma-hce.png" alt="HCE Logo" className="header-logo" />
         </div>
+        {/* Curso y avance siempre a la vista, sin ocupar la pantalla. */}
+        <div className="aula-cabecera-curso">
+          <span className="aula-cabecera-titulo" title={course.title}>{course.title}</span>
+          <div className="aula-cabecera-avance">
+            <div
+              className="aula-cabecera-barra"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={avanceCurso}
+              aria-label="Avance del curso"
+            >
+              <span style={{ width: `${avanceCurso}%` }} />
+            </div>
+            <span className="aula-cabecera-pct">{avanceCurso}%</span>
+          </div>
+        </div>
         <div className="header-right">
+          {conNavegacion && (
+            <button
+              type="button"
+              className={`back-btn aula-enfoque-btn${modoEnfoque ? ' activo' : ''}`}
+              onClick={alternarEnfoque}
+              aria-pressed={modoEnfoque}
+              title={modoEnfoque ? 'Mostrar el temario' : 'Modo enfoque: ocultar el temario'}
+            >
+              {modoEnfoque ? <Minimize2 size={16} /> : <Maximize2 size={16} />} <span className="aula-btn-texto">{modoEnfoque ? 'Salir de enfoque' : 'Modo enfoque'}</span>
+            </button>
+          )}
           {biblioteca.length > 0 && (
             <button type="button" className="back-btn aula-biblioteca-btn" onClick={() => setBibliotecaAbierta(true)} aria-label={`Biblioteca del curso (${biblioteca.length} archivos)`}>
               <FolderOpen size={16} /> <span className="aula-btn-texto">Biblioteca</span> <span className="aula-biblioteca-num">{biblioteca.length}</span>
@@ -1660,7 +1990,7 @@ const Classroom = () => {
       )}
 
       {/* Main Content Area */}
-      <main className="classroom-container">
+      <main className={`classroom-container${modoEnfoque && conNavegacion ? ' aula-enfoque' : ''}`}>
         <div className="classroom-grid">
           
           {/* Main Column: Player / Exam / Congratulations */}
@@ -1803,7 +2133,8 @@ const Classroom = () => {
                 {(leccionActual?.tipo === 'examen' || leccionActual?.tipo === 'encuesta') && (
                   <div className="leccion-material">
                     <EvaluacionLeccion
-                      key={leccionActual.id}
+                      ref={evaluacionRef}
+                      key={`${user?.id}:${leccionActual.id}:${esAdminReal}`}
                       leccion={leccionActual}
                       userId={user?.id}
                       esAdmin={esAdminReal}
@@ -1924,9 +2255,9 @@ const Classroom = () => {
                     {esAdmin && (
                       <button
                         type="button"
-                        onClick={() => setShowExam(true)}
+                        onClick={abrirExamenFinal}
                         className="back-btn"
-                        style={{ background: 'transparent', color: '#64748b', borderColor: '#cbd5e1' }}
+                        style={{ background: 'transparent', color: 'var(--aula-muted, #64748b)', borderColor: '#cbd5e1' }}
                         title="Solo lo ven los administradores, para revisar el examen"
                       >
                         Ver examen (admin)
@@ -1948,43 +2279,48 @@ const Classroom = () => {
                       </button>
                     )}
 
-                    {siguienteLeccion ? (
-                      <button type="button" className="back-btn" onClick={() => irALeccion(siguienteLeccion.id)}>
-                        Siguiente lección <ChevronRight size={15} />
-                      </button>
-                    ) : sinExamenFinal ? (
-                      tieneCertificado ? (
-                        <span className="progress-label">✓ Ya tienes tu certificado en la pestaña Certificados</span>
-                      ) : (
-                        <button
-                          type="button"
-                          className="back-btn leccion-btn-principal"
-                          disabled={!cursoCumplido || isGeneratingCert || esAdmin}
-                          onClick={obtenerCertificadoPorRegla}
-                          title={cursoCumplido ? '' : 'Completa las lecciones para obtener tu certificado'}
-                        >
-                          <Award size={15} /> {isGeneratingCert ? 'Generando…' : 'Obtener mi certificado'}
-                        </button>
-                      )
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={!examenDisponible}
-                        onClick={() => setShowExam(true)}
-                        className="back-btn"
-                        title={examenDisponible ? '' : 'Completa las lecciones para presentar el examen'}
-                        style={{
-                          background: examenDisponible ? '#00bcd4' : '#94a3b8',
-                          color: '#fff',
-                          borderColor: examenDisponible ? '#00bcd4' : '#94a3b8',
-                          cursor: examenDisponible ? 'pointer' : 'not-allowed'
-                        }}
-                      >
-                        Tomar Examen
-                      </button>
-                    )}
+                    {/* Con varias lecciones, el paso final va en la navegación de abajo. */}
+                    {!conNavegacion && renderAccionFinal()}
                   </div>
                 </div>
+
+                {conNavegacion && (
+                  <nav className="aula-nav-lecciones" aria-label="Cambiar de lección">
+                    <button
+                      type="button"
+                      className="aula-nav-btn"
+                      disabled={!anteriorLeccion}
+                      onClick={() => anteriorLeccion && irALeccion(anteriorLeccion.id)}
+                    >
+                      <ChevronLeft size={20} aria-hidden="true" />
+                      <span className="aula-nav-texto">
+                        <small>Anterior</small>
+                        <strong>{anteriorLeccion ? anteriorLeccion.titulo : 'Es la primera lección'}</strong>
+                      </span>
+                    </button>
+                    {siguienteLeccion ? (
+                      <button
+                        type="button"
+                        className="aula-nav-btn aula-nav-btn--siguiente"
+                        onClick={() => irALeccion(siguienteLeccion.id)}
+                      >
+                        <span className="aula-nav-texto">
+                          <small>Siguiente lección</small>
+                          <strong>{siguienteLeccion.titulo}</strong>
+                        </span>
+                        <ChevronRight size={20} aria-hidden="true" />
+                      </button>
+                    ) : (
+                      <div className="aula-nav-final">
+                        <small>Última lección</small>
+                        {renderAccionFinal()}
+                      </div>
+                    )}
+                  </nav>
+                )}
+                {conNavegacion && (
+                  <p className="aula-atajos">Atajo: usa las flechas <kbd>←</kbd> <kbd>→</kbd> del teclado para cambiar de lección.</p>
+                )}
               </div>
             ) : (
               // Exam / Congratulations View
@@ -1993,18 +2329,28 @@ const Classroom = () => {
                   // Exam sheet card
                   <div className="exam-container-card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '15px' }}>
-                      <h3 style={{ fontSize: '1.25rem', color: '#0f172a', margin: 0, fontWeight: '700', fontFamily: 'Sora, sans-serif' }}>
-                        Examen de Acreditación (Mínimo: {course.minAprobacion || course.min_aprobacion || 80}%)
+                      <h3 style={{ fontSize: '1.25rem', color: 'var(--aula-texto, #0f172a)', margin: 0, fontWeight: '700', fontFamily: 'Sora, sans-serif' }}>
+                        Examen de Acreditación (Mínimo: {course.minAprobacion ?? course.min_aprobacion ?? 80}%)
                       </h3>
-                      <button onClick={() => setShowExam(false)} className="back-btn" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+                      <button disabled={calificando || isGeneratingCert} onClick={() => setShowExam(false)} className="back-btn" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
                         Volver a las lecciones
                       </button>
                     </div>
 
                     {questions.length > 0 ? (
-                      <div>
-                        {questions.map((q, qIndex) => (
-                          <div key={q.id || qIndex} className="question-block">
+                      <fieldset className="eval-controles" disabled={calificando || isGeneratingCert} aria-busy={calificando || isGeneratingCert}>
+                        <div className="examen-progreso" aria-live="polite">
+                          <span>{revisandoFinal ? 'Revisión de respuestas' : `Pregunta ${indicePreguntaFinal + 1} de ${questions.length}`} · {contestadasExamen} contestadas</span>
+                          <div className="examen-progreso-barra" aria-hidden="true"><span style={{ width: `${(contestadasExamen / questions.length) * 100}%` }} /></div>
+                        </div>
+                        <ol className="eval-mapa" aria-label="Preguntas del examen final">
+                          {questions.map((q, i) => <li key={q.id ?? i}><button type="button" className={`eval-mapa-punto${examAnswers[i] != null ? ' hecha' : ''}${!revisandoFinal && indicePreguntaFinal === i ? ' actual' : ''}`} aria-label={`Pregunta ${i + 1}, ${examAnswers[i] != null ? 'contestada' : 'sin contestar'}`} aria-current={!revisandoFinal && indicePreguntaFinal === i ? 'step' : undefined} onClick={() => irAPreguntaFinal(i)}>{i + 1}</button></li>)}
+                        </ol>
+                        {revisandoFinal ? <div className="eval-revision-envio">
+                          <h3>Revisa antes de enviar</h3>
+                          <ol className="eval-revision-lista">{questions.map((q, i) => <li key={q.id ?? i}><button type="button" className={`eval-revision-fila${examAnswers[i] != null ? ' hecha' : ''}`} onClick={() => irAPreguntaFinal(i)}><span className="eval-numero-pregunta">{i + 1}</span><span className="eval-revision-texto">{q.question_text}<small className="examen-respuesta">{examAnswers[i] != null ? q.options[examAnswers[i]] : 'Sin respuesta'}</small></span><span className="eval-revision-estado">{examAnswers[i] != null ? 'Contestada' : 'Sin contestar'}</span></button></li>)}</ol>
+                        </div> : questions.map((q, qIndex) => qIndex === indicePreguntaFinal && (
+                          <div key={q.id || qIndex} className={`question-block${examAnswers[qIndex] != null ? ' question-block--contestada' : ''}`}>
                             <p className="question-text">{qIndex + 1}. {q.question_text}</p>
                             <div className="options-grid">
                               {q.options.map((opt, optIndex) => (
@@ -2022,7 +2368,18 @@ const Classroom = () => {
                           </div>
                         ))}
 
-                        <button 
+                        <div className="eval-nav">
+                          <button type="button" className="back-btn eval-nav-btn" disabled={!revisandoFinal && indicePreguntaFinal === 0} onClick={() => irAPreguntaFinal(revisandoFinal ? indicePreguntaFinal : indicePreguntaFinal - 1)}><ChevronLeft size={16} /> {revisandoFinal ? 'Volver a las preguntas' : 'Anterior'}</button>
+                          {!revisandoFinal && <button type="button" className="back-btn leccion-btn-principal eval-nav-btn" onClick={() => indicePreguntaFinal === questions.length - 1 ? setRevisandoFinal(true) : irAPreguntaFinal(indicePreguntaFinal + 1)}>{indicePreguntaFinal === questions.length - 1 ? 'Revisar respuestas' : 'Siguiente'} <ChevronRight size={16} /></button>}
+                        </div>
+                        {revisandoFinal && faltanExamen > 0 && (
+                          <p className="examen-faltan" role="status">
+                            Te {faltanExamen === 1 ? 'falta 1 pregunta' : `faltan ${faltanExamen} preguntas`} por contestar
+                            {' '}(la{faltanExamen === 1 ? '' : 's'} {questions.map((_, i) => (examAnswers[i] == null ? i + 1 : null)).filter(Boolean).slice(0, 8).join(', ')}{faltanExamen > 8 ? '…' : ''}).
+                            {' '}Las que dejes sin contestar cuentan como incorrectas.
+                          </p>
+                        )}
+                        {revisandoFinal && <button
                           type="button" 
                           className="back-btn"
                           style={{ width: '100%', background: '#00bcd4', borderColor: '#00bcd4', color: '#fff', padding: '14px', fontSize: '1rem', justifyContent: 'center' }}
@@ -2030,11 +2387,11 @@ const Classroom = () => {
                           disabled={isGeneratingCert || calificando}
                         >
                           {calificando ? 'Calificando…' : isGeneratingCert ? 'Generando tu certificado…' : 'Enviar Respuestas'}
-                        </button>
-                      </div>
+                        </button>}
+                      </fieldset>
                     ) : (
                       <div style={{ textAlign: 'center', padding: '40px' }}>
-                        <p style={{ color: '#64748b', marginBottom: '20px' }}>Este curso no tiene examen definido por el administrador. Puedes generar tu certificado directamente.</p>
+                        <p style={{ color: 'var(--aula-muted, #64748b)', marginBottom: '20px' }}>Este curso no tiene examen definido por el administrador. Puedes generar tu certificado directamente.</p>
                         <button 
                           type="button" 
                           className="back-btn"
@@ -2049,10 +2406,11 @@ const Classroom = () => {
                   </div>
                 ) : (
                   // Congratulations & recommended courses card
-                  <div className="exam-container-card" style={{ textAlign: 'center', padding: '40px' }}>
-                    <div style={{ color: '#10b981', fontSize: '3.5rem', marginBottom: '16px' }}>✓</div>
+                  <div className="exam-container-card aula-felicidades" style={{ textAlign: 'center', padding: '40px' }}>
+                    <div className="aula-confeti" aria-hidden="true">{Array.from({ length: 18 }, (_, i) => <span key={i} />)}</div>
+                    <div className="aula-felicidades-icono" aria-hidden="true"><PartyPopper size={44} /></div>
                     <h3 style={{ fontFamily: 'Sora, sans-serif', fontSize: '1.5rem', fontWeight: '800', margin: '0 0 10px 0' }}>¡Felicitaciones! Has completado el curso</h3>
-                    <p style={{ color: '#64748b', fontSize: '0.95rem', maxWidth: '500px', margin: '0 auto 30px auto', lineHeight: '1.5' }}>
+                    <p style={{ color: 'var(--aula-muted, #64748b)', fontSize: '0.95rem', maxWidth: '500px', margin: '0 auto 30px auto', lineHeight: '1.5' }}>
                       Tu calificación fue de <strong>{examScore}%</strong>. Tu certificado ha sido emitido con éxito{certificadoEmitido?.folio ? ` (folio ${certificadoEmitido.folio})` : ''}{course.vigencia_meses ? ` y es válido por ${course.vigencia_meses} ${Number(course.vigencia_meses) === 1 ? 'mes' : 'meses'}` : ''}. También queda guardado en la pestaña Certificados de tu portal.
                     </p>
 
@@ -2075,7 +2433,7 @@ const Classroom = () => {
                     {/* Recommendations in stand-alone classroom */}
                     {recommendedCourses.length > 0 && (
                       <div className="classroom-recs-wrapper" style={{ textAlign: 'left' }}>
-                        <h4 style={{ fontSize: '1.05rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Sora, sans-serif', fontWeight: '700', margin: '0 0 16px 0' }}>
+                        <h4 style={{ fontSize: '1.05rem', color: 'var(--aula-texto, #0f172a)', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'Sora, sans-serif', fontWeight: '700', margin: '0 0 16px 0' }}>
                           <Sparkles size={18} style={{ color: '#00bcd4' }} />
                           Sigue aprendiendo: Cursos recomendados para ti
                         </h4>
@@ -2114,7 +2472,6 @@ const Classroom = () => {
                 )}
               </div>
             )}
-            {renderTemario('temario--movil')}
 
             {/* Classroom Doubts and Feedback Section */}
             <div className="classroom-doubts-card">
@@ -2402,6 +2759,41 @@ const Classroom = () => {
 
         </div>
       </main>
+
+      {/* Celular y tableta: el temario va en un cajón con botón fijo. */}
+      {lecciones.length > 1 && (
+        <button
+          type="button"
+          className="aula-lecciones-btn"
+          onClick={() => setTemarioAbierto(true)}
+          aria-haspopup="dialog"
+          aria-expanded={temarioAbierto}
+        >
+          <ListOrdered size={18} aria-hidden="true" />
+          <span>Lecciones</span>
+          <span className="aula-lecciones-num">{leccionesHechas}/{navegables.length}</span>
+        </button>
+      )}
+      {temarioAbierto && (
+        <div className="aula-cajon-fondo" onClick={() => setTemarioAbierto(false)}>
+          <div
+            ref={cajonRef}
+            tabIndex={-1}
+            className="aula-cajon"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Lecciones del curso"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button type="button" className="aula-cajon-cerrar" onClick={() => setTemarioAbierto(false)} aria-label="Cerrar lecciones" autoFocus>
+              <X size={18} />
+            </button>
+            {renderTemario('temario--cajon')}
+          </div>
+        </div>
+      )}
+
+      {renderAvisoAula()}
     </div>
   );
 };

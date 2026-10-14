@@ -25,7 +25,8 @@ function guardarCerrado(id) {
   }
 }
 
-export default function Comunicados({ tipo = 'interno' }) {
+// `vacio`: lo que se muestra cuando no hay avisos (por defecto, nada).
+export default function Comunicados({ tipo = 'interno', vacio = null }) {
   const [lista, setLista] = useState([]);
   const [cerrados, setCerrados] = useState(leerCerrados);
 
@@ -42,7 +43,7 @@ export default function Comunicados({ tipo = 'interno' }) {
   }, [tipo]);
 
   const visibles = lista.filter((c) => !cerrados.includes(c.id));
-  if (!visibles.length) return null;
+  if (!visibles.length) return vacio;
 
   return (
     <div className={`comunicados comunicados--${tipo}`}>

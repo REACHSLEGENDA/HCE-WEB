@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 import './Notification.css';
 
@@ -15,6 +15,7 @@ export const useNotification = () => {
 };
 
 export const NotificationProvider = ({ children }) => {
+  const modalRef = useRef(null);
   const [toasts, setToasts] = useState([]);
   const [modal, setModal] = useState(null); // { type: 'alert'|'confirm', title, message, resolve }
 
@@ -58,6 +59,27 @@ export const NotificationProvider = ({ children }) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  useEffect(() => {
+    if (!modal) return undefined;
+    const previo = document.activeElement;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    (modalRef.current?.querySelector('button') || modalRef.current)?.focus();
+    return () => {
+      document.body.style.overflow = overflow;
+      if (document.contains(previo)) previo?.focus();
+    };
+  }, [modal]);
+
+  const teclaModal = (e) => {
+    if (e.key === 'Escape') { e.stopPropagation(); modal.resolve(false); }
+    if (e.key !== 'Tab') return;
+    const lista = [...(modalRef.current?.querySelectorAll('button') || [])];
+    const primero = lista[0]; const ultimo = lista[lista.length - 1];
+    if (e.shiftKey && document.activeElement === primero) { e.preventDefault(); ultimo.focus(); }
+    else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primero.focus(); }
+  };
+
   return (
     <NotificationContext.Provider value={{ showToast, showAlert, showConfirm }}>
       {children}
@@ -83,15 +105,15 @@ export const NotificationProvider = ({ children }) => {
       {/* Modal Container */}
       {modal && (
         <div className="hce-modal-overlay" onClick={() => modal.resolve(false)}>
-          <div className="hce-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div ref={modalRef} className="hce-modal-card" role="alertdialog" aria-modal="true" aria-labelledby="hce-modal-titulo" aria-describedby="hce-modal-mensaje" tabIndex={-1} onKeyDown={teclaModal} onClick={(e) => e.stopPropagation()}>
             <div className="hce-modal-header">
               <span className={`hce-modal-header-icon hce-modal-header-icon--${modal.type}`}>
                 {modal.type === 'confirm' ? <Info size={24} /> : <AlertCircle size={24} />}
               </span>
-              <h3 className="hce-modal-title">{modal.title}</h3>
+              <h3 className="hce-modal-title" id="hce-modal-titulo">{modal.title}</h3>
             </div>
             <div className="hce-modal-body">
-              <p>{modal.message}</p>
+              <p id="hce-modal-mensaje">{modal.message}</p>
             </div>
             <div className="hce-modal-footer">
               {modal.type === 'confirm' && (

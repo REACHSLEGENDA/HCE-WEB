@@ -1,0 +1,67 @@
+/* Barra inferior del portal del alumno (solo celular). */
+
+.nav-movil, .nav-movil-fondo { display: none; }
+
+@media (max-width: 768px) {
+  .nav-movil {
+    position: fixed; right: 0; bottom: 0; left: 0; z-index: 1005;
+    display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column;
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-main);
+    box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.08);
+  }
+  .nav-movil-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-width: 0; min-height: 56px; padding: 6px 0; border: 0; border-radius: 12px;
+    background: none; color: var(--text-muted); font: inherit; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-movil-item:focus-visible { outline: 2px solid var(--primary-cyan); outline-offset: -2px; }
+  .nav-movil-item.activo { color: var(--secondary-blue); }
+  .crm-layout[data-theme="dark"] .nav-movil-item.activo { color: #4dd0e1; }
+  .nav-movil-icono {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 52px; height: 28px; border-radius: 999px; transition: background-color 0.2s ease;
+  }
+  .nav-movil-item.activo .nav-movil-icono { background: var(--bg-active-item); }
+  .nav-movil-texto { max-width: 100%; overflow: hidden; font-size: 0.66rem; font-weight: 700; letter-spacing: -0.01em; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-movil-contador {
+    position: absolute; top: -3px; right: 6px; min-width: 18px; padding: 0 5px;
+    border: 2px solid var(--bg-main); border-radius: 999px; background: #e53935; color: #fff;
+    font-size: 0.64rem; font-weight: 800; line-height: 14px; text-align: center;
+  }
+
+  .nav-movil-fondo {
+    position: fixed; inset: 0; z-index: 1020; display: flex; align-items: flex-end;
+    background: rgba(15, 23, 42, 0.45); animation: nav-movil-fundido 0.2s ease;
+  }
+  .nav-movil-hoja {
+    width: 100%; max-height: 80vh; overflow-y: auto;
+    padding: 8px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    border-radius: 20px 20px 0 0; background: var(--bg-main); color: var(--text-dark);
+    box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.25); animation: nav-movil-sube 0.25s ease; outline: none;
+  }
+  .nav-movil-hoja-cabecera { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 2px 10px; }
+  .nav-movil-hoja-cabecera strong { font-family: 'Sora', sans-serif; font-size: 1rem; }
+  .nav-movil-asa { position: absolute; top: 2px; left: 50%; width: 40px; height: 4px; border-radius: 999px; background: var(--border-color); transform: translateX(-50%); }
+  .nav-movil-cerrar { display: inline-flex; padding: 8px; border: 0; border-radius: 999px; background: var(--bg-gray); color: var(--text-dark); cursor: pointer; }
+  .nav-movil-opciones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .nav-movil-opcion {
+    display: flex; align-items: center; gap: 10px; width: 100%; min-height: 54px; padding: 12px;
+    border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-gray);
+    color: var(--text-dark); font: inherit; font-size: 0.9rem; font-weight: 600; text-align: left; cursor: pointer;
+  }
+  .nav-movil-opcion svg { flex-shrink: 0; color: var(--primary-cyan); }
+  .nav-movil-opcion.activo { border-color: var(--primary-cyan); background: var(--bg-active-item); }
+  .nav-movil-opcion.peligro { color: var(--accent-orange); }
+  .nav-movil-opcion.peligro svg { color: var(--accent-orange); }
+  .nav-movil-opcion:focus-visible { outline: 2px solid var(--primary-cyan); outline-offset: 2px; }
+
+  @keyframes nav-movil-fundido { from { opacity: 0; } }
+  @keyframes nav-movil-sube { from { transform: translateY(100%); } }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .nav-movil-fondo, .nav-movil-hoja { animation: none; }
+}

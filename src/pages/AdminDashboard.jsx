@@ -11,6 +11,7 @@ import {
   BarChart2,
   Users,
   Settings,
+  LifeBuoy,
   LogOut,
   Menu,
   Search,
@@ -50,9 +51,11 @@ import {
   BellRing,
   MessagesSquare,
   Copy,
-  Building2
+  Building2,
+  Image as ImageIcon
 } from 'lucide-react';
 import './AdminDashboard.css';
+import GuiaUso from '../components/GuiaUso';
 import PosicionadorConstancia from '../components/PosicionadorConstancia';
 import InformesAdmin from '../components/admin/InformesAdmin';
 import EditorLecciones from '../components/admin/EditorLecciones';
@@ -69,6 +72,10 @@ import GruposAdmin from '../components/admin/GruposAdmin';
 import CuentasPorActivar from '../components/admin/CuentasPorActivar';
 import { BotonVerComoAlumno } from '../components/CambioVista';
 import InscritosCurso from '../components/admin/InscritosCurso';
+import EditorCursoPestanas, { BarraGuardarCurso } from '../components/admin/EditorCursoPestanas';
+import ChecklistPublicar from '../components/admin/ChecklistPublicar';
+import PendientesHoy from '../components/admin/PendientesHoy';
+import { PESTANAS_CURSO, esPestanaFormulario, pestanaInicialCurso, recordarPestanaCurso, validarCurso, firmaCurso } from '../components/admin/editorCurso';
 import { llamarInscripcion, llamarCuenta, llamarClonar, esTablaFaltante, formatoPrecio } from '../lib/cursos';
 import { traerTodo } from '../lib/traerTodo';
 import { tasaFinalizacion } from '../lib/informes';
@@ -134,6 +141,42 @@ const FORM_LABELS = {
   xnjlvzdq: 'Retroalimentación y Dudas',
 };
 
+// Menú lateral agrupado. `titulo` es el texto del tooltip con el menú colapsado.
+const SECCIONES_MENU = [
+  { id: 'inicio', titulo: null, items: [
+    { id: 'dashboard', etiqueta: 'Dashboard', icono: Home, titulo: 'Panel inicial' },
+  ] },
+  { id: 'escuela', titulo: 'Escuela', items: [
+    { id: 'courses', etiqueta: 'Cursos', icono: BookOpen, titulo: 'Gestión de cursos' },
+    { id: 'grupos', etiqueta: 'Grupos', icono: UsersRound, titulo: 'Grupos e inscripción masiva' },
+    { id: 'tareas', etiqueta: 'Tareas', icono: ClipboardList, titulo: 'Tareas por revisar' },
+    { id: 'certificates', etiqueta: 'Certificados', icono: Award, titulo: 'Certificados' },
+    { id: 'categories', etiqueta: 'Categorías', icono: FolderOpen, titulo: 'Categorías' },
+    { id: 'webinars', etiqueta: 'Webinars', icono: CalendarDays, titulo: 'Webinars' },
+  ] },
+  { id: 'personas', titulo: 'Personas', items: [
+    { id: 'students', etiqueta: 'Alumnos', icono: GraduationCap, titulo: 'Alumnos' },
+    { id: 'divisiones', etiqueta: 'Divisiones', icono: Building2, titulo: 'Divisiones (otras asociaciones)' },
+    { id: 'admins', etiqueta: 'Administradores', icono: Users, titulo: 'Administradores' },
+  ] },
+  { id: 'comunicacion', titulo: 'Comunicación', items: [
+    { id: 'mensajes', etiqueta: 'Mensajes', icono: MessagesSquare, titulo: 'Mensajes y comunicados' },
+    { id: 'notificaciones', etiqueta: 'Notificaciones', icono: BellRing, titulo: 'Notificaciones automáticas por correo' },
+  ] },
+  { id: 'reportes', titulo: 'Reportes', items: [
+    { id: 'metricas', etiqueta: 'Métricas', icono: TrendingUp, titulo: 'Métricas de cursos' },
+    { id: 'reports', etiqueta: 'Reportes', icono: BarChart2, titulo: 'Reportes' },
+  ] },
+  { id: 'ventas', titulo: 'Ventas', items: [
+    { id: 'payments', etiqueta: 'Pagos y Formularios', icono: CreditCard, titulo: 'Pagos y Formularios' },
+    { id: 'facturacion', etiqueta: 'Facturación', icono: Receipt, titulo: 'Facturación' },
+  ] },
+  { id: 'sistema', titulo: 'Sistema', items: [
+    { id: 'settings', etiqueta: 'Configuración', icono: Settings, titulo: 'Configuración' },
+    { id: 'ayuda', etiqueta: 'Ayuda', icono: LifeBuoy, titulo: 'Guía de uso' },
+  ] },
+];
+
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -149,16 +192,21 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTabState] = useState(() => {
     return localStorage.getItem('adminActiveTab') || 'dashboard';
   });
-  const cambiosCursoRef = useRef({ reglas: false, evaluacion: false });
+  const cambiosCursoRef = useRef({ reglas: false, evaluacion: false, formulario: false });
   const permitirSalidaCurso = () => !Object.values(cambiosCursoRef.current).some(Boolean)
-    || window.confirm('Hay cambios sin guardar en las reglas o la evaluación. ¿Salir y descartarlos?');
+    || window.confirm('Hay cambios sin guardar en el curso (información, reglas o evaluación). ¿Salir y descartarlos?');
   const cambiosReglas = React.useCallback((valor) => { cambiosCursoRef.current.reglas = valor; }, []);
   const cambiosEvaluacion = React.useCallback((valor) => { cambiosCursoRef.current.evaluacion = valor; }, []);
 
   const setActiveTab = (tab) => {
     if (tab !== activeTab && !permitirSalidaCurso()) return;
+    // Si se confirmó salir con el curso a medio editar, los cambios se
+    // descartan de verdad (antes quedaban ahí al volver a Cursos).
+    if (tab !== activeTab && cambiosCursoRef.current.formulario) cerrarEditorCurso();
+    // En el celular el menú tapa el contenido: se cierra al elegir.
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) setIsSidebarCollapsed(true);
     setActiveTabState(tab);
-    localStorage.setItem('adminActiveTab', tab);
+    try { localStorage.setItem('adminActiveTab', tab); } catch { /* sin almacenamiento */ }
   };
 
   const [theme, setThemeState] = useState(() => {
@@ -177,6 +225,7 @@ const AdminDashboard = () => {
   // Supabase profiles list (both students & admins)
   const [profiles, setProfiles] = useState([]);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
+  const [errorPerfiles, setErrorPerfiles] = useState('');
 
   // Supabase certificates list
   const [certificates, setCertificates] = useState([]);
@@ -205,6 +254,9 @@ const AdminDashboard = () => {
     const saved = localStorage.getItem('courses');
     return saved ? JSON.parse(saved) : [];
   });
+  // Para no mostrar "Aún no hay cursos" mientras llega la primera consulta.
+  const [cursosCargados, setCursosCargados] = useState(false);
+  const [errorCursos, setErrorCursos] = useState('');
 
 
   // Categories list
@@ -290,6 +342,30 @@ const AdminDashboard = () => {
     questions: []
   });
 
+  // Editor de cursos por pestañas: pestaña abierta, las ya visitadas (se
+  // quedan montadas para no perder lo que se esté editando en ellas), la
+  // huella de lo último guardado y el estado del botón de guardar.
+  const [pestanaCurso, setPestanaCurso] = useState('info');
+  const [pestanasCursoVisitadas, setPestanasCursoVisitadas] = useState(['info']);
+  const [firmaCursoGuardada, setFirmaCursoGuardada] = useState('');
+  const [estadoGuardadoCurso, setEstadoGuardadoCurso] = useState('idle');
+  const [intentoGuardarCurso, setIntentoGuardarCurso] = useState(false);
+  const [camposCursoTocados, setCamposCursoTocados] = useState({});
+  const [recargaChecklist, setRecargaChecklist] = useState(0);
+  const cursoSucio = showCourseForm && firmaCurso(courseForm) !== firmaCursoGuardada;
+  useEffect(() => {
+    cambiosCursoRef.current.formulario = cursoSucio;
+    if (!cursoSucio) return undefined;
+    const salir = (e) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', salir);
+    return () => window.removeEventListener('beforeunload', salir);
+  }, [cursoSucio]);
+
+  // Lista de cursos: búsqueda y filtros.
+  const [busquedaCursos, setBusquedaCursos] = useState('');
+  const [filtroEstadoCursos, setFiltroEstadoCursos] = useState('todos');
+  const [filtroAccesoCursos, setFiltroAccesoCursos] = useState('todos');
+
   // Divisiones, para filtrar el directorio de alumnos.
   const [divisionesLista, setDivisionesLista] = useState([]);
   const [studentDivisionFilter, setStudentDivisionFilter] = useState('');
@@ -311,14 +387,28 @@ const AdminDashboard = () => {
   // Tareas sin revisar: se muestran como contador en el menú.
   const [tareasPendientes, setTareasPendientes] = useState(0);
 
-  // Se cuenta al entrar al panel, no solo al abrir la pestaña de Tareas.
+  // Solicitudes de inscripción pendientes (insignia de Alumnos). `null` si la
+  // tabla aún no existe o no se pudo leer: no se muestra nada.
+  const [solicitudesPendientes, setSolicitudesPendientes] = useState(null);
+
+  // Se cuentan al entrar al panel y al cambiar de sección, para que las
+  // insignias del menú no se queden con números viejos. Son consultas de
+  // solo conteo (head) y fallan en silencio.
   useEffect(() => {
-    supabase
-      .from('tarea_entregas')
-      .select('id', { count: 'exact', head: true })
-      .eq('estado', 'entregada')
-      .then(({ count, error }) => { if (!error) setTareasPendientes(count || 0); });
-  }, []);
+    let vigente = true;
+    const contar = (consulta, guardar) => Promise.resolve(consulta)
+      .then(({ count, error }) => { if (vigente) guardar(error ? null : (count || 0)); })
+      .catch(() => { if (vigente) guardar(null); });
+    contar(
+      supabase.from('tarea_entregas').select('id', { count: 'exact', head: true }).eq('estado', 'entregada'),
+      (n) => setTareasPendientes(n || 0)
+    );
+    contar(
+      supabase.from('solicitudes_inscripcion').select('id', { count: 'exact', head: true }).eq('estado', 'pendiente'),
+      setSolicitudesPendientes
+    );
+    return () => { vigente = false; };
+  }, [activeTab]);
 
   // Student details modal states
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -853,6 +943,7 @@ const AdminDashboard = () => {
         { orden: 'id' }
       );
       setProfiles(data || []);
+      setErrorPerfiles('');
       
       // Update statistics
       const studentsCount = (data || []).filter(p => p.rol === 'estudiante').length;
@@ -862,6 +953,7 @@ const AdminDashboard = () => {
       }));
     } catch (err) {
       console.error('Error fetching profiles:', err.message);
+      setErrorPerfiles(err.message || 'Error de conexión');
     } finally {
       setLoadingProfiles(false);
     }
@@ -901,10 +993,13 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const initData = async () => {
-      await fetchProfiles();
-      await fetchCourses();
-      await fetchCategories();
-      await fetchWebinars();
+      // Las categorías cuentan los cursos recién cargados. Los perfiles y
+      // webinars son independientes y no retrasan la lista de cursos.
+      await Promise.allSettled([
+        fetchProfiles(),
+        fetchWebinars(),
+        fetchCourses().then(() => fetchCategories()),
+      ]);
     };
     initData();
   }, []);
@@ -1424,6 +1519,7 @@ const AdminDashboard = () => {
       case 'students': return 'Directorio de Alumnos';
       case 'certificates': return 'Certificados';
       case 'categories': return 'Categorías';
+      case 'webinars': return 'Webinars';
       case 'reports': return 'Reportes Académicos';
       case 'metricas': return 'Métricas de Cursos';
       case 'tareas': return 'Tareas';
@@ -1435,6 +1531,7 @@ const AdminDashboard = () => {
       case 'facturacion': return 'Facturación';
       case 'admins': return 'Administradores';
       case 'settings': return 'Configuración General';
+      case 'ayuda': return 'Guía de uso';
       default: return 'Portal HCE Admin';
     }
   };
@@ -1499,6 +1596,7 @@ const AdminDashboard = () => {
           questions: questionsByCourse[c.id] || []
         };
       });
+      setErrorCursos('');
       if (dbCourses && dbCourses.length > 0) {
         setCourses(coursesWithQuestions);
         localStorage.setItem('courses', JSON.stringify(coursesWithQuestions));
@@ -1508,8 +1606,11 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       console.error('Error fetching courses from Supabase:', err.message);
+      setErrorCursos(err.message || 'Error de conexión');
       const saved = localStorage.getItem('courses');
       setCourses(saved ? JSON.parse(saved) : []);
+    } finally {
+      setCursosCargados(true);
     }
   };
 
@@ -1542,45 +1643,57 @@ const AdminDashboard = () => {
     }
   };
 
-  // Lleva el formulario a la vista (en móvil queda debajo de la tabla).
+  // Lleva el editor a la vista (arriba de la sección de cursos).
   const courseFormRef = useRef(null);
   const mostrarFormularioCurso = () => {
     setTimeout(() => courseFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
   };
 
-  const handleOpenCourseCreate = () => {
-    if (!permitirSalidaCurso()) return;
-    setEditingCourse(null);
-    setCourseForm({
-      title: '',
-      description: '',
-      duracion: '',
-      modalidad: 'Online',
-      requisitos: '',
-      image: '',
-      link: '',
-      minAprobacion: 80,
-      // Un curso nuevo nace como borrador: los alumnos no lo ven hasta activarlo.
-      activo: false,
-      youtube_video_id: '',
-      certificado_template_url: '',
-      certificado_x: 300,
-      certificado_y: 400,
-      certificado_font_size: 40,
-      category_id: '',
-      tipo: 'gratis',
-      precio_mxn: '',
-      vigencia_meses: '',
-      questions: []
-    });
+  // Deja el editor listo con un formulario y su huella "guardada".
+  const prepararEditorCurso = (curso, formulario, pestana) => {
+    const inicial = pestana || pestanaInicialCurso(!!curso);
+    setEditingCourse(curso);
+    setCourseForm(formulario);
+    setFirmaCursoGuardada(firmaCurso(formulario));
+    setPestanaCurso(inicial);
+    setPestanasCursoVisitadas([inicial]);
+    setEstadoGuardadoCurso('idle');
+    setIntentoGuardarCurso(false);
+    setCamposCursoTocados({});
     setShowCourseForm(true);
     mostrarFormularioCurso();
   };
 
-  const handleOpenCourseEdit = (course) => {
+  const formularioCursoNuevo = () => ({
+    title: '',
+    description: '',
+    duracion: '',
+    modalidad: 'Online',
+    requisitos: '',
+    image: '',
+    link: '',
+    minAprobacion: 80,
+    // Un curso nuevo nace como borrador: los alumnos no lo ven hasta activarlo.
+    activo: false,
+    youtube_video_id: '',
+    certificado_template_url: '',
+    certificado_x: 300,
+    certificado_y: 400,
+    certificado_font_size: 40,
+    category_id: '',
+    tipo: 'gratis',
+    precio_mxn: '',
+    vigencia_meses: '',
+    questions: []
+  });
+
+  const handleOpenCourseCreate = () => {
     if (!permitirSalidaCurso()) return;
-    setEditingCourse(course);
-    setCourseForm({
+    prepararEditorCurso(null, formularioCursoNuevo());
+  };
+
+  const abrirCursoEnEditor = (course, pestana) => {
+    prepararEditorCurso(course, {
       title: course.title,
       description: course.description,
       duracion: course.duracion,
@@ -1602,39 +1715,58 @@ const AdminDashboard = () => {
       // Copia profunda: editar una pregunta no debe tocar la lista de cursos
       // hasta que se guarde.
       questions: (course.questions || []).map(q => ({ ...q, options: [...(q.options || [])] }))
-    });
-    setShowCourseForm(true);
-    mostrarFormularioCurso();
+    }, pestana);
+  };
+
+  const handleOpenCourseEdit = (course) => {
+    if (!permitirSalidaCurso()) return;
+    abrirCursoEnEditor(course);
+  };
+
+  // Cierra el editor sin preguntar (quien llama ya confirmó si hacía falta).
+  const cerrarEditorCurso = () => {
+    setShowCourseForm(false);
+    setEditingCourse(null);
+    const limpio = { ...formularioCursoNuevo(), activo: true };
+    setCourseForm(limpio);
+    setFirmaCursoGuardada(firmaCurso(limpio));
+    cambiosCursoRef.current.formulario = false;
+    setEstadoGuardadoCurso('idle');
+    setIntentoGuardarCurso(false);
+    setCamposCursoTocados({});
+    try {
+      localStorage.removeItem('adminShowCourseForm');
+      localStorage.removeItem('adminEditingCourse');
+      localStorage.removeItem('adminCourseForm');
+    } catch { /* sin almacenamiento */ }
   };
 
   const handleCloseCourseForm = () => {
     if (!permitirSalidaCurso()) return;
-    setShowCourseForm(false);
-    setEditingCourse(null);
-    setCourseForm({
-      title: '',
-      description: '',
-      duracion: '',
-      modalidad: 'Online',
-      requisitos: '',
-      image: '',
-      link: '',
-      minAprobacion: 80,
-      activo: true,
-      youtube_video_id: '',
-      certificado_template_url: '',
-      certificado_x: 300,
-      certificado_y: 400,
-      certificado_font_size: 40,
-      category_id: '',
-      tipo: 'gratis',
-      precio_mxn: '',
-      vigencia_meses: '',
-      questions: []
-    });
-    localStorage.removeItem('adminShowCourseForm');
-    localStorage.removeItem('adminEditingCourse');
-    localStorage.removeItem('adminCourseForm');
+    cerrarEditorCurso();
+  };
+
+  // Cambia de pestaña dentro del editor. Las de contenido (lecciones, reglas…)
+  // necesitan que el curso ya exista.
+  const cambiarPestanaCurso = (id) => {
+    const pestana = PESTANAS_CURSO.find((p) => p.id === id);
+    if (!pestana) return;
+    if (pestana.requiereGuardado && !(editingCourse?.id && !isNaN(Number(editingCourse.id)))) return;
+    setPestanaCurso(id);
+    setPestanasCursoVisitadas((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    recordarPestanaCurso(id);
+    // Al volver de Lecciones o Reglas el checklist se actualiza.
+    setRecargaChecklist((n) => n + 1);
+  };
+
+  // Desde el panel inicial: abre un curso directo en una pestaña.
+  const abrirCursoDesdePanel = (courseId, pestana) => {
+    const course = courses.find((c) => Number(c.id) === Number(courseId));
+    if (!course) { setActiveTab('courses'); return; }
+    if (!permitirSalidaCurso()) return;
+    setActiveTabState('courses');
+    try { localStorage.setItem('adminActiveTab', 'courses'); } catch { /* sin almacenamiento */ }
+    abrirCursoEnEditor(course, pestana);
   };
 
   const handleCloseAddStudentModal = () => {
@@ -1857,11 +1989,13 @@ const AdminDashboard = () => {
       await fetchCourses();
       if (!editingCourse && courseId) {
         setCourseForm(prev => ({ ...prev, activo: false }));
-        showToast('Curso creado como borrador (inactivo). Agrégale sus lecciones abajo y actívalo cuando esté listo.', 'success');
-        return;
+        showToast('Curso creado como borrador. Ya puedes agregarle lecciones, reglas y archivos en sus pestañas.', 'success');
+        return true;
       }
+      // El editor se queda abierto (por pestañas): se sigue trabajando en el
+      // mismo curso sin tener que volver a buscarlo.
       showToast('Curso actualizado correctamente', 'success');
-      handleCloseCourseForm();
+      return true;
     } catch (err) {
       // Sin guardado "local": se muestra el error real y el formulario queda
       // abierto con lo que se escribió para poder reintentar.
@@ -2705,6 +2839,104 @@ const AdminDashboard = () => {
   // Registradas pero todavía sin acceso a sus cursos.
   const cuentasPendientes = profiles.filter(p => p.rol === 'estudiante' && p.aprobado === false && p.activo !== false);
 
+  // Insignias del menú lateral.
+  const insigniasMenu = {
+    students: {
+      total: cuentasPendientes.length + (solicitudesPendientes || 0),
+      titulo: [
+        cuentasPendientes.length > 0 && `${cuentasPendientes.length} ${cuentasPendientes.length === 1 ? 'cuenta por activar' : 'cuentas por activar'}`,
+        solicitudesPendientes > 0 && `${solicitudesPendientes} ${solicitudesPendientes === 1 ? 'solicitud de inscripción' : 'solicitudes de inscripción'}`,
+      ].filter(Boolean).join(' · '),
+    },
+    tareas: {
+      total: tareasPendientes,
+      titulo: `${tareasPendientes} ${tareasPendientes === 1 ? 'tarea por revisar' : 'tareas por revisar'}`,
+    },
+  };
+
+  // Lista de cursos con búsqueda y filtros.
+  const textoBusquedaCursos = busquedaCursos.trim().toLowerCase();
+  const cursosFiltrados = courses.filter((c) => {
+    if (filtroEstadoCursos === 'activos' && !c.activo) return false;
+    if (filtroEstadoCursos === 'borradores' && c.activo) return false;
+    const dePago = c.tipo === 'pago';
+    if (filtroAccesoCursos === 'gratis' && dePago) return false;
+    if (filtroAccesoCursos === 'pago' && !dePago) return false;
+    if (!textoBusquedaCursos) return true;
+    return [c.title, c.requisitos, c.modalidad, `#${c.id}`, String(c.id)]
+      .some((v) => String(v || '').toLowerCase().includes(textoBusquedaCursos));
+  });
+  const conteoCursos = {
+    activos: courses.filter((c) => c.activo).length,
+    borradores: courses.filter((c) => !c.activo).length,
+    gratis: courses.filter((c) => c.tipo !== 'pago').length,
+    pago: courses.filter((c) => c.tipo === 'pago').length,
+  };
+  const hayFiltrosCursos = !!textoBusquedaCursos || filtroEstadoCursos !== 'todos' || filtroAccesoCursos !== 'todos';
+  const limpiarFiltrosCursos = () => { setBusquedaCursos(''); setFiltroEstadoCursos('todos'); setFiltroAccesoCursos('todos'); };
+
+  // Editor de curso: curso guardado (si existe), estado y errores por campo.
+  const idCursoEditado = editingCourse?.id && !isNaN(Number(editingCourse.id)) ? Number(editingCourse.id) : null;
+  const cursoEditadoGuardado = idCursoEditado ? courses.find((c) => Number(c.id) === idCursoEditado) : null;
+  const erroresCurso = showCourseForm ? validarCurso(courseForm, { esMiniaturaYoutube }) : [];
+  const errorCampoCurso = (campo) => {
+    if (!intentoGuardarCurso && !camposCursoTocados[campo]) return null;
+    return erroresCurso.find((e) => e.campo === campo)?.mensaje || null;
+  };
+  const tocarCampoCurso = (campo) => setCamposCursoTocados((prev) => (prev[campo] ? prev : { ...prev, [campo]: true }));
+  const pestanasConErrorCurso = intentoGuardarCurso
+    ? [...new Set(erroresCurso.map((e) => e.pestana))]
+    : [...new Set(erroresCurso.filter((e) => camposCursoTocados[e.campo]).map((e) => e.pestana))];
+  // Propiedades de accesibilidad y aviso de error para un campo del formulario.
+  const propsCampoCurso = (campo) => {
+    const error = errorCampoCurso(campo);
+    return {
+      id: `curso-${campo}`,
+      'aria-invalid': error ? true : undefined,
+      'aria-describedby': error ? `curso-${campo}-error` : undefined,
+      className: error ? 'campo-con-error' : undefined,
+      onBlur: () => tocarCampoCurso(campo),
+    };
+  };
+  const avisoCampoCurso = (campo) => {
+    const error = errorCampoCurso(campo);
+    return error ? <small id={`curso-${campo}-error`} className="campo-error-texto" role="alert">{error}</small> : null;
+  };
+
+  // Guardar desde la barra fija: valida todo y, si falta algo, salta a la
+  // pestaña del primer error y lo enfoca (nada de `required` escondidos en
+  // otras pestañas que bloqueen el envío sin decir por qué).
+  const guardarCurso = async (e) => {
+    e?.preventDefault?.();
+    if (estadoGuardadoCurso === 'guardando') return;
+    setIntentoGuardarCurso(true);
+    if (erroresCurso.length) {
+      const primero = erroresCurso[0];
+      if (pestanaCurso !== primero.pestana) cambiarPestanaCurso(primero.pestana);
+      setTimeout(() => {
+        const campo = document.getElementById(primero.foco);
+        campo?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        campo?.focus({ preventScroll: true });
+      }, 80);
+      showToast(erroresCurso.length === 1 ? primero.mensaje : `${primero.mensaje} (y ${erroresCurso.length - 1} más por corregir)`, 'error');
+      return;
+    }
+    const firma = firmaCurso(courseForm);
+    setEstadoGuardadoCurso('guardando');
+    const ok = await handleSaveCourse({ preventDefault() {} });
+    if (ok) {
+      setFirmaCursoGuardada(firma);
+      setEstadoGuardadoCurso('guardado');
+      setIntentoGuardarCurso(false);
+      setCamposCursoTocados({});
+      setRecargaChecklist((n) => n + 1);
+    } else {
+      setEstadoGuardadoCurso('idle');
+    }
+  };
+
+  const actualizarCurso = (cambios) => setCourseForm((prev) => ({ ...prev, ...cambios }));
+
   // Helper formatting dates
   const formatDate = (isoString) => {
     if (!isoString) return 'Desconocido';
@@ -2745,161 +2977,37 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <nav className="sidebar-menu">
-          <button 
-            className={`menu-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-            title="Dashboard"
-          >
-            <Home size={20} className="menu-icon" />
-            <span className="menu-label">Dashboard</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'courses' ? 'active' : ''}`}
-            onClick={() => setActiveTab('courses')}
-            title="Gestión de Cursos"
-          >
-            <BookOpen size={20} className="menu-icon" />
-            <span className="menu-label">Gestión de Cursos</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'students' ? 'active' : ''}`}
-            onClick={() => setActiveTab('students')}
-            title="Alumnos"
-          >
-            <GraduationCap size={20} className="menu-icon" />
-            <span className="menu-label">Alumnos</span>
-            {cuentasPendientes.length > 0 && <span className="menu-contador" title="Cuentas por activar">{cuentasPendientes.length}</span>}
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'certificates' ? 'active' : ''}`}
-            onClick={() => setActiveTab('certificates')}
-            title="Certificados"
-          >
-            <Award size={20} className="menu-icon" />
-            <span className="menu-label">Certificados</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'categories' ? 'active' : ''}`}
-            onClick={() => setActiveTab('categories')}
-            title="Categorías"
-          >
-            <FolderOpen size={20} className="menu-icon" />
-            <span className="menu-label">Categorías</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'webinars' ? 'active' : ''}`}
-            onClick={() => setActiveTab('webinars')}
-            title="Webinars"
-          >
-            <CalendarDays size={20} className="menu-icon" />
-            <span className="menu-label">Webinars</span>
-          </button>
-
-          <button
-            className={`menu-item ${activeTab === 'tareas' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tareas')}
-            title="Tareas por revisar"
-          >
-            <ClipboardList size={20} className="menu-icon" />
-            <span className="menu-label">Tareas</span>
-            {tareasPendientes > 0 && <span className="menu-contador">{tareasPendientes}</span>}
-          </button>
-
-          <button
-            className={`menu-item ${activeTab === 'grupos' ? 'active' : ''}`}
-            onClick={() => setActiveTab('grupos')}
-            title="Grupos e inscripción masiva"
-          >
-            <UsersRound size={20} className="menu-icon" />
-            <span className="menu-label">Grupos</span>
-          </button>
-
-          <button
-            className={`menu-item ${activeTab === 'divisiones' ? 'active' : ''}`}
-            onClick={() => setActiveTab('divisiones')}
-            title="Divisiones (otras asociaciones)"
-          >
-            <Building2 size={20} className="menu-icon" />
-            <span className="menu-label">Divisiones</span>
-          </button>
-
-          <button
-            className={`menu-item ${activeTab === 'notificaciones' ? 'active' : ''}`}
-            onClick={() => setActiveTab('notificaciones')}
-            title="Notificaciones automáticas por correo"
-          >
-            <BellRing size={20} className="menu-icon" />
-            <span className="menu-label">Notificaciones</span>
-          </button>
-
-          <button
-            className={`menu-item ${activeTab === 'mensajes' ? 'active' : ''}`}
-            onClick={() => setActiveTab('mensajes')}
-            title="Mensajes y comunicados"
-          >
-            <MessagesSquare size={20} className="menu-icon" />
-            <span className="menu-label">Mensajes</span>
-          </button>
-
-          <button
-            className={`menu-item ${activeTab === 'metricas' ? 'active' : ''}`}
-            onClick={() => setActiveTab('metricas')}
-            title="Métricas de cursos"
-          >
-            <TrendingUp size={20} className="menu-icon" />
-            <span className="menu-label">Métricas</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'reports' ? 'active' : ''}`}
-            onClick={() => setActiveTab('reports')}
-            title="Reportes"
-          >
-            <BarChart2 size={20} className="menu-icon" />
-            <span className="menu-label">Reportes</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'payments' ? 'active' : ''}`}
-            onClick={() => setActiveTab('payments')}
-            title="Pagos y Formularios"
-          >
-            <CreditCard size={20} className="menu-icon" />
-            <span className="menu-label">Pagos y Formularios</span>
-          </button>
-          
-          <button 
-            className={`menu-item ${activeTab === 'facturacion' ? 'active' : ''}`}
-            onClick={() => setActiveTab('facturacion')}
-            title="Facturación"
-          >
-            <Receipt size={20} className="menu-icon" />
-            <span className="menu-label">Facturación</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'admins' ? 'active' : ''}`}
-            onClick={() => setActiveTab('admins')}
-            title="Administradores"
-          >
-            <Users size={20} className="menu-icon" />
-            <span className="menu-label">Administradores</span>
-          </button>
-
-          <button 
-            className={`menu-item ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-            title="Configuración"
-          >
-            <Settings size={20} className="menu-icon" />
-            <span className="menu-label">Configuración</span>
-          </button>
+        <nav className="sidebar-menu" aria-label="Secciones del panel">
+          {SECCIONES_MENU.map((seccion) => (
+            <div key={seccion.id} className="menu-seccion" role="group" aria-label={seccion.titulo || 'Inicio'}>
+              {seccion.titulo && (
+                <div className="menu-seccion-titulo" aria-hidden="true">
+                  <span>{seccion.titulo}</span>
+                </div>
+              )}
+              {seccion.items.map((item) => {
+                const Icono = item.icono;
+                const insignia = insigniasMenu[item.id];
+                const activo = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`menu-item ${activo ? 'active' : ''}`}
+                    onClick={() => setActiveTab(item.id)}
+                    title={insignia?.total > 0 ? `${item.titulo} — ${insignia.titulo}` : item.titulo}
+                    aria-current={activo ? 'page' : undefined}
+                  >
+                    <Icono size={20} className="menu-icon" />
+                    <span className="menu-label">{item.etiqueta}</span>
+                    {insignia?.total > 0 && (
+                      <span className="menu-contador" aria-label={insignia.titulo}>{insignia.total > 99 ? '99+' : insignia.total}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
 
           <div className="sidebar-separator"></div>
 
@@ -2954,6 +3062,30 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
+              <PendientesHoy
+                cuentas={errorPerfiles ? null : cuentasPendientes.length}
+                cargando={loadingProfiles || !cursosCargados}
+                solicitudes={solicitudesPendientes}
+                tareas={tareasPendientes}
+                borradores={errorCursos ? null : courses.filter((c) => !c.activo).length}
+                cursos={courses}
+                onIr={(tab, opciones) => {
+                  if (tab === 'courses' && opciones?.filtro) {
+                    // Lleva a la lista ya filtrada (cierra el editor si estaba abierto).
+                    if (!permitirSalidaCurso()) return;
+                    if (showCourseForm) cerrarEditorCurso();
+                    setFiltroEstadoCursos(opciones.filtro);
+                    setFiltroAccesoCursos('todos');
+                    setBusquedaCursos('');
+                    setActiveTabState('courses');
+                    try { localStorage.setItem('adminActiveTab', 'courses'); } catch { /* sin almacenamiento */ }
+                    return;
+                  }
+                  setActiveTab(tab);
+                }}
+                onAbrirCurso={abrirCursoDesdePanel}
+              />
+
               {/* KPI Cards row */}
               <div className="kpi-row">
                 <div className="kpi-card">
@@ -2986,13 +3118,15 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
+                {/* Antes era "Cursos Activos", que salía del mismo número que
+                    "Cursos Publicados": dos tarjetas diciendo lo mismo. */}
                 <div className="kpi-card">
                   <div className="kpi-icon-wrapper orange">
-                    <BarChart2 size={20} />
+                    <Users size={20} />
                   </div>
                   <div className="kpi-details">
-                    <span className="kpi-label">Cursos Activos</span>
-                    <h3 className="kpi-value">{stats.cursosActivos}</h3>
+                    <span className="kpi-label">Inscripciones</span>
+                    <h3 className="kpi-value">{inscripcionesTodas ? inscripcionesTodas.length : '—'}</h3>
                   </div>
                 </div>
               </div>
@@ -4027,579 +4161,654 @@ const AdminDashboard = () => {
 
           {/* VIEW: CURSOS (CRUD) */}
           {activeTab === 'courses' && (
-            <div className="courses-view">
-              <div className="section-title-row">
-                <h2>Gestión del Catálogo de Cursos</h2>
-                <button className="btn-crm-action solid" onClick={handleOpenCourseCreate}>
-                  <Plus size={16} />
-                  <span>Crear Curso</span>
-                </button>
-              </div>
-
+            <div className="courses-view" ref={courseFormRef}>
               {showCourseForm ? (
-                <div ref={courseFormRef} className="settings-card" style={{ marginBottom: '30px' }}>
-                  <h3>{editingCourse ? 'Editar Curso' : 'Crear Nuevo Curso'}</h3>
-                  <form onSubmit={handleSaveCourse} className="crm-settings-form" style={{ marginTop: '20px' }}>
-                    <fieldset disabled={actionLoading} className="course-editor-fields">
-                    <div className="form-group-row">
-                      <div className="crm-input-group">
-                        <label>Título del Curso *</label>
-                        <input 
-                          type="text" 
-                          required 
-                          value={courseForm.title} 
-                          onChange={(e) => setCourseForm({...courseForm, title: e.target.value})} 
-                          placeholder="Ej. Diplomado Avanzado en ECMO"
-                        />
-                      </div>
-                      <div className="crm-input-group">
-                        <label>Duración (Ej. 120 horas) *</label>
-                        <input 
-                          type="text" 
-                          required 
-                          value={courseForm.duracion} 
-                          onChange={(e) => setCourseForm({...courseForm, duracion: e.target.value})} 
-                          placeholder="Ej. 40 horas"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-group-row">
-                      <div className="crm-input-group">
-                        <label>Modalidad *</label>
-                        <select 
-                          value={courseForm.modalidad} 
-                          onChange={(e) => setCourseForm({...courseForm, modalidad: e.target.value})}
-                          style={{
-                            width: '100%',
-                            padding: '12px',
-                            borderRadius: '8px',
-                            border: '1px solid var(--border-color)',
-                            backgroundColor: 'var(--bg-gray)'
-                          }}
-                        >
-                          <option value="Online">Online</option>
-                          <option value="Híbrido">Híbrido</option>
-                          <option value="Presencial">Presencial</option>
-                          <option value="Simulado">Simulado</option>
-                        </select>
-                      </div>
-                      <div className="crm-input-group">
-                        <label>Porcentaje Mínimo de Aprobación (%)</label>
-                        <input 
-                          type="number" 
-                          min="0" max="100" required
-                          value={courseForm.minAprobacion} 
-                          onChange={(e) => setCourseForm({...courseForm, minAprobacion: parseInt(e.target.value)})}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="crm-input-group">
-                      <label>Descripción Breve *</label>
-                      <textarea 
-                        required 
-                        rows="3" 
-                        value={courseForm.description} 
-                        onChange={(e) => setCourseForm({...courseForm, description: e.target.value})} 
-                        placeholder="Escribe una pequeña síntesis del entrenamiento..."
-                        style={{
-                          width: '100%',
-                          padding: '12px',
-                          borderRadius: '8px',
-                          border: '1px solid var(--border-color)',
-                          backgroundColor: 'var(--bg-gray)',
-                          fontFamily: 'inherit'
-                        }}
-                      />
-                    </div>
-
-                    <div className="form-group-row">
-                      <div className="crm-input-group">
-                        <label>Requisitos Académicos</label>
-                        <input 
-                          type="text" 
-                          value={courseForm.requisitos} 
-                          onChange={(e) => setCourseForm({...courseForm, requisitos: e.target.value})} 
-                          placeholder="Ej. Licenciatura Médica"
-                        />
-                      </div>
-                      <div className="crm-input-group">
-                        <label>Portada del curso</label>
-                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                          <input
-                            type="text"
-                            value={courseForm.image}
-                            onChange={(e) => setCourseForm({...courseForm, image: e.target.value})}
-                            placeholder="URL de la imagen, o súbela"
-                            style={{ flex: '1 1 200px', minWidth: 0 }}
-                          />
-                          <input
-                            type="file"
-                            id="curso-portada-archivo"
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                            onChange={handleCoursePortadaUpload}
-                          />
-                          <label htmlFor="curso-portada-archivo" className="btn-crm-action outlined" style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                            <Upload size={15} /> Subir
-                          </label>
-                        </div>
-                        {courseForm.tipo === 'pago' && esMiniaturaYoutube(courseForm.image) && (
-                          <small style={{ color: 'var(--accent-orange)', fontSize: '0.75rem', lineHeight: 1.5 }}>
-                            Esta portada es la miniatura de YouTube y deja ver el video sin pagar. Sube una imagen propia.
-                          </small>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="form-group-row">
-                      <div className="crm-input-group">
-                        <label>Acceso al curso</label>
-                        <select
-                          value={courseForm.tipo}
-                          onChange={(e) => setCourseForm({ ...courseForm, tipo: e.target.value })}
-                          style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-gray)', color: 'var(--text-dark)' }}
-                        >
-                          <option value="gratis">Gratis — el alumno se inscribe solo</option>
-                          <option value="pago">De pago — se inscribe al pagar</option>
-                        </select>
-                      </div>
-                      {courseForm.tipo === 'pago' && (
-                        <div className="crm-input-group">
-                          <label>Precio (MXN) *</label>
-                          <input
-                            type="number"
-                            min="1"
-                            required
-                            value={courseForm.precio_mxn}
-                            onChange={(e) => setCourseForm({ ...courseForm, precio_mxn: e.target.value })}
-                            placeholder="Ej. 1500"
-                          />
-                          <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                            Quien paga desde el extranjero lo ve en dólares a 17.5 por dólar.
-                          </small>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="form-group-row">
-                      <div className="crm-input-group">
-                        <label>Categoría del Catálogo</label>
-                        <select
-                          value={courseForm.category_id || ''}
-                          onChange={(e) => setCourseForm({...courseForm, category_id: e.target.value ? parseInt(e.target.value) : ''})}
-                          style={{
-                            width: '100%',
-                            padding: '10px 14px',
-                            borderRadius: '8px',
-                            border: '1px solid var(--border-color)',
-                            backgroundColor: 'var(--bg-white)',
-                            color: 'var(--text-main)',
-                            fontSize: '0.95rem',
-                            outline: 'none',
-                            transition: 'border-color 0.2s',
-                            height: '42px'
-                          }}
-                        >
-                          <option value="">-- Sin Categoría --</option>
-                          {categories.map(cat => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="crm-input-group">
-                        <label>Vigencia del certificado (meses)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={courseForm.vigencia_meses}
-                          onChange={(e) => setCourseForm({ ...courseForm, vigencia_meses: e.target.value })}
-                          placeholder="Vacío = no vence"
-                        />
-                        <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                          Si vence, al alumno se le avisa 30 días antes para que vuelva a presentar el examen.
-                        </small>
-                      </div>
-                    </div>
-
-                    <div className="form-group-row">
-                      <div className="crm-input-group">
-                        <label>Subir Plantilla del Certificado (JPG/PNG)</label>
-                        <input 
-                          type="file" 
-                          accept="image/*"
-                          onChange={handleCertificateTemplateChange}
-                        />
-                        {courseForm.certificado_template_url && (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--primary-cyan)', display: 'block', marginTop: '5px' }}>
-                            Subido: {courseForm.certificado_template_url.substring(0, 50)}...
-                          </span>
-                        )}
-                      </div>
-                      <div className="crm-input-group">
-                        <label>URL Directa de Plantilla</label>
-                        <input 
-                          type="text" 
-                          value={courseForm.certificado_template_url || ''} 
-                          onChange={(e) => setCourseForm({...courseForm, certificado_template_url: e.target.value})} 
-                          placeholder="http://..."
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-group-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-                      <div className="crm-input-group">
-                        <label>Posición X del Nombre (px)</label>
-                        <input 
-                          type="number" 
-                          value={courseForm.certificado_x ?? 300}
-                          onChange={(e) => setCourseForm({...courseForm, certificado_x: parseInt(e.target.value) || 0})}
-                        />
-                      </div>
-                      <div className="crm-input-group">
-                        <label>Posición Y del Nombre (px)</label>
-                        <input 
-                          type="number" 
-                          value={courseForm.certificado_y ?? 400}
-                          onChange={(e) => setCourseForm({...courseForm, certificado_y: parseInt(e.target.value) || 0})}
-                        />
-                      </div>
-                      <div className="crm-input-group">
-                        <label>Tamaño de Fuente (px)</label>
-                        <input 
-                          type="number" 
-                          value={courseForm.certificado_font_size || 40} 
-                          onChange={(e) => setCourseForm({...courseForm, certificado_font_size: parseInt(e.target.value) || 0})}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Visual Positioning Preview */}
-                    <div style={{
-                      marginTop: '25px',
-                      padding: '20px',
-                      background: 'var(--bg-gray)',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-color)',
-                      marginBottom: '25px'
-                    }}>
-                      <h4 style={{ fontSize: '0.9rem', marginBottom: '8px', color: 'var(--primary-cyan)', fontWeight: 'bold' }}>
-                        Ajuste y Posición Visual del Certificado
-                      </h4>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: '1.4' }}>
-                        Usa los controles deslizantes para posicionar el nombre del estudiante sobre el diploma. La previsualización muestra en tiempo real cómo se generará el documento oficial.
-                      </p>
-                      
-                      {/* Sliders */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '25px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                          <span style={{ fontSize: '0.8rem', minWidth: '100px', fontWeight: '500' }}>Posición X (Ancho):</span>
-                          <input 
-                            type="range" 
-                            min="0" 
-                            max={naturalDimensions.width} 
-                            value={courseForm.certificado_x ?? 300}
-                            onChange={(e) => setCourseForm({...courseForm, certificado_x: parseInt(e.target.value) || 0})}
-                            style={{ flex: 1, accentColor: 'var(--primary-cyan)', cursor: 'pointer' }}
-                          />
-                          <span style={{ fontSize: '0.8rem', minWidth: '45px', textAlign: 'right', fontWeight: 'bold' }}>{courseForm.certificado_x ?? 300}px</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                          <span style={{ fontSize: '0.8rem', minWidth: '100px', fontWeight: '500' }}>Posición Y (Alto):</span>
-                          <input 
-                            type="range" 
-                            min="0" 
-                            max={naturalDimensions.height} 
-                            value={courseForm.certificado_y ?? 400}
-                            onChange={(e) => setCourseForm({...courseForm, certificado_y: parseInt(e.target.value) || 0})}
-                            style={{ flex: 1, accentColor: 'var(--primary-cyan)', cursor: 'pointer' }}
-                          />
-                          <span style={{ fontSize: '0.8rem', minWidth: '45px', textAlign: 'right', fontWeight: 'bold' }}>{courseForm.certificado_y ?? 400}px</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                          <span style={{ fontSize: '0.8rem', minWidth: '100px', fontWeight: '500' }}>Tamaño de Letra:</span>
-                          <input 
-                            type="range" 
-                            min="10" 
-                            max="150" 
-                            value={courseForm.certificado_font_size || 40} 
-                            onChange={(e) => setCourseForm({...courseForm, certificado_font_size: parseInt(e.target.value) || 0})}
-                            style={{ flex: 1, accentColor: 'var(--primary-cyan)', cursor: 'pointer' }}
-                          />
-                          <span style={{ fontSize: '0.8rem', minWidth: '45px', textAlign: 'right', fontWeight: 'bold' }}>{courseForm.certificado_font_size || 40}px</span>
-                        </div>
-                      </div>
-
-                      {/* Image Preview Container */}
-                      <div style={{
-                        position: 'relative',
-                        width: '100%',
-                        maxWidth: '550px',
-                        margin: '0 auto',
-                        border: '3px solid #1E293B',
-                        borderRadius: '10px',
-                        overflow: 'hidden',
-                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
-                        backgroundColor: '#E2E8F0'
-                      }}>
-                        <img 
-                          src={courseForm.certificado_template_url || 'https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-25-51-449.png'} 
-                          alt="Plantilla de Certificado" 
-                          onLoad={(e) => {
-                            setNaturalDimensions({
-                              width: e.target.naturalWidth || 800,
-                              height: e.target.naturalHeight || 600
-                            });
-                          }}
-                          style={{ width: '100%', display: 'block' }}
-                        />
-                        <div style={{
-                          position: 'absolute',
-                          left: `${((courseForm.certificado_x ?? 300) / naturalDimensions.width) * 100}%`,
-                          top: `${((courseForm.certificado_y ?? 400) / naturalDimensions.height) * 100}%`,
-                          transform: 'translate(-50%, -50%)',
-                          fontSize: `${((courseForm.certificado_font_size || 40) / naturalDimensions.height) * 350}px`,
-                          fontFamily: 'Georgia, serif',
-                          fontWeight: 'bold',
-                          color: '#1B2B3C',
-                          whiteSpace: 'nowrap',
-                          pointerEvents: 'none',
-                          textShadow: '0 0 6px rgba(255, 255, 255, 0.95), 0 0 12px rgba(255, 255, 255, 0.7)'
-                        }}>
-                          Nombre del Alumno
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* EXAM BUILDER */}
-                    <div style={{ marginTop: '20px', borderTop: '1px solid var(--border-color)', paddingTop: '20px', marginBottom: '20px' }}>
-                      <h4 style={{ color: 'var(--primary-cyan)', marginBottom: '10px' }}>Preguntas del Examen de Validación</h4>
-                      
-                      {courseForm.questions && courseForm.questions.map((q, qIndex) => (
-                        <div key={qIndex} style={{ padding: '15px', background: 'var(--bg-gray)', borderRadius: '8px', marginBottom: '15px', position: 'relative', border: '1px solid var(--border-color)' }}>
-                          <button 
-                            type="button" 
-                            onClick={() => {
-                              const updated = courseForm.questions.filter((_, idx) => idx !== qIndex);
-                              setCourseForm({ ...courseForm, questions: updated });
-                            }}
-                            style={{ position: 'absolute', right: '10px', top: '10px', color: '#EF4444', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold' }}
-                          >
-                            Eliminar Pregunta
-                          </button>
-                          
-                          <div className="crm-input-group">
-                            <label>Pregunta {qIndex + 1} *</label>
-                            <input 
-                              type="text" 
-                              required 
-                              value={q.question_text} 
-                              onChange={(e) => {
-                                const updated = courseForm.questions.map((pq, i) => i === qIndex ? { ...pq, question_text: e.target.value } : pq);
-                                setCourseForm({ ...courseForm, questions: updated });
-                              }}
-                              placeholder="Ej. ¿Qué significa ECMO?"
-                            />
-                          </div>
-                          
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
-                            {q.options.map((opt, optIndex) => (
-                              <div key={optIndex} className="crm-input-group">
-                                <label>Opción {optIndex + 1} *</label>
-                                <input 
-                                  type="text" 
-                                  required 
-                                  value={opt} 
-                                  onChange={(e) => {
-                                    const updated = courseForm.questions.map((pq, i) => i === qIndex
-                                      ? { ...pq, options: pq.options.map((o, oi) => oi === optIndex ? e.target.value : o) }
-                                      : pq);
-                                    setCourseForm({ ...courseForm, questions: updated });
-                                  }}
-                                  placeholder={`Opción ${optIndex + 1}`}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                          
-                          <div className="crm-input-group" style={{ marginTop: '10px' }}>
-                            <label>Opción Correcta *</label>
-                            <select 
-                              value={q.correct_option_index} 
-                              onChange={(e) => {
-                                const updated = courseForm.questions.map((pq, i) => i === qIndex ? { ...pq, correct_option_index: parseInt(e.target.value) } : pq);
-                                setCourseForm({ ...courseForm, questions: updated });
-                              }}
-                              style={{ 
-                                width: '100%', 
-                                padding: '12px', 
-                                borderRadius: '8px', 
-                                border: '1px solid var(--border-color)',
-                                backgroundColor: 'var(--bg-white)'
-                              }}
-                            >
-                              <option value={0}>Opción 1</option>
-                              <option value={1}>Opción 2</option>
-                              <option value={2}>Opción 3</option>
-                              <option value={3}>Opción 4</option>
-                            </select>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      <button 
-                        type="button" 
-                        className="btn-crm-action outlined" 
-                        onClick={() => {
-                          const newQ = { question_text: '', options: ['', '', '', ''], correct_option_index: 0 };
-                          setCourseForm({ ...courseForm, questions: [...(courseForm.questions || []), newQ] });
-                        }}
-                      >
-                        + Agregar Pregunta
-                      </button>
-                    </div>
-
-                    <div className="form-action-row" style={{ display: 'flex', gap: '10px' }}>
-                      <button type="button" className="btn-crm-action outlined" onClick={handleCloseCourseForm}>
-                        Cancelar
-                      </button>
-                      <button type="submit" className="btn-crm-action solid" disabled={actionLoading}>
-                        <Save size={16} />
-                        <span>{actionLoading ? 'Guardando…' : editingCourse ? 'Guardar Cambios' : 'Guardar borrador'}</span>
-                      </button>
-                    </div>
-                    </fieldset>
-                  </form>
-                </div>
-              ) : null}
-
-              {/* Va fuera del formulario del curso a propósito: tiene su propio
-                  formulario, y uno dentro de otro enviaría el curso completo. */}
-              {showCourseForm && (
-                <div className="settings-card" style={{ marginBottom: '30px' }}>
-                  <h3>Lecciones del curso</h3>
-                  {editingCourse?.id && !isNaN(Number(editingCourse.id)) ? (
-                    <EditorLecciones
-                      key={editingCourse.id}
-                      onCambios={cambiosEvaluacion}
-                      courseId={Number(editingCourse.id)}
-                      cursos={courses}
-                      onCambio={fetchCourses}
-                      notificar={showToast}
-                      confirmar={showConfirm}
+                <EditorCursoPestanas
+                  titulo={courseForm.title}
+                  courseId={idCursoEditado}
+                  activo={!!cursoEditadoGuardado?.activo}
+                  pestana={pestanaCurso}
+                  onPestana={cambiarPestanaCurso}
+                  pestanasConError={pestanasConErrorCurso}
+                  onCerrar={handleCloseCourseForm}
+                  lateral={idCursoEditado ? (
+                    <ChecklistPublicar
+                      key={idCursoEditado}
+                      courseId={idCursoEditado}
+                      form={courseForm}
+                      activo={!!cursoEditadoGuardado?.activo}
+                      sucio={cursoSucio}
+                      recarga={recargaChecklist}
+                      onIr={cambiarPestanaCurso}
+                      onIrGrupos={() => setActiveTab('grupos')}
+                      onActivar={() => handleToggleCourseStatus(cursoEditadoGuardado?.id ?? idCursoEditado)}
                     />
                   ) : (
-                    <p style={{ color: 'var(--text-muted)', margin: '8px 0 0' }}>
-                      Guarda el curso como borrador para agregarle lecciones. Actívalo cuando esté listo.
-                    </p>
+                    <div className="cp-tarjeta cp-nuevo">
+                      <p className="cp-titulo">Listo para publicar</p>
+                      <p>Guarda el borrador y aquí verás qué le falta al curso para activarlo: lecciones, examen, certificado…</p>
+                    </div>
                   )}
-                </div>
-              )}
+                >
+                  {esPestanaFormulario(pestanaCurso) && (
+                    <form id="form-curso" onSubmit={guardarCurso} noValidate className="crm-settings-form ec-formulario">
+                      <fieldset disabled={actionLoading} className="course-editor-fields">
 
-              {showCourseForm && editingCourse?.id && !isNaN(Number(editingCourse.id)) && (
-                <div className="settings-card" style={{ marginBottom: '30px' }}>
-                  <h3>Reglas del curso</h3>
-                  <p style={{ color: 'var(--text-muted)', margin: '4px 0 14px', fontSize: '0.86rem' }}>
-                    Quién puede entrar, por cuánto tiempo y cuándo se da por terminado.
-                  </p>
-                  <ReglasCurso key={editingCourse.id} courseId={Number(editingCourse.id)} cursos={courses} tipoCurso={courseForm.tipo} notificar={showToast} confirmar={showConfirm} onCambios={cambiosReglas} />
-                </div>
-              )}
+                        {pestanaCurso === 'info' && (
+                          <div className="ec-seccion">
+                            <div className="ec-seccion-cabeza">
+                              <h3>Información del curso</h3>
+                              <p>Lo que ven los alumnos en el catálogo y en la página del curso.</p>
+                            </div>
+                            <div className="form-group-row">
+                              <div className="crm-input-group">
+                                <label htmlFor="curso-titulo">Título del curso *</label>
+                                <input
+                                  type="text"
+                                  {...propsCampoCurso('titulo')}
+                                  value={courseForm.title || ''}
+                                  onChange={(e) => { tocarCampoCurso('titulo'); actualizarCurso({ title: e.target.value }); }}
+                                  placeholder="Ej. Diplomado Avanzado en ECMO"
+                                />
+                                {avisoCampoCurso('titulo')}
+                              </div>
+                              <div className="crm-input-group">
+                                <label htmlFor="curso-duracion">Duración *</label>
+                                <input
+                                  type="text"
+                                  {...propsCampoCurso('duracion')}
+                                  value={courseForm.duracion || ''}
+                                  onChange={(e) => { tocarCampoCurso('duracion'); actualizarCurso({ duracion: e.target.value }); }}
+                                  placeholder="Ej. 40 horas"
+                                />
+                                {avisoCampoCurso('duracion')}
+                              </div>
+                            </div>
 
-              {showCourseForm && editingCourse?.id && !isNaN(Number(editingCourse.id)) && (
-                <div className="settings-card" style={{ marginBottom: '30px' }}>
-                  <h3>Biblioteca de archivos</h3>
-                  <p style={{ color: 'var(--text-muted)', margin: '4px 0 14px', fontSize: '0.86rem' }}>
-                    Artículos, manuales, programas… Liga cada archivo a una clase para que aparezca dentro de esa lección, o déjalo en la biblioteca general del curso.
-                  </p>
-                  <BibliotecaCurso key={editingCourse.id} courseId={Number(editingCourse.id)} notificar={showToast} confirmar={showConfirm} />
-                </div>
-              )}
+                            <div className="form-group-row">
+                              <div className="crm-input-group">
+                                <label htmlFor="curso-modalidad">Modalidad</label>
+                                <select id="curso-modalidad" value={courseForm.modalidad || 'Online'} onChange={(e) => actualizarCurso({ modalidad: e.target.value })}>
+                                  <option value="Online">Online</option>
+                                  <option value="Híbrido">Híbrido</option>
+                                  <option value="Presencial">Presencial</option>
+                                  <option value="Simulado">Simulado</option>
+                                </select>
+                              </div>
+                              <div className="crm-input-group">
+                                <label htmlFor="curso-categoria">Categoría del catálogo</label>
+                                <select
+                                  id="curso-categoria"
+                                  value={courseForm.category_id || ''}
+                                  onChange={(e) => actualizarCurso({ category_id: e.target.value ? parseInt(e.target.value) : '' })}
+                                >
+                                  <option value="">Sin categoría</option>
+                                  {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
 
-              {showCourseForm && editingCourse?.id && !isNaN(Number(editingCourse.id)) && (
-                <div className="settings-card" style={{ marginBottom: '30px' }}>
-                  <h3>Alumnos inscritos</h3>
-                  <InscritosCurso key={editingCourse.id} courseId={Number(editingCourse.id)} cursos={courses} perfiles={profiles} notificar={showToast} confirmar={showConfirm} />
-                </div>
-              )}
+                            <div className="crm-input-group">
+                              <label htmlFor="curso-descripcion">Descripción breve *</label>
+                              <textarea
+                                rows="4"
+                                {...propsCampoCurso('descripcion')}
+                                value={courseForm.description || ''}
+                                onChange={(e) => { tocarCampoCurso('descripcion'); actualizarCurso({ description: e.target.value }); }}
+                                placeholder="Escribe una pequeña síntesis del entrenamiento…"
+                              />
+                              <div className="ec-ayuda-fila">
+                                {avisoCampoCurso('descripcion') || <small>Una o dos frases: aparece en la tarjeta del catálogo.</small>}
+                                <small className="ec-contador">{(courseForm.description || '').length} caracteres</small>
+                              </div>
+                            </div>
 
-              {/* Table of courses */}
-              <div className="table-responsive-container">
-                <table className="admin-table courses-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Curso</th>
-                      <th>Duración</th>
-                      <th>Modalidad</th>
-                      <th>Aprobación</th>
-                      <th>Acceso</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {courses.map(course => (
-                      <tr key={course.id}>
-                        <td><strong>#{course.id}</strong></td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            {course.image && <img src={course.image} alt={course.title} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />}
-                            <div>
-                              <div style={{ fontWeight: '600' }}>{course.title}</div>
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{course.requisitos}</span>
+                            <div className="crm-input-group">
+                              <label htmlFor="curso-requisitos">Requisitos académicos</label>
+                              <input
+                                id="curso-requisitos"
+                                type="text"
+                                value={courseForm.requisitos || ''}
+                                onChange={(e) => actualizarCurso({ requisitos: e.target.value })}
+                                placeholder="Ej. Licenciatura Médica"
+                              />
+                            </div>
+
+                            <div className="crm-input-group">
+                              <label htmlFor="curso-portada">Portada del curso</label>
+                              <div className="ec-portada">
+                                <div className="ec-portada-vista" aria-hidden="true">
+                                  {courseForm.image
+                                    ? <img src={courseForm.image} alt="" onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} onLoad={(e) => { e.currentTarget.style.visibility = 'visible'; }} />
+                                    : <ImageIcon size={26} />}
+                                </div>
+                                <div className="ec-portada-campos">
+                                  <div className="wz-archivo">
+                                    <input
+                                      type="text"
+                                      {...propsCampoCurso('portada')}
+                                      value={courseForm.image || ''}
+                                      onChange={(e) => { tocarCampoCurso('portada'); actualizarCurso({ image: e.target.value }); }}
+                                      placeholder="URL de la imagen, o súbela"
+                                    />
+                                    <input
+                                      type="file"
+                                      id="curso-portada-archivo"
+                                      accept="image/*"
+                                      className="ec-oculto"
+                                      onChange={handleCoursePortadaUpload}
+                                    />
+                                    <label htmlFor="curso-portada-archivo" className="btn-crm-action outlined">
+                                      <Upload size={15} /> Subir
+                                    </label>
+                                  </div>
+                                  {avisoCampoCurso('portada') || (
+                                    <small>PNG, JPG o WebP de hasta 3 MB. {courseForm.tipo === 'pago' ? 'En cursos de pago no uses la miniatura de YouTube.' : ''}</small>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </td>
-                        <td>{course.duracion}</td>
-                        <td><span className={`status-pill disponible`}>{course.modalidad}</span></td>
-                        <td>{course.minAprobacion ?? 80}%</td>
-                        <td>
-                          {course.tipo === 'pago' && course.precio_mxn
-                            ? <span className="status-pill disponible">{formatoPrecio(course.precio_mxn)}</span>
-                            : <span className="status-pill" style={{ background: 'rgba(16,185,129,0.12)', color: '#10B981' }}>Gratis</span>}
-                        </td>
-                        <td>
-                          <button 
-                            className={`status-pill ${course.activo ? 'disponible' : 'inactivo'}`}
-                            onClick={() => handleToggleCourseStatus(course.id)}
-                            style={{ border: 'none', cursor: 'pointer' }}
-                          >
-                            {course.activo ? 'Activo' : 'Inactivo'}
-                          </button>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <button className="icon-action-btn edit" onClick={() => handleOpenCourseEdit(course)} title="Editar">
-                              <Edit size={16} />
-                            </button>
-                            <a className="icon-action-btn" href={`/classroom/${course.id}`} target="_blank" rel="noopener noreferrer" title="Ver aula" aria-label={`Ver aula de ${course.title}`}><ExternalLink size={16} /></a>
-                            {!isNaN(Number(course.id)) && (
-                              <button
-                                className="icon-action-btn"
-                                onClick={() => { setMetricasDeCurso({ id: Number(course.id) }); setActiveTab('metricas'); }}
-                                title="Métricas del curso: alumnos, avance y calificaciones"
-                              >
-                                <TrendingUp size={16} />
-                              </button>
-                            )}
-                            {!isNaN(Number(course.id)) && (
-                              <button className="icon-action-btn" onClick={() => handleClonarCourse(course)} title="Clonar curso">
-                                <Copy size={16} />
-                              </button>
-                            )}
-                            <button className="icon-action-btn delete" onClick={() => handleDeleteCourse(course.id)} title="Eliminar">
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        )}
 
+                        {pestanaCurso === 'precio' && (
+                          <div className="ec-seccion">
+                            <div className="ec-seccion-cabeza">
+                              <h3>Precio y acceso</h3>
+                              <p>Cómo se inscribe el alumno a este curso.</p>
+                            </div>
+                            <div className="ec-opciones" role="radiogroup" aria-label="Acceso al curso">
+                              <label className={`ec-opcion${courseForm.tipo !== 'pago' ? ' elegida' : ''}`}>
+                                <input type="radio" name="curso-tipo" value="gratis" checked={courseForm.tipo !== 'pago'} onChange={() => actualizarCurso({ tipo: 'gratis' })} />
+                                <span>
+                                  <strong>Gratis</strong>
+                                  <small>El alumno se inscribe solo, sin pagar.</small>
+                                </span>
+                              </label>
+                              <label className={`ec-opcion${courseForm.tipo === 'pago' ? ' elegida' : ''}`}>
+                                <input type="radio" name="curso-tipo" value="pago" checked={courseForm.tipo === 'pago'} onChange={() => actualizarCurso({ tipo: 'pago' })} />
+                                <span>
+                                  <strong>De pago</strong>
+                                  <small>Se inscribe al pagar con tarjeta.</small>
+                                </span>
+                              </label>
+                            </div>
+
+                            {courseForm.tipo === 'pago' && (
+                              <div className="crm-input-group ec-precio">
+                                <label htmlFor="curso-precio">Precio (MXN) *</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  inputMode="decimal"
+                                  {...propsCampoCurso('precio')}
+                                  value={courseForm.precio_mxn ?? ''}
+                                  onChange={(e) => { tocarCampoCurso('precio'); actualizarCurso({ precio_mxn: e.target.value }); }}
+                                  placeholder="Ej. 1500"
+                                />
+                                {avisoCampoCurso('precio') || (
+                                  <small>
+                                    {Number(courseForm.precio_mxn) > 0
+                                      ? `${formatoPrecio(Number(courseForm.precio_mxn))}. Desde el extranjero se cobra en dólares a 17.5 por dólar (≈ US$${(Number(courseForm.precio_mxn) / 17.5).toFixed(2)}).`
+                                      : 'Quien paga desde el extranjero lo ve en dólares a 17.5 por dólar.'}
+                                  </small>
+                                )}
+                              </div>
+                            )}
+
+                            <div className="ec-nota">
+                              <p>
+                                <strong>¿Cupo, solicitud de inscripción, prerrequisitos o acceso por grupo?</strong>{' '}
+                                Eso se configura en la pestaña Reglas.
+                              </p>
+                              <button
+                                type="button"
+                                className="btn-crm-action outlined mini"
+                                onClick={() => cambiarPestanaCurso('reglas')}
+                                disabled={!idCursoEditado}
+                                title={idCursoEditado ? undefined : 'Guarda el curso primero'}
+                              >
+                                Ir a Reglas
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {pestanaCurso === 'certificado' && (
+                          <div className="ec-seccion">
+                            <div className="ec-seccion-cabeza">
+                              <h3>Certificado</h3>
+                              <p>La plantilla sobre la que se escribe el nombre del alumno al terminar el curso.</p>
+                            </div>
+                            <div className="form-group-row">
+                              <div className="crm-input-group">
+                                <label htmlFor="curso-plantilla-archivo">Subir plantilla (JPG/PNG)</label>
+                                <input id="curso-plantilla-archivo" type="file" accept="image/*" onChange={handleCertificateTemplateChange} />
+                              </div>
+                              <div className="crm-input-group">
+                                <label htmlFor="curso-plantilla">o pega la URL de la plantilla</label>
+                                <input
+                                  id="curso-plantilla"
+                                  type="text"
+                                  value={courseForm.certificado_template_url || ''}
+                                  onChange={(e) => actualizarCurso({ certificado_template_url: e.target.value })}
+                                  placeholder="https://…"
+                                />
+                              </div>
+                            </div>
+                            {!courseForm.certificado_template_url && (
+                              <p className="ec-aviso-suave">Sin plantilla propia: la vista previa usa una de ejemplo y el curso no genera su certificado.</p>
+                            )}
+
+                            <div className="crm-input-group ec-vigencia">
+                              <label htmlFor="curso-vigencia">Vigencia del certificado (meses)</label>
+                              <input
+                                type="number"
+                                min="1"
+                                {...propsCampoCurso('vigencia')}
+                                value={courseForm.vigencia_meses ?? ''}
+                                onChange={(e) => { tocarCampoCurso('vigencia'); actualizarCurso({ vigencia_meses: e.target.value }); }}
+                                placeholder="Vacío = no vence"
+                              />
+                              {avisoCampoCurso('vigencia') || (
+                                <small>Si vence, al alumno se le avisa 30 días antes para que vuelva a presentar el examen.</small>
+                              )}
+                            </div>
+
+                            <div className="ec-certificado">
+                              <h4>Posición del nombre</h4>
+                              <p>Mueve los controles y mira en la vista previa cómo queda el nombre del alumno.</p>
+                              <div className="ec-deslizadores">
+                                <label>
+                                  <span>Horizontal (X)</span>
+                                  <input type="range" min="0" max={naturalDimensions.width} value={courseForm.certificado_x ?? 300} onChange={(e) => actualizarCurso({ certificado_x: parseInt(e.target.value) || 0 })} />
+                                  <input type="number" aria-label="Posición X en píxeles" value={courseForm.certificado_x ?? 300} onChange={(e) => actualizarCurso({ certificado_x: parseInt(e.target.value) || 0 })} />
+                                </label>
+                                <label>
+                                  <span>Vertical (Y)</span>
+                                  <input type="range" min="0" max={naturalDimensions.height} value={courseForm.certificado_y ?? 400} onChange={(e) => actualizarCurso({ certificado_y: parseInt(e.target.value) || 0 })} />
+                                  <input type="number" aria-label="Posición Y en píxeles" value={courseForm.certificado_y ?? 400} onChange={(e) => actualizarCurso({ certificado_y: parseInt(e.target.value) || 0 })} />
+                                </label>
+                                <label>
+                                  <span>Tamaño de letra</span>
+                                  <input type="range" min="10" max="150" value={courseForm.certificado_font_size || 40} onChange={(e) => actualizarCurso({ certificado_font_size: parseInt(e.target.value) || 0 })} />
+                                  <input type="number" aria-label="Tamaño de letra en píxeles" value={courseForm.certificado_font_size || 40} onChange={(e) => actualizarCurso({ certificado_font_size: parseInt(e.target.value) || 0 })} />
+                                </label>
+                              </div>
+
+                              <div className="ec-certificado-vista">
+                                <img
+                                  src={courseForm.certificado_template_url || 'https://raw.githubusercontent.com/HCEDEV/imagenes/refs/heads/main/Picsart_26-04-22_16-25-51-449.png'}
+                                  alt="Vista previa del certificado"
+                                  onLoad={(e) => {
+                                    setNaturalDimensions({
+                                      width: e.target.naturalWidth || 800,
+                                      height: e.target.naturalHeight || 600
+                                    });
+                                  }}
+                                />
+                                <div
+                                  className="ec-certificado-nombre"
+                                  style={{
+                                    left: `${((courseForm.certificado_x ?? 300) / naturalDimensions.width) * 100}%`,
+                                    top: `${((courseForm.certificado_y ?? 400) / naturalDimensions.height) * 100}%`,
+                                    fontSize: `${((courseForm.certificado_font_size || 40) / naturalDimensions.height) * 350}px`
+                                  }}
+                                >
+                                  Nombre del Alumno
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {pestanaCurso === 'examen' && (
+                          <div className="ec-seccion">
+                            <div className="ec-seccion-cabeza">
+                              <h3>Examen final</h3>
+                              <p>Si la regla de finalización del curso es “examen final”, el alumno debe aprobar estas preguntas para terminar y recibir su certificado.</p>
+                            </div>
+
+                            <div className="crm-input-group ec-minimo">
+                              <label htmlFor="curso-min-aprobacion">Calificación mínima para aprobar (%)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                {...propsCampoCurso('min-aprobacion')}
+                                value={Number.isFinite(courseForm.minAprobacion) ? courseForm.minAprobacion : ''}
+                                onChange={(e) => { tocarCampoCurso('min-aprobacion'); actualizarCurso({ minAprobacion: parseInt(e.target.value) }); }}
+                              />
+                              {avisoCampoCurso('min-aprobacion')}
+                            </div>
+
+                            {(courseForm.questions || []).length === 0 ? (
+                              <div className="ec-vacio">
+                                <p><strong>Este curso todavía no tiene preguntas.</strong></p>
+                                <p>Agrega al menos una si el curso se termina con examen final.</p>
+                              </div>
+                            ) : (
+                              <ol className="ec-preguntas">
+                                {courseForm.questions.map((q, qIndex) => (
+                                  <li key={qIndex} className="ec-pregunta">
+                                    <div className="ec-pregunta-cabeza">
+                                      <span className="ec-pregunta-num">Pregunta {qIndex + 1}</span>
+                                      <button
+                                        type="button"
+                                        className="ec-quitar"
+                                        onClick={() => actualizarCurso({ questions: courseForm.questions.filter((_, idx) => idx !== qIndex) })}
+                                        aria-label={`Eliminar la pregunta ${qIndex + 1}`}
+                                      >
+                                        <Trash2 size={14} /> Eliminar
+                                      </button>
+                                    </div>
+                                    <div className="crm-input-group">
+                                      <label htmlFor={`curso-pregunta-${qIndex}-texto`}>Texto de la pregunta *</label>
+                                      <input
+                                        type="text"
+                                        {...propsCampoCurso(`pregunta-${qIndex}-texto`)}
+                                        value={q.question_text || ''}
+                                        onChange={(e) => {
+                                          tocarCampoCurso(`pregunta-${qIndex}-texto`);
+                                          actualizarCurso({ questions: courseForm.questions.map((pq, i) => i === qIndex ? { ...pq, question_text: e.target.value } : pq) });
+                                        }}
+                                        placeholder="Ej. ¿Qué significa ECMO?"
+                                      />
+                                      {avisoCampoCurso(`pregunta-${qIndex}-texto`)}
+                                    </div>
+                                    <div
+                                      className="ec-opciones-pregunta"
+                                      id={`curso-pregunta-${qIndex}-correcta`}
+                                      tabIndex={-1}
+                                      role="radiogroup"
+                                      aria-label={`Opciones de la pregunta ${qIndex + 1}; marca la correcta`}
+                                    >
+                                      {(q.options || []).map((opt, optIndex) => {
+                                        const correcta = Number(q.correct_option_index) === optIndex;
+                                        const campo = `pregunta-${qIndex}-op-${optIndex}`;
+                                        return (
+                                          <div key={optIndex} className={`ec-opcion-pregunta${correcta ? ' correcta' : ''}`}>
+                                            <label className="ec-marca-correcta" title="Marcar como respuesta correcta">
+                                              <input
+                                                type="radio"
+                                                name={`curso-correcta-${qIndex}`}
+                                                checked={correcta}
+                                                onChange={() => actualizarCurso({ questions: courseForm.questions.map((pq, i) => i === qIndex ? { ...pq, correct_option_index: optIndex } : pq) })}
+                                                aria-label={`La opción ${optIndex + 1} es la correcta`}
+                                              />
+                                              <span>{correcta ? 'Correcta' : `Opción ${optIndex + 1}`}</span>
+                                            </label>
+                                            <input
+                                              type="text"
+                                              {...propsCampoCurso(campo)}
+                                              aria-label={`Texto de la opción ${optIndex + 1}`}
+                                              value={opt}
+                                              onChange={(e) => {
+                                                tocarCampoCurso(campo);
+                                                actualizarCurso({
+                                                  questions: courseForm.questions.map((pq, i) => i === qIndex
+                                                    ? { ...pq, options: pq.options.map((o, oi) => oi === optIndex ? e.target.value : o) }
+                                                    : pq)
+                                                });
+                                              }}
+                                              placeholder={`Opción ${optIndex + 1}`}
+                                            />
+                                            {avisoCampoCurso(campo)}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                    {avisoCampoCurso(`pregunta-${qIndex}-correcta`)}
+                                  </li>
+                                ))}
+                              </ol>
+                            )}
+
+                            <div>
+                              <button
+                                type="button"
+                                className="btn-crm-action outlined"
+                                onClick={() => {
+                                  const nueva = { question_text: '', options: ['', '', '', ''], correct_option_index: 0 };
+                                  const indice = (courseForm.questions || []).length;
+                                  actualizarCurso({ questions: [...(courseForm.questions || []), nueva] });
+                                  setTimeout(() => document.getElementById(`curso-pregunta-${indice}-texto`)?.focus(), 60);
+                                }}
+                              >
+                                <Plus size={15} /> Agregar pregunta
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </fieldset>
+                    </form>
+                  )}
+
+                  {/* Las pestañas de contenido van fuera del formulario del curso a
+                      propósito: tienen sus propios formularios. Una vez abiertas se
+                      quedan montadas (ocultas) para no perder lo que se edita. */}
+                  {idCursoEditado && pestanasCursoVisitadas.includes('lecciones') && (
+                    <div className="ec-seccion" hidden={pestanaCurso !== 'lecciones'}>
+                      <div className="ec-seccion-cabeza">
+                        <h3>Lecciones</h3>
+                        <p>El temario del curso: videos, lecturas, tareas, evaluaciones y sesiones en vivo.</p>
+                      </div>
+                      <EditorLecciones
+                        key={idCursoEditado}
+                        onCambios={cambiosEvaluacion}
+                        courseId={idCursoEditado}
+                        cursos={courses}
+                        onCambio={() => { fetchCourses(); setRecargaChecklist((n) => n + 1); }}
+                        notificar={showToast}
+                        confirmar={showConfirm}
+                      />
+                    </div>
+                  )}
+
+                  {idCursoEditado && pestanasCursoVisitadas.includes('reglas') && (
+                    <div className="ec-seccion" hidden={pestanaCurso !== 'reglas'}>
+                      <div className="ec-seccion-cabeza">
+                        <h3>Reglas</h3>
+                        <p>Quién puede entrar, por cuánto tiempo y cuándo se da por terminado.</p>
+                      </div>
+                      <ReglasCurso key={idCursoEditado} courseId={idCursoEditado} cursos={courses} tipoCurso={courseForm.tipo} notificar={showToast} confirmar={showConfirm} onCambios={cambiosReglas} />
+                    </div>
+                  )}
+
+                  {idCursoEditado && pestanasCursoVisitadas.includes('biblioteca') && (
+                    <div className="ec-seccion" hidden={pestanaCurso !== 'biblioteca'}>
+                      <div className="ec-seccion-cabeza">
+                        <h3>Biblioteca de archivos</h3>
+                        <p>Artículos, manuales, programas… Liga cada archivo a una clase para que aparezca dentro de esa lección, o déjalo en la biblioteca general del curso.</p>
+                      </div>
+                      <BibliotecaCurso key={idCursoEditado} courseId={idCursoEditado} notificar={showToast} confirmar={showConfirm} />
+                    </div>
+                  )}
+
+                  {idCursoEditado && pestanasCursoVisitadas.includes('alumnos') && (
+                    <div className="ec-seccion" hidden={pestanaCurso !== 'alumnos'}>
+                      <div className="ec-seccion-cabeza">
+                        <h3>Alumnos inscritos</h3>
+                        <p>Quién está en el curso y cómo va.</p>
+                      </div>
+                      <InscritosCurso key={idCursoEditado} courseId={idCursoEditado} cursos={courses} perfiles={profiles} notificar={showToast} confirmar={showConfirm} />
+                    </div>
+                  )}
+                  {(esPestanaFormulario(pestanaCurso) || cursoSucio) && (
+                    <BarraGuardarCurso
+                      sucio={cursoSucio}
+                      estado={estadoGuardadoCurso}
+                      nuevo={!idCursoEditado}
+                      deshabilitado={actionLoading && estadoGuardadoCurso !== 'guardando'}
+                      errores={intentoGuardarCurso ? erroresCurso.length : 0}
+                      onGuardar={guardarCurso}
+                    />
+                  )}
+                </EditorCursoPestanas>
+              ) : (
+                <>
+                  <div className="section-title-row">
+                    <h2>Cursos</h2>
+                    <button className="btn-crm-action solid" onClick={handleOpenCourseCreate}>
+                      <Plus size={16} />
+                      <span>Crear curso</span>
+                    </button>
+                  </div>
+
+                  <div className="cl-barra">
+                    <div className="search-box-wrapper cl-buscar">
+                      <Search size={16} className="search-icon-inside" aria-hidden="true" />
+                      <input
+                        type="search"
+                        value={busquedaCursos}
+                        onChange={(e) => setBusquedaCursos(e.target.value)}
+                        placeholder="Buscar por nombre, requisitos o #ID"
+                        aria-label="Buscar cursos"
+                      />
+                    </div>
+                    <div className="cl-filtros">
+                      <div className="cl-segmento" role="group" aria-label="Filtrar por estado">
+                        {[
+                          ['todos', `Todos (${courses.length})`],
+                          ['activos', `Activos (${conteoCursos.activos})`],
+                          ['borradores', `Borradores (${conteoCursos.borradores})`],
+                        ].map(([valor, texto]) => (
+                          <button key={valor} type="button" className={filtroEstadoCursos === valor ? 'activo' : ''} aria-pressed={filtroEstadoCursos === valor} onClick={() => setFiltroEstadoCursos(valor)}>
+                            {texto}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="cl-segmento" role="group" aria-label="Filtrar por acceso">
+                        {[
+                          ['todos', 'Todo acceso'],
+                          ['gratis', `Gratis (${conteoCursos.gratis})`],
+                          ['pago', `De pago (${conteoCursos.pago})`],
+                        ].map(([valor, texto]) => (
+                          <button key={valor} type="button" className={filtroAccesoCursos === valor ? 'activo' : ''} aria-pressed={filtroAccesoCursos === valor} onClick={() => setFiltroAccesoCursos(valor)}>
+                            {texto}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {errorCursos && (
+                    <div className="cl-error" role="alert">
+                      <span>No se pudo actualizar la lista de cursos{courses.length ? ' (se muestra la última copia guardada)' : ''}: {errorCursos}</span>
+                      <button type="button" className="btn-crm-action outlined mini" onClick={() => { void fetchCourses(); }}>
+                        <RefreshCw size={13} /> Reintentar
+                      </button>
+                    </div>
+                  )}
+
+                  {courses.length === 0 && !cursosCargados ? (
+                    <p className="cl-cargando" role="status">Cargando cursos…</p>
+                  ) : courses.length === 0 && errorCursos ? null : courses.length === 0 ? (
+                    <div className="cl-vacio">
+                      <BookOpen size={28} aria-hidden="true" />
+                      <h3>Aún no hay cursos</h3>
+                      <p>Crea el primero: nace como borrador y lo activas cuando esté listo.</p>
+                      <button type="button" className="btn-crm-action solid" onClick={handleOpenCourseCreate}><Plus size={16} /> Crear curso</button>
+                    </div>
+                  ) : cursosFiltrados.length === 0 ? (
+                    <div className="cl-vacio">
+                      <Search size={28} aria-hidden="true" />
+                      <h3>Ningún curso coincide</h3>
+                      <p>Prueba con otra búsqueda o quita los filtros.</p>
+                      <button type="button" className="btn-crm-action outlined" onClick={limpiarFiltrosCursos}>Limpiar filtros</button>
+                    </div>
+                  ) : (
+                    <>
+                      {hayFiltrosCursos && (
+                        <p className="cl-resumen" aria-live="polite">
+                          {cursosFiltrados.length} de {courses.length} cursos ·{' '}
+                          <button type="button" onClick={limpiarFiltrosCursos}>Limpiar filtros</button>
+                        </p>
+                      )}
+                      <div className="table-responsive-container cl-tabla">
+                        <table className="admin-table courses-table">
+                          <thead>
+                            <tr>
+                              <th>Curso</th>
+                              <th>Aprobación</th>
+                              <th>Acceso</th>
+                              <th>Estado</th>
+                              <th>Acciones</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {cursosFiltrados.map(course => (
+                              <tr key={course.id}>
+                                <td className="cl-curso" data-label="Curso">
+                                  <div className="cl-curso-info">
+                                    {course.image
+                                      ? <img src={course.image} alt="" className="cl-miniatura" />
+                                      : <span className="cl-miniatura cl-sin-imagen" aria-hidden="true"><BookOpen size={16} /></span>}
+                                    <div>
+                                      <div className="cl-curso-titulo">{course.title}</div>
+                                      {/* Duración y modalidad van aquí y no en columnas propias:
+                                          con siete columnas la tabla se salía de una laptop de
+                                          1280 px y las acciones quedaban cortadas. */}
+                                      <span className="cl-curso-sub">
+                                        {[course.duracion, course.modalidad, `#${course.id}`].filter(Boolean).join(' · ')}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td data-label="Aprobación">{course.minAprobacion ?? 80}%</td>
+                                <td data-label="Acceso">
+                                  {course.tipo === 'pago' && course.precio_mxn
+                                    ? <span className="status-pill disponible">{formatoPrecio(course.precio_mxn)}</span>
+                                    : <span className="status-pill cl-gratis">Gratis</span>}
+                                </td>
+                                <td data-label="Estado">
+                                  <button
+                                    type="button"
+                                    className={`status-pill ${course.activo ? 'disponible' : 'inactivo'} cl-estado`}
+                                    onClick={() => handleToggleCourseStatus(course.id)}
+                                    title={course.activo ? 'Activo: los alumnos lo ven. Clic para inactivar.' : 'Borrador: los alumnos no lo ven. Clic para activar.'}
+                                  >
+                                    {course.activo ? 'Activo' : 'Borrador'}
+                                  </button>
+                                </td>
+                                <td className="cl-acciones" data-label="Acciones">
+                                  <div className="cl-acciones-fila">
+                                    {/* Editar es lo que se usa casi siempre: lleva texto, no solo ícono. */}
+                                    <button className="cl-btn-editar" onClick={() => handleOpenCourseEdit(course)} aria-label={`Editar ${course.title}`}>
+                                      <Edit size={15} /> Editar
+                                    </button>
+                                    {!isNaN(Number(course.id)) && (
+                                      <button
+                                        className="icon-action-btn"
+                                        onClick={() => { setMetricasDeCurso({ id: Number(course.id) }); setActiveTab('metricas'); }}
+                                        title="Métricas del curso: alumnos, avance y calificaciones"
+                                        aria-label={`Métricas de ${course.title}`}
+                                      >
+                                        <TrendingUp size={16} />
+                                      </button>
+                                    )}
+                                    <a className="icon-action-btn" href={`/classroom/${course.id}`} target="_blank" rel="noopener noreferrer" title="Ver aula" aria-label={`Ver aula de ${course.title}`}><ExternalLink size={16} /></a>
+                                    {!isNaN(Number(course.id)) && (
+                                      <button className="icon-action-btn" onClick={() => handleClonarCourse(course)} title="Clonar curso" aria-label={`Clonar ${course.title}`}>
+                                        <Copy size={16} />
+                                      </button>
+                                    )}
+                                    <button className="icon-action-btn delete" onClick={() => handleDeleteCourse(course.id)} title="Eliminar" aria-label={`Eliminar ${course.title}`}>
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
           )}
 
@@ -5735,6 +5944,8 @@ const AdminDashboard = () => {
               <DivisionesAdmin perfiles={profiles} cursos={courses} onPerfilesCambiados={fetchProfiles} notificar={showToast} confirmar={showConfirm} />
             </div>
           )}
+
+          {activeTab === 'ayuda' && <GuiaUso rol="admin" onIr={setActiveTab} />}
 
           {activeTab === 'notificaciones' && (
             <div className="notificaciones-view">

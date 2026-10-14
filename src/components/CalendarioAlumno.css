@@ -81,8 +81,14 @@
   border: 1px solid var(--cal-borde); border-radius: 8px; background: none; color: var(--cal-tenue); cursor: pointer;
 }
 
+.cal-nav button:focus-visible, .cal-hoy:focus-visible, .cal-celda:focus-visible, .cal-lista-texto:focus-visible, .cal-ics:focus-visible { outline: 2px solid var(--cal-hoy); outline-offset: 2px; }
+
 @media (max-width: 640px) {
   .cal-celda { min-height: 48px; padding: 4px; align-items: center; }
+  .cal-celda.con-eventos { background: var(--cal-sesion-fondo); }
+  .cal-cabecera { flex-wrap: wrap; }
+  .cal-nav { flex: 1; justify-content: space-between; }
+  .cal-lista li { padding: 10px; }
   .cal-chip, .cal-mas { display: none; }
   .cal-puntos { display: flex; }
   .cal-nav h2 { min-width: 0; font-size: 1rem; }

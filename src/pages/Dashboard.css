@@ -2773,3 +2773,124 @@
   color: #0e7490;
 }
 .crm-layout[data-theme="dark"] .curso-generacion { color: #67e8f9; }
+
+/* ==========================================================================
+   Navegación agrupada, barra inferior en celular, catálogo con filtros y
+   Mis cursos (rediseño "una cosa a la vez").
+   ========================================================================== */
+
+.crm-layout .sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* Menú lateral por grupos. Con muchas secciones, el menú se desplaza solo. */
+.crm-sidebar .sidebar-menu { gap: 2px; padding: 16px 12px 20px; overflow-y: auto; overscroll-behavior: contain; }
+.menu-grupo { display: flex; flex-direction: column; gap: 2px; }
+.menu-grupo + .menu-grupo { margin-top: 10px; }
+.menu-grupo-titulo {
+  padding: 4px 14px 4px; color: var(--text-muted);
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+}
+.crm-sidebar .menu-item { padding: 10px 14px; }
+.crm-sidebar .menu-item:focus-visible { outline: 2px solid var(--primary-cyan); outline-offset: -2px; }
+/* Riel colapsado de escritorio: sin títulos, una línea marca el grupo. */
+.crm-sidebar.collapsed .menu-grupo-titulo { height: 1px; padding: 0; margin: 4px 10px; overflow: hidden; background: var(--border-color); color: transparent; }
+
+@media (max-width: 768px) {
+  /* En el cajón móvil los títulos sí caben. */
+  .crm-sidebar.collapsed .menu-grupo-titulo,
+  .crm-sidebar .menu-grupo-titulo { height: auto; margin: 0; padding: 4px 14px; background: none; color: var(--text-muted); }
+  /* La barra inferior reemplaza al botón de menú del encabezado. */
+  .crm-top-header .sidebar-toggle-btn-header { display: none; }
+  .crm-top-header { height: 64px; }
+  .crm-top-header .breadcrumb-main,
+  .crm-top-header .breadcrumb-separator { display: none; }
+  .crm-top-header .breadcrumb-sub { font-size: 1rem; }
+  /* Espacio para que la barra inferior no tape el final del contenido. */
+  .crm-content-area { padding: 18px 16px calc(96px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Chat e invitación a instalar: por encima de la barra inferior. */
+@media (max-width: 768px) {
+  body.portal-barra-inferior .hce-chat-widget { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  body.portal-barra-inferior .hce-install { bottom: calc(160px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Chips de filtro (catálogo y Mis cursos). */
+.filtro-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; scrollbar-width: none; }
+.filtro-chips::-webkit-scrollbar { display: none; }
+.filtro-chip {
+  display: inline-flex; flex-shrink: 0; align-items: center; gap: 6px; min-height: 38px; padding: 7px 14px;
+  border: 1px solid var(--border-color); border-radius: 999px; background: var(--bg-main);
+  color: var(--text-dark); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.filtro-chip:hover { border-color: var(--primary-cyan); }
+.filtro-chip:focus-visible { outline: 2px solid var(--primary-cyan); outline-offset: 2px; }
+.filtro-chip.activo { border-color: var(--primary-cyan); background: var(--bg-active-item); color: var(--secondary-blue); }
+.crm-layout[data-theme="dark"] .filtro-chip.activo { color: #4dd0e1; }
+.filtro-chip-num { min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--bg-gray); color: var(--text-muted); font-size: 0.74rem; font-weight: 800; text-align: center; }
+.filtro-chip.activo .filtro-chip-num { background: var(--primary-cyan); color: #06222b; }
+.filtro-vacio { margin: 18px 0; color: var(--text-muted); }
+.courses-view .filtro-chips { margin-bottom: 20px; }
+
+/* Catálogo: buscador y filtros en una franja. */
+.catalogo-herramientas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-bottom: 10px; }
+.catalogo-herramientas .catalogo-buscar {
+  position: relative; flex: 1 1 320px; flex-direction: row; align-items: center; gap: 0;
+  max-width: 460px; margin: 0; color: var(--text-muted);
+}
+.catalogo-herramientas .catalogo-buscar > svg { position: absolute; left: 14px; pointer-events: none; }
+.catalogo-herramientas .catalogo-buscar input {
+  min-height: 46px; padding: 10px 40px 10px 42px; border-radius: 999px;
+  background: var(--bg-main); color: var(--text-dark);
+}
+.catalogo-herramientas .catalogo-buscar input:focus { outline: none; border-color: var(--primary-cyan); box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.18); }
+.catalogo-limpiar {
+  position: absolute; right: 8px; display: inline-flex; padding: 6px; border: 0; border-radius: 999px;
+  background: var(--bg-gray); color: var(--text-muted); cursor: pointer;
+}
+.catalogo-conteo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0 0 22px; color: var(--text-muted); font-size: 0.86rem; }
+.catalogo-quitar-filtros { padding: 0; border: 0; background: none; color: var(--primary-cyan); font: inherit; font-weight: 700; cursor: pointer; }
+.catalogo-quitar-filtros:hover { text-decoration: underline; }
+.catalogo-seccion { margin-bottom: 44px; }
+.catalogo-seccion-nota { margin: -6px 0 20px; color: var(--text-muted); font-size: 0.9rem; }
+
+/* Estado de cada tarjeta del catálogo. */
+.curso-estado {
+  display: inline-flex; align-self: flex-start; align-items: center; margin-bottom: 8px; padding: 3px 10px;
+  border-radius: 999px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.02em;
+  background: rgba(0, 188, 212, 0.12); color: #0e7490;
+}
+.curso-estado--completo { background: rgba(16, 185, 129, 0.14); color: #047857; }
+.curso-estado--revision,
+.curso-estado--apartado,
+.curso-estado--solicitud { background: rgba(245, 158, 11, 0.16); color: #92400e; }
+.curso-estado--lleno,
+.curso-estado--vencido { background: rgba(100, 116, 139, 0.16); color: #475569; }
+.curso-estado--requisito { background: rgba(139, 92, 246, 0.14); color: #6d28d9; }
+.crm-layout[data-theme="dark"] .curso-estado { background: rgba(38, 198, 218, 0.16); color: #67e8f9; }
+.crm-layout[data-theme="dark"] .curso-estado--completo { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
+.crm-layout[data-theme="dark"] .curso-estado--revision,
+.crm-layout[data-theme="dark"] .curso-estado--apartado,
+.crm-layout[data-theme="dark"] .curso-estado--solicitud { background: rgba(245, 158, 11, 0.18); color: #fcd34d; }
+.crm-layout[data-theme="dark"] .curso-estado--lleno,
+.crm-layout[data-theme="dark"] .curso-estado--vencido { background: rgba(148, 163, 184, 0.16); color: #cbd5e1; }
+.crm-layout[data-theme="dark"] .curso-estado--requisito { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; }
+.curso-estado-avance { height: 6px; margin: -2px 0 10px; overflow: hidden; border-radius: 999px; background: var(--border-color); }
+.curso-estado-avance span { display: block; height: 100%; border-radius: 999px; background: var(--primary-cyan); }
+
+@media (max-width: 640px) {
+  .catalogo-herramientas { flex-direction: column; align-items: stretch; }
+  .catalogo-herramientas > * { min-width: 0; max-width: 100%; }
+  .catalogo-herramientas .catalogo-buscar { flex-basis: auto; max-width: none; }
+  .section-title-row { margin-bottom: 18px; }
+  .section-title-row h2 { font-size: 1.4rem; }
+}
+
+/* Tarjeta bloqueada (cupo lleno, solicitud en revisión): la acción se ve inactiva. */
+.crm-layout .curso-tarjeta--bloqueada .exp-link-action {
+  background: var(--bg-gray); color: var(--text-muted); box-shadow: none;
+  border: 1px dashed var(--border-color); cursor: default;
+}
+.crm-layout .curso-tarjeta--bloqueada:hover .exp-link-action { background: var(--bg-gray); color: var(--text-muted); transform: none; }
