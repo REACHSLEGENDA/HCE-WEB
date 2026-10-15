@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useSEO } from '../hooks/useSEO';
 import { useMonedaSugerida } from '../hooks/useMonedaSugerida';
+import { EDICIONES_ALUMNI, PAISES_ALUMNI } from '../data/alumniPass';
 import './AlumniPass.css';
 
 /* ---------------------------------------------------------------------------
@@ -277,7 +278,8 @@ export default function AlumniPass() {
   const [cupo, setCupo] = useState(null);
   const [modalidad, setModalidad] = useState('');
   const [grabaciones, setGrabaciones] = useState(false);
-  const [datos, setDatos] = useState({ nombre: '', email: '', telefono: '', ciudad: '', pais: '', hospital: '', especialidad: '' });
+  const [datos, setDatos] = useState({ nombres: '', apellido_paterno: '', apellido_materno: '', email: '', telefono: '', ciudad: '', pais: '', hospital: '', especialidad: '', edicion_diploma: '' });
+  const [paisOtro, setPaisOtro] = useState('');
   const [diploma, setDiploma] = useState(null); // { nombre, vista, blob, tipo }
   const [arrastrando, setArrastrando] = useState(false);
   const [acepta, setAcepta] = useState(false);
@@ -329,17 +331,20 @@ export default function AlumniPass() {
   const requerido = (v, msg) => (String(v).trim().length < 2 ? msg : '');
   const errores = {
     modalidad: !modalidad ? 'Elige presencial o virtual.' : (modalidad === 'presencial' && agotado ? 'Los lugares presenciales se agotaron.' : ''),
-    nombre: datos.nombre.trim().length < 5 ? 'Escribe tu nombre completo como aparece en tu diploma.' : '',
+    nombres: requerido(datos.nombres, 'Escribe tu nombre o nombres como aparecen en tu diploma.'),
+    apellido_paterno: requerido(datos.apellido_paterno, 'Escribe tu apellido paterno.'),
     email: !emailValido ? 'Escribe un correo válido: ahí te llegará tu enlace de pago.' : '',
     telefono: datos.telefono.replace(/\D/g, '').length < 8 ? 'Escribe tu teléfono o WhatsApp con lada.' : '',
     ciudad: requerido(datos.ciudad, 'Escribe tu ciudad.'),
-    pais: requerido(datos.pais, 'Escribe tu país.'),
+    pais: !datos.pais ? 'Selecciona tu país.' : '',
+    pais_otro: datos.pais === 'Otro país' ? requerido(paisOtro, 'Escribe tu país.') : '',
     hospital: requerido(datos.hospital, 'Escribe tu hospital o institución.'),
     especialidad: requerido(datos.especialidad, 'Escribe tu especialidad.'),
+    edicion_diploma: !EDICIONES_ALUMNI.includes(datos.edicion_diploma) ? 'Selecciona la edición en la que tomaste el diploma.' : '',
     diploma: !diploma ? 'Sube la foto o copia de tu diploma de Step 1.' : '',
     acepta: !acepta ? 'Acepta el aviso de privacidad para continuar.' : '',
   };
-  const NOMBRES = { modalidad: 'modalidad', nombre: 'nombre', email: 'correo', telefono: 'teléfono', ciudad: 'ciudad', pais: 'país', hospital: 'hospital', especialidad: 'especialidad', diploma: 'diploma', acepta: 'aceptar el aviso' };
+  const NOMBRES = { modalidad: 'modalidad', nombres: 'nombre', apellido_paterno: 'apellido paterno', email: 'correo', telefono: 'teléfono', ciudad: 'ciudad', pais: 'país', pais_otro: 'país', hospital: 'hospital', especialidad: 'especialidad', edicion_diploma: 'edición del diploma', diploma: 'diploma', acepta: 'aceptar el aviso' };
   const listo = Object.values(errores).every((e) => !e);
   const ocupado = estado !== 'idle';
 
@@ -385,7 +390,7 @@ export default function AlumniPass() {
     setEstado('enviando');
     try {
       const base64 = await aBase64(diploma.blob);
-      const resultado = await llamar({ accion: 'solicitar', solicitudClave, ...datos, modalidad, grabaciones, acepta, diploma: { tipo: diploma.tipo, base64 } });
+      const resultado = await llamar({ accion: 'solicitar', solicitudClave, ...datos, pais: datos.pais === 'Otro país' ? paisOtro.trim() : datos.pais, modalidad, grabaciones, acepta, diploma: { tipo: diploma.tipo, base64 } });
       setAcuseEnviado(resultado.acuseEnviado ?? null);
       setEnviada(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -399,9 +404,10 @@ export default function AlumniPass() {
 
   const campo = (nombre, etiqueta, props = {}) => (
     <label className={`ap-campo${tocado[nombre] && errores[nombre] ? ' ap-campo--error' : ''}`}>
-      <span>{etiqueta}</span>
+      <span id={`ap-etiqueta-${nombre}`}>{etiqueta}</span>
       <input
         name={nombre}
+        aria-labelledby={`ap-etiqueta-${nombre}`}
         maxLength={nombre === 'email' || nombre === 'hospital' ? 160 : nombre === 'telefono' ? 40 : nombre === 'ciudad' || nombre === 'pais' ? 80 : 120}
         required
         value={datos[nombre]}
@@ -411,6 +417,23 @@ export default function AlumniPass() {
         aria-describedby={tocado[nombre] && errores[nombre] ? `ap-error-${nombre}` : undefined}
         {...props}
       />
+      {tocado[nombre] && errores[nombre] && <small id={`ap-error-${nombre}`}>{errores[nombre]}</small>}
+    </label>
+  );
+
+  const desplegable = (nombre, etiqueta, opciones, placeholder, props = {}) => (
+    <label className={`ap-campo${tocado[nombre] && errores[nombre] ? ' ap-campo--error' : ''}`}>
+      <span id={`ap-etiqueta-${nombre}`}>{etiqueta}</span>
+      <select name={nombre} required value={datos[nombre]}
+        aria-labelledby={`ap-etiqueta-${nombre}`}
+        onChange={(ev) => setDatos({ ...datos, [nombre]: ev.target.value })}
+        onBlur={() => setTocado((t) => ({ ...t, [nombre]: true }))}
+        aria-invalid={!!(tocado[nombre] && errores[nombre])}
+        aria-describedby={tocado[nombre] && errores[nombre] ? `ap-error-${nombre}` : undefined}
+        {...props}>
+        <option value="" disabled>{placeholder}</option>
+        {opciones.map((opcion) => <option key={opcion} value={opcion}>{opcion}</option>)}
+      </select>
       {tocado[nombre] && errores[nombre] && <small id={`ap-error-${nombre}`}>{errores[nombre]}</small>}
     </label>
   );
@@ -457,7 +480,7 @@ export default function AlumniPass() {
             <div className="ap-ticket-talon" aria-hidden="true"><span>SOLICITUD</span></div>
             <div className="ap-ticket-cuerpo">
               <p className="ap-kicker"><MailCheck size={16} /> Solicitud recibida</p>
-              <h1>¡Gracias, {datos.nombre.split(/\s+/)[0]}!<span>Recibimos tu solicitud</span></h1>
+              <h1>¡Gracias, {datos.nombres.trim().split(/\s+/)[0]}!<span>Recibimos tu solicitud</span></h1>
               <p className="ap-nota">
                 Nuestro equipo validará tu diploma de Step 1. En cuanto quede aprobado te enviaremos a
                 <strong> {datos.email}</strong> tu enlace de pago personal para asegurar tu lugar.
@@ -512,9 +535,7 @@ export default function AlumniPass() {
               <li><Check size={15} /> Interacción directa y networking con ponentes y colegas.</li>
               <li><Check size={15} /> 30 lugares limitados.</li>
             </ul>
-            <span className={`ap-cupo${agotado ? ' agotado' : ''}`}>
-              {!cupo ? '30 lugares' : agotado ? 'Agotado' : `Quedan ${cupo.restantes} de ${cupo.total} lugares`}
-            </span>
+            {agotado && <span className="ap-cupo agotado">Agotado</span>}
           </button>
           <button
             type="button" role="radio" aria-checked={modalidad === 'virtual'} disabled={ocupado}
@@ -546,7 +567,7 @@ export default function AlumniPass() {
         <div>
           <h2>¿Cómo funciona?</h2>
           <ol className="ap-pasos">
-            <li>Envía tu solicitud con tus datos y la foto o copia de tu <strong>Diploma del Step 1 firmado por los profesores de París</strong>.</li>
+            <li>Envía tu solicitud con tus datos y la foto o copia de tu <strong>Diploma del Step 1</strong>.</li>
             <li>Nuestro equipo valida tu diploma.</li>
             <li>Si es aprobado, te llega por correo tu <strong>enlace de pago personal</strong> para asegurar tu lugar.</li>
           </ol>
@@ -571,14 +592,25 @@ export default function AlumniPass() {
           </div>
 
           <div className="ap-rejilla">
-            {campo('nombre', 'Nombre completo *', { autoComplete: 'name', placeholder: 'Como aparece en tu diploma' })}
+            {campo('nombres', 'Nombre(s) *', { autoComplete: 'given-name', placeholder: 'Como aparecen en tu diploma', maxLength: 80 })}
+            {campo('apellido_paterno', 'Apellido paterno *', { autoComplete: 'section-paterno family-name', maxLength: 80 })}
+            {campo('apellido_materno', 'Apellido materno (opcional)', { autoComplete: 'section-materno family-name', required: false, maxLength: 80 })}
             {campo('email', 'Correo electrónico *', { type: 'email', autoComplete: 'email', placeholder: 'tucorreo@ejemplo.com' })}
             {campo('telefono', 'Teléfono / WhatsApp *', { type: 'tel', autoComplete: 'tel', placeholder: 'Con lada' })}
             {campo('especialidad', 'Especialidad *', { placeholder: 'Ej. Medicina crítica, Perfusión' })}
             {campo('hospital', 'Hospital o institución *', { autoComplete: 'organization' })}
             {campo('ciudad', 'Ciudad *', { autoComplete: 'address-level2' })}
-            {campo('pais', 'País *', { autoComplete: 'country-name' })}
+            {desplegable('pais', 'País *', [...PAISES_ALUMNI, 'Otro país'], 'Selecciona tu país', { autoComplete: 'country-name' })}
+            {datos.pais === 'Otro país' && <label className={`ap-campo${tocado.pais_otro && errores.pais_otro ? ' ap-campo--error' : ''}`}>
+              <span id="ap-etiqueta-pais_otro">Especifica tu país *</span>
+              <input name="pais_otro" required maxLength={80} value={paisOtro} onChange={(ev) => setPaisOtro(ev.target.value)} onBlur={() => setTocado((t) => ({ ...t, pais_otro: true }))}
+                aria-labelledby="ap-etiqueta-pais_otro"
+                aria-invalid={!!(tocado.pais_otro && errores.pais_otro)} aria-describedby={tocado.pais_otro && errores.pais_otro ? 'ap-error-pais_otro' : undefined} />
+              {tocado.pais_otro && errores.pais_otro && <small id="ap-error-pais_otro">{errores.pais_otro}</small>}
+            </label>}
           </div>
+
+          {desplegable('edicion_diploma', '¿En qué edición tomaste el diploma? *', EDICIONES_ALUMNI, 'Selecciona tu edición')}
 
           <div className="ap-campo-grupo">
             <span className="ap-etiqueta">Diploma de Step 1 *</span>

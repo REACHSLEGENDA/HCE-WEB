@@ -54,8 +54,9 @@ export async function confirmarAlumniDesdeSesion(db, sesion, { exigirCorreo = fa
     if (!isConfigured()) throw new Error('El envío de correos no está configurado.');
     if (!actual.brevo_sincronizado_en) {
       const [nombre, ...apellidos] = actual.nombre.trim().split(/\s+/);
+      const apellido = actual.nombres ? [actual.apellido_paterno, actual.apellido_materno].filter(Boolean).join(' ') : apellidos.join(' ');
       await upsertContact(actual.email, {
-        FIRSTNAME: nombre, ...(apellidos.length ? { LASTNAME: apellidos.join(' ') } : {}),
+        FIRSTNAME: actual.nombres || nombre, ...(apellido ? { LASTNAME: apellido } : {}),
         ALUMNI_MODALIDAD: modalidad === 'presencial' ? 'Presencial' : 'Virtual (streaming en vivo)',
         ALUMNI_GRABACIONES: grabaciones ? 'Incluidas por 1 mes' : 'No incluidas', ALUMNI_FOLIO: actual.folio,
       });

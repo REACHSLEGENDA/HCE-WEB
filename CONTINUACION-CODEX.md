@@ -13,6 +13,19 @@ estaba en curso. Léelo completo antes de tocar código.
 
 ### 14 oct, continuación de Codex tras el límite de Claude: Alumni Pass
 
+Actualización durante las pruebas por enlace: nombre(s), apellido paterno y
+materno separados (materno opcional), 28 países y opción Otro país, y edición
+del diploma antes de subir el archivo: Septiembre 2024 INC, Marzo 2025 INER,
+Chile 2025 INT. Se quitó el contador público de lugares y la frase de firmas.
+Se preservan nombre completo para correos/pase y compatibilidad con formularios
+anteriores. Brevo recibe nombres compuestos en FIRSTNAME y apellidos en LASTNAME;
+el panel, CSV, aviso al equipo y Formspree incluyen la edición.
+La migración `supabase/alumni-pass-datos-diploma.sql` ya se aplicó y verificó
+en producción (cuatro columnas text nuevas; total 45). Consulta:
+https://supabase.com/dashboard/project/mxpxvtklkyvonbhqjdmq/sql/0159f46a-1d28-4965-b507-9b0e45a56fd0
+Pruebas actuales: 18 regresiones servidor, migraciones idempotentes y 11 grupos
+UI a 375/1280 px; sin envíos externos ni cobros durante QA.
+
 **Publicación autorizada por Christian:** publicar todos los cambios y ocultar
 temporalmente el botón Alumni Pass de París para probar por enlace directo.
 El enlace `/alumni-pass-step1` se conserva y la página sigue marcada noindex.

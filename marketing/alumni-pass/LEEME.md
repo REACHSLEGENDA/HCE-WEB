@@ -77,8 +77,13 @@ con el envío desde el servidor y espacio/cupo de envíos en la cuenta Formspree
 No se necesita una clave de lectura de Formspree para este flujo: el panel HCE lee
 su propio registro de Supabase.
 
-El exalumno envía nombre, correo, teléfono con lada, ciudad, país, hospital,
-especialidad y diploma de Step 1. La solicitud aparece en **Ventas → Alumni Pass**.
+El exalumno envía nombre(s), apellido paterno y materno (opcional), correo,
+teléfono con lada, ciudad, país de un desplegable (incluye Otro país), hospital,
+especialidad, edición y diploma de Step 1. Ediciones: Septiembre 2024 INC,
+Marzo 2025 INER y Chile 2025 INT. El nombre completo se conserva para el pase;
+los campos separados y la edición quedan en el panel, CSV y Formspree.
+La ampliación `supabase/alumni-pass-datos-diploma.sql` ya está aplicada en
+Supabase (cuatro columnas adicionales; total 45). La solicitud aparece en **Ventas → Alumni Pass**.
 Se intenta enviar un aviso al equipo y un acuse al solicitante; aunque falle un
 correo, la solicitud permanece guardada. La aprobación envía el enlace de pago
 personal. El panel muestra cuándo se envió y permite reenviar o copiar el enlace.

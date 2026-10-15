@@ -25,6 +25,7 @@ import { isConfigured as brevoListo, enviarCorreo } from './_brevo.js';
 import { plantillaHce } from './_notificaciones.js';
 import { confirmarAlumniDesdeSesion, PRECIOS_ALUMNI, GRABACIONES_ALUMNI, importeAlumni, totalAlumni } from './_alumni-pass.js';
 import { sincronizarRegistrosAlumni } from './_alumni-registros.js';
+import { EDICIONES_ALUMNI } from '../../src/data/alumniPass.js';
 
 const SITIO = 'https://healthcareexp.com';
 const PAGINA = `${SITIO}/alumni-pass-step1`;
@@ -93,6 +94,10 @@ async function solicitar(db, cuerpo) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clave)) return json(400, { error: 'Recarga la página e intenta enviar tu solicitud de nuevo.' });
   const d = {
     nombre: texto(cuerpo.nombre, 120),
+    nombres: texto(cuerpo.nombres, 80),
+    apellido_paterno: texto(cuerpo.apellido_paterno, 80),
+    apellido_materno: texto(cuerpo.apellido_materno, 80),
+    edicion_diploma: texto(cuerpo.edicion_diploma, 80),
     email: texto(cuerpo.email, 160).toLowerCase(),
     telefono: texto(cuerpo.telefono, 40),
     ciudad: texto(cuerpo.ciudad, 80),
@@ -103,6 +108,14 @@ async function solicitar(db, cuerpo) {
   const modalidad = cuerpo.modalidad === 'presencial' ? 'presencial' : cuerpo.modalidad === 'virtual' ? 'virtual' : null;
   const grabaciones = cuerpo.grabaciones === true;
   const diploma = cuerpo.diploma || {};
+
+  // Conserva compatibilidad con formularios abiertos antes de esta publicación.
+  const separado = ['nombres', 'apellido_paterno', 'apellido_materno', 'edicion_diploma'].some((k) => Object.hasOwn(cuerpo, k));
+  if (separado) {
+    if (d.nombres.length < 2 || d.apellido_paterno.length < 2) return json(400, { error: 'Completa tu nombre y apellido paterno.' });
+    if (!EDICIONES_ALUMNI.includes(d.edicion_diploma)) return json(400, { error: 'Selecciona la edición en la que tomaste el diploma.' });
+    d.nombre = [d.nombres, d.apellido_paterno, d.apellido_materno].filter(Boolean).join(' ');
+  }
 
   if (!d.nombre || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return json(400, { error: 'Escribe tu nombre completo y un correo válido.' });
   if (d.telefono.replace(/\D/g, '').length < 8 || [d.ciudad, d.pais, d.hospital, d.especialidad].some(v => v.length < 2)) return json(400, { error: 'Completa teléfono con lada, ciudad, país, hospital y especialidad.' });
@@ -146,6 +159,7 @@ async function solicitar(db, cuerpo) {
     p('Llegó una nueva solicitud para el <strong>Alumni Pass · Step 1 Refresher</strong> (28 y 29 de octubre). Revisa su diploma y acéptala o recházala desde el panel.'),
     tabla([
       fila('Nombre', d.nombre), fila('Correo', d.email), fila('Teléfono', d.telefono),
+      fila('Edición del diploma', d.edicion_diploma),
       fila('Ciudad', d.ciudad), fila('País', d.pais), fila('Hospital', d.hospital),
       fila('Especialidad', d.especialidad), fila('Modalidad', ETIQUETA[modalidad]),
       fila('Grabaciones', grabaciones ? 'Le interesan (+$1,299)' : 'No'),

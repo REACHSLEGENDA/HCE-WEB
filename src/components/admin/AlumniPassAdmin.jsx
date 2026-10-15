@@ -131,8 +131,8 @@ export default function AlumniPassAdmin({ notificar, confirmar }) {
 
   const exportar = () => {
     const filas = [
-      ['Estado', 'Folio', 'Nombre', 'Correo', 'Teléfono', 'Especialidad', 'Hospital', 'Ciudad', 'País', 'Modalidad', 'Grabaciones', 'Moneda', 'Importe', 'Solicitó', 'Pagó'],
-      ...visibles.map((r) => [ESTADOS[estadoDe(r)].texto, r.folio || '', r.nombre, r.email, r.telefono || '', r.especialidad || '',
+      ['Estado', 'Folio', 'Nombre completo', 'Nombre(s)', 'Apellido paterno', 'Apellido materno', 'Edición del diploma', 'Correo', 'Teléfono', 'Especialidad', 'Hospital', 'Ciudad', 'País', 'Modalidad', 'Grabaciones', 'Moneda', 'Importe', 'Solicitó', 'Pagó'],
+      ...visibles.map((r) => [ESTADOS[estadoDe(r)].texto, r.folio || '', r.nombre, r.nombres || '', r.apellido_paterno || '', r.apellido_materno || '', r.edicion_diploma || '', r.email, r.telefono || '', r.especialidad || '',
         r.hospital || '', r.ciudad || '', r.pais || '', r.modalidad === 'presencial' ? 'Presencial' : 'Virtual',
         r.grabaciones ? 'Sí' : 'No', (r.moneda || 'mxn').toUpperCase(), r.pagado ? r.importe ?? '' : '', fecha(r.creado_en), fecha(r.pagado_en)]),
     ];
@@ -202,6 +202,7 @@ export default function AlumniPassAdmin({ notificar, confirmar }) {
                   <div><dt>Especialidad</dt><dd>{r.especialidad || '—'}</dd></div>
                   <div><dt>Hospital</dt><dd>{r.hospital || '—'}</dd></div>
                   <div><dt>Ciudad / país</dt><dd>{[r.ciudad, r.pais].filter(Boolean).join(', ') || '—'}</dd></div>
+                  <div><dt>Edición del diploma</dt><dd>{r.edicion_diploma || 'No indicada en la solicitud anterior'}</dd></div>
                   <div><dt>Modalidad</dt><dd>{r.modalidad === 'presencial' ? 'Presencial' : 'Virtual'}{r.grabaciones ? ' + grabaciones' : ''}</dd></div>
                   <div><dt>Solicitó</dt><dd>{fecha(r.creado_en)}</dd></div>
                   {r.pagado && <div><dt>Pagó</dt><dd>{r.moneda === 'usd' ? 'US$' : '$'}{Number(r.importe || 0).toLocaleString('es-MX')} · {fecha(r.pagado_en)}</dd></div>}

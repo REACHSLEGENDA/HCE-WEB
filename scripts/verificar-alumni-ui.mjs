@@ -69,18 +69,24 @@ try {
     for(const width of [375,1280]){await page.setViewportSize({width,height:900});await ir();await page.getByRole('button',{name:'Enviar mi solicitud',exact:true}).waitFor();await ancho();await page.screenshot({path:path.join(salida,`alumni-solicitud-${width}.png`),fullPage:true});}
   });
   await check('datos incompletos no se envían; archivo inválido se explica',async()=>{
-    await page.getByRole('button',{name:'Enviar mi solicitud',exact:true}).click();assert.equal(solicitado,0);await page.getByText('Escribe tu nombre completo como aparece en tu diploma.').waitFor();
+    await page.getByRole('button',{name:'Enviar mi solicitud',exact:true}).click();assert.equal(solicitado,0);await page.getByText('Escribe tu nombre o nombres como aparecen en tu diploma.').waitFor();
     await page.getByLabel('Subir diploma de Step 1').setInputFiles({name:'diploma.txt',mimeType:'text/plain',buffer:Buffer.from('qa')});await page.getByRole('alert').filter({hasText:'El diploma debe ser una foto'}).waitFor();
   });
   await check('solicitud completa con PDF bloquea doble envío y muestra acuse fallido',async()=>{
     await page.locator('.ap-chips').getByRole('button',{name:'Virtual',exact:true}).click();
-    for(const [name,value]of Object.entries({nombre:'Ana López',email:'ana@example.test',telefono:'+52 5555555555',especialidad:'Perfusión',hospital:'Hospital QA',ciudad:'CDMX',pais:'México'}))await page.locator(`input[name="${name}"]`).fill(value);
+    for(const [name,value]of Object.entries({nombres:'Ana María',apellido_paterno:'López',apellido_materno:'Pérez',email:'ana@example.test',telefono:'+52 5555555555',especialidad:'Perfusión',hospital:'Hospital QA',ciudad:'CDMX'}))await page.locator(`input[name="${name}"]`).fill(value);
+    const pais=page.locator('select[name="pais"]');assert.ok(await pais.locator('option').count()>25);
+    await pais.selectOption('Otro país');await page.getByRole('textbox',{name:'Especifica tu país *',exact:true}).fill('Japón');
+    await pais.selectOption('México');assert.equal(await page.locator('input[name="pais_otro"]').count(),0);
+    const edicion=page.locator('select[name="edicion_diploma"]');assert.deepEqual(await edicion.locator('option').allTextContents(),['Selecciona tu edición','Septiembre 2024 INC','Marzo 2025 INER','Chile 2025 INT']);await edicion.selectOption('Marzo 2025 INER');
+    assert.equal(await page.getByText(/Quedan \d+ de/).count(),0);assert.equal(await page.getByText(/firmado por los profesores/).count(),0);
     await page.getByLabel('Subir diploma de Step 1').setInputFiles({name:'diploma.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\nQA')});
     await page.getByRole('checkbox',{name:/Acepto/}).check();
     await page.getByRole('button',{name:'Enviar mi solicitud',exact:true}).click();
-    await page.getByRole('button',{name:'Enviando tu solicitud…'}).waitFor();assert.equal(await page.locator('input[name="nombre"]').isDisabled(),true);
+    await page.getByRole('button',{name:'Enviando tu solicitud…'}).waitFor();assert.equal(await page.locator('input[name="nombres"]').isDisabled(),true);assert.equal(await edicion.isDisabled(),true);
     await page.getByText('Tu solicitud sí quedó guardada, pero no pudimos enviar el acuse por correo. No necesitas registrarte otra vez.').waitFor();assert.equal(solicitado,1);
     const d=cuerpos.find(d=>d.accion==='solicitar');assert.ok(d.solicitudClave);assert.equal(d.hospital,'Hospital QA');assert.ok(d.diploma.base64);
+    assert.equal(d.nombres,'Ana María');assert.equal(d.apellido_paterno,'López');assert.equal(d.apellido_materno,'Pérez');assert.equal(d.edicion_diploma,'Marzo 2025 INER');assert.equal(d.pais,'México');
   });
   await check('pago aprobado USD coincide con total 475 y conserva opciones ante error',async()=>{
     await page.setViewportSize({width:375,height:900});await ir('?pago=aprobado');await page.getByRole('button',{name:'Dólares (USD)'}).click();await page.getByRole('checkbox').check();

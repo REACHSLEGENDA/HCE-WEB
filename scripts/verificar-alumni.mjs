@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { randomUUID } from 'node:crypto';
 import { LISTS } from '../netlify/functions/_brevo.js';
+import { EDICIONES_ALUMNI } from '../src/data/alumniPass.js';
 
 const clon = v => structuredClone(v);
 function base() {
@@ -83,6 +84,7 @@ async function entorno(s) {
     },
   } } };
   const mocks = {
+    '../../src/data/alumniPass.js': { EDICIONES_ALUMNI },
     './_stripe.js': { getStripe: () => ({ stripe, pasarela: 'qa' }) },
     './_supabase.js': { admin: () => db, adminDesdeToken: async () => s.administrador ? { id: 'admin' } : null,
       isConfigured: () => true, registrarAccionAdmin: async () => {}, json: (statusCode, body) => ({ statusCode, body: JSON.stringify(body) }) },
@@ -129,6 +131,20 @@ await check('solicitud completa se guarda una sola vez al reintentar', async () 
   assert.equal(s.formularios[0].form_id,'xdeapenv');assert.equal(s.formularios[0].payload._integraciones.formspree,'enviado');
   const externo=s.formspree[0];assert.equal(externo.hospital,'Hospital QA');assert.equal(externo.ciudad,'CDMX');
   assert.ok(!JSON.stringify(externo).includes(s.filas[1].token));assert.ok(!('diploma_path' in externo));assert.ok(!('base64' in externo));
+});
+await check('nombres compuestos, apellidos y edición se guardan y llegan al panel, Formspree y Brevo', async () => {
+  const s=base(),e=await entorno(s),d={...solicitud(),nombre:'No usar',nombres:'Ana María',apellido_paterno:'López',apellido_materno:'Pérez',edicion_diploma:'Marzo 2025 INER'};
+  assert.equal((await e.endpoint(evento(d))).statusCode,200);
+  const r=s.filas[1];assert.equal(r.nombre,'Ana María López Pérez');assert.equal(r.nombres,'Ana María');assert.equal(r.apellido_paterno,'López');assert.equal(r.apellido_materno,'Pérez');assert.equal(r.edicion_diploma,d.edicion_diploma);
+  for(const payload of [s.formularios[0].payload,s.formspree[0]]){assert.equal(payload.nombres,'Ana María');assert.equal(payload.apellido_materno,'Pérez');assert.equal(payload.edicion_diploma,d.edicion_diploma);}
+  assert.equal(s.contactos[0][1].FIRSTNAME,'Ana María');assert.equal(s.contactos[0][1].LASTNAME,'López Pérez');assert.equal(s.listas.length,0);
+  r.revision='aprobado';s.filas=[r];const pago=await cobro(s,e);const confirmado=await e.confirmar(e.db,pago);assert.ok(confirmado);
+  const contacto=s.contactos.at(-1)[1];assert.equal(contacto.FIRSTNAME,'Ana María');assert.equal(contacto.LASTNAME,'López Pérez');assert.equal(s.listas[0][1],20);
+});
+await check('edición y apellido paterno se validan; apellido materno es opcional', async () => {
+  const s=base(),e=await entorno(s),d={...solicitud(),nombres:'Ana María',apellido_paterno:'López',apellido_materno:'',edicion_diploma:'Chile 2025 INT'};
+  for(const faltante of [{edicion_diploma:''},{edicion_diploma:'Otra edición'},{apellido_paterno:''}])assert.equal((await e.endpoint(evento({...d,...faltante}))).statusCode,400);
+  assert.equal(s.archivos.length,0);assert.equal((await e.endpoint(evento(d))).statusCode,200);assert.equal(s.filas[1].nombre,'Ana María López');
 });
 await check('Formspree falla sin perder solicitud ni registro en el panel; reintento solo de pendientes',async()=>{
   const s=base(),e=await entorno(s),d=solicitud();s.fallarFormspree='http';

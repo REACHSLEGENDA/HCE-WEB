@@ -44,6 +44,10 @@ create table if not exists public.alumni_pass_registros (
 alter table public.alumni_pass_registros add column if not exists ciudad text;
 alter table public.alumni_pass_registros add column if not exists hospital text;
 alter table public.alumni_pass_registros add column if not exists especialidad text;
+alter table public.alumni_pass_registros add column if not exists nombres text;
+alter table public.alumni_pass_registros add column if not exists apellido_paterno text;
+alter table public.alumni_pass_registros add column if not exists apellido_materno text;
+alter table public.alumni_pass_registros add column if not exists edicion_diploma text;
 alter table public.alumni_pass_registros add column if not exists token text;
 alter table public.alumni_pass_registros add column if not exists revisado_en timestamptz;
 alter table public.alumni_pass_registros add column if not exists pago_enviado_en timestamptz;

@@ -21,6 +21,10 @@ try {
   `);
   const sql = await fs.readFile(new URL('../supabase/alumni-pass.sql',import.meta.url),'utf8');
   await db.exec(sql); await db.exec(sql);
+  const ampliacion = await fs.readFile(new URL('../supabase/alumni-pass-datos-diploma.sql',import.meta.url),'utf8');
+  await db.exec(ampliacion);await db.exec(ampliacion);
+  const columnas=(await db.query("select column_name from information_schema.columns where table_schema='public' and table_name='alumni_pass_registros'")).rows.map(r=>r.column_name);
+  for(const nombre of ['nombres','apellido_paterno','apellido_materno','edicion_diploma'])assert.ok(columnas.includes(nombre));
   console.log('PASS migración completa ejecutada dos veces');
   await db.exec(`insert into public.alumni_pass_registros(email,nombre,modalidad,diploma_path,revision,pagado)
     select 'qa'||n||'@example.test','Solicitud '||n,'presencial','qa/diploma.pdf','aprobado',n<=29 from generate_series(1,32) n;`);

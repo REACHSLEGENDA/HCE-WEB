@@ -258,7 +258,7 @@
 .ap-rejilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .ap-campo, .ap-campo-grupo { display: grid; gap: 6px; min-width: 0; }
 .ap-campo span, .ap-etiqueta { font-size: 0.85rem; font-weight: 600; color: var(--ap-suave); }
-.ap-campo input {
+.ap-campo input, .ap-campo select {
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(148, 163, 184, 0.3);
@@ -266,9 +266,11 @@
   color: var(--ap-texto);
   font: inherit;
   min-width: 0;
+  width: 100%;
 }
-.ap-campo input:focus { outline: none; border-color: var(--ap-oro); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); }
-.ap-campo--error input { border-color: #f87171; }
+.ap-campo select { color-scheme: dark; }
+.ap-campo input:focus, .ap-campo select:focus { outline: none; border-color: var(--ap-oro); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); }
+.ap-campo--error input, .ap-campo--error select { border-color: #f87171; }
 .ap-campo small, .ap-error-texto { color: #fca5a5; font-size: 0.8rem; }
 
 .ap-zona {

@@ -9,6 +9,8 @@ export function payloadSolicitudAlumni(r) {
     _subject: `Solicitud Alumni Pass: ${r.nombre}`,
     registro_alumni_id: r.id, referencia_solicitud: r.solicitud_clave || `ALUMNI-${r.id}`,
     formulario: NOMBRE_FORM_ALUMNI, nombre: r.nombre, email: r.email,
+    nombres: r.nombres || '', apellido_paterno: r.apellido_paterno || '',
+    apellido_materno: r.apellido_materno || '', edicion_diploma: r.edicion_diploma || '',
     telefono: r.telefono, ciudad: r.ciudad, pais: r.pais,
     hospital: r.hospital, especialidad: r.especialidad,
     modalidad: r.modalidad === 'presencial' ? 'Presencial' : 'Virtual',
@@ -64,7 +66,8 @@ async function sincronizar(db, registro, reintentar) {
     try {
       if (!isConfigured()) throw new Error('Brevo no está configurado.');
       const [nombre, ...resto] = r.nombre.trim().split(/\s+/);
-      await upsertContact(r.email, { FIRSTNAME: nombre, ...(resto.length ? { LASTNAME: resto.join(' ') } : {}),
+      const apellidos = r.nombres ? [r.apellido_paterno, r.apellido_materno].filter(Boolean).join(' ') : resto.join(' ');
+      await upsertContact(r.email, { FIRSTNAME: r.nombres || nombre, ...(apellidos ? { LASTNAME: apellidos } : {}),
         TELEFONO: r.telefono, PAIS: r.pais, INSTITUCION: r.hospital, ESPECIALIDAD: r.especialidad }, { signal: AbortSignal.timeout(6000) });
       // No se agrega a la lista de pagados: eso dispararía un pase antes del cobro.
       await guardar({ brevo_solicitud_en: new Date().toISOString() });
