@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "check:lms": "node --experimental-vm-modules scripts/verificar-lms.mjs",
     "check:ui": "node scripts/verificar-borradores.mjs",
+    "check:alumni": "node --experimental-vm-modules scripts/verificar-alumni.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

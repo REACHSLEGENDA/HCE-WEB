@@ -75,6 +75,7 @@ import InscritosCurso from '../components/admin/InscritosCurso';
 import EditorCursoPestanas, { BarraGuardarCurso } from '../components/admin/EditorCursoPestanas';
 import ChecklistPublicar from '../components/admin/ChecklistPublicar';
 import PendientesHoy from '../components/admin/PendientesHoy';
+import AlumniPassAdmin from '../components/admin/AlumniPassAdmin';
 import { PESTANAS_CURSO, esPestanaFormulario, pestanaInicialCurso, recordarPestanaCurso, validarCurso, firmaCurso } from '../components/admin/editorCurso';
 import { llamarInscripcion, llamarCuenta, llamarClonar, esTablaFaltante, formatoPrecio } from '../lib/cursos';
 import { traerTodo } from '../lib/traerTodo';
@@ -139,6 +140,7 @@ const FORM_LABELS = {
   xredqyol: 'ECMO SIM: Realidad Clínica',
   mreroozv: 'Solicitud de Facturación',
   xnjlvzdq: 'Retroalimentación y Dudas',
+  xdeapenv: 'Alumni Pass · Solicitud Step 1 Refresher',
 };
 
 // Menú lateral agrupado. `titulo` es el texto del tooltip con el menú colapsado.
@@ -170,6 +172,7 @@ const SECCIONES_MENU = [
   { id: 'ventas', titulo: 'Ventas', items: [
     { id: 'payments', etiqueta: 'Pagos y Formularios', icono: CreditCard, titulo: 'Pagos y Formularios' },
     { id: 'facturacion', etiqueta: 'Facturación', icono: Receipt, titulo: 'Facturación' },
+    { id: 'alumni', etiqueta: 'Alumni Pass', icono: Award, titulo: 'Alumni Pass · Step 1 Refresher' },
   ] },
   { id: 'sistema', titulo: 'Sistema', items: [
     { id: 'settings', etiqueta: 'Configuración', icono: Settings, titulo: 'Configuración' },
@@ -397,7 +400,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     let vigente = true;
     const contar = (consulta, guardar) => Promise.resolve(consulta)
-      .then(({ count, error }) => { if (vigente) guardar(error ? null : (count || 0)); })
+      .then(({ count, error }) => { if (vigente) guardar(error ? (esTablaFaltante(error) ? 0 : null) : (count || 0)); })
       .catch(() => { if (vigente) guardar(null); });
     contar(
       supabase.from('tarea_entregas').select('id', { count: 'exact', head: true }).eq('estado', 'entregada'),
@@ -1529,6 +1532,7 @@ const AdminDashboard = () => {
       case 'divisiones': return 'Divisiones';
       case 'payments': return 'Pagos y Formularios';
       case 'facturacion': return 'Facturación';
+      case 'alumni': return 'Alumni Pass · Step 1 Refresher';
       case 'admins': return 'Administradores';
       case 'settings': return 'Configuración General';
       case 'ayuda': return 'Guía de uso';
@@ -1755,8 +1759,8 @@ const AdminDashboard = () => {
     setPestanaCurso(id);
     setPestanasCursoVisitadas((prev) => (prev.includes(id) ? prev : [...prev, id]));
     recordarPestanaCurso(id);
-    // Al volver de Lecciones o Reglas el checklist se actualiza.
-    setRecargaChecklist((n) => n + 1);
+    // Al volver de Lecciones o Reglas el checklist se actualiza (no en cada pestaña).
+    if (['lecciones', 'reglas'].includes(pestanaCurso)) setRecargaChecklist((n) => n + 1);
   };
 
   // Desde el panel inicial: abre un curso directo en una pestaña.
@@ -3433,6 +3437,27 @@ const AdminDashboard = () => {
             };
 
             const handleResendToFormspree = async (entry) => {
+              if (entry.formId === 'xdeapenv') {
+                const id = Number(entry.payload?.registro_alumni_id);
+                if (!Number.isSafeInteger(id) || id <= 0) {
+                  showToast('Este registro no tiene una solicitud de Alumni Pass asociada.', 'error');
+                  return;
+                }
+                const ok = await showConfirm('Se reintentarán solo los registros pendientes. Si Formspree no confirmó una recepción anterior, revisa su buzón antes de continuar para evitar duplicados.', 'Reintentar registros');
+                if (!ok) return;
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  const res = await fetch('/.netlify/functions/alumni-pass', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+                    body: JSON.stringify({ accion: 'sincronizar-registros', id }),
+                  });
+                  const respuesta = await res.json();
+                  if (!res.ok) throw new Error(respuesta.error || 'No se pudieron reintentar los registros.');
+                  showToast(respuesta.avisoRegistros || 'Registros confirmados en Formularios, Formspree y Brevo.', respuesta.avisoRegistros ? 'error' : 'success');
+                  await fetchRealFormSubmissions();
+                } catch (err) { showToast(err.message, 'error'); }
+                return;
+              }
               if (!entry.formId) {
                 showToast('No se puede reenviar: ID de formulario desconocido.', 'error');
                 return;
@@ -3877,6 +3902,7 @@ const AdminDashboard = () => {
                           <option value="xredqyol">ECMO SIM: Realidad Clinica</option>
                           <option value="mreroozv">Solicitud de Facturación</option>
                           <option value="xnjlvzdq">Retroalimentación y Dudas</option>
+                          <option value="xdeapenv">Alumni Pass · Solicitudes</option>
                         </select>
 
                         <button 
@@ -3934,8 +3960,12 @@ const AdminDashboard = () => {
                                 <td>{formatDate(entry.date)} {new Date(entry.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</td>
                                 <td>
                                   <span className="status-badge active" style={{ padding: '4px 8px', borderRadius: '100px', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '4px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                                    <CheckCircle size={10} /> Enviado API
+                                    <CheckCircle size={10} /> {entry.formId === 'xdeapenv' ? 'Solicitud guardada' : 'Enviado API'}
                                   </span>
+                                  {entry.formId === 'xdeapenv' && <small style={{ display: 'block', marginTop: '6px', color: 'var(--text-muted)' }}>
+                                    Formspree: {entry.payload?._integraciones?.formspree || 'pendiente'}<br />
+                                    Contacto Brevo: {entry.payload?._integraciones?.brevo || 'pendiente'}
+                                  </small>}
                                 </td>
                                 <td>
                                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '240px' }}>
@@ -4058,6 +4088,16 @@ const AdminDashboard = () => {
               </div>
             );
           })()}
+
+          {activeTab === 'alumni' && (
+            <div className="tab-pane animate-fade-in">
+              <div className="section-header">
+                <h2>Alumni Pass · Step 1 Refresher</h2>
+                <a className="btn-crm-action outlined" href="/alumni-pass-step1" target="_blank" rel="noreferrer">Ver la página</a>
+              </div>
+              <AlumniPassAdmin notificar={showToast} confirmar={showConfirm} />
+            </div>
+          )}
 
           {activeTab === 'facturacion' && (
             <div className="tab-pane animate-fade-in">
@@ -4185,7 +4225,7 @@ const AdminDashboard = () => {
                     />
                   ) : (
                     <div className="cp-tarjeta cp-nuevo">
-                      <p className="cp-titulo">Listo para publicar</p>
+                      <p className="cp-titulo">Revisión antes de publicar</p>
                       <p>Guarda el borrador y aquí verás qué le falta al curso para activarlo: lecciones, examen, certificado…</p>
                     </div>
                   )}
@@ -4613,7 +4653,7 @@ const AdminDashboard = () => {
                         <h3>Reglas</h3>
                         <p>Quién puede entrar, por cuánto tiempo y cuándo se da por terminado.</p>
                       </div>
-                      <ReglasCurso key={idCursoEditado} courseId={idCursoEditado} cursos={courses} tipoCurso={courseForm.tipo} notificar={showToast} confirmar={showConfirm} onCambios={cambiosReglas} />
+                      <ReglasCurso key={idCursoEditado} courseId={idCursoEditado} cursos={courses} tipoCurso={courseForm.tipo} notificar={showToast} confirmar={showConfirm} onCambios={cambiosReglas} onGuardado={() => setRecargaChecklist((n) => n + 1)} />
                     </div>
                   )}
 

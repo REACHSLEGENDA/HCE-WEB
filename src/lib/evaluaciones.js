@@ -151,7 +151,8 @@ export async function borrarPregunta(id) {
 }
 
 export async function reordenarPreguntas(ids) {
-  const resultados = await Promise.all(ids.map((id, i) => supabase.from('evaluacion_preguntas').update({ orden: i + 1 }).eq('id', id)));
+  const resultados = await Promise.all(ids.map((id, i) => supabase.from('evaluacion_preguntas').update({ orden: i + 1 }).eq('id', id).select('id')));
   const fallo = resultados.find((r) => r.error);
   if (fallo) throw fallo.error;
+  if (resultados.some((r) => !r.data?.length)) throw new Error('No tienes permiso para cambiar el orden de las preguntas.');
 }

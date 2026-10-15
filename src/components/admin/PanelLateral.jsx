@@ -26,10 +26,13 @@ export default function PanelLateral({ titulo, subtitulo, onCerrar, onSubmit, pi
     const previo = document.activeElement;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    // Con el panel abierto el robot del chat se oculta: tapaba "Guardar".
+    document.body.classList.add('panel-lateral-abierto');
     const primero = panelRef.current?.querySelector('.panel-lateral-cuerpo input, .panel-lateral-cuerpo textarea, .panel-lateral-cuerpo select, .panel-lateral-cuerpo button');
     (primero || panelRef.current)?.focus({ preventScroll: true });
     return () => {
       document.body.style.overflow = overflow;
+      document.body.classList.remove('panel-lateral-abierto');
       if (previo && typeof previo.focus === 'function' && document.contains(previo)) previo.focus({ preventScroll: true });
     };
   }, [contenedor]);

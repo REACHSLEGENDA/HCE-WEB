@@ -183,6 +183,10 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
     const correctas = p.tipo === 'opcion'
       ? [indice]
       : (p.correctas.includes(indice) ? p.correctas.filter((c) => c !== indice) : [...p.correctas, indice]);
+    if (!correctas.length) {
+      notificar('Debe quedar al menos una respuesta correcta.', 'error');
+      return;
+    }
     const cambiar = (lista) => setDatos((actual) => ({ ...actual, preguntas: actual.preguntas.map((x) => (x.id === p.id ? { ...x, correctas: lista } : x)) }));
     cambiar(correctas);
     setMarcando(p.id);

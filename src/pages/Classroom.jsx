@@ -804,6 +804,11 @@ const Classroom = () => {
           // Desde el inicio del portal se puede abrir una lección concreta
           // (?leccion=ID: una tarea pendiente, una sesión en vivo).
           const pedida = new URLSearchParams(window.location.search).get('leccion');
+          if (pedida) {
+            const u = new URL(window.location.href);
+            u.searchParams.delete('leccion');
+            window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
+          }
           const elegida = pedida ? conContenido.find((l) => String(l.id) === pedida) : null;
           setLeccionActualId((elegida || pendiente || conContenido[0] || lista[0]).id);
 
@@ -1396,7 +1401,20 @@ const Classroom = () => {
   useEffect(() => {
     if (!user?.id) return;
     localStorage.setItem(`examAnswers_${user.id}_${id}`, JSON.stringify(examAnswers));
-  }, [examAnswers, id, user?.id]);
+    // Las respuestas van por número de pregunta: se guarda qué preguntas eran.
+    if (questions?.length) {
+      try { localStorage.setItem(`examAnswersFirma_${user.id}_${id}`, questions.map((q) => q.id).join(',')); } catch { /* sin almacenamiento */ }
+    }
+  }, [examAnswers, id, user?.id, questions]);
+
+  // Si el administrador editó el examen, las respuestas guardadas ya no
+  // corresponden a las preguntas: se descartan en vez de enviarlas.
+  useEffect(() => {
+    if (!user?.id || !questions?.length) return;
+    let firma = null;
+    try { firma = localStorage.getItem(`examAnswersFirma_${user.id}_${id}`); } catch { /* sin almacenamiento */ }
+    if (firma && firma !== questions.map((q) => q.id).join(',')) setExamAnswers({});
+  }, [questions, id, user?.id]);
 
   useEffect(() => {
     if (!user?.id) return;

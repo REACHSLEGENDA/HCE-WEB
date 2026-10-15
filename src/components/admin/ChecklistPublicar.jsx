@@ -181,8 +181,8 @@ export default function ChecklistPublicar({ courseId, form, activo, sucio, recar
     <section className={`cp-tarjeta${esencialesListos ? ' listo' : ''}`} aria-labelledby="cp-titulo">
       <button type="button" className="cp-cabecera" onClick={() => setAbierto((v) => !v)} aria-expanded={abierto}>
         {abierto ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-        <span id="cp-titulo" className="cp-titulo">{activo ? 'Revisión del curso' : 'Listo para publicar'}</span>
-        <span className="cp-conteo">{listos} de {puntos.length}</span>
+        <span id="cp-titulo" className="cp-titulo">{activo ? 'Revisión del curso' : 'Revisión antes de publicar'}</span>
+        <span className="cp-conteo">{esencialesListos ? (activo ? `${listos} de ${puntos.length}` : 'Listo para publicar') : `${listos} de ${puntos.length}`}</span>
       </button>
       <div className="cp-barra" aria-hidden="true"><span style={{ width: `${porcentaje}%` }} /></div>
 

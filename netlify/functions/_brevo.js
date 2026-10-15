@@ -21,6 +21,7 @@ export const LISTS = {
   // Avisos del portal que salen por Brevo (recordatorio de curso y
   // recertificación): una lista, un flujo y una plantilla universal.
   PORTAL_GENERAL:    19,
+  ALUMNI_PASS:       20,
 };
 
 export const isConfigured = () => Boolean(process.env.BREVO_API_KEY);
@@ -144,7 +145,7 @@ export async function remitentePorDefecto() {
 
 // Correo suelto (transaccional), fuera de las automatizaciones. Sin `de`, usa
 // el remitente de la cuenta de Brevo.
-export async function enviarCorreo({ de, para, asunto, html }) {
+export async function enviarCorreo({ de, para, asunto, html, claveIdempotencia }) {
   const remitente = de || await remitentePorDefecto();
   if (!remitente) throw new Error('La cuenta de Brevo no tiene un remitente verificado.');
   return brevoFetch('/smtp/email', {
@@ -153,6 +154,7 @@ export async function enviarCorreo({ de, para, asunto, html }) {
       to: para.map((email) => ({ email })),
       subject: asunto,
       htmlContent: html,
+      ...(claveIdempotencia ? { headers: { 'Idempotency-Key': claveIdempotencia } } : {}),
     },
   });
 }

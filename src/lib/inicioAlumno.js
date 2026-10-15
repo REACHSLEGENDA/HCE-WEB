@@ -121,7 +121,7 @@ export function pendientesDe(datos, cursos) {
   const lista = [];
   for (const [courseId, lecciones] of Object.entries(datos.lecciones || {})) {
     const curso = porCurso.get(Number(courseId));
-    if (!curso) continue;
+    if (!curso || curso.completed) continue;
     for (const l of lecciones) {
       const hecha = datos.progreso[l.id]?.completada;
       if (l.tipo === 'tarea') {

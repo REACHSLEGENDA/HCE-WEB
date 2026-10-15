@@ -129,6 +129,8 @@ export default function InicioAlumno({
   // pantalla muestra "Cargando…" en lugar de datos de otra combinación.
   const claveCarga = `${userId}|${claveAbiertos}|${intento}`;
   useEffect(() => {
+    // Hasta que el portal sepa qué cursos están abiertos, no se consulta nada.
+    if (cargandoCursos) return undefined;
     let vigente = true;
     cargarInicioAlumno(userId, abiertos)
       .then((d) => { if (vigente) { setErrorDatos(d.errores.length ? d.errores.join(' · ') : ''); setDatos({ ...d, clave: claveCarga }); } })
@@ -136,7 +138,7 @@ export default function InicioAlumno({
     return () => { vigente = false; };
     // Se recarga cuando cambian los cursos abiertos (clave), no en cada render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [claveCarga]);
+  }, [claveCarga, cargandoCursos]);
 
   const cargando = cargandoCursos || (!errorDatos && datos?.clave !== claveCarga);
 

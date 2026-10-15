@@ -1633,7 +1633,7 @@ button.temario-seccion[aria-expanded="false"] .temario-seccion-flecha { transfor
 
 /* Examen final: avance y preguntas pendientes antes de enviar. */
 .examen-progreso {
-  position: sticky; top: 76px; z-index: 5; display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
+  position: sticky; top: 84px; z-index: 5; display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
   padding: 10px 14px; border: 1px solid var(--aula-borde, #e2e8f0); border-radius: 12px; background: var(--aula-superficie, #fff); color: var(--aula-secundario, #475569); font-size: 0.86rem; font-weight: 700;
 }
 .examen-progreso-barra { flex: 1; height: 6px; overflow: hidden; border-radius: 999px; background: var(--aula-borde, #e2e8f0); }
@@ -1658,7 +1658,7 @@ button.temario-seccion[aria-expanded="false"] .temario-seccion-flecha { transfor
   .aula-aviso-texto span { white-space: normal; }
   .aula-aviso-acciones { flex: 1 1 100%; justify-content: space-between; }
   .aula-aviso-acciones .back-btn { flex: 1; justify-content: center; }
-  .examen-progreso { top: 108px; }
+  .examen-progreso { top: 118px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

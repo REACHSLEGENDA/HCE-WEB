@@ -53,7 +53,7 @@ function TarjetaRegla({ id, icono, titulo, explicacion, resumen, abierta, modifi
   );
 }
 
-export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, confirmar, onCambios }) {
+export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, confirmar, onCambios, onGuardado }) {
   const [reglas, setReglas] = useState(null);
   const [faltaMigracion, setFaltaMigracion] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -126,6 +126,7 @@ export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, co
         }
       }
       await guardarReglasCurso(courseId, reglas);
+      onGuardado?.();
       setOriginal({ ...reglas });
       notificar('Reglas del curso guardadas.', 'success');
     } catch (err) {
@@ -198,6 +199,13 @@ export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, co
     ? 'Pon un número entero entre 1 y 100.'
     : '';
   const hayErrores = !!(errorCupo || errorDias || errorPorcentaje);
+  const abrirErrores = () => setAbiertas((prev) => {
+    const s = new Set(prev);
+    if (errorCupo) s.add('disponibilidad');
+    if (errorDias) s.add('limites');
+    if (errorPorcentaje) s.add('finalizacion');
+    return s;
+  });
   const todasAbiertas = Object.keys(CAMPOS).every((id) => abiertas.has(id));
 
   return (
@@ -319,7 +327,7 @@ export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, co
 
       <div className="reglas-acciones">
         {cambios && <span className="panel-lateral-cambios" role="status">Cambios sin guardar</span>}
-        {hayErrores && <span className="lms-alerta reglas-error">Corrige los campos marcados para guardar.</span>}
+        {hayErrores && <button type="button" className="lms-alerta reglas-error reglas-ver-errores" onClick={abrirErrores}>Corrige los campos marcados para guardar · Ver dónde</button>}
         <button type="button" className="btn-crm-action outlined" onClick={() => setReglas(original)} disabled={!cambios || guardando}>Descartar</button>
         <button type="button" className="btn-crm-action solid" onClick={guardar} disabled={guardando || hayErrores}>
           {guardando ? <><Loader2 size={14} className="lms-girando" /> Guardando…</> : 'Guardar reglas'}

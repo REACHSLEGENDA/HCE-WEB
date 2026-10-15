@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { supabase } from '../lib/supabase';
@@ -167,6 +167,7 @@ const Dashboard = () => {
   );
 
   const [myCertificates, setMyCertificates] = useState([]);
+  const [certificadosListos, setCertificadosListos] = useState(false);
   const [certificadoOcupado, setCertificadoOcupado] = useState(null);
   const [mensajeBienvenida, setMensajeBienvenida] = useState('');
   const [inscritoEn, setInscritoEn] = useState({});
@@ -422,6 +423,8 @@ const Dashboard = () => {
     } catch (err) {
       console.error('Error fetching certificates:', err.message);
       setMyCertificates([]);
+    } finally {
+      setCertificadosListos(true);
     }
   }, [user?.id]);
 
@@ -495,6 +498,7 @@ const Dashboard = () => {
   const [reglasCursos, setReglasCursos] = useState({});
   const [lugaresOcupados, setLugaresOcupados] = useState({});
   const [misSolicitudes, setMisSolicitudes] = useState({});
+  const [reglasListas, setReglasListas] = useState(false);
   useEffect(() => {
     if (!user?.id) return undefined;
     let vigente = true;
@@ -505,24 +509,30 @@ const Dashboard = () => {
         setLugaresOcupados(lugares);
         setMisSolicitudes(solicitudes);
       })
-      .catch((err) => console.warn('No se pudieron cargar las reglas de los cursos:', err.message));
+      .catch((err) => console.warn('No se pudieron cargar las reglas de los cursos:', err.message))
+      .finally(() => { if (vigente) setReglasListas(true); });
     return () => { vigente = false; };
   }, [user?.id]);
 
   // Cursos por generación en los que está inscrito: si ya abrieron o cuándo.
   const [aperturas, setAperturas] = useState({});
+  // Clave de los cursos por grupo ya consultados: hasta que coincide, el Inicio
+  // no da por abierto ningún curso (antes mostraba un momento cursos cerrados).
+  const [aperturasDe, setAperturasDe] = useState(null);
+  const clavePorGrupo = useMemo(() => (profile?.rol === 'admin' ? '' : Object.entries(reglasCursos)
+    .filter(([id, r]) => r.modo_acceso === 'grupo' && misInscripciones?.has(Number(id)))
+    .map(([id]) => Number(id)).sort((a, b) => a - b).join(',')), [reglasCursos, misInscripciones, profile?.rol]);
+  const aperturasListas = !clavePorGrupo || aperturasDe === clavePorGrupo;
   useEffect(() => {
-    if (!user?.id || profile?.rol === 'admin') return undefined;
-    const porGrupo = Object.entries(reglasCursos)
-      .filter(([id, r]) => r.modo_acceso === 'grupo' && misInscripciones.has(Number(id)))
-      .map(([id]) => Number(id));
-    if (!porGrupo.length) return undefined;
+    if (!user?.id || !clavePorGrupo) return undefined;
+    const porGrupo = clavePorGrupo.split(',').map(Number);
     let vigente = true;
     Promise.all(porGrupo.map((id) => cargarMiApertura(id).then((a) => [id, a])))
       .then((lista) => { if (vigente) setAperturas(Object.fromEntries(lista)); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (vigente) setAperturasDe(clavePorGrupo); });
     return () => { vigente = false; };
-  }, [user?.id, profile?.rol, reglasCursos, misInscripciones]);
+  }, [user?.id, clavePorGrupo]);
 
   const abrirAula = (courseId, leccionId = null) => {
     // Dentro de la app instalada la clase se abre sin salir; en el navegador,
@@ -1450,7 +1460,7 @@ const Dashboard = () => {
                 onAbrirAula={abrirAula}
                 onAbrirCurso={(curso) => handleAbrirCurso(curso, curso.enrolled)}
                 onIr={setActiveTab}
-                cargandoCursos={cargandoInscripciones}
+                cargandoCursos={cargandoInscripciones || !reglasListas || !certificadosListos || !aperturasListas}
                 extra={(
                   <>
                     <LogrosAlumno userId={user?.id} />
@@ -1497,8 +1507,8 @@ const Dashboard = () => {
           {activeTab === 'courses' && (() => {
             const filtros = [
               ['todos', 'Todos', enrolledCourses],
-              ['progreso', 'En progreso', enrolledCourses.filter((c) => c.inProgress && !c.completed)],
-              ['nuevos', 'Sin empezar', enrolledCourses.filter((c) => !c.completed && c.progress === 0)],
+              ['progreso', 'En progreso', enrolledCourses.filter((c) => c.inProgress && !c.completed && !c.accesoVencido)],
+              ['nuevos', 'Sin empezar', enrolledCourses.filter((c) => !c.completed && c.progress === 0 && !c.enRevision && !c.esperandoGrupo && !c.accesoVencido)],
               ['completos', 'Completados', enrolledCourses.filter((c) => c.completed)],
             ];
             const lista = (filtros.find(([id]) => id === filtroMisCursos) || filtros[0])[2];

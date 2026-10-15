@@ -1,4 +1,4 @@
-// Webhook de Stripe para los cursos del portal.
+// Webhook de Stripe para los cursos del portal y Alumni Pass.
 //
 // Es la red de seguridad del cobro: si el alumno paga y cierra la pestaña
 // antes de volver al portal, la confirmación al regresar nunca ocurre. Stripe,
@@ -7,12 +7,13 @@
 // Hay dos cuentas de Stripe (pesos y dólares) y cada una firma sus avisos con
 // su propio secreto, así que se prueba la firma contra los dos.
 //
-// Solo actúa sobre cobros de cursos del portal; cualquier otro evento o cobro
-// (París, Nursing, simulador) se responde con 200 y se ignora.
+// Solo actúa sobre cursos del portal y Alumni Pass; otros tipos de cobro
+// (París, Nursing, simulador) se responden con 200 y se ignoran.
 
 import Stripe from 'stripe';
 import { admin, isConfigured as supabaseListo } from './_supabase.js';
 import { inscribirDesdeSesion, TIPO_COBRO } from './_inscripciones.js';
+import { confirmarAlumniDesdeSesion, TIPO_ALUMNI } from './_alumni-pass.js';
 
 const SECRETOS = [
   process.env.STRIPE_WEBHOOK_SECRET,
@@ -57,12 +58,12 @@ export const handler = async (event) => {
     return { statusCode: 400, body: 'Firma inválida' };
   }
 
-  const esPagoDeCurso =
+  const esPagoConocido =
     (evento.type === 'checkout.session.completed' ||
       evento.type === 'checkout.session.async_payment_succeeded') &&
-    evento.data?.object?.metadata?.tipo === TIPO_COBRO;
+    [TIPO_COBRO, TIPO_ALUMNI].includes(evento.data?.object?.metadata?.tipo);
 
-  if (!esPagoDeCurso) {
+  if (!esPagoConocido) {
     return { statusCode: 200, body: 'Ignorado' };
   }
 
@@ -72,6 +73,10 @@ export const handler = async (event) => {
   }
 
   try {
+    if (evento.data.object.metadata.tipo === TIPO_ALUMNI) {
+      const confirmado = await confirmarAlumniDesdeSesion(admin(), evento.data.object, { exigirCorreo: true });
+      return { statusCode: 200, body: confirmado ? 'Alumni Pass confirmado' : 'Sin pago confirmado' };
+    }
     const inscrito = await inscribirDesdeSesion(admin(), evento.data.object);
     return { statusCode: 200, body: inscrito ? 'Inscrito' : 'Sin pago confirmado' };
   } catch (err) {

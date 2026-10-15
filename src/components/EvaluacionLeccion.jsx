@@ -115,7 +115,9 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
     const previo = usarBorrador ? borrador : null;
     const nuevasRespuestas = previo?.respuestas || {};
     const nuevoOrden = previo?.orden || (config.aleatorio ? barajar(datos.preguntas).map((p) => p.id) : []);
-    const inicio = previo?.iniciadoEn || new Date().toISOString();
+    // Al reanudar, el tiempo cuenta desde ahora: las horas que el borrador
+    // estuvo guardado no son tiempo de examen.
+    const inicio = new Date().toISOString();
     setRespuestas(nuevasRespuestas);
     setFaltan([]);
     setResultado(null);

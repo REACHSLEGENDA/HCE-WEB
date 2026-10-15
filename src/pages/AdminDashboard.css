@@ -2533,3 +2533,8 @@ p.cp-pie.ok { font-size: 0.8rem; font-weight: 600; color: #059669; }
   font-size: 0.83rem;
   color: var(--text-dark);
 }
+
+/* La barra fija de guardar deja libre la esquina del robot del chat. */
+@media (max-width: 768px) {
+  .ec-barra-guardar { padding-right: 96px; }
+}

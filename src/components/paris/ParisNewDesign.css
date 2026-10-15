@@ -178,6 +178,73 @@
     text-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
+/* Keep all three actions aligned with the hero copy. */
+.paris-redesign .hero-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+    max-width: 600px;
+}
+
+.paris-redesign .hero-actions .btn {
+    min-width: 0;
+    min-height: 64px;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    letter-spacing: 0.4px;
+    text-align: center;
+    gap: 4px;
+    white-space: normal;
+}
+
+.paris-redesign .hero-actions .hero-action-step1 {
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #00d2ff;
+    color: white;
+}
+
+.paris-redesign .hero-actions .hero-action-detail {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.paris-redesign .hero-actions .hero-action-alumni {
+    grid-column: 1 / -1;
+    min-height: 52px;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    background: linear-gradient(180deg, #f5d27a, #d4af37 55%, #9c7a1c);
+    color: #1a1405;
+    box-shadow: 0 6px 18px rgba(212, 175, 55, 0.2);
+}
+
+.paris-redesign .hero-actions .btn:focus-visible {
+    outline: 3px solid white;
+    outline-offset: 4px;
+}
+
+@media (max-width: 600px) {
+    .paris-redesign .hero-actions {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 380px;
+        gap: 10px;
+    }
+
+    .paris-redesign .hero-actions .btn {
+        min-height: 52px;
+    }
+
+    .paris-redesign .hero-actions .hero-action-alumni {
+        flex-direction: column;
+    }
+}
+
 /* --- Hero Countdown --- */
 .paris-redesign .hero-countdown {
     margin-top: 2rem;

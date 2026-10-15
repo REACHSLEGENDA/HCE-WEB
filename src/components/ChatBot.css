@@ -449,4 +449,5 @@ body.cookie-banner-open .hce-chat-widget {
 
 /* Con la hoja "Más" del portal abierta, el robot se oculta: quedaba encima
    de las opciones de la última fila (Ayuda). */
-body.nav-movil-abierta .hce-chat-widget { display: none; }
+body.nav-movil-abierta .hce-chat-widget,
+body.panel-lateral-abierto .hce-chat-widget { display: none; }

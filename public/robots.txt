@@ -3,5 +3,6 @@ Allow: /
 Disallow: /debug-checkout-preview-2026
 Disallow: /inscripcion-step2-privada-2026
 Disallow: /programas-diploma-paris-2026
+Disallow: /alumni-pass-step1
 
 Sitemap: https://healthcareexp.com/sitemap.xml

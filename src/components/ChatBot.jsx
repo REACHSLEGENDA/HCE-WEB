@@ -171,7 +171,7 @@ const FLOWS = {
 
   // ── FLUJOS ADMINISTRADOR ────────────────────────────────────────────────────
   admin_gestion_cursos: {
-    text: "En **Gestión de Cursos**:\n\n1. **Datos del curso**, **acceso** (gratis o de pago) y **vigencia** del certificado.\n2. Al publicarlo aparecen abajo: **Lecciones del curso**, **Reglas del curso** y **Biblioteca de archivos**.\n3. En lecciones agregas videos (YouTube, Vimeo u otra plataforma), PDF, lecturas, páginas web, tareas, exámenes, encuestas y sesiones en vivo; con **Sección** agrupas por módulos. También puedes **copiar una lección de otro curso**.\n4. En la lista de cursos, el botón de **copiar** clona un curso completo (queda inactivo para revisarlo).\n\nCon **\"Vista de alumno\"** (arriba) ves el portal como lo ve un alumno.",
+    text: "En **Gestión de Cursos**:\n\n1. **Datos del curso**, **acceso** (gratis o de pago) y **vigencia** del certificado.\n2. Al guardar el borrador se habilitan las pestañas **Lecciones**, **Reglas**, **Biblioteca** y **Alumnos**; la **Revisión antes de publicar** te dice qué falta para activarlo.\n3. En lecciones agregas videos (YouTube, Vimeo u otra plataforma), PDF, lecturas, páginas web, tareas, exámenes, encuestas y sesiones en vivo; con **Sección** agrupas por módulos. También puedes **copiar una lección de otro curso**.\n4. En la lista de cursos, el botón de **copiar** clona un curso completo (queda inactivo para revisarlo).\n\nCon **\"Vista de alumno\"** (arriba) ves el portal como lo ve un alumno.",
     buttons: [
       { label: "¿Qué tipo de lección uso?", next: "admin_lecciones" },
       { label: "Exámenes, encuestas y sesiones", next: "admin_evaluaciones" },
