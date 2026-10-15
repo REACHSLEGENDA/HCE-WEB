@@ -2538,3 +2538,16 @@ p.cp-pie.ok { font-size: 0.8rem; font-weight: 600; color: #059669; }
 @media (max-width: 768px) {
   .ec-barra-guardar { padding-right: 96px; }
 }
+/* Escuela HCE — superficies y jerarquía compartidas por las vistas del admin. */
+.admin-layout { --bg-main:#f8f9f7; --bg-gray:#eceeed; --bg-sidebar:#f4f6f3; --bg-active-item:#deeeea; --text-dark:#172320; --text-muted:#52635c; --border-color:#cbd5ce; --primary-cyan:#006f80; --radius-card:24px; --shadow-card:none; --shadow-hover:none; font-family:'Inter','DM Sans',sans-serif; background:var(--bg-gray); }
+.admin-layout[data-theme='dark'] { --bg-main:#1b2723; --bg-gray:#141e1a; --bg-sidebar:#18231f; --bg-active-item:#263d34; --text-dark:#edf3ec; --text-muted:#adbbb2; --border-color:#3c4e43; --primary-cyan:#74d2d4; --shadow-card:none; --shadow-hover:none; color-scheme:dark; }
+.admin-layout :is(h1,h2,h3,h4) { font-family:'Plus Jakarta Sans','Inter',sans-serif; font-weight:800; letter-spacing:-.035em; }
+.admin-layout[data-theme] :is(.settings-card,.kpi-card,.cp-tarjeta,.ec-seccion,.course-card) { border-radius:24px; border-color:var(--border-color); box-shadow:none; background:var(--bg-main); }
+.admin-layout .admin-top-header { box-shadow:none; background:var(--bg-main); border-bottom:1px solid var(--border-color); }
+.admin-layout .btn-crm-action { border-radius:100px; min-height:44px; box-shadow:none; }
+.admin-layout .btn-crm-action.solid { background:var(--text-dark); color:var(--bg-main); border-color:var(--text-dark); }
+.admin-layout .btn-crm-action.outlined { background:transparent; color:var(--text-dark); border-color:var(--border-color); }
+.admin-layout[data-theme='dark'] :is(input,select,textarea) { color:var(--text-dark); background:var(--bg-gray); border-color:var(--border-color); }
+.admin-layout :is(button,a,input,select,textarea):focus-visible { outline:3px solid var(--primary-cyan); outline-offset:3px; }
+.admin-layout .theme-selector-row { flex-wrap: wrap; }
+.admin-layout .theme-option-btn { justify-content: center; min-height: 44px; flex: 1 1 100px; }

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Home, ArrowLeft, LifeBuoy } from 'lucide-react';
+import { Home, ArrowLeft, ArrowUpRight, BookOpen, LifeBuoy } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import './NotFound.css';
@@ -28,20 +28,24 @@ const NotFound = () => (
 
     <main className="nf-main">
       <div className="hce-container nf-inner">
+        <p className="nf-etiqueta">ESCUELA HCE · ERROR 404</p>
         <p className="nf-codigo" aria-hidden="true">404</p>
 
         <h1 className="nf-titulo">Esta página no existe</h1>
 
         <p className="nf-texto">
-          El enlace que seguiste está roto o la página cambió de dirección.
-          No perdiste tu inscripción ni tu progreso: todo sigue en su lugar.
+          Parece que este enlace tomó otro camino. Vuelve al inicio o entra a tu
+          portal para continuar con tu formación.
         </p>
 
         <div className="nf-acciones">
           <Link to="/" className="nf-btn nf-btn--primario">
             <Home size={18} /> Ir al inicio
           </Link>
-          <button type="button" className="nf-btn nf-btn--secundario" onClick={() => window.history.back()}>
+          <Link to="/dashboard" className="nf-btn nf-btn--secundario">
+            <BookOpen size={18} /> Mi portal <ArrowUpRight size={16} />
+          </Link>
+          <button type="button" className="nf-volver" onClick={() => window.history.back()}>
             <ArrowLeft size={18} /> Volver atrás
           </button>
         </div>

@@ -1,0 +1,536 @@
+/* ===========================================================================
+   Verificación pública de certificados (/verificar/:folio).
+
+   Prefijo vc- en todas las clases: este CSS comparte bundle con otras páginas.
+   ======================================================================== */
+
+.vc-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #eceeed;
+  color: #0f172a;
+}
+
+.vc-main {
+  flex: 1;
+  /* El navbar es fijo (90 px): sin este espacio la página queda debajo. */
+  padding: 140px 0 80px;
+}
+
+.vc-inner {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* --- Encabezado ------------------------------------------------------------ */
+
+.vc-encabezado {
+  text-align: center;
+}
+
+.vc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  background: #ecfeff;
+  border: 1px solid rgba(8, 145, 178, 0.25);
+  color: #0e7490;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vc-titulo {
+  margin: 14px 0 0;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: clamp(1.7rem, 4.5vw, 2.4rem);
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.vc-subtitulo {
+  max-width: 560px;
+  margin: 10px auto 0;
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* --- Tarjeta de resultado -------------------------------------------------- */
+
+.vc-tarjeta {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.vc-tarjeta--ok {
+  border-color: #86efac;
+  box-shadow: 0 14px 36px rgba(22, 163, 74, 0.12);
+}
+
+.vc-tarjeta--cargando {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  min-height: 120px;
+}
+
+.vc-tarjeta--cargando p {
+  margin: 0;
+}
+
+.vc-spinner {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 3px solid #e2e8f0;
+  border-top-color: #0891b2;
+  animation: vcGirar 0.85s linear infinite;
+}
+
+@keyframes vcGirar { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .vc-spinner { animation-duration: 2.5s; }
+}
+
+.vc-tarjeta--vacio {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  color: #334155;
+}
+
+.vc-tarjeta--vacio p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.vc-vacio-icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: #ecfeff;
+  color: #0e7490;
+}
+
+/* --- Sello ----------------------------------------------------------------- */
+
+.vc-sello {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 14px;
+}
+
+.vc-sello--ok { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.vc-sello--no { background: #fff7ed; border: 1px solid #fed7aa; }
+.vc-sello--error { background: #fef2f2; border: 1px solid #fecaca; }
+
+.vc-sello-icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  color: #ffffff;
+}
+
+.vc-sello--ok .vc-sello-icono { background: #16a34a; box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.15); }
+.vc-sello--no .vc-sello-icono { background: #ea580c; box-shadow: 0 0 0 6px rgba(234, 88, 12, 0.14); }
+.vc-sello--error .vc-sello-icono { background: #dc2626; box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.14); }
+
+.vc-sello-titulo {
+  margin: 2px 0 0;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.vc-sello--ok .vc-sello-titulo { color: #15803d; }
+.vc-sello--no .vc-sello-titulo { color: #c2410c; }
+.vc-sello--error .vc-sello-titulo { color: #b91c1c; }
+
+.vc-sello-texto {
+  margin: 6px 0 0;
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+/* --- Datos ----------------------------------------------------------------- */
+
+.vc-datos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+.vc-dato {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  min-width: 0;
+}
+
+.vc-dato--ancho {
+  grid-column: 1 / -1;
+}
+
+.vc-dato dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.vc-dato dd {
+  margin: 6px 0 0;
+  color: #0f172a;
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.vc-dato dd.vc-dato-nombre {
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.vc-folio {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+}
+
+.vc-sello-texto .vc-folio {
+  white-space: nowrap;
+}
+
+.vc-chip {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.vc-chip--ok { background: #dcfce7; color: #166534; }
+.vc-chip--aviso { background: #ffedd5; color: #9a3412; }
+.vc-chip--info { background: #e0f2fe; color: #075985; }
+
+.vc-nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.vc-nota svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #0891b2;
+}
+
+.vc-nota--aviso {
+  color: #9a3412;
+  font-weight: 600;
+}
+
+.vc-nota--aviso svg {
+  color: #ea580c;
+}
+
+.vc-lista {
+  margin: 0;
+  padding-left: 20px;
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vc-lista a,
+.vc-como a {
+  color: #0369a1;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(3, 105, 161, 0.3);
+}
+
+/* --- Botones --------------------------------------------------------------- */
+
+.vc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 100px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.vc-btn:focus-visible,
+.vc-input-wrap:focus-within {
+  outline: 3px solid rgba(8, 145, 178, 0.45);
+  outline-offset: 2px;
+}
+
+.vc-btn--primario {
+  border: none;
+  background: #172320;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.vc-btn--primario:hover:not(:disabled) {
+  background: #304c42;
+}
+
+.vc-btn--primario:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.vc-btn--secundario {
+  align-self: flex-start;
+  background: #ffffff;
+  color: #0e7490;
+  border: 1px solid rgba(8, 145, 178, 0.4);
+}
+
+.vc-btn--secundario:hover {
+  background: #ecfeff;
+}
+
+/* --- Buscador -------------------------------------------------------------- */
+
+.vc-buscador {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 20px 24px;
+}
+
+.vc-buscador-label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.vc-buscador-fila {
+  display: flex;
+  gap: 10px;
+}
+
+.vc-input-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  min-height: 48px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #94a3b8;
+}
+
+.vc-input-wrap:has(input[aria-invalid='true']) {
+  border-color: #f97316;
+}
+
+.vc-input-wrap input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #0f172a;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 1.05rem; /* 16 px o más: iPhone no hace zoom al escribir */
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.vc-input-wrap input::placeholder {
+  color: #94a3b8;
+  text-transform: none;
+}
+
+.vc-buscador-ayuda {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 0.86rem;
+}
+
+.vc-buscador-ayuda--error {
+  color: #c2410c;
+  font-weight: 600;
+}
+
+/* --- Cómo funciona --------------------------------------------------------- */
+
+.vc-como {
+  padding: 4px 4px 0;
+}
+
+.vc-como h2 {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.vc-como ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vc-como li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #475569;
+  font-size: 0.93rem;
+  line-height: 1.5;
+}
+
+.vc-como li svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #0891b2;
+}
+
+.vc-como-pie {
+  margin: 14px 0 0;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+/* --- Celular --------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .vc-main {
+    padding: 108px 0 56px;
+  }
+
+  .vc-inner {
+    padding: 0 16px;
+    gap: 18px;
+  }
+
+  .vc-subtitulo {
+    font-size: 0.94rem;
+  }
+
+  .vc-tarjeta {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .vc-sello {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .vc-sello-icono {
+    width: 44px;
+    height: 44px;
+  }
+
+  .vc-sello-icono svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .vc-sello-titulo {
+    font-size: 1.15rem;
+  }
+
+  .vc-datos {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .vc-dato dd.vc-dato-nombre {
+    font-size: 1.15rem;
+  }
+
+  .vc-buscador {
+    padding: 16px;
+  }
+
+  .vc-buscador-fila {
+    flex-direction: column;
+  }
+
+  .vc-btn--secundario {
+    align-self: stretch;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .vc-page { background: #141e1a; color: #edf3ec; color-scheme: dark; }
+  .vc-page :is(.vc-tarjeta,.vc-buscador) { background: #1b2723; border-color: #3c4e43; box-shadow: none; }
+  .vc-page :is(.vc-titulo,.vc-dato dd,.vc-buscador-label,.vc-como h2,.vc-vacio-icono) { color: #edf3ec; }
+  .vc-page :is(.vc-subtitulo,.vc-sello-texto,.vc-lista,.vc-nota,.vc-como,.vc-como-pie,.vc-buscador-ayuda,.vc-dato dt) { color: #bdcbc2; }
+  .vc-page :is(.vc-input-wrap,.vc-dato) { background: #141e1a; border-color: #3c4e43; }
+  .vc-page .vc-input-wrap input { color: #edf3ec; background: transparent; }
+  .vc-page a { color: #8bdde0; }
+  .vc-page .vc-btn--secundario { background: transparent; color: #8bdde0; }
+  .vc-page .vc-btn--primario { background: #edf3ec; color: #172320; }
+  .vc-page .vc-sello--no { background: #382c21; border-color: #725138; }
+  .vc-page .vc-sello--no .vc-sello-titulo { color: #ffbd88; }
+  .vc-page .vc-sello--ok { background: #1b3529; border-color: #397652; }
+  .vc-page .vc-sello--ok .vc-sello-titulo { color: #9ee5b8; }
+  .vc-page .vc-sello--error { background: #3c2423; border-color: #78544c; }
+  .vc-page .vc-sello--error .vc-sello-titulo { color: #ffb7a3; }
+}

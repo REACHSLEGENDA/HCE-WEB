@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  LogIn, 
-  UserPlus, 
-  Mail, 
-  Lock, 
-  User, 
-  Phone, 
-  CheckCircle, 
-  AlertCircle, 
-  ArrowRight, 
-  Eye, 
-  EyeOff, 
-  Globe, 
-  MapPin, 
-  Award, 
-  BookOpen, 
-  Building, 
-  Briefcase 
+import {
+  LogIn,
+  UserPlus,
+  Mail,
+  Lock,
+  User,
+  Phone,
+  CheckCircle,
+  AlertCircle,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Globe,
+  MapPin,
+  Award,
+  BookOpen,
+  Building,
+  Briefcase
 } from 'lucide-react';
 import './Login.css';
 
@@ -50,47 +50,9 @@ const COUNTRIES = [
 ];
 
 function PhoneSelect({ value, onChange }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  const selected = COUNTRIES.find(c => c.code === value) || COUNTRIES[0];
-
-  useEffect(() => {
-    const handler = (e) => { 
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false); 
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  return (
-    <div className="phone-select" ref={ref}>
-      <button type="button" className="phone-select__trigger" onClick={() => setOpen(v => !v)}>
-        <img src={`https://flagcdn.com/w40/${selected.iso}.png`} alt={selected.label} className="phone-select__flag" />
-        <span>{selected.code}</span>
-        <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-          <path d="M1 1l4 4 4-4" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
-      </button>
-      {open && (
-        <div className="phone-select__dropdown">
-          {COUNTRIES.map(c => (
-            <button
-              key={c.code}
-              type="button"
-              className={`phone-select__option ${c.code === value ? 'active' : ''}`}
-              onClick={() => { onChange(c.code); setOpen(false); }}
-            >
-              <img src={`https://flagcdn.com/w40/${c.iso}.png`} alt={c.label} className="phone-select__flag" />
-              <span>{c.label}</span>
-              <span className="phone-select__dial">{c.code}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return <select className="phone-select" aria-label="Código de país del teléfono" value={value} onChange={(ev) => onChange(ev.target.value)}>
+    {COUNTRIES.map(c => <option key={c.iso} value={c.code}>{c.label} ({c.code})</option>)}
+  </select>;
 }
 
 const Login = () => {
@@ -100,7 +62,7 @@ const Login = () => {
 
   // Tabs: 'signin' | 'signup' | 'recovery'
   const [activeTab, setActiveTab] = useState('signin');
-  
+
   // Fields - General/Sign In
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -123,6 +85,11 @@ const Login = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // States
+  const envioRef = useRef(false);
+  const mensajeRef = useRef(null);
+  const registroTimer = useRef(null);
+  useEffect(() => () => clearTimeout(registroTimer.current), []);
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -141,6 +108,18 @@ const Login = () => {
     }
   }, [user, profile, authLoading, navigate, location.state]);
 
+  useEffect(() => { if (errorMsg || successMsg) mensajeRef.current?.focus(); }, [errorMsg, successMsg]);
+
+  const errorEnEspanol = (err, defecto) => {
+    const t = String(err?.message || '');
+    if (/invalid.login.credentials|invalid.credentials|invalid_grant/i.test(t)) return 'Correo o contraseña incorrectos. Revisa tus datos e intenta de nuevo.';
+    if (/email.not.confirmed/i.test(t)) return 'Confirma tu correo antes de iniciar sesión. Revisa también spam.';
+    if (/already.registered|already.exists/i.test(t)) return 'Este correo ya tiene una cuenta. Inicia sesión o recupera tu contraseña.';
+    if (/rate.limit|too.many|security.purposes|seconds/i.test(t) || err?.status === 429) return 'Hubo varios intentos seguidos. Espera un momento e intenta de nuevo.';
+    if (/fetch|network|offline|timeout/i.test(t)) return 'No pudimos conectar. Revisa tu conexión e intenta de nuevo.';
+    return defecto;
+  };
+
   const clearMessages = () => {
     setErrorMsg('');
     setSuccessMsg('');
@@ -148,20 +127,24 @@ const Login = () => {
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+    if (envioRef.current || isFormSubmitting) return;
     clearMessages();
+    envioRef.current = true;
     setLoading(true);
     try {
       await login(email, password);
       // Redirection is handled by useEffect when user and profile are loaded.
     } catch (err) {
-      setErrorMsg(err.message || 'Error al iniciar sesión. Verifica tus credenciales.');
+      setErrorMsg(errorEnEspanol(err, 'No pudimos iniciar sesión. Intenta de nuevo en un momento.'));
     } finally {
+      envioRef.current = false;
       setLoading(false);
     }
   };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
+    if (envioRef.current || isFormSubmitting) return;
     clearMessages();
 
     if (password !== confirmPassword) {
@@ -170,27 +153,28 @@ const Login = () => {
       return;
     }
 
+    envioRef.current = true;
     setLoading(true);
     try {
       const fullPhone = `${lada} ${telefono}`.trim();
       await signUp(
-        email, 
-        password, 
-        nombres, 
-        apellidos, 
-        fullPhone, 
-        pais, 
-        estado, 
-        grado, 
-        especialidad, 
-        institucion, 
+        email,
+        password,
+        nombres,
+        apellidos,
+        fullPhone,
+        pais,
+        estado,
+        grado,
+        especialidad,
+        institucion,
         cargo
       );
-      setSuccessMsg('¡Registro exitoso! Ya puedes iniciar sesión con tu cuenta.');
+      setSuccessMsg('Tu cuenta fue creada. Revisa tu correo por si necesitas confirmarla y después inicia sesión.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      
+
       // Auto switch to signin tab after success
-      setTimeout(() => {
+      registroTimer.current = setTimeout(() => {
         setActiveTab('signin');
         setPassword('');
         setConfirmPassword('');
@@ -203,66 +187,79 @@ const Login = () => {
         setEspecialidad('');
         setInstitucion('');
         setCargo('');
-        clearMessages();
       }, 3500);
     } catch (err) {
-      setErrorMsg(err.message || 'Error al crear la cuenta. Por favor intenta de nuevo.');
+      setErrorMsg(errorEnEspanol(err, 'No pudimos crear la cuenta. Revisa tus datos e intenta de nuevo.'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
+      envioRef.current = false;
       setLoading(false);
     }
   };
 
   const handleRecovery = async (e) => {
     e.preventDefault();
+    if (envioRef.current || isFormSubmitting) return;
     clearMessages();
+    envioRef.current = true;
     setLoading(true);
     try {
       await resetPassword(email);
-      setSuccessMsg('Se ha enviado un correo de recuperación a tu dirección.');
+      setSuccessMsg('Revisa tu correo. Si corresponde a una cuenta, recibirás un enlace para restablecer tu contraseña. Revisa también spam o promociones.');
     } catch (err) {
-      setErrorMsg(err.message || 'Error al enviar correo de recuperación.');
+      setErrorMsg(errorEnEspanol(err, 'No pudimos enviar el enlace. Revisa tu correo e intenta de nuevo.'));
     } finally {
+      envioRef.current = false;
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-page clinical-bg-light">
-      <div className="login-container">
-        <div className={`login-card reveal active ${activeTab === 'signup' ? 'large-card' : ''}`}>
+    <div className="login-page">
+      <header className="auth-topbar"><Link to="/" aria-label="HCE, ir al inicio"><img src="/assets/componentes/ghghg-scaled.png" alt="HCE Healthcare Training Experience" width="184" height="48" /></Link><Link to="/" className="auth-toplink">Volver al sitio <ArrowRight size={16} /></Link></header>
+      <main className="login-container">
+        <section className="auth-intro" aria-label="Escuela HCE">
+          <span className="auth-eyebrow">ESCUELA HCE</span>
+          <h1>Tu siguiente<br />paso empieza aquí.</h1>
+          <p>Un espacio para seguir aprendiendo, conectar con tu formación y avanzar en la práctica clínica.</p>
+          <div className="auth-benefits"><span>01 / Tus cursos</span><span>02 / Tu progreso</span><span>03 / Tus certificados</span></div>
+          <p className="auth-intro-note">Healthcare Training Experience<br /><strong>Educación médica continua.</strong></p>
+        </section>
+        <div className={`login-card ${activeTab === 'signup' ? 'large-card' : ''}`}>
           {/* Logo / Badge */}
           <div className="login-header">
             <span className="section-badge">
-              <LogIn size={14} /> Portal HCE
+              Tu portal de aprendizaje
             </span>
-            <h2>Educación Médica Continua</h2>
-            <p>Accede a tus cursos, simulaciones clínicas y certificaciones en ECMO</p>
+            <h2>{activeTab === 'signup' ? 'Crea tu cuenta.' : activeTab === 'recovery' ? 'Volvamos a entrar.' : 'Qué gusto verte.'}</h2>
+            <p>Accede a tus cursos, sigue tu progreso y continúa donde te quedaste.</p>
           </div>
 
           {/* Navigation Tabs */}
           {activeTab !== 'recovery' && (
             <div className="login-tabs">
-              <button 
+              <button
+                disabled={isFormSubmitting}
                 className={`tab-btn ${activeTab === 'signin' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('signin'); clearMessages(); }}
               >
                 <LogIn size={16} />
-                Iniciar Sesión
+                Iniciar sesión
               </button>
-              <button 
+              <button
+                disabled={isFormSubmitting}
                 className={`tab-btn ${activeTab === 'signup' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('signup'); clearMessages(); }}
               >
                 <UserPlus size={16} />
-                Registrarse
+                Crear cuenta
               </button>
             </div>
           )}
 
           {/* Alert Messages */}
           {errorMsg && (
-            <div className="auth-alert alert-error">
+            <div ref={mensajeRef} tabIndex={-1} role="alert" className="auth-alert alert-error">
               <AlertCircle size={18} />
               <span>{errorMsg}</span>
             </div>
@@ -270,7 +267,7 @@ const Login = () => {
 
           {/* Alert Messages */}
           {successMsg && (
-            <div className="auth-alert alert-success">
+            <div ref={mensajeRef} tabIndex={-1} role="status" className="auth-alert alert-success">
               <CheckCircle size={18} />
               <span>{successMsg}</span>
             </div>
@@ -279,14 +276,15 @@ const Login = () => {
           {/* Sign In Form */}
           {activeTab === 'signin' && (
             <form onSubmit={handleSignIn} className="auth-form">
+              <fieldset className="auth-controls" disabled={isFormSubmitting}>
               <div className="input-group">
-                <label>Correo Electrónico</label>
+                <label htmlFor="login-email">Correo Electrónico</label>
                 <div className="input-wrapper">
                   <Mail className="input-icon" size={18} />
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     placeholder="correo@ejemplo.com"
-                    value={email}
+                    id="login-email" name="email" value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
@@ -295,10 +293,10 @@ const Login = () => {
 
               <div className="input-group">
                 <div className="label-row">
-                  <label>Contraseña</label>
-                  <button 
-                    type="button" 
-                    className="forgot-link"
+                  <label htmlFor="login-password">Contraseña</label>
+                  <button
+                    type="button"
+                    className="forgot-link" disabled={isFormSubmitting}
                     onClick={() => { setActiveTab('recovery'); clearMessages(); }}
                   >
                     ¿Olvidaste tu contraseña?
@@ -306,10 +304,10 @@ const Login = () => {
                 </div>
                 <div className="input-wrapper">
                   <Lock className="input-icon" size={18} />
-                  <input 
-                    type={showPassword ? 'text' : 'password'} 
+                  <input
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    value={password}
+                    id="login-password" name="password" value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     required
@@ -318,7 +316,7 @@ const Login = () => {
                     type="button"
                     className="password-toggle-btn"
                     onClick={() => setShowPassword(!showPassword)}
-                    tabIndex="-1"
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showPassword}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -326,22 +324,24 @@ const Login = () => {
               </div>
 
               <button type="submit" className="btn btn-primary w-full" disabled={isFormSubmitting}>
-                {isFormSubmitting ? 'Accediendo...' : 'Iniciar Sesión'} <ArrowRight size={16} />
+                {isFormSubmitting ? 'Entrando…' : 'Iniciar sesión'} <ArrowRight size={16} />
               </button>
+            </fieldset>
             </form>
           )}
 
           {/* Sign Up Form */}
           {activeTab === 'signup' && (
             <form onSubmit={handleSignUp} className="auth-form signup-form-grid">
+              <fieldset className="auth-controls" disabled={isFormSubmitting}>
               <div className="input-group">
-                <label>Nombre(s) *</label>
+                <label htmlFor="login-nombres">Nombre(s) *</label>
                 <div className="input-wrapper">
                   <User className="input-icon" size={18} />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Juan"
-                    value={nombres}
+                    id="login-nombres" name="nombres" value={nombres}
                     onChange={(e) => setNombres(e.target.value)}
                     required
                   />
@@ -349,13 +349,13 @@ const Login = () => {
               </div>
 
               <div className="input-group">
-                <label>Apellido(s) *</label>
+                <label htmlFor="login-apellidos">Apellido(s) *</label>
                 <div className="input-wrapper">
                   <User className="input-icon" size={18} />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Pérez"
-                    value={apellidos}
+                    id="login-apellidos" name="apellidos" value={apellidos}
                     onChange={(e) => setApellidos(e.target.value)}
                     required
                   />
@@ -363,13 +363,13 @@ const Login = () => {
               </div>
 
               <div className="input-group span-2">
-                <label>Correo Electrónico *</label>
+                <label htmlFor="login-email">Correo Electrónico *</label>
                 <div className="input-wrapper">
                   <Mail className="input-icon" size={18} />
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     placeholder="correo@ejemplo.com"
-                    value={email}
+                    id="login-email" name="email" value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
@@ -377,15 +377,15 @@ const Login = () => {
               </div>
 
               <div className="input-group span-2">
-                <label>Teléfono de Contacto *</label>
+                <label htmlFor="login-telefono">Teléfono de Contacto *</label>
                 <div className="tel-group-wrapper">
                   <PhoneSelect value={lada} onChange={setLada} />
                   <div className="input-wrapper" style={{ flex: 1 }}>
                     <Phone className="input-icon" size={18} />
-                    <input 
-                      type="tel" 
+                    <input
+                      type="tel"
                       placeholder="10 dígitos"
-                      value={telefono}
+                      id="login-telefono" name="telefono" value={telefono}
                       onChange={(e) => setTelefono(e.target.value)}
                       required
                     />
@@ -394,13 +394,13 @@ const Login = () => {
               </div>
 
               <div className="input-group">
-                <label>País *</label>
+                <label htmlFor="login-pais">País *</label>
                 <div className="input-wrapper">
                   <Globe className="input-icon" size={18} />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="México"
-                    value={pais}
+                    id="login-pais" name="pais" value={pais}
                     onChange={(e) => setPais(e.target.value)}
                     required
                   />
@@ -408,13 +408,13 @@ const Login = () => {
               </div>
 
               <div className="input-group">
-                <label>Estado / Ciudad *</label>
+                <label htmlFor="login-estado">Estado / Ciudad *</label>
                 <div className="input-wrapper">
                   <MapPin className="input-icon" size={18} />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="CDMX"
-                    value={estado}
+                    id="login-estado" name="estado" value={estado}
                     onChange={(e) => setEstado(e.target.value)}
                     required
                   />
@@ -422,12 +422,12 @@ const Login = () => {
               </div>
 
               <div className="input-group span-2">
-                <label>Grado académico / Profesión *</label>
+                <label htmlFor="login-grado">Grado académico / Profesión *</label>
                 <div className="input-wrapper">
                   <Award className="input-icon" size={18} />
-                  <select 
-                    value={grado} 
-                    onChange={(e) => setGrado(e.target.value)} 
+                  <select
+                    id="login-grado" name="grado" value={grado}
+                    onChange={(e) => setGrado(e.target.value)}
                     required
                     className="select-input"
                   >
@@ -446,13 +446,13 @@ const Login = () => {
               </div>
 
               <div className="input-group span-2">
-                <label>Especialidad * <span className="label-hint">(escribe "no aplica" si no tienes)</span></label>
+                <label htmlFor="login-especialidad">Especialidad * <span className="label-hint">(escribe "no aplica" si no tienes)</span></label>
                 <div className="input-wrapper">
                   <BookOpen className="input-icon" size={18} />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Escribe tu especialidad o 'no aplica'"
-                    value={especialidad}
+                    id="login-especialidad" name="especialidad" value={especialidad}
                     onChange={(e) => setEspecialidad(e.target.value)}
                     required
                   />
@@ -460,13 +460,13 @@ const Login = () => {
               </div>
 
               <div className="input-group">
-                <label>Institución / Hospital *</label>
+                <label htmlFor="login-institucion">Institución / Hospital *</label>
                 <div className="input-wrapper">
                   <Building className="input-icon" size={18} />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Hospital Central"
-                    value={institucion}
+                    id="login-institucion" name="institucion" value={institucion}
                     onChange={(e) => setInstitucion(e.target.value)}
                     required
                   />
@@ -474,13 +474,13 @@ const Login = () => {
               </div>
 
               <div className="input-group">
-                <label>Cargo / Puesto *</label>
+                <label htmlFor="login-cargo">Cargo / Puesto *</label>
                 <div className="input-wrapper">
                   <Briefcase className="input-icon" size={18} />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Médico de Guardia"
-                    value={cargo}
+                    id="login-cargo" name="cargo" value={cargo}
                     onChange={(e) => setCargo(e.target.value)}
                     required
                   />
@@ -488,13 +488,13 @@ const Login = () => {
               </div>
 
               <div className="input-group">
-                <label>Contraseña (mín. 6) *</label>
+                <label htmlFor="login-password">Contraseña (mín. 6) *</label>
                 <div className="input-wrapper">
                   <Lock className="input-icon" size={18} />
-                  <input 
-                    type={showPassword ? 'text' : 'password'} 
+                  <input
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    value={password}
+                    id="login-password" name="password" value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
                     minLength={6}
@@ -504,7 +504,7 @@ const Login = () => {
                     type="button"
                     className="password-toggle-btn"
                     onClick={() => setShowPassword(!showPassword)}
-                    tabIndex="-1"
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showPassword}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -512,13 +512,13 @@ const Login = () => {
               </div>
 
               <div className="input-group">
-                <label>Confirmar Contraseña *</label>
+                <label htmlFor="login-confirmPassword">Confirmar Contraseña *</label>
                 <div className="input-wrapper">
                   <Lock className="input-icon" size={18} />
-                  <input 
-                    type={showConfirmPassword ? 'text' : 'password'} 
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    value={confirmPassword}
+                    id="login-confirmPassword" name="confirmPassword" value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     autoComplete="new-password"
                     minLength={6}
@@ -528,7 +528,7 @@ const Login = () => {
                     type="button"
                     className="password-toggle-btn"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    tabIndex="-1"
+                    aria-label={showConfirmPassword ? "Ocultar confirmación de contraseña" : "Mostrar confirmación de contraseña"} aria-pressed={showConfirmPassword}
                   >
                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -536,48 +536,52 @@ const Login = () => {
               </div>
 
               <button type="submit" className="btn btn-primary w-full span-2" disabled={isFormSubmitting}>
-                {isFormSubmitting ? 'Registrando...' : 'Crear Cuenta'} <ArrowRight size={16} />
+                {isFormSubmitting ? 'Creando tu cuenta…' : 'Crear Cuenta'} <ArrowRight size={16} />
               </button>
+            </fieldset>
             </form>
           )}
 
           {/* Password Recovery Form */}
           {activeTab === 'recovery' && (
             <form onSubmit={handleRecovery} className="auth-form">
-              <h3 className="recovery-title">Recuperar Contraseña</h3>
+              <fieldset className="auth-controls" disabled={isFormSubmitting}>
+              <h3 className="recovery-title">Recuperar contraseña</h3>
               <p className="recovery-desc">
                 Ingresa tu correo electrónico registrado y te enviaremos un enlace seguro para restablecer tu contraseña.
               </p>
 
               <div className="input-group">
-                <label>Correo Electrónico</label>
+                <label htmlFor="login-email">Correo Electrónico</label>
                 <div className="input-wrapper">
                   <Mail className="input-icon" size={18} />
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     placeholder="correo@ejemplo.com"
-                    value={email}
+                    id="login-email" name="email" value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-primary w-full" disabled={loading}>
-                {loading ? 'Enviando...' : 'Enviar enlace de recuperación'}
+              <button type="submit" className="btn btn-primary w-full" disabled={isFormSubmitting}>
+                {loading ? 'Enviando enlace…' : 'Enviar enlace de recuperación'}
               </button>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="back-to-login"
                 onClick={() => { setActiveTab('signin'); clearMessages(); }}
               >
-                Volver a Iniciar Sesión
+                Volver a Iniciar sesión
               </button>
+            </fieldset>
             </form>
           )}
         </div>
-      </div>
+      </main>
+      <footer className="auth-footer"><span>HCE · Healthcare Training Experience</span><Link to="/aviso-de-privacidad">Aviso de privacidad</Link></footer>
     </div>
   );
 };

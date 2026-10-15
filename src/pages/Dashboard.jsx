@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { supabase } from '../lib/supabase';
-import { getSafeAvatarUrl, uploadAvatar } from '../lib/avatar';
+import { getSafeAvatarUrl } from '../lib/avatar';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Home,
@@ -47,13 +47,17 @@ import {
   Lock,
   Download,
   Search,
+  ShieldCheck,
+  Link as LinkIcon,
   X
 } from 'lucide-react';
 import './Dashboard.css';
 import GuiaUso from '../components/GuiaUso';
 import '../components/Experiences.css';
 import { generarConstancia, descargarConstancia } from '../lib/constancia';
-import { generarImagenCertificado, descargarArchivo } from '../lib/certificados';
+import { descargarCertificadoAlumno, hayPdf, rutaVerificacion, copiarEnlaceVerificacion } from '../lib/certificadoAlumno';
+import CampanitaAvisos from '../components/CampanitaAvisos';
+import PerfilAlumno from '../components/PerfilAlumno';
 import { traerTodo } from '../lib/traerTodo';
 import LogrosAlumno from '../components/LogrosAlumno';
 import Mensajes from '../components/Mensajes';
@@ -86,7 +90,6 @@ const NurseCap = ({ size = 24, ...props }) => (
   </svg>
 );
 
-import { COUNTRIES as ALL_COUNTRIES, getFlagUrl } from '../data/countries';
 
 /* ---------------------------------------------------------------------------
  * Menú del portal, agrupado por lo que el alumno viene a hacer. En celular los
@@ -116,6 +119,15 @@ const MENU_ALUMNO = [
 const PESTANAS_ALUMNO = MENU_ALUMNO.flatMap((g) => g.items.map((i) => i.id));
 // Orden de la barra inferior: Inicio, Cursos, Catálogo, Calendario, Mensajes.
 const ORDEN_MOVIL = ['dashboard', 'courses', 'explore', 'calendario', 'mensajes'];
+
+/** Título de cada sección: etiqueta pequeña ("— MIS CURSOS"), título y nota. */
+const TituloSeccion = ({ etiqueta, titulo, descripcion }) => (
+  <div className="section-title-row pa-titulo">
+    {etiqueta && <span className="pa-etiqueta">{etiqueta}</span>}
+    <h2>{titulo}</h2>
+    {descripcion && <p>{descripcion}</p>}
+  </div>
+);
 
 const leerPestana = () => {
   try {
@@ -168,6 +180,7 @@ const Dashboard = () => {
 
   const [myCertificates, setMyCertificates] = useState([]);
   const [certificadosListos, setCertificadosListos] = useState(false);
+  const [errorCertificados, setErrorCertificados] = useState('');
   const [certificadoOcupado, setCertificadoOcupado] = useState(null);
   const [mensajeBienvenida, setMensajeBienvenida] = useState('');
   const [inscritoEn, setInscritoEn] = useState({});
@@ -190,7 +203,15 @@ const Dashboard = () => {
   const [menuMasAbierto, setMenuMasAbierto] = useState(false);
   const cerrarMenuMas = useCallback(() => setMenuMasAbierto(false), []);
 
+  // "Mi perfil" avisa si hay cambios sin guardar; antes de salir se pregunta.
+  const perfilSucioRef = useRef(false);
+  const marcarPerfilSucio = useCallback((sucio) => { perfilSucioRef.current = sucio; }, []);
+
   const setActiveTab = (tab) => {
+    if (!PESTANAS_ALUMNO.includes(tab)) return;
+    if (perfilSucioRef.current && tab !== 'profile'
+      && !window.confirm('Tienes cambios sin guardar en tu perfil. ¿Salir sin guardarlos?')) return;
+    if (tab !== 'profile') perfilSucioRef.current = false;
     setActiveTabState(tab);
     try { localStorage.setItem('studentActiveTab', tab); } catch { /* sin almacenamiento: no se recuerda */ }
     if (window.innerWidth <= 768) setIsSidebarCollapsed(true);
@@ -198,6 +219,19 @@ const Dashboard = () => {
     // Cada sección empieza arriba: ya no es una sola pantalla larga.
     window.scrollTo({ top: 0 });
   };
+
+  // C6: el asistente cambia de sección sin recargar con
+  // window.dispatchEvent(new CustomEvent('hce:ir', { detail: { tab } })).
+  const setActiveTabRef = useRef(setActiveTab);
+  useEffect(() => { setActiveTabRef.current = setActiveTab; });
+  useEffect(() => {
+    const alIr = (e) => {
+      const tab = e?.detail?.tab;
+      if (PESTANAS_ALUMNO.includes(tab)) setActiveTabRef.current(tab);
+    };
+    window.addEventListener('hce:ir', alIr);
+    return () => window.removeEventListener('hce:ir', alIr);
+  }, []);
 
   // En celular la barra inferior tapa la esquina donde flotan el chat y la
   // invitación a instalar la app; esta clase los sube (ver Dashboard.css).
@@ -220,6 +254,8 @@ const Dashboard = () => {
     ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
     : theme;
 
+  useEffect(() => { window.dispatchEvent(new CustomEvent('hce:pantalla', { detail: { zona: 'alumno', tab: activeTab, theme: effectiveTheme } })); }, [activeTab, effectiveTheme]);
+
   const bannerRef = useRef(null);
   useEffect(() => {
     if (!bannerRef.current) return;
@@ -235,122 +271,6 @@ const Dashboard = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-
-  // Avatar Upload State
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-
-
-
-  const handleAvatarUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    e.target.value = '';
-
-    if (!file.type.startsWith('image/')) {
-      showToast('Selecciona un archivo de imagen válido', 'error');
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('La foto de perfil debe ser menor a 2MB', 'error');
-      return;
-    }
-
-    setUploadingAvatar(true);
-    try {
-      const publicUrl = await uploadAvatar(supabase, user?.id, file);
-      await updateProfile({ avatar_url: publicUrl });
-
-      // Legacy versions stored the full Base64 image in the JWT. Remove it.
-      if (user?.user_metadata && Object.prototype.hasOwnProperty.call(user.user_metadata, 'avatar_url')) {
-        await updateUserMetadata({ avatar_url: null });
-      }
-
-      showToast('Foto de perfil actualizada correctamente', 'success');
-    } catch (err) {
-      console.error('Error updating profile picture:', err);
-      showToast(err.message || 'Error al actualizar la foto de perfil', 'error');
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  // Profile Edit States
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({
-    nombre_completo: '',
-    telefono: '',
-    pais: '',
-    estado: '',
-    grado: '',
-    especialidad: '',
-    institucion: '',
-    cargo: ''
-  });
-  const [showProfileCountrySuggestions, setShowProfileCountrySuggestions] = useState(false);
-  const [savingProfile, setSavingProfile] = useState(false);
-
-  const startEditingProfile = () => {
-    setProfileForm({
-      nombre_completo: profile?.nombre_completo || '',
-      telefono: profile?.telefono || '',
-      pais: user?.user_metadata?.pais || '',
-      estado: user?.user_metadata?.estado || '',
-      grado: user?.user_metadata?.grado || '',
-      especialidad: user?.user_metadata?.especialidad || '',
-      institucion: user?.user_metadata?.institucion || '',
-      cargo: user?.user_metadata?.cargo || ''
-    });
-    setIsEditingProfile(true);
-  };
-
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
-    setSavingProfile(true);
-    try {
-      // 1. Update profiles table (with fallback if columns do not exist in database yet)
-      try {
-        await updateProfile({
-          nombre_completo: profileForm.nombre_completo,
-          telefono: profileForm.telefono,
-          pais: profileForm.pais,
-          estado: profileForm.estado,
-          grado: profileForm.grado,
-          especialidad: profileForm.especialidad,
-          institucion: profileForm.institucion,
-          cargo: profileForm.cargo
-        });
-      } catch (dbErr) {
-        console.warn('Could not update extended columns in profiles table, falling back to basic.', dbErr.message);
-        await updateProfile({
-          nombre_completo: profileForm.nombre_completo,
-          telefono: profileForm.telefono
-        });
-      }
-
-      // 2. Update auth metadata
-      await updateUserMetadata({
-        pais: profileForm.pais,
-        estado: profileForm.estado,
-        grado: profileForm.grado,
-        especialidad: profileForm.especialidad,
-        institucion: profileForm.institucion,
-        cargo: profileForm.cargo
-      });
-
-      showToast('Perfil actualizado correctamente', 'success');
-      setIsEditingProfile(false);
-    } catch (err) {
-      console.error('Error saving profile:', err);
-      showToast('Error al actualizar el perfil', 'error');
-    } finally {
-      setSavingProfile(false);
-    }
-  };
-
-  // Notification states
-  const [showNotifications, setShowNotifications] = useState(false);
 
   // Real registration timestamp or placeholder
   const getMemberSinceDate = () => {
@@ -420,9 +340,10 @@ const Dashboard = () => {
         .order('created_at', { ascending: false });
       if (error) throw error;
       setMyCertificates(data || []);
+      setErrorCertificados('');
     } catch (err) {
       console.error('Error fetching certificates:', err.message);
-      setMyCertificates([]);
+      setErrorCertificados(err.message || 'No se pudieron cargar tus certificados.');
     } finally {
       setCertificadosListos(true);
     }
@@ -1044,21 +965,29 @@ const Dashboard = () => {
     };
   }, [user?.id, activeTab]);
 
-  const descargarCertificado = async (certificado) => {
+  // Botón principal: PDF con QR de verificación (si ya existe en la librería
+  // de certificados); "Imagen PNG" queda como opción secundaria.
+  const descargarCertificado = async (certificado, formato = 'pdf') => {
     if (certificadoOcupado) return;
-    setCertificadoOcupado(certificado.id);
+    setCertificadoOcupado(`${certificado.id}:${formato}`);
     try {
-      let actualizado = certificado;
-      if (!certificado.pdf_url || certificado.pdf_url === 'local-simulated') {
-        actualizado = await generarImagenCertificado({ certificado, curso: certificado.courses,
-          nombre: profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email });
-        setMyCertificates((lista) => lista.map((c) => c.id === actualizado.id ? { ...c, ...actualizado } : c));
+      const actualizado = await descargarCertificadoAlumno({
+        certificado,
+        curso: certificado.courses,
+        nombre: profile?.nombre_completo || user?.user_metadata?.nombre_completo || user?.email,
+        formato,
+      });
+      if (actualizado && actualizado !== certificado) {
+        setMyCertificates((lista) => lista.map((c) => (c.id === actualizado.id ? { ...c, ...actualizado } : c)));
       }
-      if (!actualizado.pdf_url) throw new Error('La imagen del certificado todavía no está disponible.');
-      await descargarArchivo(actualizado.pdf_url, 'Certificado_' + actualizado.folio + '.png');
     } catch (err) {
       showToast('No se pudo descargar el certificado: ' + err.message, 'error');
     } finally { setCertificadoOcupado(null); }
+  };
+
+  const copiarVerificacion = async (folio) => {
+    const ok = await copiarEnlaceVerificacion(folio);
+    showToast(ok ? 'Enlace de verificación copiado. Compártelo con quien necesite validar tu certificado.' : 'No se pudo copiar el enlace. Ábrelo con "Ver verificación" y cópialo desde la barra del navegador.', ok ? 'success' : 'error');
   };
 
   // Calculate course states dynamically
@@ -1270,27 +1199,33 @@ const Dashboard = () => {
     registrado: !!registroDeWebinar(w.id),
   }));
 
-  // Notificaciones derivadas del estado real del alumno. Antes esto era un
-  // arreglo fijo con un solo mensaje de bienvenida que nunca cambiaba, así que
-  // la campanita mostraba el punto rojo para siempre y enseñaba a ignorarla.
-  const notifications = [
+  // Avisos calculados del estado real del alumno (certificado listo, curso a
+  // medias, curso sin empezar). La campanita los junta con los del servidor y
+  // no repite los que ya avisó el servidor para el mismo curso.
+  const avisosDerivados = [
     ...myCertificates.slice(0, 3).map((cert) => ({
       id: `cert-${cert.id}`,
-      text: `Tu certificado de ${cert.courses?.title || 'tu programa'} ya está disponible para descargar.`,
-      tab: 'certificates',
+      tipo: 'certificado',
+      courseId: String(cert.course_id),
+      texto: `Tu certificado de ${cert.courses?.title || 'tu programa'} está listo para descargar.`,
+      destino: { tab: 'certificates' },
     })),
     ...inProgressCourses.slice(0, 3).map((course) => ({
       id: `prog-${course.id}`,
-      text: `Llevas ${course.progress}% de ${course.title}. Continúa donde te quedaste.`,
-      tab: 'courses',
+      tipo: 'progreso',
+      courseId: String(course.id),
+      texto: `Llevas ${course.progress}% de ${course.title}. Continúa donde te quedaste.`,
+      destino: { courseId: course.id },
     })),
     ...enrolledCourses
-      .filter((course) => course.progress === 0 && !course.enRevision && !course.accesoVencido && !course.esperandoGrupo)
+      .filter((course) => course.progress === 0 && !course.completed && !course.enRevision && !course.accesoVencido && !course.esperandoGrupo)
       .slice(0, 2)
       .map((course) => ({
         id: `nuevo-${course.id}`,
-        text: `Aún no comienzas ${course.title}. Tu acceso ya está activo.`,
-        tab: 'courses',
+        tipo: 'nuevo',
+        courseId: String(course.id),
+        texto: `Aún no empiezas ${course.title}. Tu acceso ya está activo.`,
+        destino: { courseId: course.id },
       })),
   ];
 
@@ -1375,41 +1310,13 @@ const Dashboard = () => {
           </div>
 
           <div className="top-header-right">
-            {/* Notification Bell */}
-            <div className="notification-wrapper">
-              <button 
-                className="notification-trigger" 
-                onClick={() => setShowNotifications(!showNotifications)}
-                title="Notificaciones"
-              >
-                <Bell size={20} />
-                {/* El punto rojo solo aparece si de verdad hay algo que ver. */}
-                {notifications.length > 0 && <span className="notification-badge-dot"></span>}
-              </button>
-              {showNotifications && (
-                <div className="notifications-dropdown">
-                  <div className="dropdown-header">Notificaciones</div>
-                  <div className="dropdown-body">
-                    {notifications.length === 0 ? (
-                      <div className="notification-item notification-empty">
-                        <p>Estás al día. Aquí te avisaremos cuando tengas un certificado listo o un curso pendiente.</p>
-                      </div>
-                    ) : (
-                      notifications.map(n => (
-                        <button
-                          key={n.id}
-                          type="button"
-                          className="notification-item"
-                          onClick={() => { setActiveTab(n.tab); setShowNotifications(false); }}
-                        >
-                          <p>{n.text}</p>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Campanita: avisos del servidor + los calculados del avance */}
+            <CampanitaAvisos
+              userId={user?.id}
+              derivados={avisosDerivados}
+              onIr={setActiveTab}
+              onAbrirAula={abrirAula}
+            />
 
             <div className="user-profile-summary">
               <span className="user-greeting">Hola, <strong>{getFirstName()}</strong></span>
@@ -1514,10 +1421,7 @@ const Dashboard = () => {
             const lista = (filtros.find(([id]) => id === filtroMisCursos) || filtros[0])[2];
             return (
               <div className="courses-view">
-                <div className="section-title-row">
-                  <h2>Mis cursos</h2>
-                  <p>Tu avance en cada curso y el acceso directo a su aula.</p>
-                </div>
+                <TituloSeccion etiqueta="Aprender" titulo="Mis cursos" descripcion="Tu avance en cada curso y el acceso directo a su aula." />
 
                 {enrolledCourses.length === 0 ? (
                   <div className="crm-empty-state-card">
@@ -1570,18 +1474,27 @@ const Dashboard = () => {
           })()}
 
           {activeTab === 'calificaciones' && <div className="calificaciones-view">
-            <div className="section-title-row"><h2>Mis calificaciones</h2><p>Consulta tus intentos, entregas y calificación final por curso.</p></div>
-            {errorCalificaciones ? <div role="alert"><p>{errorCalificaciones}</p><button type="button" className="btn-crm-action solid" onClick={() => setIntentoCalificaciones(n => n + 1)}>Reintentar</button></div>
-              : !calificaciones ? <p role="status">Cargando calificaciones…</p>
-              : enrolledCourses.length === 0 ? <p>Tus resultados aparecerán aquí al inscribirte en un curso.</p>
+            <TituloSeccion etiqueta="Aprender" titulo="Mis calificaciones" descripcion="Tus exámenes, tareas y calificación final de cada curso." />
+            {errorCalificaciones ? <div className="pa-alerta" role="alert"><AlertCircle size={16} aria-hidden="true" /><span>No pudimos cargar tus calificaciones. {errorCalificaciones}</span><button type="button" className="btn-crm-action outlined" onClick={() => setIntentoCalificaciones(n => n + 1)}>Reintentar</button></div>
+              : !calificaciones ? <p className="pa-cargando" role="status">Cargando calificaciones…</p>
+              : enrolledCourses.length === 0 ? (
+                <div className="crm-empty-state-card">
+                  <CheckSquare size={40} className="empty-state-icon" />
+                  <h3>Aún no hay calificaciones</h3>
+                  <p>Tus exámenes y tareas aparecerán aquí cuando te inscribas a un curso y los presentes.</p>
+                  <div className="pa-acciones-centro"><button type="button" className="btn-crm-action solid" onClick={() => setActiveTab('explore')}>Explorar el catálogo</button></div>
+                </div>
+              )
               : enrolledCourses.map(curso => {
                 const evaluaciones = calificaciones.evaluaciones.filter(e => Number(e.course_id) === Number(curso.id));
                 const tareas = calificaciones.tareas.filter(e => Number(e.course_id) === Number(curso.id));
                 const certificado = myCertificates.find(c => Number(c.course_id) === Number(curso.id));
                 return <section className="sub-section-block" key={curso.id}>
                   <h3>{curso.title}</h3>
-                  <p>Calificación final: {certificado?.score != null ? certificado.score + '%' : 'Pendiente de emisión del certificado'}</p>
-                  {!evaluaciones.length && !tareas.length ? <p>Aún no tienes evaluaciones ni tareas entregadas.</p> : <div className="table-responsive-container">
+                  <p className="calif-final">Calificación final: {certificado?.score != null ? <strong>{certificado.score}%</strong> : <span>se asigna al emitir tu certificado</span>}</p>
+                  {!evaluaciones.length && !tareas.length ? (
+                    <p className="calif-vacio">Aún no presentas exámenes ni entregas tareas. <button type="button" className="pa-enlace" onClick={() => abrirAula(curso.id)}>Ir al curso</button></p>
+                  ) : <div className="table-responsive-container">
                     <table className="admin-table"><thead><tr><th>Actividad</th><th>Mejor calificación</th><th>Intentos</th><th>Estado</th></tr></thead>
                       <tbody>{evaluaciones.map(e => <tr key={'e-' + e.leccion_id}>
                         <td>{e.curso_lecciones?.titulo || (e.calificacion == null ? 'Encuesta' : 'Examen')}</td>
@@ -1600,10 +1513,7 @@ const Dashboard = () => {
           {/* VIEW: CATÁLOGO: buscador, filtros y tarjetas con su estado */}
           {activeTab === 'explore' && (
             <div className="explore-view">
-              <div className="section-title-row">
-                <h2>Catálogo</h2>
-                <p>Cursos gratuitos, cursos en línea y programas de alta especialidad de HCE.</p>
-              </div>
+              <TituloSeccion etiqueta="Descubrir" titulo="Catálogo" descripcion="Cursos gratuitos, cursos en línea y programas de alta especialidad de HCE." />
 
               <div className="catalogo-herramientas">
                 <label className="catalogo-buscar" htmlFor="buscar-catalogo">
@@ -1784,10 +1694,7 @@ const Dashboard = () => {
 
           {activeTab === 'webinars' && (
             <div className="webinars-portal-view">
-              <div className="section-title-row">
-                <h2>Webinars Gratuitos</h2>
-                <p>Regístrate, entra por Zoom y descarga tu constancia al terminar. Todo desde aquí.</p>
-              </div>
+              <TituloSeccion etiqueta="Descubrir" titulo="Webinars gratuitos" descripcion="Regístrate, entra por Zoom y descarga tu constancia al terminar. Todo desde aquí." />
 
               {webinarsPortal.length === 0 ? (
                 <div className="crm-empty-state-card">
@@ -1979,456 +1886,171 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* VIEW: CERTIFICADOS (Clean Empty state) */}
+          {/* VIEW: CERTIFICADOS: cada certificado con descarga y verificación */}
           {activeTab === 'certificates' && (
             <div className="certificates-view">
-              <div className="section-title-row">
-                <h2>Certificados Acreditados</h2>
-                <p>Descarga tus constancias curriculares avaladas una vez que completes y apruebes cada programa.</p>
-              </div>
+              <TituloSeccion
+                etiqueta="Certificados"
+                titulo="Mis certificados"
+                descripcion="Descarga tus certificados y comparte el enlace para que cualquiera pueda verificarlos."
+              />
 
-              {myCertificates.length === 0 && constanciasWebinar.length === 0 ? (
-                <div className="crm-empty-state-card">
-                  <Award size={48} className="empty-state-icon" />
-                  <h3>Sin certificados disponibles</h3>
-                  <p>Tu constancia oficial aparecerá aquí una vez que apruebes el curso correspondiente.</p>
+              {errorCertificados && (
+                <div className="pa-alerta" role="alert">
+                  <AlertCircle size={16} aria-hidden="true" />
+                  <span>No pudimos cargar tus certificados. {errorCertificados}</span>
+                  <button type="button" className="btn-crm-action outlined" onClick={() => { setErrorCertificados(''); void fetchMyCertificates(); }}>Reintentar</button>
                 </div>
+              )}
+
+              {!certificadosListos ? (
+                <p className="pa-cargando" role="status">Cargando tus certificados…</p>
+              ) : myCertificates.length === 0 && constanciasWebinar.length === 0 ? (
+                !errorCertificados && (
+                  <div className="crm-empty-state-card">
+                    <Award size={44} className="empty-state-icon" />
+                    <h3>Aún no tienes certificados</h3>
+                    <p>Tu certificado aparece aquí en cuanto terminas y apruebas un curso. Las constancias de los webinars también se guardan aquí.</p>
+                    <div className="pa-acciones-centro">
+                      <button type="button" className="btn-crm-action solid" onClick={() => setActiveTab(numEnrolled ? 'courses' : 'explore')}>
+                        {numEnrolled ? 'Continuar mis cursos' : 'Explorar el catálogo'}
+                      </button>
+                    </div>
+                  </div>
+                )
               ) : myCertificates.length === 0 ? null : (
-                <div className="table-responsive-container" style={{ marginTop: '20px' }}>
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>Folio</th>
-                        <th>Curso</th>
-                        <th>Fecha de Emisión</th>
-                                                <th>Calificación</th>
-                        <th>Vigencia</th>
-                        <th>Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {myCertificates.map(cert => (
-                        <tr key={cert.id}>
-                          <td><strong>#{cert.folio}</strong></td>
-                          <td><strong>{cert.courses?.title || 'Curso Académico'}</strong></td>
-                          <td>{new Date(cert.created_at).toLocaleDateString('es-MX')}</td>
-                          <td>{cert.score}%</td>
-                          <td>
-                            {(() => {
-                              // Sin fecha, el certificado es permanente. Con fecha
-                              // vence, y 30 días antes se sugiere recertificarse.
-                              if (!cert.vigente_hasta) return <span className="cert-vigencia cert-vigencia--ok">Permanente</span>;
-                              const vence = new Date(cert.vigente_hasta);
-                              const dias = Math.ceil((vence - Date.now()) / 86400000);
-                              const estado = dias < 0 ? 'vencido' : dias <= 30 ? 'pronto' : 'ok';
-                              return (
-                                <>
-                                  <span className={`cert-vigencia cert-vigencia--${estado}`}>
-                                    {dias < 0 ? 'Vencido' : `Hasta ${vence.toLocaleDateString('es-MX')}`}
-                                  </span>
-                                  {estado !== 'ok' && (
-                                    <Link to={`/classroom/${cert.course_id}`} className="cert-recertificar">
-                                      Recertificarme
-                                    </Link>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </td>
-                          <td>
-                            <button type="button" onClick={() => descargarCertificado(cert)} disabled={certificadoOcupado !== null} className="btn-crm-action solid mini btn-sm-table">
-                                {certificadoOcupado === cert.id ? 'Preparando…' : 'Descargar'}
+                <ul className="cert-lista">
+                  {myCertificates.map((cert) => {
+                    const vigencia = (() => {
+                      // Sin fecha es permanente; con fecha vence, y 30 días antes
+                      // se sugiere recertificarse.
+                      if (!cert.vigente_hasta) return { clave: 'ok', texto: 'Permanente' };
+                      const vence = new Date(cert.vigente_hasta);
+                      const dias = Math.ceil((vence - Date.now()) / 86400000);
+                      return {
+                        clave: dias < 0 ? 'vencido' : dias <= 30 ? 'pronto' : 'ok',
+                        texto: dias < 0 ? `Venció el ${vence.toLocaleDateString('es-MX')}` : `Vigente hasta ${vence.toLocaleDateString('es-MX')}`,
+                      };
+                    })();
+                    const ocupadoPdf = certificadoOcupado === `${cert.id}:pdf`;
+                    const ocupadoPng = certificadoOcupado === `${cert.id}:png`;
+                    const conPdf = hayPdf();
+                    return (
+                      <li key={cert.id} className="cert-tarjeta">
+                        <div className="cert-icono" aria-hidden="true"><Award size={22} /></div>
+                        <div className="cert-cuerpo">
+                          <span className="pa-etiqueta">Folio {cert.folio}</span>
+                          <h3>{cert.courses?.title || 'Curso'}</h3>
+                          <ul className="cert-datos">
+                            <li>Emitido el {new Date(cert.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}</li>
+                            {cert.score != null && <li>Calificación <strong>{cert.score}%</strong></li>}
+                            <li><span className={`cert-vigencia cert-vigencia--${vigencia.clave}`}>{vigencia.texto}</span></li>
+                          </ul>
+                          <div className="cert-acciones">
+                            <button
+                              type="button"
+                              className="btn-crm-action solid"
+                              onClick={() => descargarCertificado(cert, 'pdf')}
+                              disabled={certificadoOcupado !== null}
+                            >
+                              <Download size={15} aria-hidden="true" /> {ocupadoPdf ? 'Preparando…' : conPdf ? 'Descargar PDF' : 'Descargar certificado'}
+                            </button>
+                            {conPdf && (
+                              <button
+                                type="button"
+                                className="btn-crm-action outlined"
+                                onClick={() => descargarCertificado(cert, 'png')}
+                                disabled={certificadoOcupado !== null}
+                              >
+                                {ocupadoPng ? 'Preparando…' : 'Imagen PNG'}
                               </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                            )}
+                            {cert.folio && (
+                              <>
+                                <a className="btn-crm-action outlined" href={rutaVerificacion(cert.folio)} target="_blank" rel="noreferrer">
+                                  <ShieldCheck size={15} aria-hidden="true" /> Ver verificación
+                                </a>
+                                <button type="button" className="btn-crm-action outlined" onClick={() => copiarVerificacion(cert.folio)}>
+                                  <LinkIcon size={15} aria-hidden="true" /> Copiar enlace de verificación
+                                </button>
+                              </>
+                            )}
+                            {vigencia.clave !== 'ok' && (
+                              <button type="button" className="btn-crm-action outlined" onClick={() => abrirAula(cert.course_id)}>
+                                Recertificarme
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
 
               {/* Constancias de asistencia a webinars: antes solo se veían en
                   la pestaña Webinars, y el alumno las buscaba aquí. */}
               {constanciasWebinar.length > 0 && (
-                <div style={{ marginTop: myCertificates.length ? '32px' : '8px' }}>
+                <div className="cert-webinars">
                   <h3 className="catalog-subtitle">Constancias de webinars</h3>
-                  <div className="table-responsive-container" style={{ marginTop: '12px' }}>
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>Folio</th>
-                          <th>Webinar</th>
-                          <th>Emitida</th>
-                          <th>Acción</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {constanciasWebinar.map((r) => {
-                          const titulo = r.webinars?.title || 'Webinar';
-                          return (
-                            <tr key={r.id}>
-                              <td><strong>{r.folio ? `#${r.folio}` : '—'}</strong></td>
-                              <td><strong>{titulo}</strong></td>
-                              <td>{r.certificado_en ? new Date(r.certificado_en).toLocaleDateString('es-MX') : '—'}</td>
-                              <td>
-                                <button
-                                  className="btn-crm-action solid"
-                                  onClick={() => descargarConstancia(r.certificado_url, `Constancia_${titulo.replace(/\s+/g, '_')}.png`)}
-                                >
-                                  <Download size={15} /> Descargar
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                  <ul className="cert-lista">
+                    {constanciasWebinar.map((r) => {
+                      const titulo = r.webinars?.title || 'Webinar';
+                      return (
+                        <li key={r.id} className="cert-tarjeta cert-tarjeta--webinar">
+                          <div className="cert-icono" aria-hidden="true"><Video size={20} /></div>
+                          <div className="cert-cuerpo">
+                            {r.folio && <span className="pa-etiqueta">Folio {r.folio}</span>}
+                            <h3>{titulo}</h3>
+                            {r.certificado_en && <ul className="cert-datos"><li>Emitida el {new Date(r.certificado_en).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}</li></ul>}
+                            <div className="cert-acciones">
+                              <button
+                                type="button"
+                                className="btn-crm-action solid"
+                                onClick={() => descargarConstancia(r.certificado_url, `Constancia_${titulo.replace(/\s+/g, '_')}.png`)}
+                              >
+                                <Download size={15} aria-hidden="true" /> Descargar constancia
+                              </button>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               )}
             </div>
           )}
 
-          {/* VIEW: MI PERFIL (Dynamic clean metrics) */}
+          {/* VIEW: MI PERFIL: foto, datos, cédula y facturación */}
           {activeTab === 'profile' && (
             <div className="profile-view">
-              <div className="section-title-row">
-                <h2>Mi Perfil Profesional</h2>
-                <p>Detalles curriculares y datos personales registrados en el portal académico.</p>
-              </div>
-
-              <div className="profile-details-layout">
-                {/* Profile Card */}
-                <div className="profile-details-card">
-                  <div className="profile-card-header">
-                    <div 
-                      className="profile-big-avatar"
-                      style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
-                      onClick={() => document.getElementById('profile-avatar-upload').click()}
-                      title="Haz clic para cambiar foto de perfil"
-                    >
-                      {avatarUrl ? (
-                        <img 
-                          src={avatarUrl}
-                          alt="Foto de perfil" 
-                          style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
-                        />
-                      ) : (
-                        profile?.nombre_completo ? profile.nombre_completo.charAt(0).toUpperCase() : 'U'
-                      )}
-                      <div 
-                        style={{
-                          position: 'absolute',
-                          bottom: 0,
-                          left: 0,
-                          width: '100%',
-                          background: 'rgba(0, 0, 0, 0.6)',
-                          color: '#fff',
-                          fontSize: '0.65rem',
-                          padding: '4px 0',
-                          textAlign: 'center',
-                          opacity: 0,
-                          transition: 'opacity 0.2s',
-                        }}
-                        className="avatar-hover-overlay"
-                      >
-                        Subir Foto
-                      </div>
-                    </div>
-                    <input 
-                      type="file"
-                      id="profile-avatar-upload"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleAvatarUpload}
-                      disabled={uploadingAvatar}
-                    />
-                    <h3>{profile?.nombre_completo || 'Usuario HCE'}</h3>
-                    <span className="user-role-badge">Estudiante</span>
-                  </div>
-
-                  {isEditingProfile ? (
-                    <form onSubmit={handleSaveProfile} className="profile-edit-form" style={{ width: '100%' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div className="crm-input-group">
-                          <label>Nombre Completo *</label>
-                          <input 
-                            type="text" 
-                            value={profileForm.nombre_completo} 
-                            onChange={(e) => setProfileForm(f => ({ ...f, nombre_completo: e.target.value }))}
-                            required 
-                          />
-                        </div>
-                        
-                        <div className="crm-input-group">
-                          <label>Teléfono *</label>
-                          <input 
-                            type="text" 
-                            value={profileForm.telefono} 
-                            onChange={(e) => setProfileForm(f => ({ ...f, telefono: e.target.value }))}
-                            required 
-                          />
-                        </div>
-
-                        <div className="crm-input-group" style={{ position: 'relative' }}>
-                          <label>País *</label>
-                          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                            <input 
-                              type="text" 
-                              value={profileForm.pais} 
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setProfileForm(f => ({ ...f, pais: val }));
-                                setShowProfileCountrySuggestions(true);
-                              }}
-                              onFocus={() => setShowProfileCountrySuggestions(true)}
-                              onBlur={() => {
-                                setTimeout(() => setShowProfileCountrySuggestions(false), 250);
-                              }}
-                              required 
-                              style={{ paddingRight: getFlagUrl(profileForm.pais) ? '45px' : '12px' }}
-                              placeholder="Escribe tu país..."
-                              autoComplete="off"
-                            />
-                            {getFlagUrl(profileForm.pais) && (
-                              <img 
-                                src={getFlagUrl(profileForm.pais)} 
-                                alt="Bandera" 
-                                style={{ 
-                                  position: 'absolute', 
-                                  right: '12px', 
-                                  height: '16px', 
-                                  width: 'auto', 
-                                  borderRadius: '2px',
-                                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
-                                  pointerEvents: 'none'
-                                }} 
-                              />
-                            )}
-                          </div>
-                          {showProfileCountrySuggestions && profileForm.pais.trim().length > 0 && (
-                            <div className="country-autocomplete-dropdown">
-                              {ALL_COUNTRIES.filter(c => {
-                                const cleanName = c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                                const cleanInput = profileForm.pais.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                                return cleanName.includes(cleanInput);
-                              }).slice(0, 5).map(c => (
-                                <div 
-                                  key={c.code} 
-                                  className="country-suggestion-item"
-                                  onMouseDown={() => {
-                                    setProfileForm(f => ({ ...f, pais: c.name }));
-                                    setShowProfileCountrySuggestions(false);
-                                  }}
-                                >
-                                  <img 
-                                    src={`https://flagcdn.com/w40/${c.code}.png`} 
-                                    alt={c.name} 
-                                    className="suggestion-flag" 
-                                  />
-                                  <span>{c.name}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="crm-input-group">
-                          <label>Estado / Ciudad *</label>
-                          <input 
-                            type="text" 
-                            value={profileForm.estado} 
-                            onChange={(e) => setProfileForm(f => ({ ...f, estado: e.target.value }))}
-                            required 
-                          />
-                        </div>
-
-                        <div className="crm-input-group">
-                          <label>Grado académico / Profesión *</label>
-                          <select 
-                            value={profileForm.grado} 
-                            onChange={(e) => setProfileForm(f => ({ ...f, grado: e.target.value }))}
-                            required
-                          >
-                            <option value="">Selecciona...</option>
-                            <option>Médico Especialista</option>
-                            <option>Médico Residente</option>
-                            <option>Médico General</option>
-                            <option>Perfusionista</option>
-                            <option>Enfermero/a</option>
-                            <option>Terapeuta Respiratorio</option>
-                            <option>Fisioterapeuta</option>
-                            <option>Estudiante</option>
-                            <option>Otro</option>
-                          </select>
-                        </div>
-
-                        <div className="crm-input-group">
-                          <label>Especialidad *</label>
-                          <input 
-                            type="text" 
-                            value={profileForm.especialidad} 
-                            onChange={(e) => setProfileForm(f => ({ ...f, especialidad: e.target.value }))}
-                            required 
-                          />
-                        </div>
-
-                        <div className="crm-input-group">
-                          <label>Institución / Hospital *</label>
-                          <input 
-                            type="text" 
-                            value={profileForm.institucion} 
-                            onChange={(e) => setProfileForm(f => ({ ...f, institucion: e.target.value }))}
-                            required 
-                          />
-                        </div>
-
-                        <div className="crm-input-group">
-                          <label>Cargo / Puesto *</label>
-                          <input 
-                            type="text" 
-                            value={profileForm.cargo} 
-                            onChange={(e) => setProfileForm(f => ({ ...f, cargo: e.target.value }))}
-                            required 
-                          />
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '10px', marginTop: '25px' }}>
-                        <button 
-                          type="submit" 
-                          className="btn-crm-action solid" 
-                          disabled={savingProfile}
-                          style={{ flex: 1, padding: '12px', background: 'var(--primary-cyan)', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                        >
-                          {savingProfile ? 'Guardando...' : 'Guardar Cambios'}
-                        </button>
-                        <button 
-                          type="button" 
-                          className="btn-crm-action outline" 
-                          onClick={() => setIsEditingProfile(false)}
-                          style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-dark)', borderRadius: '8px', cursor: 'pointer' }}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <>
-                      <div className="profile-info-list">
-                        <div className="profile-info-item">
-                          <span className="info-label">Correo electrónico:</span>
-                          <span className="info-value">{user?.email}</span>
-                        </div>
-                        <div className="profile-info-item">
-                          <span className="info-label">Teléfono:</span>
-                          <span className="info-value">{profile?.telefono || user?.user_metadata?.telefono || 'No registrado'}</span>
-                        </div>
-                        <div className="profile-info-item">
-                          <span className="info-label">País:</span>
-                          <span className="info-value" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {getFlagUrl(user?.user_metadata?.pais) && (
-                              <img 
-                                src={getFlagUrl(user.user_metadata.pais)} 
-                                alt="Bandera" 
-                                style={{ height: '14px', width: 'auto', borderRadius: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }} 
-                              />
-                            )}
-                            {user?.user_metadata?.pais || 'No registrado'}
-                          </span>
-                        </div>
-                        <div className="profile-info-item">
-                          <span className="info-label">Estado / Ciudad:</span>
-                          <span className="info-value">{user?.user_metadata?.estado || 'No registrado'}</span>
-                        </div>
-                        <div className="profile-info-item">
-                          <span className="info-label">Grado académico / Profesión:</span>
-                          <span className="info-value">{user?.user_metadata?.grado || 'No registrado'}</span>
-                        </div>
-                        <div className="profile-info-item">
-                          <span className="info-label">Especialidad:</span>
-                          <span className="info-value">{user?.user_metadata?.especialidad || 'No registrado'}</span>
-                        </div>
-                        <div className="profile-info-item">
-                          <span className="info-label">Institución / Hospital:</span>
-                          <span className="info-value">{user?.user_metadata?.institucion || 'No registrado'}</span>
-                        </div>
-                        <div className="profile-info-item">
-                          <span className="info-label">Cargo / Puesto:</span>
-                          <span className="info-value">{user?.user_metadata?.cargo || 'No registrado'}</span>
-                        </div>
-                        <div className="profile-info-item">
-                          <span className="info-label">Miembro desde:</span>
-                          <span className="info-value">{getMemberSinceDate()}</span>
-                        </div>
-                      </div>
-
-                      <button 
-                        type="button" 
-                        className="btn-crm-action solid" 
-                        onClick={startEditingProfile}
-                        style={{ marginTop: '25px', width: '100%', padding: '12px', background: 'var(--primary-cyan)', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                      >
-                        Editar Datos de Perfil
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                {/* Academic Status Card */}
-                <div className="academic-status-card">
-                  <h3>Resumen Académico</h3>
-                  <div className="academic-status-grid">
-                    <div className="status-metric-box">
-                      <span className="status-metric-number">{numEnrolled}</span>
-                      <span className="status-metric-label">Cursos Inscritos</span>
-                    </div>
-                    <div className="status-metric-box">
-                      <span className="status-metric-number">{avgProgress}%</span>
-                      <span className="status-metric-label">Avance Promedio</span>
-                    </div>
-                    <div className="status-metric-box">
-                      <span className="status-metric-number">{numCertificates}</span>
-                      <span className="status-metric-label">Certificados</span>
-                    </div>
-                  </div>
-                  
-                  <div className="active-enrollments-list" style={{ marginTop: '30px' }}>
-                    <h4>Matrículas Activas</h4>
-                    {enrolledCourses.length === 0 ? (
-                      <div className="crm-empty-state-card mini">
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No tienes matrículas activas en este momento.</p>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {enrolledCourses.map(course => (
-                          <div key={course.id} className="active-enrollment-item">
-                            <div className="enrollment-bullet"></div>
-                            <div style={{ flex: 1 }}>
-                              <strong>{course.title}</strong>
-                              <p>{course.estadoCurso} ({course.progress}%)</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <TituloSeccion
+                etiqueta="Mi cuenta"
+                titulo="Mi perfil"
+                descripcion="Tus datos personales, profesionales y de facturación. Tu nombre aparece así en tus certificados."
+              />
+              <PerfilAlumno
+                key={user?.id}
+                user={user}
+                profile={profile}
+                updateProfile={updateProfile}
+                updateUserMetadata={updateUserMetadata}
+                notificar={showToast}
+                avatarUrl={avatarUrl}
+                miembroDesde={profile?.created_at ? getMemberSinceDate() : ''}
+                resumen={{ cursos: numEnrolled, avance: avgProgress, certificados: numCertificates }}
+                onSucio={marcarPerfilSucio}
+              />
             </div>
           )}
-
-
 
           {activeTab === 'ayuda' && <GuiaUso rol="alumno" onIr={setActiveTab} />}
 
           {/* VIEW: CONFIGURACIÓN */}
           {activeTab === 'settings' && (
             <div className="settings-view">
-              <div className="section-title-row">
-                <h2>Configuración de Cuenta</h2>
-                <p>Actualiza tu contraseña de acceso al portal.</p>
-              </div>
+              <TituloSeccion etiqueta="Mi cuenta" titulo="Configuración" descripcion="Zona horaria, apariencia del portal y tu contraseña." />
 
               {successMsg && (
                 <div className="auth-alert alert-success">

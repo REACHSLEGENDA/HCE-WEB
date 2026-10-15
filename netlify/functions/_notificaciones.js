@@ -102,6 +102,90 @@ async function destinatarios(db, notificacion, userId) {
   return data?.email ? [data] : [];
 }
 
+// ---------------------------------------------------------------------------
+// Avisos dentro del portal (campanita del alumno, ver supabase/portal-alumno.sql)
+//
+// Cada evento del alumno deja también un aviso en `notificaciones_portal`,
+// aunque el correo de ese evento esté apagado o Brevo no esté configurado. Se
+// guarda una sola vez por alumno y hecho (índice único user_id + clave).
+// ---------------------------------------------------------------------------
+
+const corta = (texto, max) => {
+  const t = String(texto ?? '').replace(/\s+/g, ' ').trim();
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+};
+
+// El id de la lección viaja en la clave de algunos eventos
+// ("examen:12", "sesion-registro:12", "sesion-recordatorio:12:<fecha>").
+const leccionDeClave = (clave) => {
+  const m = /^(?:examen|sesion-registro|sesion-recordatorio):(\d+)/.exec(String(clave || ''));
+  return m ? m[1] : null;
+};
+
+const aula = (courseId, leccionId) => (courseId
+  ? `/classroom/${Number(courseId)}${leccionId ? `?leccion=${leccionId}` : ''}`
+  : '/dashboard?tab=courses');
+
+/** Título, cuerpo y enlace (dentro del portal) del aviso de cada evento. */
+export function avisoPortal(evento, { courseId = null, clave = '', variables = {}, curso = '' } = {}) {
+  const v = variables;
+  const enCurso = curso ? ` en ${curso}` : '';
+  switch (evento) {
+    case 'cuenta_activada':
+      return { titulo: 'Tu cuenta ya está activa', cuerpo: v.acceso || 'Ya puedes entrar a tus cursos.', enlace: '/dashboard?tab=courses' };
+    case 'inscrito_curso':
+      return { titulo: curso ? `Inscrito en ${curso}` : 'Te inscribimos a un curso', cuerpo: v.acceso || 'El curso ya aparece en Mis cursos.', enlace: aula(courseId) };
+    case 'curso_abierto':
+      return { titulo: curso ? `${curso} ya está abierto` : 'Tu curso ya está abierto', cuerpo: 'Tu grupo inició: ya puedes entrar al aula y empezar.', enlace: aula(courseId) };
+    case 'examen_aprobado':
+      return { titulo: `Aprobaste ${v.examen || 'tu examen'}`, cuerpo: `Calificación: ${v.calificacion || '—'}${enCurso}.`, enlace: aula(courseId, leccionDeClave(clave)) };
+    case 'tarea_revisada':
+      return {
+        titulo: `Tu tarea ${v.tarea ? `«${v.tarea}» ` : ''}fue revisada`,
+        cuerpo: `Quedó ${v.estado || 'revisada'}${enCurso}.${v.comentario ? ` Comentario: ${v.comentario}` : ''}`,
+        enlace: aula(courseId),
+      };
+    case 'curso_completado':
+      return { titulo: curso ? `Terminaste ${curso}` : '¡Terminaste tu curso!', cuerpo: `Tu certificado${v.folio ? ` (folio ${v.folio})` : ''} ya está listo para descargar.`, enlace: `/dashboard?tab=certificates${courseId ? `&curso=${Number(courseId)}` : ''}` };
+    case 'mensaje_nuevo':
+      return { titulo: `Mensaje de ${v.remitente || 'HCE'}`, cuerpo: v.asunto || 'Tienes un mensaje nuevo en tu bandeja.', enlace: '/dashboard?tab=mensajes' };
+    case 'sesion_registro':
+      return { titulo: `Registrado a ${v.sesion || 'la sesión en vivo'}`, cuerpo: v.fecha ? `Es el ${v.fecha}. El botón "Unirse" se activa 15 minutos antes.` : 'El botón "Unirse" se activa 15 minutos antes.', enlace: aula(courseId, leccionDeClave(clave)) };
+    case 'sesion_recordatorio':
+      return { titulo: `En 1 hora: ${v.sesion || 'tu sesión en vivo'}`, cuerpo: v.fecha ? `Empieza el ${v.fecha}. Entra desde tu aula.` : 'Entra desde tu aula con el botón "Unirse".', enlace: aula(courseId, leccionDeClave(clave)) };
+    default:
+      return null;
+  }
+}
+
+/**
+ * Guarda el aviso del portal para el alumno del evento. Nunca lanza error; si
+ * la tabla aún no existe (migración pendiente), no hace nada.
+ */
+export async function avisarEnPortal(db, evento, { userId = null, courseId = null, clave, variables = {}, curso = '' } = {}) {
+  if (!userId) return { guardado: false };
+  const aviso = avisoPortal(evento, { courseId, clave, variables, curso });
+  if (!aviso) return { guardado: false };
+  try {
+    const { error } = await db.from('notificaciones_portal').upsert([{
+      user_id: userId,
+      tipo: evento,
+      titulo: corta(aviso.titulo, 140),
+      cuerpo: corta(aviso.cuerpo, 400),
+      enlace: aviso.enlace,
+      clave: `${evento}:${clave || evento}`,
+    }], { onConflict: 'user_id,clave', ignoreDuplicates: true });
+    if (error) {
+      if (!['42P01', 'PGRST205', '42703', 'PGRST204'].includes(error.code)) console.error(`Aviso del portal ${evento}:`, error.message);
+      return { guardado: false };
+    }
+    return { guardado: true };
+  } catch (err) {
+    console.error(`Aviso del portal ${evento}:`, err.message);
+    return { guardado: false };
+  }
+}
+
 /**
  * Manda las notificaciones activas de un evento.
  *   userId     el alumno que provocó el evento
@@ -111,6 +195,18 @@ async function destinatarios(db, notificacion, userId) {
  */
 export async function notificar(db, evento, { userId = null, courseId = null, clave, variables = {} } = {}) {
   try {
+    // Primero el aviso del portal: no depende de Brevo ni de que el correo
+    // del evento esté activo. El registro nuevo solo avisa a los admins.
+    if (userId && evento !== 'registro_nuevo') {
+      let cursoAviso = variables.curso || '';
+      if (!cursoAviso && courseId) {
+        const { data } = await db.from('courses').select('title').eq('id', Number(courseId)).maybeSingle();
+        cursoAviso = data?.title || '';
+        if (cursoAviso) variables = { ...variables, curso: cursoAviso };
+      }
+      await avisarEnPortal(db, evento, { userId, courseId, clave, variables, curso: cursoAviso });
+    }
+
     if (!brevoListo()) return { enviadas: 0, motivo: 'sin-configurar' };
 
     let consulta = db.from('notificaciones').select('*').eq('evento', evento).eq('activo', true);

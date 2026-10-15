@@ -1,169 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ShieldAlert } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import './Login.css';
 
-const RestablecerPassword = () => {
+export default function RestablecerPassword() {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [hasValidSession, setHasValidSession] = useState(true);
+  const envioRef = useRef(false);
+  const timerRef = useRef(null);
+  const mensajeRef = useRef(null);
 
-  // Parse the recovery flow or active temporary session from URL
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // In Supabase, if the user clicked the reset password link, 
-      // they should have an active session established automatically.
-      if (!session) {
-        // If there's no session, check if there's an error in the hash fragment 
-        // indicating an expired link.
-        const hash = window.location.hash;
-        if (hash && (hash.includes('error=unauthorized_client') || hash.includes('error_description'))) {
-          setErrorMsg('El enlace de recuperación ha expirado o ya fue utilizado.');
-          setHasValidSession(false);
-        } else {
-          // No session yet, but we allow trying the update.
-        }
-      }
-    };
-    checkSession();
-  }, []);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    if (password.length < 6) {
-      setErrorMsg('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setErrorMsg('Las contraseñas no coinciden. Por favor verifícalas.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: password });
+    let vigente = true;
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!vigente) return;
       if (error) throw error;
-      
-      setSuccessMsg('¡Contraseña actualizada con éxito! Redirigiendo al inicio de sesión...');
-      
-      // Auto redirect to login after 3 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+      if (!data?.session && /error=|error_code=|error_description=/.test(window.location.hash)) {
+        setErrorMsg('El enlace de recuperación venció o ya fue utilizado. Solicita uno nuevo desde el inicio de sesión.');
+        setHasValidSession(false);
+      }
+    }).catch(() => {
+      if (vigente) setErrorMsg('No pudimos comprobar tu sesión. Revisa tu conexión antes de continuar.');
+    }).finally(() => { if (vigente) setChecking(false); });
+    return () => { vigente = false; clearTimeout(timerRef.current); };
+  }, []);
+  useEffect(() => { if (errorMsg || successMsg) mensajeRef.current?.focus(); }, [errorMsg, successMsg]);
+
+  const handleSubmit = async (ev) => {
+    ev.preventDefault();
+    if (envioRef.current || checking || !hasValidSession || successMsg) return;
+    setErrorMsg(''); setSuccessMsg('');
+    if (password.length < 6) { setErrorMsg('La contraseña debe tener al menos 6 caracteres.'); return; }
+    if (password !== confirmPassword) { setErrorMsg('Las contraseñas no coinciden. Vuelve a escribirlas.'); return; }
+    envioRef.current = true; setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      setSuccessMsg('Tu contraseña fue actualizada. En unos segundos volverás al inicio de sesión.');
+      timerRef.current = setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
-      setErrorMsg(err.message || 'Error al restablecer la contraseña. El enlace podría haber expirado.');
-    } finally {
-      setLoading(false);
-    }
+      const t = String(err?.message || '');
+      setErrorMsg(/fetch|network|offline|timeout/i.test(t) ? 'No pudimos conectar. Revisa tu conexión e intenta de nuevo.' : /same.password|different.*password/i.test(t) ? 'Elige una contraseña diferente de la anterior.' : 'No pudimos actualizar la contraseña. El enlace puede haber vencido: solicita uno nuevo desde el inicio de sesión.');
+    } finally { envioRef.current = false; setLoading(false); }
   };
-
-  return (
-    <div className="login-page clinical-bg-light">
-      <div className="login-container">
-        <div className="login-card reveal active" style={{ maxWidth: '450px' }}>
-          
-          <div className="login-header">
-            <span className="section-badge">
-              <ShieldAlert size={14} /> Seguridad HCE
-            </span>
-            <h2>Nueva Contraseña</h2>
-            <p>Ingresa tu nueva contraseña para recuperar el acceso a tu cuenta</p>
-          </div>
-
-          {/* Alert Messages */}
-          {errorMsg && (
-            <div className="auth-alert alert-error">
-              <AlertCircle size={18} />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {successMsg && (
-            <div className="auth-alert alert-success">
-              <CheckCircle size={18} />
-              <span>{successMsg}</span>
-            </div>
-          )}
-
-          {hasValidSession && !successMsg && (
-            <form onSubmit={handleSubmit} className="auth-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="input-group">
-                <label>Nueva Contraseña *</label>
-                <div className="input-wrapper">
-                  <Lock className="input-icon" size={18} />
-                  <input 
-                    type={showPassword ? 'text' : 'password'} 
-                    placeholder="Escribe al menos 6 caracteres"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowPassword(!showPassword)}
-                    tabIndex="-1"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="input-group">
-                <label>Confirmar Nueva Contraseña *</label>
-                <div className="input-wrapper">
-                  <Lock className="input-icon" size={18} />
-                  <input 
-                    type={showConfirmPassword ? 'text' : 'password'} 
-                    placeholder="Confirma tu nueva contraseña"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    tabIndex="-1"
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <button type="submit" className="btn btn-primary w-full" disabled={loading} style={{ padding: '14px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>
-                {loading ? 'Actualizando...' : 'Guardar Nueva Contraseña'}
-              </button>
-            </form>
-          )}
-
-          {!hasValidSession && (
-            <button 
-              onClick={() => navigate('/login')} 
-              className="btn btn-primary w-full" 
-              style={{ padding: '14px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', marginTop: '10px' }}
-            >
-              Ir a Iniciar Sesión
-            </button>
-          )}
-
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default RestablecerPassword;
+  return <div className="login-page">
+    <header className="auth-topbar"><Link to="/" aria-label="HCE, ir al inicio"><img src="/assets/componentes/ghghg-scaled.png" alt="HCE Healthcare Training Experience" width="184" height="48" /></Link><Link to="/login" className="auth-toplink">Iniciar sesión <ArrowRight size={16} /></Link></header>
+    <main className="auth-reset-container"><div className="login-card">
+      <div className="login-header"><span className="section-badge">SEGURIDAD HCE</span><h1 className="auth-reset-title">Nueva contraseña.</h1><p>Recupera el acceso a tu formación con una contraseña que solo tú conozcas.</p></div>
+      {(errorMsg || successMsg) && <div ref={mensajeRef} tabIndex={-1} className={`auth-alert ${errorMsg ? 'alert-error' : 'alert-success'}`} role={errorMsg ? 'alert' : 'status'}>{errorMsg ? <AlertCircle size={20} /> : <CheckCircle size={20} />}<span>{errorMsg || successMsg}</span></div>}
+      {checking && <p role="status">Comprobando tu enlace…</p>}
+      {hasValidSession && !successMsg && <form onSubmit={handleSubmit} className="auth-form" aria-busy={loading || checking}>
+        <fieldset className="auth-controls" disabled={loading || checking}>
+          <div className="input-group"><label htmlFor="reset-password">Nueva contraseña</label><div className="input-wrapper"><Lock className="input-icon" size={18} /><input id="reset-password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={6} value={password} onChange={(ev) => setPassword(ev.target.value)} aria-describedby="reset-help" /><button type="button" className="password-toggle-btn" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div><small id="reset-help">Usa al menos 6 caracteres.</small></div>
+          <div className="input-group"><label htmlFor="reset-confirm">Confirmar nueva contraseña</label><div className="input-wrapper"><Lock className="input-icon" size={18} /><input id="reset-confirm" name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={6} value={confirmPassword} onChange={(ev) => setConfirmPassword(ev.target.value)} /><button type="button" className="password-toggle-btn" aria-label={showConfirmPassword ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'} aria-pressed={showConfirmPassword} onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></div>
+          <button type="submit" className="btn btn-primary" disabled={loading || checking}>{loading ? 'Actualizando contraseña…' : 'Guardar nueva contraseña'}<ArrowRight size={18} /></button>
+        </fieldset>
+      </form>}
+      <Link to="/login" className="auth-secondary">Volver a iniciar sesión</Link>
+    </div></main>
+    <footer className="auth-footer"><span>HCE · Healthcare Training Experience</span><Link to="/aviso-de-privacidad">Aviso de privacidad</Link></footer>
+  </div>;
+}

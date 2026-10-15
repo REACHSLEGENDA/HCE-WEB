@@ -1,4 +1,5 @@
 import React from 'react';
+import { reportarError } from '../lib/reporteErrores';
 
 // Si una pantalla falla al dibujarse, se muestra este aviso en lugar de dejar
 // la página en blanco. `resetKey` (por ejemplo, la ruta) limpia el error al
@@ -15,6 +16,8 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, info) {
     console.error('Error en la pantalla:', error, info?.componentStack);
+    // Aviso automático a los administradores (solo en producción).
+    reportarError(error, { origen: 'render', componente: info?.componentStack || '' });
   }
 
   componentDidUpdate(prevProps) {

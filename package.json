@@ -11,7 +11,11 @@
     "check:lms": "node --experimental-vm-modules scripts/verificar-lms.mjs",
     "check:ui": "node scripts/verificar-borradores.mjs",
     "check:alumni": "node --experimental-vm-modules scripts/verificar-alumni.mjs",
-    "preview": "vite preview"
+    "check:asistente": "node scripts/verificar-asistente.mjs",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verificar": "npm run lint && npm run test && npm run check:lms && npm run check:alumni && npm run check:ui && npm run check:asistente && npm run build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -20,7 +24,9 @@
     "@supabase/supabase-js": "^2.107.0",
     "@vimeo/player": "^2.30.4",
     "exceljs": "^4.4.0",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.8.0",
+    "qrcode": "^1.5.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-intersection-observer": "^10.0.3",
@@ -30,6 +36,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@tailwindcss/postcss": "^4.2.2",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
@@ -38,9 +45,11 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "jsdom": "^30.1.2",
     "postcss": "^8.5.10",
     "sharp": "^0.35.4",
     "tailwindcss": "^4.2.2",
-    "vite": "^8.0.4"
+    "vite": "^8.0.4",
+    "vitest": "^5.0.4"
   }
 }

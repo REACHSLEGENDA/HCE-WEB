@@ -1,0 +1,120 @@
+/* Campanita de avisos del portal del alumno (encabezado). Usa las variables
+   de Dashboard.css, así que respeta el tema claro y oscuro. */
+
+.avisos { position: relative; }
+
+.avisos-boton {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+.avisos-boton:hover,
+.avisos-boton.abierta { background: var(--bg-gray); color: var(--primary-cyan); }
+.avisos-boton:focus-visible { outline: 2px solid var(--primary-cyan); outline-offset: 2px; }
+
+.avisos-contador {
+  position: absolute; top: 4px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px;
+  border: 2px solid var(--bg-main); border-radius: 999px; box-sizing: content-box;
+  background: #e5484d; color: #fff; font-size: 0.68rem; font-weight: 800; line-height: 18px; text-align: center;
+}
+
+.avisos-panel {
+  position: absolute; top: calc(100% + 8px); right: -8px; z-index: 1100;
+  display: flex; flex-direction: column; width: 380px; max-height: min(560px, calc(100vh - 110px));
+  overflow: hidden; border: 1px solid var(--border-color); border-radius: 14px;
+  background: var(--bg-main); color: var(--text-dark);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18);
+}
+.crm-layout[data-theme="dark"] .avisos-panel { box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55); }
+
+.avisos-cabecera {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 8px 8px 16px; border-bottom: 1px solid var(--border-color); background: var(--bg-gray);
+}
+.avisos-cabecera > strong { font-family: 'Sora', sans-serif; font-size: 0.95rem; }
+.avisos-cabecera-acciones { display: flex; align-items: center; gap: 2px; }
+.avisos-marcar {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 44px; padding: 0 10px;
+  border: 0; border-radius: 8px; background: none; color: var(--secondary-blue, #0288d1);
+  font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+}
+.crm-layout[data-theme="dark"] .avisos-marcar { color: #4dd0e1; }
+.avisos-marcar:hover { background: var(--bg-active-item); }
+.avisos-marcar:disabled { opacity: 0.6; cursor: wait; }
+.avisos-cerrar {
+  display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
+  border: 0; border-radius: 8px; background: none; color: var(--text-muted); cursor: pointer;
+}
+.avisos-cerrar:hover { background: var(--bg-active-item); color: var(--text-dark); }
+
+.avisos-cuerpo { overflow-y: auto; overscroll-behavior: contain; }
+
+.avisos-lista { margin: 0; padding: 0; list-style: none; }
+.avisos-item {
+  display: flex; align-items: flex-start; gap: 12px; width: 100%; min-height: 56px; padding: 12px 16px;
+  border: 0; border-bottom: 1px solid var(--border-color); background: none;
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.avisos-item:hover { background: var(--bg-sidebar); }
+.avisos-item:focus-visible { outline: 2px solid var(--primary-cyan); outline-offset: -2px; }
+.avisos-item.nuevo { background: rgba(0, 188, 212, 0.07); }
+.avisos-item.nuevo:hover { background: rgba(0, 188, 212, 0.12); }
+
+.avisos-icono {
+  display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(0, 188, 212, 0.12); color: #0e7490;
+}
+.avisos-icono--curso_completado,
+.avisos-icono--certificado,
+.avisos-icono--examen_aprobado,
+.avisos-icono--cuenta_activada { background: rgba(16, 185, 129, 0.14); color: #047857; }
+.avisos-icono--sesion_registro,
+.avisos-icono--sesion_recordatorio { background: rgba(139, 92, 246, 0.14); color: #6d28d9; }
+.avisos-icono--tarea_revisada { background: rgba(245, 158, 11, 0.16); color: #92400e; }
+.crm-layout[data-theme="dark"] .avisos-icono { background: rgba(38, 198, 218, 0.16); color: #67e8f9; }
+.crm-layout[data-theme="dark"] .avisos-icono--curso_completado,
+.crm-layout[data-theme="dark"] .avisos-icono--certificado,
+.crm-layout[data-theme="dark"] .avisos-icono--examen_aprobado,
+.crm-layout[data-theme="dark"] .avisos-icono--cuenta_activada { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
+.crm-layout[data-theme="dark"] .avisos-icono--sesion_registro,
+.crm-layout[data-theme="dark"] .avisos-icono--sesion_recordatorio { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; }
+.crm-layout[data-theme="dark"] .avisos-icono--tarea_revisada { background: rgba(245, 158, 11, 0.18); color: #fcd34d; }
+
+.avisos-texto { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; font-size: 0.84rem; line-height: 1.4; }
+.avisos-texto strong { color: var(--text-dark); font-size: 0.86rem; }
+.avisos-texto > span { color: var(--text-muted); overflow-wrap: anywhere; }
+.avisos-item:not(:has(strong)) .avisos-texto > span { color: var(--text-dark); }
+.avisos-texto small { color: var(--text-muted); font-size: 0.72rem; }
+.avisos-punto { flex-shrink: 0; width: 9px; height: 9px; margin-top: 6px; border-radius: 50%; background: var(--primary-cyan); }
+
+.avisos-subtitulo {
+  margin: 0; padding: 12px 16px 6px; color: var(--text-muted);
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.avisos-vacio { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 0; padding: 28px 24px; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
+.avisos-vacio p { margin: 0; }
+.avisos-vacio strong { color: var(--text-dark); }
+.avisos-vacio svg { margin-bottom: 6px; color: var(--primary-cyan); }
+
+.avisos-error {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px;
+  margin: 10px 12px 0; padding: 8px 12px; border-radius: 10px;
+  background: rgba(229, 72, 77, 0.1); color: #b42318; font-size: 0.8rem;
+}
+.crm-layout[data-theme="dark"] .avisos-error { background: rgba(229, 72, 77, 0.18); color: #fca5a5; }
+.avisos-error button {
+  display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 10px;
+  border: 1px solid currentColor; border-radius: 999px; background: none; color: inherit;
+  font: inherit; font-weight: 700; cursor: pointer;
+}
+
+/* En celular el panel ocupa el ancho de la pantalla, bajo el encabezado. */
+@media (max-width: 768px) {
+  .avisos-panel {
+    position: fixed; top: 70px; right: 8px; left: 8px; width: auto;
+    max-height: calc(100dvh - 70px - 96px - env(safe-area-inset-bottom, 0px));
+  }
+}

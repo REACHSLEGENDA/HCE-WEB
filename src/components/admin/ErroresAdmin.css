@@ -1,0 +1,41 @@
+/* Sistema -> Errores (ErroresAdmin.jsx). Usa las variables del panel, así
+   funciona en claro y en oscuro. */
+.errores-admin { display: grid; gap: 4px; min-width: 0; }
+.errores-intro { margin: 0 0 12px; color: var(--text-muted); font-size: 0.88rem; line-height: 1.55; }
+
+.errores-aviso { display: flex; gap: 12px; align-items: flex-start; color: var(--text-dark); }
+.errores-aviso > svg { flex-shrink: 0; color: var(--accent-orange, #f4511e); margin-top: 2px; }
+.errores-aviso p { margin: 0 0 10px; line-height: 1.55; }
+.errores-aviso code { overflow-wrap: anywhere; }
+
+.errores-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.errores-item { margin: 0; padding: 16px 18px; display: grid; gap: 12px; border-left: 4px solid var(--accent-orange, #f4511e); min-width: 0; }
+.errores-item--resuelto { border-left-color: #10b981; opacity: 0.85; }
+
+.errores-cabeza { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+.errores-mensaje { margin: 0; font-weight: 700; color: var(--text-dark); overflow-wrap: anywhere; font-size: 0.95rem; line-height: 1.45; min-width: 0; }
+.errores-veces { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: var(--bg-gray, rgba(148, 163, 184, 0.15)); color: var(--text-dark); white-space: nowrap; }
+.errores-veces--alto { background: rgba(244, 81, 30, 0.15); color: var(--accent-orange, #c2410c); }
+
+.errores-datos { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px; }
+.errores-datos div { min-width: 0; }
+.errores-datos dt { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.errores-datos dd { margin: 2px 0 0; color: var(--text-dark); font-size: 0.86rem; overflow-wrap: anywhere; }
+.errores-datos code { font-size: 0.8rem; }
+
+.errores-detalle { display: grid; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border-color); min-width: 0; }
+.errores-subtitulo { margin: 0; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); }
+.errores-pre {
+  margin: 0; padding: 10px 12px; max-height: 260px; overflow: auto;
+  border-radius: 10px; background: var(--bg-gray, #f1f5f9); color: var(--text-dark);
+  font-size: 0.75rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.errores-ua { margin: 0; font-size: 0.72rem; color: var(--text-muted); overflow-wrap: anywhere; }
+.errores-detalle > .btn-crm-action { justify-self: start; min-height: 44px; }
+
+@media (max-width: 600px) {
+  .errores-item { padding: 14px; }
+  .errores-cabeza { flex-direction: column; gap: 8px; }
+  .errores-datos { grid-template-columns: 1fr 1fr; }
+  .errores-detalle > .btn-crm-action { justify-self: stretch; justify-content: center; }
+}

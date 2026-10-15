@@ -1673,3 +1673,20 @@ button.temario-seccion[aria-expanded="false"] .temario-seccion-flecha { transfor
 @media (max-width: 1024px) {
   .classroom-grid { grid-template-columns: minmax(0, 1fr); }
 }
+/* El aula comparte el acabado sobrio de la escuela, sin tocar el reproductor. */
+.classroom-layout {
+  --aula-superficie: #f8f9f7; --aula-suave: #eceeed; --aula-borde: #cbd5ce;
+  --aula-texto: #172320; --aula-secundario: #364b41; --aula-muted: #52635c;
+  --aula-acento: #006f80; --aula-seleccion: #deeeea;
+  font-family: 'Inter','DM Sans',sans-serif;
+}
+.classroom-layout[data-theme='dark'] {
+  --aula-superficie: #1b2723; --aula-suave: #141e1a; --aula-borde: #3c4e43;
+  --aula-texto: #edf3ec; --aula-secundario: #d4ded6; --aula-muted: #adbbb2;
+  --aula-acento: #74d2d4; --aula-seleccion: #263d34; background: var(--aula-suave);
+}
+.classroom-layout :is(h1,h2,h3,h4) { font-family: 'Plus Jakarta Sans','Inter',sans-serif; font-weight: 800; letter-spacing: -.035em; }
+.classroom-layout .classroom-header { background: var(--aula-superficie); color: var(--aula-texto); border-bottom: 1px solid var(--aula-borde); box-shadow: none; }
+.classroom-layout .back-btn { background: transparent; color: var(--aula-texto); border-color: var(--aula-borde); min-height: 44px; }
+.classroom-layout :is(.exam-container-card,.classroom-card,.lesson-card) { border-radius: 24px; box-shadow: none; }
+.classroom-layout :is(button,a,input,textarea):focus-visible { outline: 3px solid var(--aula-acento); outline-offset: 3px; }

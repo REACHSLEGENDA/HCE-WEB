@@ -451,3 +451,22 @@ body.cookie-banner-open .hce-chat-widget {
    de las opciones de la última fila (Ayuda). */
 body.nav-movil-abierta .hce-chat-widget,
 body.panel-lateral-abierto .hce-chat-widget { display: none; }
+/* Consulta contextual y búsqueda local. */
+.hce-chat-contexto { padding: 10px 18px; margin: 0; border-bottom: 1px solid #d6dfdb; background: #f3f6f2; color: #365349; font-size: .76rem; }
+.hce-chat-close { width: 44px; height: 44px; }
+.hce-chat-widget[data-theme='dark'] :is(.hce-chat-contexto,.hce-chat-consulta) { background: #1b2723; border-color: #3c4e43; color: #edf3ec; }
+.hce-chat-widget[data-theme='dark'] .hce-chat-escritura input { background: #141e1a; border-color: #3c4e43; color: #edf3ec; color-scheme: dark; }
+.hce-chat-widget[data-theme='dark'] .hce-chat-sugerencias button { color: #a3eaeb; }
+.hce-chat-window { max-height: min(760px, calc(100dvh - 110px)); }
+.hce-chat-messages { min-height: 0; }
+.hce-chat-consulta { padding: 14px 16px; background: #f8f9f7; border-top: 1px solid #d6dfdb; color: #172320; }
+.hce-chat-consulta label { display: block; font-size: .76rem; font-weight: 600; margin-bottom: 7px; }
+.hce-chat-escritura { display: flex; gap: 8px; }
+.hce-chat-escritura input { min-width: 0; flex: 1; min-height: 44px; padding: 10px; border: 1px solid #b7c9bf; border-radius: 12px; background: #fff; color: #172320; font: inherit; font-size: 1rem; }
+.hce-chat-escritura button { padding: 10px 14px; min-height: 44px; border: 0; border-radius: 100px; background: #183b32; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.hce-chat-escritura button:disabled { opacity: .55; cursor: wait; }
+.hce-chat-sugerencias { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; max-height: 150px; overflow-y: auto; }
+.hce-chat-sugerencias button { text-align: left; padding: 8px; min-height: 44px; border: 1px solid #cbd5ce; border-radius: 10px; background: #fff; color: #172320; font: inherit; font-size: .78rem; cursor: pointer; width: 100%; }
+.hce-chat-widget :is(button,input):focus-visible { outline: 3px solid #007c8a; outline-offset: 2px; }
+@media (max-width: 600px) { .hce-chat-widget--sobre-barra .hce-chat-window { max-height: calc(100dvh - 175px); } }
+@media (prefers-reduced-motion: reduce) { .hce-chat-widget * { scroll-behavior: auto !important; animation: none !important; } }

@@ -45,6 +45,7 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Facturacion = lazy(() => import('./pages/Facturacion'));
 const Gallery = lazy(() => import('./pages/Gallery'));
 const Comunidad = lazy(() => import('./pages/Comunidad'));
+const VerificarCertificado = lazy(() => import('./pages/VerificarCertificado'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 /* ------------------------------------------------------------------------ */
@@ -263,6 +264,9 @@ function App() {
               <Route path="/facturacion" element={<Facturacion />} />
               <Route path="/galeria" element={<Gallery />} />
               <Route path="/comunidad" element={<Comunidad />} />
+              {/* Pública, sin sesión: a esta página lleva el QR del certificado (noindex). */}
+              <Route path="/verificar" element={<VerificarCertificado />} />
+              <Route path="/verificar/:folio" element={<VerificarCertificado />} />
 
               {/* Comodín: va al final porque React Router evalúa en orden y
                   esta ruta coincide con todo lo que no encajó antes. */}

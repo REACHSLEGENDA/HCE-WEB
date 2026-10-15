@@ -1,3 +1,4 @@
+import { descargarCertificadoAlumno, rutaVerificacion } from '../lib/certificadoAlumno';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -733,13 +734,16 @@ const Classroom = () => {
         const reglas = (await cargarReglasCurso(cursoCargado.id).catch(() => null)) || REGLAS_BASE;
         const { data: certPrevio } = await supabase
           .from('certificates')
-          .select('id')
+          .select('id, user_id, course_id, folio, score, pdf_url, created_at')
           .eq('user_id', user.id)
           .eq('course_id', cursoCargado.id)
           .limit(1);
         const yaCertificado = !!certPrevio?.length;
         setReglasCurso(reglas);
         setTieneCertificado(yaCertificado);
+        setCertificadoEmitido(certPrevio?.[0] || null);
+        setGeneratedCertUrl(certPrevio?.[0]?.pdf_url || '');
+        if (certPrevio?.[0]?.score != null) setExamScore(Number(certPrevio[0].score));
 
         // Curso por generación: se abre cuando el alumno está en un grupo y
         // llega la fecha de inicio (acceso-por-grupo.sql).
@@ -1506,31 +1510,26 @@ const Classroom = () => {
     }
   };
 
+  const descargaCertificadoRef = useRef(false);
   const handleDownloadCertificate = async () => {
-    if (!course) return;
-    const filename = `Certificado_${course.title.replace(/\s+/g, '_')}.png`;
-    let url = generatedCertUrl;
-    // La imagen no se pudo subir al emitirlo: se intenta de nuevo ahora.
-    if (!url && certificadoEmitido) {
-      setIsGeneratingCert(true);
-      try {
-        const actualizado = await generarImagenCertificado({ certificado: certificadoEmitido, curso: course, nombre: nombreAlumno() });
+    if (descargaCertificadoRef.current) return;
+    descargaCertificadoRef.current = true;
+    setIsGeneratingCert(true);
+    try {
+      if (certificadoEmitido?.folio) {
+        const actualizado = await descargarCertificadoAlumno({ certificado: certificadoEmitido, curso: course, nombre: nombreAlumno() });
         setCertificadoEmitido(actualizado);
-        url = actualizado?.pdf_url || '';
-        setGeneratedCertUrl(url);
-      } catch (err) {
-        showAlert(`Tu certificado está emitido, pero no pudimos generar la imagen: ${err.message}. Intenta de nuevo en un momento.`, 'No se pudo descargar');
-        return;
-      } finally {
-        setIsGeneratingCert(false);
+        if (actualizado.pdf_url) setGeneratedCertUrl(actualizado.pdf_url);
+      } else if (generatedCertUrl) {
+        await descargarArchivo(generatedCertUrl, `Certificado_${course.id}.png`);
+      } else {
+        throw new Error('Primero completa el curso para emitir tu certificado.');
       }
-    }
-    if (url) {
-      try {
-        await descargarArchivo(url, filename);
-      } catch (err) {
-        showAlert(err.message || 'No se pudo descargar el certificado.', 'Descarga');
-      }
+    } catch (err) {
+      showAlert(err.message || 'No se pudo descargar el certificado. Intenta de nuevo.', 'Descarga');
+    } finally {
+      descargaCertificadoRef.current = false;
+      setIsGeneratingCert(false);
     }
   };
 
@@ -1796,7 +1795,11 @@ const Classroom = () => {
   };
 
   // Lo que toca al terminar la última lección: examen final o certificado.
-  const renderAccionFinal = (clase = '') => (sinExamenFinal ? (
+  const renderAccionFinal = (clase = '') => (certificadoEmitido?.folio ? (
+    <button type="button" className={`back-btn ${clase}`} onClick={handleDownloadCertificate} disabled={isGeneratingCert}>
+      <Award size={15} /> {isGeneratingCert ? 'Preparando PDF…' : 'Descargar PDF'}
+    </button>
+  ) : sinExamenFinal ? (
     tieneCertificado ? (
       <button type="button" className={`back-btn ${clase}`} onClick={() => irAlPortal('/dashboard?tab=certificates')}>
         <Award size={15} /> Ver mis certificados
@@ -2440,9 +2443,10 @@ const Classroom = () => {
                         onClick={handleDownloadCertificate}
                         disabled={isGeneratingCert}
                       >
-                        {isGeneratingCert ? 'Generando imagen…' : 'Descargar Certificado'}
+                        {isGeneratingCert ? 'Preparando PDF…' : 'Descargar PDF'}
                       </button>
                       
+                      {certificadoEmitido?.folio && <Link to={rutaVerificacion(certificadoEmitido.folio)} className="back-btn" target="_blank" rel="noreferrer">Verificar certificado</Link>}
                       <button onClick={() => navigate('/dashboard')} className="back-btn">
                         Volver al Dashboard
                       </button>

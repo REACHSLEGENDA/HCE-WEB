@@ -9,6 +9,93 @@ estaba en curso. Léelo completo antes de tocar código.
 > "Que la interfaz de la escuela sea mejor, no todo en una sola pantalla, súper
 > interactiva y fácil de usar para administradores y alumnos."
 
+## 0. EN CURSO (15 oct) — Claude con 5 agentes. Codex: NO editar estos archivos
+
+Pedido de Christian: certificado PDF con QR + verificación pública; campanita de
+avisos en el portal; perfil completo (foto, cédula, datos fiscales); aviso automático
+de errores; pruebas automáticas antes de publicar; dividir AdminDashboard.jsx; pulir
+la interfaz de alumno y admin; asistente (bot) que ayude en cada pantalla.
+Ya se instalaron jspdf, qrcode, vitest, jsdom, @testing-library/react.
+
+- Certificados: src/lib/certificados.js, src/pages/VerificarCertificado.*, App.jsx
+  (solo la ruta), netlify/functions/certificado-verificar.js, certificado-emitir.js.
+- Alumno: Dashboard.*, Classroom.*, InicioAlumno.*, NavegacionMovil.*, AuthContext,
+  componentes nuevos del alumno, netlify/functions/_notificaciones.js,
+  supabase/portal-alumno.sql.
+- Monitoreo y pruebas: ErrorBoundary.jsx, main.jsx, src/lib/reporteErrores.js,
+  netlify/functions/reportar-error.js, supabase/errores.sql, tests/, configuración
+  de vitest, scripts de package.json, src/components/admin/ErroresAdmin.jsx.
+- Admin: AdminDashboard.jsx/.css y src/pages/admin/* (división en módulos + pulido).
+- Asistente: ChatBot.jsx/.css, src/data/guiaUso.js, src/data/asistente*.js.
+- Además, en este momento: Comunicados, Mensajes, CalendarioAlumno, EvaluacionLeccion,
+  SesionEnVivo, LogrosAlumno, src/components/admin/*, src/lib/avisosPortal.js,
+  CampanitaAvisos.jsx y cualquier archivo nuevo que aparezca sin commit.
+
+### TAREA PARA CODEX (15 oct) — no choca con los agentes
+
+**Dirección visual nueva (pedida por el cliente):** la escuela debe verse limpia y
+pulida como https://zutech.mx/workshop-artrodesis-ensenada/ — ábrela y estúdiala. Se
+toma el estilo, NO sus colores (se usan los de HCE):
+fondo gris muy claro y cálido (#ECEEED aprox.), texto casi negro, mucho aire;
+secciones separadas por líneas finas; títulos grandes peso 800 con interletrado
+negativo; etiqueta pequeña en MAYÚSCULAS espaciadas con una rayita antes del título;
+Plus Jakarta Sans (títulos) + Inter/DM Sans (texto); botones píldora (uno oscuro
+sólido, los demás con contorno); tarjetas con esquinas grandes y casi sin sombra; un
+solo detalle de color vivo (degradado suave en el encabezado). El agente "Alumno" de
+Claude ya lo está aplicando al portal; tú haz la entrada a la escuela:
+
+1. **Login y recuperación de contraseña** con ese estilo: `src/pages/Login.jsx/.css`
+   y `src/pages/RestablecerPassword.jsx`. Sin cambiar la lógica de sesión (NO tocar
+   AuthContext). Errores claros en español ("Correo o contraseña incorrectos",
+   "Revisa tu correo"), mostrar/ocultar contraseña, estados de carga, 375px y
+   modo oscuro. Si cambias la fuente global, hazlo solo cargándola en `index.html`
+   (no toques los CSS de otros) y avísalo aquí.
+2. **Página 404** (`src/pages/NotFound.*`) con el mismo estilo y botones a Inicio y
+   a Mi portal.
+3. **Revisión de apen web** (`C:\Users\Christian Gonzalez\Desktop\apen web`, repo
+   aparte): que compile (`npm run build` y `npm run verify:static`), que todas las
+   páginas abran, que se vea bien en celular (375px) y SEO básico (títulos,
+   descripciones, OG, sitemap, robots). Corrige lo que encuentres y deja un
+   resumen corto al final de este documento.
+
+Reglas: no commit/push sin que Christian lo pida; `npm run lint` y `npm run build`
+deben pasar; no edites ningún archivo de la lista de arriba. Al terminar escribe
+aquí qué hiciste (archivos + qué ve el usuario).
+
+### SI CLAUDE SE QUEDA SIN CRÉDITOS — Codex termina la ronda
+
+Señal: Christian te dice "Claude se quedó sin créditos" o aquí abajo no aparece
+"RONDA 15 OCT CERRADA POR CLAUDE". En ese caso la lista "EN CURSO" queda liberada y
+tú cierras el trabajo así:
+
+1. **Inventario:** `git status` y `git diff --stat`. Los cambios sin commit son de los
+   5 agentes. Borra los arneses temporales (`arnes-*.html`, `src/arnes-*.jsx` y
+   cualquier archivo con "ARNÉS TEMPORAL").
+2. **Que compile y no truene:** `npm run lint`, `npm run build`, `npm run check:lms`,
+   `npm run check:alumni`, `node scripts/verificar-borradores.mjs` y, si existe,
+   `npm run test`. Arregla lo que falle con el cambio mínimo.
+3. **Revisar cada frente contra el pedido** (lo que falte, complétalo):
+   - Certificados: botón "Descargar PDF" con QR en Dashboard (pestaña Certificados) y
+     en el aula; `/verificar/:folio` abre sin sesión y muestra solo titular, curso,
+     fecha, vigencia y folio.
+   - Alumno: campanita con contador y "Marcar todo como leído"; perfil con foto,
+     cédula y datos fiscales (RFC, razón social, régimen, CP, uso de CFDI); estilo
+     limpio tipo Zutech en todas las pantallas; Dashboard escucha el evento `hce:ir`.
+   - Errores: `reportar-error.js` guarda y manda correo a admins; Admin → Sistema →
+     "Errores" lista los errores.
+   - Admin: AdminDashboard.jsx dividido en `src/pages/admin/*` sin cambiar el
+     comportamiento; todas las pestañas abren; escucha `hce:ir`.
+   - Asistente: el chat sabe en qué pantalla está, busca dudas y tiene "Llévame ahí".
+4. **Prueba visual** a 375px y escritorio, claro y oscuro, del portal del alumno,
+   el aula, el admin (todas las pestañas) y `/verificar/FOL-000000` (debe decir "no
+   encontrado" sin tronar). Revisa que la consola no tenga errores.
+5. **SQL para Christian** (sin correrlo tú): `supabase/portal-alumno.sql` y
+   `supabase/errores.sql`. Pásaselo con el paso "Supabase → SQL Editor → pegar todo
+   → Run". El código debe funcionar aunque aún no se corran.
+6. **Reporte corto a Christian** (sin muros de texto): qué quedó, qué SQL correr y qué
+   probar. Publica (commit + push) **solo cuando él diga "súbelo"**.
+7. Escribe aquí "RONDA 15 OCT CERRADA POR CODEX" y lo que hiciste.
+
 ## 2. ACTUALIZACIÓN 14 de octubre
 
 ### 14 oct, continuación de Codex tras el límite de Claude: Alumni Pass
@@ -339,3 +426,171 @@ Se eliminaron nuevamente los archivos temporales de QA. Las modificaciones
 siguen locales y pendientes de autorización para commit/push y publicación.
 Verificación final: lint y compilación correctos, las 12 pruebas de servidor y
 las 9 de borradores aprobadas, y revisión de espacios de Git sin errores.
+
+## 9. Resultado de TAREA PARA CODEX (15 oct de 2026)
+
+**Trabajo de Codex terminado en sus archivos; validación global HCE pendiente
+por un archivo del frente EN CURSO. Sin commit, push ni publicación.**
+
+### Entrada a la escuela
+
+Se abrió y estudió la referencia Zutech. Login, registro, recuperación y 404 usan
+ahora fondo gris cálido, tipografía de peso 800, líneas finas, espacio amplio,
+botones píldora oscuros/contorno y un degradado discreto con colores HCE.
+
+Archivos de HCE editados por Codex en esta tarea:
+- `src/pages/Login.jsx` y `src/pages/Login.css`: encabezado HCE con vuelta al sitio,
+  presentación de la escuela y formulario separado; mensajes en español para
+  credenciales incorrectas, red, límites de intentos y confirmación de correo;
+  etiquetas asociadas a campos, foco en avisos, mostrar/ocultar contraseñas con
+  teclado y lector de pantalla, bloqueo durante envío y guarda contra duplicados.
+  Se conservan firma/argumentos de login, registro y recuperación y los destinos
+  de alumno/admin, incluidos búsqueda de pago, lección y fragmento de URL.
+  El selector de lada es nativo y accesible. El mensaje de registro permanece al
+  volver a Iniciar sesión; los temporizadores se limpian al salir.
+- `src/pages/RestablecerPassword.jsx`: mismo acabado, comprobación del enlace,
+  estados de espera, errores legibles, contraseñas visibles/ocultas y confirmación
+  antes de volver al login. No se cambió AuthContext ni el método updateUser.
+- `src/pages/NotFound.jsx` y `src/pages/NotFound.css`: nueva 404 con Inicio,
+  Mi portal, Volver atrás, enlaces útiles y contacto.
+- `index.html`: solo se agregó la carga de Plus Jakarta Sans (600/700/800).
+  Los estilos usan esa fuente en títulos y las fuentes Inter/DM Sans existentes
+  en el texto. No se modificó la fuente global ni CSS de otros componentes.
+
+Verificación HCE:
+- `npm run lint`: correcto al cierre.
+- `npm run check:lms`: 12 regresiones aprobadas.
+- `npm run check:ui`: 9 regresiones de borradores aprobadas.
+- Arnés propio fuera del repositorio: 7 grupos aprobados con los componentes
+  reales y sesión/red simuladas. Incluyó 20 capturas: login, registro,
+  recuperación, reset y 404 a 375/1280 px en claro/oscuro; doble envío, errores,
+  argumentos del registro, redirecciones, recuperación, enlace vencido,
+  contraseña distinta, éxito simulado, horizontal, texto al 125% y movimiento
+  reducido. Sin errores de consola ni desbordamiento horizontal.
+- **Bloqueo ajeno a estos cambios:** `npm run build` se ejecutó dos veces y falla
+  porque `src/components/PerfilAlumno.jsx` importa `./PerfilAlumno.css`, que aún
+  no existe. PerfilAlumno pertenece al frente EN CURSO. Codex respetó la orden
+  directa de Christian y no creó/modificó ese archivo ni otros de esa lista.
+  Claude debe completar ese CSS y volver a ejecutar la compilación completa.
+- `git diff --check` de los archivos de Codex: correcto. No se borraron ni
+  editaron arneses, pruebas o archivos nuevos de los otros agentes.
+
+### Revisión de APEN (repositorio aparte)
+
+Ruta: `C:\Users\Christian Gonzalez\Desktop\apen web`.
+Se comprobó la compilación antes y después de corregir y se ejecutó
+`npm run verify:static`: ambos correctos (incluye tipos/lint de Next, catálogo
+con 125 servicios, navegación, temas y 50 verificaciones del asistente).
+La compilación conserva avisos previos sobre etiquetas img y Browserslist.
+
+Se abrieron las 183 páginas del sitemap: todas respondieron 200 con título,
+descripción, h1 y metadatos. Se revisaron los enlaces internos y assets locales
+referenciados: sin rotos. Sitemap y robots responden 200 y robots anuncia sitemap.
+La URL inexistente responde 404. Revisión real del navegador a 375 px en páginas
+principales y muestras de las plantillas de servicio/artículo: sin desbordamiento
+ni errores de JavaScript; se inspeccionaron capturas de inicio, sector eléctrico
+y contacto.
+
+Correcciones únicamente en:
+- `src/app/politica-de-privacidad/page.tsx`.
+- `src/app/terminos-y-condiciones/page.tsx`.
+Ambas heredaban el canonical del inicio y no tenían imagen Open Graph. Ahora
+cada una declara su propia URL canónica, imagen OG y tarjeta Twitter con título,
+descripción e imagen. Segunda auditoría de las 183 páginas: cero hallazgos de
+los checks de SEO y cero enlaces rotos. No se enviaron formularios reales.
+No se alteró el directorio `output/` que ya existía sin seguimiento.
+
+Evidencias locales: carpeta
+`C:\Users\Christian Gonzalez\.codex\visualizations\2026\10\02\01a0fa79-0931-72f2-9bb8-a69d9177e7d5\escuela-15oct`.
+Incluye capturas HCE/APEN y `apen-auditoria.json` / `apen-visual.json`.
+Los HTML/JSX del arnés de Codex se eliminaron de la carpeta temporal al terminar.
+No se usaron cuentas reales para iniciar sesión, enviar recuperación ni cambiar
+contraseñas. Ningún cambio de esta tarea se publicó.
+
+## 10. RONDA 15 OCT CERRADA POR CODEX
+
+Christian autorizó continuar la sección «SI CLAUDE SE QUEDA SIN CRÉDITOS».
+Se completaron los frentes liberados de EN CURSO. El bloqueo de compilación de
+la sección 9 quedó resuelto. **Sin commit, push, publicación ni SQL en producción.**
+
+### Trabajo terminado
+
+- **Certificados:** Dashboard y aula descargan PDF con QR; el aula recupera también
+  los certificados ya emitidos, sin pedir volver a presentar el examen. Se conserva
+  la imagen PNG. `/verificar/:folio` es pública, noindex y devuelve únicamente
+  titular, curso, emisión, vigencia y folio. No expone correo, RFC ni calificación.
+- **Alumno:** se completó `PerfilAlumno.css`, el perfil personal/profesional/fiscal
+  y la foto. Guarda contra doble envío, validaciones, cambios pendientes y aviso
+  claro si aún faltan columnas. Campanita con contador, marcar todo, recuperación
+  del estado si falla la escritura y avisos calculados cuando todavía no existe
+  `notificaciones_portal`.
+- **Admin:** `AdminDashboard.jsx` quedó como coordinador de estado/operaciones;
+  19 vistas están en `src/pages/admin/Vista*.jsx` y las utilidades compartidas se
+  importan de `utilidades.js`. Mensajes conserva su componente independiente.
+  Las 20 pestañas del menú abren, incluida Sistema → Errores. Se preservaron las
+  operaciones del editor y los avisos de cambios sin guardar.
+- **Errores:** reporte desde ErrorBoundary/errores globales, agrupación por huella,
+  límite de tasa, correo a admins y listado/resolución en administración. Se
+  verificaron el envío simulado, HTML escapado, usuario obtenido del token y
+  manejo de fallos de base/correo. Sin SQL, queda en logs y usa avisos limitados.
+- **Asistente:** conectado al motor de búsqueda y flujos existentes, identifica
+  pantalla/pestaña/rol, responde preguntas, ofrece sugerencias y «Llévame ahí».
+  Dashboard y Admin escuchan `hce:ir`, conservando sus guardas de salida. Se
+  corrigieron dos búsquedas que fallaban y la clave de navegación al portal.
+- **Interfaz:** acabado HCE limpio en alumno, aula y admin, claro/oscuro; tarjetas
+  y encabezados coherentes, certificados legibles, botones adaptables y selector
+  de tema sin recortes en celular. Verificación pública también admite oscuro.
+- **Antes de publicar:** `npm run verificar` reúne lint, pruebas y compilación;
+  `netlify.toml` usa ese comando. Vitest reemplaza red/servicios y elimina las
+  llaves del servidor del entorno de pruebas, también al ejecutarse en Netlify.
+  Instrucciones de mantenimiento en `tests/LEEME.md`.
+
+### Verificación realizada
+
+- `npm run verificar`: aprobado. Lint sin errores; Vitest **33/33**, LMS **12/12**,
+  Alumni **18/18**, borradores **9/9**, asistente **39/39** y build correcto.
+  Tras aislar las variables del servidor se repitió Vitest: **33/33**.
+  La compilación conserva avisos de Browserslist y tamaño del vendor.
+- Chrome con datos ficticios: **132 capturas** a 375/1280 px, claro/oscuro,
+  11 pestañas del alumno, aula, 20 pestañas admin y `/verificar/FOL-000000`.
+  Sin errores de consola/renderizado ni desbordamiento horizontal. Se comprobaron
+  marcar avisos, guardar perfil y navegación del asistente a Certificados.
+- Descarga PDF real desde Certificados y desde el aula; también regeneración
+  desde una plantilla sin imagen guardada. Se comprobó una página, nombre,
+  imagen, QR y enlace público. El QR extraído del PDF y el de la página renderizada
+  se decodificaron a `https://healthcareexp.com/verificar/FOL-123456`.
+- Ambos SQL se ejecutaron **solo en PostgreSQL en memoria**, dos veces: correctos
+  e idempotentes. Verificados permisos por alumno/admin, actualización limitada
+  a leído, RPC exclusivo del servidor, contador, reapertura y límite por IP.
+  Se agregaron permisos explícitos de tablas/secuencias para `service_role`.
+- Se retiraron los cuatro arneses temporales de Claude. Los propios HTML/JSX de
+  QA se crearon fuera del repositorio y se eliminaron al terminar. Se conservaron
+  las pruebas reales. `git diff --check` correcto.
+
+Evidencias: `C:\Users\Christian Gonzalez\.codex\visualizations\2026\10\02\01a0fa79-0931-72f2-9bb8-a69d9177e7d5\ronda15`
+(capturas, `qa.json`, `sql-local.json`, `qr-lectura.json` y PDFs ficticios de QA).
+No se enviaron correos, pagos, formularios ni archivos a servicios reales.
+
+### Pendiente para Christian
+
+Ejecutar cada archivo completo, por separado:
+
+1. `supabase/portal-alumno.sql`.
+2. `supabase/errores.sql`.
+
+Paso: **Supabase → SQL Editor → pegar todo → Run**. Codex no los aplicó.
+Antes de eso el portal funciona con los fallbacks descritos; los campos nuevos
+del perfil y el historial persistente requieren esas migraciones.
+
+Al revisar: subir foto/guardar cédula y facturación, marcar avisos, descargar PDF
+desde portal/aula y abrir su QR sin sesión; probar el asistente y Sistema → Errores.
+La recepción real de correo y los servicios se comprobarán tras publicar.
+Los pendientes externos de la sección 6 conservan su estado. Publicar únicamente
+cuando Christian autorice commit y push.
+
+### Autorización de publicación (15 oct)
+
+Christian indicó «sube ya corrí supabase»: confirma que ejecutó los SQL y autoriza
+commit y push de la ronda completa a `main`. Se vuelven a ejecutar las verificaciones
+antes de subir. La aplicación de esos SQL fue realizada por Christian; Codex no
+volvió a ejecutar migraciones en producción.

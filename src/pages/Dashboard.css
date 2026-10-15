@@ -2633,6 +2633,26 @@
 .cert-vigencia--ok { color: var(--accent-green); }
 .cert-vigencia--pronto { color: #d97706; }
 .cert-vigencia--vencido { color: var(--accent-orange); }
+.crm-layout .pa-etiqueta { display: block; margin-bottom: 10px; color: var(--text-muted); font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; overflow-wrap: anywhere; }
+.crm-layout .pa-alerta { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 18px; margin: 18px 0; border: 1px solid var(--border-color); border-left: 3px solid #d97706; border-radius: 12px; background: var(--bg-main); }
+.crm-layout .pa-alerta > span { flex: 1 1 180px; }
+.crm-layout .pa-cargando { padding: 28px 0; color: var(--text-muted); }
+.crm-layout .pa-enlace { padding: 6px; background: none; border: 0; color: var(--primary-cyan); text-decoration: underline; cursor: pointer; font: inherit; }
+.crm-layout .pa-acciones-centro { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.crm-layout .cert-lista { display: grid; gap: 18px; list-style: none; margin: 24px 0; padding: 0; }
+.crm-layout .cert-tarjeta { display: flex; gap: 20px; padding: 28px; border: 1px solid var(--border-color); border-radius: 16px; background: var(--bg-main); min-width: 0; }
+.crm-layout .cert-icono { display: grid; place-items: center; flex: 0 0 48px; width: 48px; height: 48px; border: 1px solid var(--border-color); border-radius: 50%; color: var(--primary-cyan); }
+.crm-layout .cert-cuerpo { min-width: 0; flex: 1; }
+.crm-layout .cert-cuerpo h3 { margin: 0 0 14px; overflow-wrap: anywhere; }
+.crm-layout .cert-datos { display: flex; flex-wrap: wrap; gap: 10px 24px; list-style: none; padding: 0; margin: 0 0 22px; font-size: .84rem; color: var(--text-muted); }
+.crm-layout .cert-acciones { display: flex; flex-wrap: wrap; gap: 10px; }
+.crm-layout .cert-acciones .btn-crm-action { white-space: normal; text-align: center; justify-content: center; text-decoration: none; min-height: 44px; }
+.crm-layout .cert-webinars { margin-top: 36px; }
+@media (max-width: 600px) {
+  .crm-layout .cert-tarjeta { padding: 20px 16px; gap: 14px; flex-direction: column; }
+  .crm-layout .cert-acciones { flex-direction: column; align-items: stretch; }
+  .crm-layout .cert-datos { flex-direction: column; gap: 8px; }
+}
 .cert-recertificar { display: block; margin-top: 3px; font-size: 0.74rem; font-weight: 700; color: var(--primary-cyan); }
 
 /* Cuenta nueva sin acceso a los cursos todavía. */
@@ -2894,3 +2914,34 @@
   border: 1px dashed var(--border-color); cursor: default;
 }
 .crm-layout .curso-tarjeta--bloqueada:hover .exp-link-action { background: var(--bg-gray); color: var(--text-muted); transform: none; }
+/* Escuela HCE — dirección editorial del 15 de octubre. Solo el portal. */
+.crm-layout {
+  --bg-main: #f8f9f7; --bg-gray: #eceeed; --bg-sidebar: #f4f6f3;
+  --bg-active-item: #deeeea; --text-dark: #172320; --text-muted: #52635c;
+  --border-color: #cbd5ce; --primary-cyan: #006f80; --primary-cyan-hover: #005563;
+  --radius-card: 24px; --shadow-card: none; --shadow-hover: none;
+  font-family: 'Inter', 'DM Sans', sans-serif; background: var(--bg-gray);
+}
+.crm-layout[data-theme='dark'] {
+  --bg-main: #1b2723; --bg-gray: #141e1a; --bg-sidebar: #18231f;
+  --bg-active-item: #263d34; --text-dark: #edf3ec; --text-muted: #adbbb2;
+  --border-color: #3c4e43; --primary-cyan: #74d2d4; --primary-cyan-hover: #a3eaeb;
+  --shadow-card: none; --shadow-hover: none; color-scheme: dark;
+}
+.crm-layout :is(h1,h2,h3,h4) { font-family: 'Plus Jakarta Sans','Inter',sans-serif; font-weight: 800; letter-spacing: -.035em; }
+.crm-layout[data-theme] :is(.settings-card,.kpi-card,.course-card,.crm-course-card,.crm-empty-state-card,.activity-feed,.exp-premium-card) { border: 1px solid var(--border-color); border-radius: 24px; box-shadow: none; background: var(--bg-main); }
+.crm-layout .welcome-banner-card { background: linear-gradient(115deg,#00bcd410,transparent 65%,#ff8a0012),var(--bg-main) !important; border: 1px solid var(--border-color); box-shadow: none; border-radius: 24px; }
+.crm-layout :is(.btn-crm-action,.crm-btn-primary,.crm-btn-secondary) { border-radius: 100px; min-height: 44px; box-shadow: none; }
+.crm-layout :is(.btn-crm-action.solid,.crm-btn-primary) { background: var(--text-dark); color: var(--bg-main); border-color: var(--text-dark); }
+.crm-layout :is(.btn-crm-action.outlined,.crm-btn-secondary) { background: transparent; color: var(--text-dark); border: 1px solid var(--border-color); }
+.crm-layout :is(button,a,input,select,textarea):focus-visible { outline: 3px solid var(--primary-cyan); outline-offset: 3px; }
+.crm-layout[data-theme='dark'] :is(input,select,textarea) { background: var(--bg-gray); color: var(--text-dark); border-color: var(--border-color); }
+.crm-layout[data-theme='dark'] input::placeholder { color: var(--text-muted); }
+.crm-layout .crm-top-header { box-shadow: none; border-bottom: 1px solid var(--border-color); background: var(--bg-main); }
+.crm-layout .pa-titulo { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 28px; }
+.crm-layout .pa-titulo .pa-etiqueta { display: inline-flex; align-items: center; gap: 10px; margin: 0; }
+.crm-layout .pa-titulo .pa-etiqueta::before { content: ''; width: 24px; height: 1px; background: currentColor; }
+.crm-layout .pa-titulo h2 { margin: 0; font-size: clamp(1.6rem, 3vw, 2rem); }
+.crm-layout .pa-titulo p { max-width: 70ch; margin: 0; line-height: 1.7; }
+.crm-layout .theme-selector-row { flex-wrap: wrap; }
+.crm-layout .theme-option-btn { justify-content: center; min-height: 44px; flex: 1 1 100px; }
