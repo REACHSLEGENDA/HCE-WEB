@@ -47,6 +47,19 @@ export function promoAutomatica(programa, ahora = new Date()) {
   ) || null;
 }
 
+/**
+ * Promoción automática del programa que termina dentro de `horas` (para el
+ * correo "el precio especial termina pronto"). Devuelve { etiqueta, termina }.
+ */
+export function promoPorTerminar(programa, ahora = new Date(), horas = 48) {
+  const promo = promoAutomatica(programa, ahora);
+  if (!promo) return null;
+  const termina = new Date(VIGENCIAS[promo.vigencia][1]);
+  return termina.getTime() - ahora.getTime() <= horas * 3600 * 1000
+    ? { etiqueta: promo.etiqueta, termina }
+    : null;
+}
+
 function promoValida(promoCode, programa, ahora) {
   if (!promoCode) return null;
 

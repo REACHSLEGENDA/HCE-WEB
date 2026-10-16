@@ -77,7 +77,18 @@ export default function Facturacion() {
     keywords: 'facturación electrónica, facturación HCE, CFDI 4.0, solicitar factura, recibo médico'
   });
 
-  const [form, setForm] = useState(INITIAL);
+  // Desde el recibo de pago llegan concepto, monto y folio ya puestos.
+  const [form, setForm] = useState(() => {
+    const q = new URLSearchParams(window.location.search);
+    const folio = q.get('folio');
+    return {
+      ...INITIAL,
+      concepto: q.get('concepto') || '',
+      monto: q.get('monto') || '',
+      metodo_pago: q.get('folio') ? 'Tarjeta de Crédito / Débito' : '',
+      notas: folio ? `Folio de pago: ${folio}` : '',
+    };
+  });
   const [files, setFiles] = useState([]);
   const [constanciaFile, setConstanciaFile] = useState(null);
   const [errors, setErrors] = useState({});

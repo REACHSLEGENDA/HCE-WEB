@@ -135,6 +135,7 @@ export const handler = async (event) => {
         }
       },
       metadata: {
+        programa: 'nursing', // lo usa cobros-seguimiento (recibo y carrito abandonado)
         curso: 'ECMO Nursing Care Course',
         perfil: activeProfileLabel,
         extras: validExtras.join(', '),
@@ -146,6 +147,7 @@ export const handler = async (event) => {
       },
       payment_intent_data: {
         metadata: {
+          programa: 'nursing', // lo usa cobros-seguimiento (recibo y carrito abandonado)
           curso: 'ECMO Nursing Care Course',
           perfil: activeProfileLabel,
           extras: validExtras.join(', '),

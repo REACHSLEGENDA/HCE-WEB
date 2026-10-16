@@ -26,7 +26,11 @@ const Radio = ({ name, value, label, checked, onChange }) => (
 );
 
 const Retroalimentacion = () => {
-  const [form, setForm] = useState(initialState);
+  // El correo de "¿cómo te fue?" trae el nombre del curso.
+  const [form, setForm] = useState(() => ({
+    ...initialState,
+    taller: new URLSearchParams(window.location.search).get('taller') || '',
+  }));
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));

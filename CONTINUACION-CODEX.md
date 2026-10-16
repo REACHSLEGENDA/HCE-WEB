@@ -606,3 +606,39 @@ grises/verdes oscuros. Claro: fondo #eef3f8, tarjetas blancas, texto azul marino
 inicio del alumno y del admin. Archivos: Dashboard.css, AdminDashboard.css,
 Classroom.css, ChatBot.css, NotFound.css, VerificarCertificado.css, Login.css,
 PerfilAlumno.css. `npm run verificar` correcto (Vitest 33/33, Alumni 18/18, build).
+
+## 12. Avisos a academia + borrador de SEO (15 oct, noche) — Claude
+
+- **academia@healthcareexp.com** recibe siempre los avisos del equipo:
+  `netlify/functions/_admins.js` (`correosAvisoAdmin`, `CORREO_ACADEMIA`) usado en
+  alumni-pass, _alumni-pass, reportar-error, portal-register y en
+  `_notificaciones.js` (destinatario "admins"; su registro va con user_id null).
+  Sin publicar todavía.
+- **SEO: Christian pidió primero una PROPUESTA.** El borrador completo (guías,
+  páginas con etiquetas propias, imágenes OG, robots/llms, sin precios) está
+  guardado en `git stash` con el nombre "propuesta-seo-15oct". NO aplicarlo ni
+  publicarlo hasta que Christian apruebe la propuesta (`git stash list`, luego
+  `git stash apply` con ese nombre). Nada de precios en datos estructurados.
+
+## 13. Correos de pagos, clases y aula (15 oct, noche) — Claude, SIN publicar aún
+
+SQL nuevo: `supabase/correos-mejoras.sql` (avisos nuevos + tabla `cobros_avisos`).
+El código no manda nada de esto hasta que se corra (degrada solo).
+
+- **cobros-seguimiento.js** (cada hora, min 15): lee Stripe directo (ambas
+  cuentas, sin webhook ni automatización de Brevo). Recibo de pago con folio
+  `HCE-xxxxxxxx` y botón "Solicitar factura" (prellena concepto/monto/folio en
+  /facturacion, sin datos personales en la URL); carrito abandonado (1 h, una vez
+  por persona+programa cada 7 días); pago rechazado (last_payment_error); fin de
+  precio especial (`promoPorTerminar` en _promos.js, 48 h antes); resumen al
+  equipo (admins + academia@). Solo cobros con `metadata.programa` (agregado a
+  create-*-checkout y curso-inscripcion). Prueba: tests/cobros-seguimiento.test.js.
+- **Aula** (editables en Admin → Notificaciones): `sesion_recordatorio_dia` (con
+  "Agregar a mi calendario", `enlaceCalendario` en _sesiones.js; también se agrega
+  al registro de sesión), `comentario_respondido` (respuestas en el aula),
+  en notificaciones-programadas.js; `avance_semanal` (lunes), `curso_casi` (≥80%,
+  5–60 días sin entrar) y `encuesta_curso` (1 día después del certificado →
+  /retroalimentacion?taller=…) en **avisos-alumnos.js** (cada hora, min 35, por
+  tandas de 40). Campanita: casos nuevos en `avisoPortal`.
+- Las listas de carrito de Brevo (#9, #10, #11) siguen recibiendo contactos pero
+  no tienen automatización; el carrito real ahora es cobros-seguimiento.

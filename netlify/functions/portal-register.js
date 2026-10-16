@@ -1,6 +1,7 @@
 import { LISTS, isConfigured, buildAttributes, upsertContact, addToList, enviarCorreo } from './_brevo.js';
 import { admin, isConfigured as supabaseListo } from './_supabase.js';
 import { notificar } from './_notificaciones.js';
+import { CORREO_ACADEMIA, correosExtra } from './_admins.js';
 
 // Alta en el Portal Académico. Se llama desde AuthContext.signUp, justo después
 // de que Supabase crea la cuenta. Entrar a la lista dispara en Brevo el correo
@@ -28,8 +29,7 @@ async function cuentaPendienteNueva(email) {
 }
 
 async function avisarAdministradores(email) {
-  const para = (process.env.AVISO_REGISTROS_PARA || '').split(',').map((c) => c.trim()).filter(Boolean);
-  if (!para.length) return;
+  const para = [...new Set([...correosExtra(), CORREO_ACADEMIA])];
 
   // El perfil lo crea Supabase al registrarse; se le da un momento.
   let cuenta = await cuentaPendienteNueva(email);

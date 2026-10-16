@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { traerTodo } from '../netlify/functions/_consultas.js';
-import { ventana, partirNombre } from '../netlify/functions/_sesiones.js';
+import { ventana, partirNombre, enlaceCalendario } from '../netlify/functions/_sesiones.js';
 
 function base() {
   return { usuario: { id: 'alumno' }, habilitada: true, vigente: true, tablas: {
@@ -88,7 +88,7 @@ async function handler(nombre,s) {
       registrarAccionAdmin:async()=>{}, json:(statusCode,body)=>({statusCode,body:JSON.stringify(body)}), },
     './_notificaciones.js': {notificar:async()=>({enviadas:0})},
     './_zoom.js': {isConfigured:()=>false,agregarRegistrante:async()=>({}),obtenerReunion:async()=>({}),configurarRegistroPortal:async()=>({})},
-    './_sesiones.js': {ventana,partirNombre,fechaMexico:()=> 'Fecha QA',sincronizar:async()=>({corrio:false}),cargarSesion:async()=>s.datosSesion},
+    './_sesiones.js': {ventana,partirNombre,enlaceCalendario,fechaMexico:()=> 'Fecha QA',sincronizar:async()=>({corrio:false}),cargarSesion:async()=>s.datosSesion},
     './_consultas.js': {traerTodo, comprobar:async q=>{const r=await q;if(r.error)throw new Error(r.error.message);return r.data;}},
   };
   const code=await fs.readFile(new URL(`../netlify/functions/${nombre}.js`,import.meta.url),'utf8');

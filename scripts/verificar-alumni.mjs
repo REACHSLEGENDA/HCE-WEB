@@ -103,7 +103,7 @@ async function entorno(s) {
     const mod = new vm.SourceTextModule(await fs.readFile(new URL('../netlify/functions/'+archivo, import.meta.url), 'utf8'), { context });
     cache.set(archivo,mod);
     await mod.link(async spec => {
-      if (['./_alumni-pass.js','./_alumni-registros.js'].includes(spec)) return cargar(spec.slice(2));
+      if (['./_alumni-pass.js','./_alumni-registros.js','./_admins.js'].includes(spec)) return cargar(spec.slice(2));
       if (!mocks[spec]) throw Error('Falta mock: '+spec);
       const valores = mocks[spec];
       return new vm.SyntheticModule(Object.keys(valores), function() { for (const [k,v] of Object.entries(valores)) this.setExport(k,v); }, { context });

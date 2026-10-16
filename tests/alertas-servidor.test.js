@@ -32,7 +32,7 @@ describe('Alertas de errores con servidor y correo simulados', () => {
     expect(falso.rpc.mock.calls[0][1]).toMatchObject({ p_user_id: 'usuario-verificado', p_ruta: '/classroom/:id' });
     expect(falso.rpc.mock.calls[0][1].p_ip_hash).not.toBe('prueba-local');
     expect(falso.enviar).toHaveBeenCalledOnce();
-    expect(falso.enviar.mock.calls[0][0]).toMatchObject({ para: ['admin@prueba.test'] });
+    expect(falso.enviar.mock.calls[0][0]).toMatchObject({ para: ['admin@prueba.test', 'academia@healthcareexp.com'] });
     expect(falso.enviar.mock.calls[0][0].html).toContain('&lt;img');
     expect(falso.enviar.mock.calls[0][0].html).not.toContain('<img');
   });

@@ -106,6 +106,7 @@ export const handler = async (event) => {
       cancel_url:  `${origin}/simulador-ecmo-sim?status=cancel`,
       locale: 'es-419',
       metadata: {
+        programa: 'sim', // lo usa cobros-seguimiento (recibo y carrito abandonado)
         plan: planId,
         email,
         moneda: currency,

@@ -18,7 +18,7 @@
 
 import { admin, usuarioDesdeToken, adminDesdeToken, cuentaHabilitada, accesoVigente, registrarAccionAdmin, json, isConfigured as supabaseListo } from './_supabase.js';
 import { agregarRegistrante, obtenerReunion, configurarRegistroPortal, isConfigured as zoomListo } from './_zoom.js';
-import { ventana, partirNombre, cargarSesion, sincronizar, fechaMexico } from './_sesiones.js';
+import { ventana, partirNombre, cargarSesion, sincronizar, fechaMexico, enlaceCalendario } from './_sesiones.js';
 import { notificar } from './_notificaciones.js';
 
 export const handler = async (event) => {
@@ -228,7 +228,14 @@ export const handler = async (event) => {
         userId: user.id,
         courseId: leccion.course_id,
         clave: `sesion-registro:${leccion.id}`,
-        variables: { sesion: leccion.titulo, fecha: fechaMexico(sesion.inicia_en) },
+        variables: {
+          sesion: leccion.titulo,
+          fecha: fechaMexico(sesion.inicia_en),
+          calendario: enlaceCalendario({
+            titulo: leccion.titulo, inicia_en: sesion.inicia_en, duracion_min: sesion.duracion_min,
+            aula: `https://healthcareexp.com/classroom/${leccion.course_id}?leccion=${leccion.id}`,
+          }),
+        },
       });
       return json(200, estadoActual(nuevo));
     }

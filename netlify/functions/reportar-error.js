@@ -17,6 +17,7 @@ import { createHash, createHmac } from 'node:crypto';
 import { admin, isConfigured as supabaseListo, usuarioDesdeToken, esEsquemaFaltante, json } from './_supabase.js';
 import { enviarCorreo, isConfigured as brevoListo } from './_brevo.js';
 import { plantillaHce } from './_notificaciones.js';
+import { correosAvisoAdmin } from './_admins.js';
 
 const MAX_CUERPO = 16 * 1024;
 const LIMITE_IP_MEMORIA = 20; // reportes por IP cada 10 minutos (por instancia)
@@ -119,21 +120,7 @@ function ipDe(headers = {}) {
 const hashIp = (ip) => createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY || 'hce-errores')
   .update(ip).digest('hex').slice(0, 32);
 
-async function correosAdmins(db) {
-  const extra = String(process.env.AVISO_ERRORES_PARA || process.env.AVISO_REGISTROS_PARA || '')
-    .split(',').map((c) => c.trim()).filter(Boolean);
-  let correos = [];
-  if (db) {
-    try {
-      const { data, error } = await db.from('profiles').select('email').eq('rol', 'admin').eq('activo', true);
-      if (error) console.error('reportar-error: no se pudo leer la lista de admins:', error.message);
-      correos = (data || []).map((x) => x.email).filter(Boolean);
-    } catch (error) {
-      console.error('reportar-error: no se pudo leer la lista de admins:', error.message);
-    }
-  }
-  return [...new Set([...correos, ...extra])];
-}
+const correosAdmins = (db) => correosAvisoAdmin(db, { variable: process.env.AVISO_ERRORES_PARA ? 'AVISO_ERRORES_PARA' : 'AVISO_REGISTROS_PARA' });
 
 async function avisarAdmins(db, reporte, { veces = 1, reabierto = false } = {}) {
   if (!brevoListo()) return false;

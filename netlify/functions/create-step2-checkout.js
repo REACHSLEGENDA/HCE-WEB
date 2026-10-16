@@ -92,6 +92,7 @@ export const handler = async (event) => {
         submit: { message: LEGAL_TEXT },
       },
       metadata: {
+        programa: 'step2', // lo usa cobros-seguimiento (recibo y carrito abandonado)
         perfil,
         extras: '',
         moneda: currency,

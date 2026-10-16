@@ -26,6 +26,7 @@ import { plantillaHce } from './_notificaciones.js';
 import { confirmarAlumniDesdeSesion, PRECIOS_ALUMNI, GRABACIONES_ALUMNI, importeAlumni, totalAlumni } from './_alumni-pass.js';
 import { sincronizarRegistrosAlumni } from './_alumni-registros.js';
 import { EDICIONES_ALUMNI } from '../../src/data/alumniPass.js';
+import { correosAvisoAdmin } from './_admins.js';
 
 const SITIO = 'https://healthcareexp.com';
 const PAGINA = `${SITIO}/alumni-pass-step1`;
@@ -61,12 +62,7 @@ async function correo(para, asunto, contenido, boton) {
   }
 }
 
-async function correosAdmins(db) {
-  const extra = String(process.env.AVISO_REGISTROS_PARA || '').split(',').map((c) => c.trim()).filter(Boolean);
-  const { data, error } = await db.from('profiles').select('email').eq('rol', 'admin').eq('activo', true);
-  if (error) throw new Error(error.message);
-  return [...new Set([...(data || []).map((x) => x.email).filter(Boolean), ...extra])];
-}
+const correosAdmins = (db) => correosAvisoAdmin(db);
 
 async function lugaresPresenciales(db) {
   const desde = new Date(Date.now() - APARTADO_MIN * 60 * 1000).toISOString();

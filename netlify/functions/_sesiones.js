@@ -19,6 +19,26 @@ export function fechaMexico(iso) {
   }) + ' (hora del centro de México)';
 }
 
+/**
+ * Enlace "Agregar a Google Calendar" de una sesión (para los correos). No
+ * lleva el enlace de Zoom: se entra siempre desde el aula.
+ */
+export function enlaceCalendario({ titulo, inicia_en, duracion_min = 60, curso = '', aula = '' }) {
+  const inicio = new Date(inicia_en);
+  if (Number.isNaN(inicio.getTime())) return '';
+  const fin = new Date(inicio.getTime() + (duracion_min || 60) * 60000);
+  const utc = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const detalles = [curso && `Curso: ${curso}`, aula && `Entra desde tu aula con el botón "Unirse": ${aula}`].filter(Boolean).join('\n');
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `${titulo || 'Sesión en vivo'} · HCE`,
+    dates: `${utc(inicio)}/${utc(fin)}`,
+    details: detalles,
+    ctz: 'America/Mexico_City',
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 export function ventana(sesion) {
   const inicio = new Date(sesion.inicia_en).getTime();
   const fin = inicio + (sesion.duracion_min || 60) * 60000;

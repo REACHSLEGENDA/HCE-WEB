@@ -131,6 +131,7 @@ export const handler = async (event) => {
         }
       },
       metadata: {
+        programa: 'step1', // lo usa cobros-seguimiento (recibo y carrito abandonado)
         perfil,
         extras: validExtras.join(','),
         moneda: currency,

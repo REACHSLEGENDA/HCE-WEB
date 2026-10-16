@@ -5,6 +5,7 @@
 // adelante y el fallo queda en el historial.
 
 import { enviarCorreo, isConfigured as brevoListo } from './_brevo.js';
+import { CORREO_ACADEMIA } from './_admins.js';
 
 export const EVENTOS = {
   registro_nuevo: 'Registro nuevo en el portal',
@@ -17,6 +18,11 @@ export const EVENTOS = {
   curso_completado: 'Terminó un curso (certificado emitido)',
   mensaje_nuevo: 'Recibió un mensaje en el portal',
   curso_abierto: 'Su curso por generación se abrió (inició su grupo)',
+  sesion_recordatorio_dia: '1 día antes de una sesión en vivo',
+  comentario_respondido: 'Respondieron su pregunta en el aula',
+  avance_semanal: 'Resumen semanal de su avance (lunes)',
+  curso_casi: 'Va en 80% o más y lleva días sin entrar',
+  encuesta_curso: 'Encuesta un día después de terminar un curso',
 };
 
 const PORTAL = 'https://healthcareexp.com';
@@ -70,6 +76,13 @@ export function plantillaHce(contenido, { boton, enlace } = {}) {
 </body></html>`;
 }
 
+// Los enlaces largos (calendario, encuesta) se muestran con un texto corto.
+function textoEnlace(url) {
+  if (url.includes('calendar.google.com')) return '📅 Agregar a mi calendario';
+  if (url.includes('/retroalimentacion')) return 'Contestar la encuesta';
+  return url.length > 70 ? 'Abrir enlace' : url;
+}
+
 /**
  * El texto del admin (con saltos de línea) en el diseño de HCE. Si lleva
  * botón, se quita el renglón que solo repetía su enlace.
@@ -81,7 +94,7 @@ export function aHtml(texto, { boton, enlace } = {}) {
     .split(/\n{2,}/)
     .filter((p) => p.trim())
     .map((p, i) => `<p style="margin:0 0 16px;line-height:1.7;color:${i === 0 ? '#1e293b;font-size:16px' : '#475569;font-size:15px'};">${p.replace(/\n/g, '<br>')
-      .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#0ea5e9;text-decoration:underline;font-weight:600;">$1</a>')}</p>`)
+      .replace(/(https?:\/\/[^\s<]+)/g, (url) => `<a href="${url}" style="color:#0ea5e9;text-decoration:underline;font-weight:600;">${textoEnlace(url)}</a>`)}</p>`)
     .join('');
   return plantillaHce(parrafos, { boton, enlace });
 }
@@ -95,7 +108,12 @@ export function botonPara(destinatario, enlace) {
 async function destinatarios(db, notificacion, userId) {
   if (notificacion.destinatario === 'admins') {
     const { data } = await db.from('profiles').select('id, email, nombre_completo').eq('rol', 'admin');
-    return (data || []).filter((p) => p.email);
+    const admins = (data || []).filter((p) => p.email);
+    // La academia siempre recibe los avisos del equipo.
+    if (!admins.some((p) => p.email.toLowerCase() === CORREO_ACADEMIA)) {
+      admins.push({ id: 'academia', email: CORREO_ACADEMIA, nombre_completo: 'Academia HCE' });
+    }
+    return admins;
   }
   if (!userId) return [];
   const { data } = await db.from('profiles').select('id, email, nombre_completo').eq('id', userId).maybeSingle();
@@ -118,7 +136,7 @@ const corta = (texto, max) => {
 // El id de la lección viaja en la clave de algunos eventos
 // ("examen:12", "sesion-registro:12", "sesion-recordatorio:12:<fecha>").
 const leccionDeClave = (clave) => {
-  const m = /^(?:examen|sesion-registro|sesion-recordatorio):(\d+)/.exec(String(clave || ''));
+  const m = /^(?:examen|sesion-registro|sesion-recordatorio|sesion-dia):(\d+)/.exec(String(clave || ''));
   return m ? m[1] : null;
 };
 
@@ -153,6 +171,15 @@ export function avisoPortal(evento, { courseId = null, clave = '', variables = {
       return { titulo: `Registrado a ${v.sesion || 'la sesión en vivo'}`, cuerpo: v.fecha ? `Es el ${v.fecha}. El botón "Unirse" se activa 15 minutos antes.` : 'El botón "Unirse" se activa 15 minutos antes.', enlace: aula(courseId, leccionDeClave(clave)) };
     case 'sesion_recordatorio':
       return { titulo: `En 1 hora: ${v.sesion || 'tu sesión en vivo'}`, cuerpo: v.fecha ? `Empieza el ${v.fecha}. Entra desde tu aula.` : 'Entra desde tu aula con el botón "Unirse".', enlace: aula(courseId, leccionDeClave(clave)) };
+    case 'sesion_recordatorio_dia':
+      return { titulo: `Mañana: ${v.sesion || 'tu sesión en vivo'}`, cuerpo: v.fecha ? `Es el ${v.fecha}. Agrégala a tu calendario.` : 'Agrégala a tu calendario.', enlace: aula(courseId, leccionDeClave(clave)) };
+    case 'comentario_respondido':
+      return { titulo: `${v.autor || 'Alguien'} respondió tu pregunta`, cuerpo: v.respuesta ? `«${String(v.respuesta).slice(0, 140)}»` : `Tienes una respuesta${enCurso}.`, enlace: aula(courseId) };
+    case 'curso_casi':
+      return { titulo: curso ? `Te falta poco para terminar ${curso}` : 'Te falta poco para terminar tu curso', cuerpo: `Llevas ${v.porcentaje || 'más del 80%'}. ¡Tu certificado está cerca!`, enlace: aula(courseId) };
+    case 'encuesta_curso':
+      return { titulo: curso ? `¿Cómo te fue en ${curso}?` : '¿Cómo te fue en tu curso?', cuerpo: 'Contesta la encuesta: toma 3 minutos.', enlace: v.encuesta ? v.encuesta.replace(PORTAL, '') : '/retroalimentacion' };
+    // avance_semanal solo va por correo: el inicio del portal ya muestra el avance.
     default:
       return null;
   }
@@ -242,7 +269,7 @@ export async function notificar(db, evento, { userId = null, courseId = null, cl
         if (previo) continue;
         const { data: apartado, error: errApartado } = await db
           .from('notificaciones_enviadas')
-          .insert([{ notificacion_id: n.id, clave: claveEnvio, user_id: persona.id, email: persona.email }])
+          .insert([{ notificacion_id: n.id, clave: claveEnvio, user_id: persona.id === 'academia' ? null : persona.id, email: persona.email }])
           .select('id')
           .maybeSingle();
         if (errApartado || !apartado) continue;
@@ -261,11 +288,17 @@ export async function notificar(db, evento, { userId = null, courseId = null, cl
           ...variables,
         };
 
+        // Las sesiones llevan "Agregar a mi calendario" aunque la plantilla
+        // guardada (anterior a esta opción) no tenga {calendario}.
+        const cuerpo = valores.calendario && !String(n.cuerpo).includes('{calendario}')
+          ? `${n.cuerpo}\n\nAgrégala a tu calendario:\n{calendario}`
+          : n.cuerpo;
+
         try {
           await enviarCorreo({
             para: [persona.email],
             asunto: llenarPlantilla(n.asunto, valores),
-            html: aHtml(llenarPlantilla(n.cuerpo, valores), botonPara(n.destinatario, valores.enlace)),
+            html: aHtml(llenarPlantilla(cuerpo, valores), botonPara(n.destinatario, valores.enlace)),
           });
           enviadas += 1;
         } catch (err) {

@@ -134,6 +134,7 @@ export const handler = async (event) => {
         }
       },
       metadata: {
+        programa: 'paris', // lo usa cobros-seguimiento (recibo y carrito abandonado)
         perfil,
         extras: validExtras.join(','),
         moneda: currency,

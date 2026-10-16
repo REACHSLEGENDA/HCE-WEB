@@ -1,6 +1,7 @@
 // Confirmación compartida por el regreso de Checkout y el webhook firmado.
 import { LISTS, isConfigured, upsertContact, addToList, enviarCorreo } from './_brevo.js';
 import { plantillaHce } from './_notificaciones.js';
+import { correosAvisoAdmin } from './_admins.js';
 
 export const TIPO_ALUMNI = 'alumni_pass';
 export const PRECIOS_ALUMNI = { presencial: 7000, virtual: 4000 };
@@ -67,10 +68,7 @@ export async function confirmarAlumniDesdeSesion(db, sesion, { exigirCorreo = fa
       actual = { ...actual, brevo_sincronizado_en: fecha };
     }
     if (!actual.aviso_pago_en) {
-      const { data: admins, error: falloAdmins } = await db.from('profiles').select('email').eq('rol', 'admin').eq('activo', true);
-      if (falloAdmins) throw new Error(falloAdmins.message);
-      const adicionales = String(process.env.AVISO_REGISTROS_PARA || '').split(',').map(v => v.trim()).filter(Boolean);
-      const para = [...new Set([...(admins || []).map(r => r.email).filter(Boolean), ...adicionales])];
+      const para = await correosAvisoAdmin(db);
       if (para.length) await enviarCorreo({ para, asunto: `Alumni Pass pagado: ${actual.nombre} (${actual.folio})`,
         claveIdempotencia: `alumni-pago-${sesion.id}`,
         html: plantillaHce(`<p>Se confirmó el pago de <strong>${escapar(actual.nombre)}</strong>.</p><p>Folio: ${escapar(actual.folio)}<br>Modalidad: ${escapar(modalidad)}<br>Importe: ${actual.importe} ${moneda.toUpperCase()}</p>`, { boton: 'Ver en el panel', enlace: 'https://healthcareexp.com/admin' }),

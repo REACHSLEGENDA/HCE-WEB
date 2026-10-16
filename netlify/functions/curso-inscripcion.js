@@ -336,6 +336,7 @@ export const handler = async (event) => {
 
       const metadata = {
         tipo: TIPO_COBRO,
+        programa: 'curso', // lo usa cobros-seguimiento (recibo y carrito abandonado)
         course_id: String(curso.id),
         user_id: user.id,
         email: user.email || '',
