@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #eceeed;
+  background: #eef3f8;
   color: #0f172a;
 }
 
@@ -319,13 +319,13 @@
 
 .vc-btn--primario {
   border: none;
-  background: #172320;
+  background: #005fe6;
   color: #ffffff;
   box-shadow: none;
 }
 
 .vc-btn--primario:hover:not(:disabled) {
-  background: #304c42;
+  background: #004fc2;
 }
 
 .vc-btn--primario:disabled {
@@ -518,15 +518,15 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .vc-page { background: #141e1a; color: #edf3ec; color-scheme: dark; }
-  .vc-page :is(.vc-tarjeta,.vc-buscador) { background: #1b2723; border-color: #3c4e43; box-shadow: none; }
-  .vc-page :is(.vc-titulo,.vc-dato dd,.vc-buscador-label,.vc-como h2,.vc-vacio-icono) { color: #edf3ec; }
+  .vc-page { background: #0b1526; color: #eef3fa; color-scheme: dark; }
+  .vc-page :is(.vc-tarjeta,.vc-buscador) { background: #13203a; border-color: #2a3c5a; box-shadow: none; }
+  .vc-page :is(.vc-titulo,.vc-dato dd,.vc-buscador-label,.vc-como h2,.vc-vacio-icono) { color: #eef3fa; }
   .vc-page :is(.vc-subtitulo,.vc-sello-texto,.vc-lista,.vc-nota,.vc-como,.vc-como-pie,.vc-buscador-ayuda,.vc-dato dt) { color: #bdcbc2; }
-  .vc-page :is(.vc-input-wrap,.vc-dato) { background: #141e1a; border-color: #3c4e43; }
-  .vc-page .vc-input-wrap input { color: #edf3ec; background: transparent; }
+  .vc-page :is(.vc-input-wrap,.vc-dato) { background: #0b1526; border-color: #2a3c5a; }
+  .vc-page .vc-input-wrap input { color: #eef3fa; background: transparent; }
   .vc-page a { color: #8bdde0; }
   .vc-page .vc-btn--secundario { background: transparent; color: #8bdde0; }
-  .vc-page .vc-btn--primario { background: #edf3ec; color: #172320; }
+  .vc-page .vc-btn--primario { background: #005fe6; color: #fff; }
   .vc-page .vc-sello--no { background: #382c21; border-color: #725138; }
   .vc-page .vc-sello--no .vc-sello-titulo { color: #ffbd88; }
   .vc-page .vc-sello--ok { background: #1b3529; border-color: #397652; }

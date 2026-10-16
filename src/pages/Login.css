@@ -1,14 +1,15 @@
 /* Estilos aislados para la entrada a la escuela. */
 .login-page {
-  --a-bg:#eceeed;
-  --a-panel:#f8f9f7;
-  --a-text:#171d1c;
-  --a-muted:#535e5b;
-  --a-line:#cbd2ce;
+  --a-bg:#eef3f8;
+  --a-panel:#ffffff;
+  --a-text:#0a192f;
+  --a-muted:#4f5f78;
+  --a-line:#d5dfea;
   --a-field:#fff;
-  --a-accent:#006f80;
-  --a-button:#1b302f;
+  --a-accent:#005fe6;
+  --a-button:#005fe6;
   --a-on:#fff;
+  color-scheme:light;
   min-height:100svh;
   background:var(--a-bg);
   color:var(--a-text);
@@ -168,7 +169,7 @@
   gap:24px;
   margin-bottom:28px;
 }
-.login-page .tab-btn {
+.login-page .auth-tab {
   display:flex;
   align-items:center;
   gap:8px;
@@ -182,10 +183,14 @@
   cursor:pointer;
   font-size:.875rem;
   font-weight:600;
+  box-shadow:none;
 }
-.login-page .tab-btn.active {
+.login-page .auth-tab.active {
   border-bottom-color:var(--a-accent);
-  color:var(--a-text);
+  color:var(--a-accent);
+}
+.login-page .auth-tab:hover {
+  color:var(--a-accent);
 }
 .login-page .auth-form {
   display:grid;
@@ -320,11 +325,11 @@
 }
 .login-page .auth-secondary {
   background:transparent;
-  color:var(--a-text);
-  border-color:var(--a-line);
+  color:var(--a-accent);
+  border-color:var(--a-accent);
 }
 .login-page .btn.btn-primary:hover:not(:disabled) {
-  filter:brightness(1.16);
+  background:#004fc2;
   box-shadow:none;
   transform:none;
 }
@@ -380,42 +385,6 @@
 .login-page .auth-reset-container .auth-secondary {
   width:100%;
   margin-top:16px;
-}
-@media(prefers-color-scheme:dark) {
-  .login-page {
-    --a-bg:#151c1b;
-    --a-panel:#1d2725;
-    --a-text:#eef2ed;
-    --a-muted:#aab9b4;
-    --a-line:#3d4d47;
-    --a-field:#17201e;
-    --a-accent:#76d3db;
-    --a-button:#e4ece6;
-    --a-on:#15211e;
-    color-scheme:dark;
-  }
-  .login-page .alert-error {
-    color:#ffc4b2;
-    background:#3b2723;
-    border-color:#765047;
-  }
-  .login-page .alert-success {
-    color:#b4e6c3;
-    background:#213c2b;
-    border-color:#44684f;
-  }
-}
-:is([data-theme='dark'],.dark) .login-page {
-  --a-bg:#151c1b;
-  --a-panel:#1d2725;
-  --a-text:#eef2ed;
-  --a-muted:#aab9b4;
-  --a-line:#3d4d47;
-  --a-field:#17201e;
-  --a-accent:#76d3db;
-  --a-button:#e4ece6;
-  --a-on:#15211e;
-  color-scheme:dark;
 }
 @media(max-width:760px) {
   .login-page .auth-topbar {

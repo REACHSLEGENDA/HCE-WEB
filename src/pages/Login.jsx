@@ -240,7 +240,9 @@ const Login = () => {
             <div className="login-tabs">
               <button
                 disabled={isFormSubmitting}
-                className={`tab-btn ${activeTab === 'signin' ? 'active' : ''}`}
+                type="button"
+                className={`auth-tab ${activeTab === 'signin' ? 'active' : ''}`}
+                aria-pressed={activeTab === 'signin'}
                 onClick={() => { setActiveTab('signin'); clearMessages(); }}
               >
                 <LogIn size={16} />
@@ -248,7 +250,9 @@ const Login = () => {
               </button>
               <button
                 disabled={isFormSubmitting}
-                className={`tab-btn ${activeTab === 'signup' ? 'active' : ''}`}
+                type="button"
+                className={`auth-tab ${activeTab === 'signup' ? 'active' : ''}`}
+                aria-pressed={activeTab === 'signup'}
                 onClick={() => { setActiveTab('signup'); clearMessages(); }}
               >
                 <UserPlus size={16} />

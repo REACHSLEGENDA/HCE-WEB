@@ -2916,23 +2916,27 @@
 .crm-layout .curso-tarjeta--bloqueada:hover .exp-link-action { background: var(--bg-gray); color: var(--text-muted); transform: none; }
 /* Escuela HCE — dirección editorial del 15 de octubre. Solo el portal. */
 .crm-layout {
-  --bg-main: #f8f9f7; --bg-gray: #eceeed; --bg-sidebar: #f4f6f3;
-  --bg-active-item: #deeeea; --text-dark: #172320; --text-muted: #52635c;
-  --border-color: #cbd5ce; --primary-cyan: #006f80; --primary-cyan-hover: #005563;
+  /* Colores HCE: azul marino, cian, azul de acción y naranja como acento. */
+  --hce-azul: #005fe6; --hce-azul-hover: #004fc2; --hce-naranja: #ff8a00;
+  --bg-main: #ffffff; --bg-gray: #eef3f8; --bg-sidebar: #f7fafd;
+  --bg-active-item: #e2f5fa; --text-dark: #0a192f; --text-muted: #4f5f78;
+  --border-color: #d5dfea; --primary-cyan: #00838f; --primary-cyan-hover: #006b75;
   --radius-card: 24px; --shadow-card: none; --shadow-hover: none;
   font-family: 'Inter', 'DM Sans', sans-serif; background: var(--bg-gray);
 }
 .crm-layout[data-theme='dark'] {
-  --bg-main: #1b2723; --bg-gray: #141e1a; --bg-sidebar: #18231f;
-  --bg-active-item: #263d34; --text-dark: #edf3ec; --text-muted: #adbbb2;
-  --border-color: #3c4e43; --primary-cyan: #74d2d4; --primary-cyan-hover: #a3eaeb;
+  --hce-azul: #2f7bff; --hce-azul-hover: #5a96ff;
+  --bg-main: #13203a; --bg-gray: #0b1526; --bg-sidebar: #0f1b31;
+  --bg-active-item: #1b3354; --text-dark: #eef3fa; --text-muted: #a9b6ca;
+  --border-color: #2a3c5a; --primary-cyan: #4dd0e1; --primary-cyan-hover: #80deea;
   --shadow-card: none; --shadow-hover: none; color-scheme: dark;
 }
 .crm-layout :is(h1,h2,h3,h4) { font-family: 'Plus Jakarta Sans','Inter',sans-serif; font-weight: 800; letter-spacing: -.035em; }
 .crm-layout[data-theme] :is(.settings-card,.kpi-card,.course-card,.crm-course-card,.crm-empty-state-card,.activity-feed,.exp-premium-card) { border: 1px solid var(--border-color); border-radius: 24px; box-shadow: none; background: var(--bg-main); }
-.crm-layout .welcome-banner-card { background: linear-gradient(115deg,#00bcd410,transparent 65%,#ff8a0012),var(--bg-main) !important; border: 1px solid var(--border-color); box-shadow: none; border-radius: 24px; }
+.crm-layout .welcome-banner-card { background: linear-gradient(115deg,#00bcd42e,#005fe614 45%,transparent 70%,#ff8a0024),var(--bg-main) !important; border: 1px solid var(--border-color); box-shadow: none; border-radius: 24px; }
 .crm-layout :is(.btn-crm-action,.crm-btn-primary,.crm-btn-secondary) { border-radius: 100px; min-height: 44px; box-shadow: none; }
-.crm-layout :is(.btn-crm-action.solid,.crm-btn-primary) { background: var(--text-dark); color: var(--bg-main); border-color: var(--text-dark); }
+.crm-layout :is(.btn-crm-action.solid,.crm-btn-primary) { background: var(--hce-azul); color: #fff; border-color: var(--hce-azul); }
+.crm-layout :is(.btn-crm-action.solid,.crm-btn-primary):hover:not(:disabled) { background: var(--hce-azul-hover); border-color: var(--hce-azul-hover); }
 .crm-layout :is(.btn-crm-action.outlined,.crm-btn-secondary) { background: transparent; color: var(--text-dark); border: 1px solid var(--border-color); }
 .crm-layout :is(button,a,input,select,textarea):focus-visible { outline: 3px solid var(--primary-cyan); outline-offset: 3px; }
 .crm-layout[data-theme='dark'] :is(input,select,textarea) { background: var(--bg-gray); color: var(--text-dark); border-color: var(--border-color); }
@@ -2940,7 +2944,8 @@
 .crm-layout .crm-top-header { box-shadow: none; border-bottom: 1px solid var(--border-color); background: var(--bg-main); }
 .crm-layout .pa-titulo { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 28px; }
 .crm-layout .pa-titulo .pa-etiqueta { display: inline-flex; align-items: center; gap: 10px; margin: 0; }
-.crm-layout .pa-titulo .pa-etiqueta::before { content: ''; width: 24px; height: 1px; background: currentColor; }
+.crm-layout .pa-titulo .pa-etiqueta { color: var(--primary-cyan); }
+.crm-layout .pa-titulo .pa-etiqueta::before { content: ''; width: 24px; height: 2px; border-radius: 2px; background: var(--hce-naranja); }
 .crm-layout .pa-titulo h2 { margin: 0; font-size: clamp(1.6rem, 3vw, 2rem); }
 .crm-layout .pa-titulo p { max-width: 70ch; margin: 0; line-height: 1.7; }
 .crm-layout .theme-selector-row { flex-wrap: wrap; }

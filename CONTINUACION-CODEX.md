@@ -594,3 +594,15 @@ Christian indicó «sube ya corrí supabase»: confirma que ejecutó los SQL y a
 commit y push de la ronda completa a `main`. Se vuelven a ejecutar las verificaciones
 antes de subir. La aplicación de esos SQL fue realizada por Christian; Codex no
 volvió a ejecutar migraciones en producción.
+
+## 11. Colores HCE (15 oct, noche) — Claude
+
+Christian aclaró que el estilo Zutech se veía "solo negro". Se terminó el cambio que
+Codex dejó a medias (botones azules): la escuela usa ahora la paleta HCE en vez de
+grises/verdes oscuros. Claro: fondo #eef3f8, tarjetas blancas, texto azul marino
+#0a192f, cian #00838f, botón principal azul (`--hce-azul` #005fe6) y naranja
+(`--hce-naranja` #ff8a00) en las rayitas de las etiquetas. Oscuro: azul marino
+(#0b1526 / #13203a), no negro. Degradado cian→azul→naranja en el encabezado de
+inicio del alumno y del admin. Archivos: Dashboard.css, AdminDashboard.css,
+Classroom.css, ChatBot.css, NotFound.css, VerificarCertificado.css, Login.css,
+PerfilAlumno.css. `npm run verificar` correcto (Vitest 33/33, Alumni 18/18, build).

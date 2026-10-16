@@ -1675,15 +1675,15 @@ button.temario-seccion[aria-expanded="false"] .temario-seccion-flecha { transfor
 }
 /* El aula comparte el acabado sobrio de la escuela, sin tocar el reproductor. */
 .classroom-layout {
-  --aula-superficie: #f8f9f7; --aula-suave: #eceeed; --aula-borde: #cbd5ce;
-  --aula-texto: #172320; --aula-secundario: #364b41; --aula-muted: #52635c;
-  --aula-acento: #006f80; --aula-seleccion: #deeeea;
+  --aula-superficie: #ffffff; --aula-suave: #eef3f8; --aula-borde: #d5dfea;
+  --aula-texto: #0a192f; --aula-secundario: #24364f; --aula-muted: #4f5f78;
+  --aula-acento: #00838f; --aula-seleccion: #e2f5fa;
   font-family: 'Inter','DM Sans',sans-serif;
 }
 .classroom-layout[data-theme='dark'] {
-  --aula-superficie: #1b2723; --aula-suave: #141e1a; --aula-borde: #3c4e43;
-  --aula-texto: #edf3ec; --aula-secundario: #d4ded6; --aula-muted: #adbbb2;
-  --aula-acento: #74d2d4; --aula-seleccion: #263d34; background: var(--aula-suave);
+  --aula-superficie: #13203a; --aula-suave: #0b1526; --aula-borde: #2a3c5a;
+  --aula-texto: #eef3fa; --aula-secundario: #d3ddeb; --aula-muted: #a9b6ca;
+  --aula-acento: #4dd0e1; --aula-seleccion: #1b3354; background: var(--aula-suave);
 }
 .classroom-layout :is(h1,h2,h3,h4) { font-family: 'Plus Jakarta Sans','Inter',sans-serif; font-weight: 800; letter-spacing: -.035em; }
 .classroom-layout .classroom-header { background: var(--aula-superficie); color: var(--aula-texto); border-bottom: 1px solid var(--aula-borde); box-shadow: none; }
