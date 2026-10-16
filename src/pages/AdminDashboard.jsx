@@ -555,6 +555,8 @@ const AdminDashboard = () => {
     return saved ? processAndFilterList(JSON.parse(saved), 'form') : [];
   });
   const [loadingPayments, setLoadingPayments] = useState(true);
+  // Carritos abandonados y pagos rechazados (de cobros-seguimiento) para el reporte de ventas.
+  const [seguimientoCobros, setSeguimientoCobros] = useState([]);
   const [paymentsError, setPaymentsError] = useState(null);
   const [loadingForms, setLoadingForms] = useState(true);
   const [paymentSortOrder, setPaymentSortOrder] = useState('desc'); // 'desc' | 'asc'
@@ -741,6 +743,7 @@ const AdminDashboard = () => {
           : 'No se pudieron cargar los pagos de Stripe.'));
       }
       const data = await res.json();
+      setSeguimientoCobros(Array.isArray(data.seguimiento) ? data.seguimiento : []);
       const merged = [...stripePayments];
       if (data.payments && data.payments.length > 0) {
         data.payments.forEach(item => {
@@ -3026,7 +3029,7 @@ const AdminDashboard = () => {
           {activeTab === 'dashboard' && <VistaInicio contexto={{ Award, BarChart2, BookOpen, GraduationCap, PendientesHoy, Plus, Users, abrirCursoDesdePanel, cerrarEditorCurso, certificates, courses, cuentasPendientes, cursosCargados, errorCursos, errorPerfiles, formatDate, handleOpenCourseCreate, inscripcionesTodas, loadingProfiles, permitirSalidaCurso, resumenDashboard, setActiveTab, setActiveTabState, setBusquedaCursos, setFiltroAccesoCursos, setFiltroEstadoCursos, setShowAddStudentModal, showCourseForm, solicitudesPendientes, stats, tareasPendientes }} />}
 
           {/* VIEW: PAYMENTS & FORMS */}
-          {activeTab === 'payments' && <VistaPagos contexto={{ AlertCircle, BarChart2, CheckCircle, Clock, CreditCard, DollarSign, Eye, FileSpreadsheet, Mail, Search, Send, Upload, X, activePaymentsSubTab, fetchRealFormSubmissions, fetchRealStripePayments, formFilterType, formSearch, formSortOrder, formSubmissions, formatDate, handleImportForms, handleImportPayments, loadingForms, loadingPayments, paymentFilterCourse, paymentSearch, paymentSortOrder, paymentTimePeriod, paymentsError, selectedFormEntry, setActivePaymentsSubTab, setFormFilterType, setFormSearch, setFormSortOrder, setPaymentFilterCourse, setPaymentSearch, setPaymentSortOrder, setPaymentTimePeriod, setSelectedFormEntry, setShowFormModal, showConfirm, showFormModal, showToast, stripePayments, supabase }} />}
+          {activeTab === 'payments' && <VistaPagos contexto={{ AlertCircle, BarChart2, CheckCircle, Clock, CreditCard, DollarSign, Eye, FileSpreadsheet, Mail, Search, Send, Upload, X, activePaymentsSubTab, fetchRealFormSubmissions, fetchRealStripePayments, formFilterType, formSearch, formSortOrder, formSubmissions, formatDate, handleImportForms, handleImportPayments, loadingForms, loadingPayments, paymentFilterCourse, paymentSearch, paymentSortOrder, paymentTimePeriod, paymentsError, selectedFormEntry, setActivePaymentsSubTab, setFormFilterType, setFormSearch, setFormSortOrder, setPaymentFilterCourse, setPaymentSearch, setPaymentSortOrder, setPaymentTimePeriod, setSelectedFormEntry, setShowFormModal, showConfirm, showFormModal, showToast, stripePayments, seguimientoCobros, supabase }} />}
 
           {activeTab === 'errores' && <VistaErrores contexto={{ ErroresAdmin, showToast }} />}
 

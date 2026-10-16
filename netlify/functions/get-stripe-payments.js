@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { adminDesdeToken, isConfigured } from './_supabase.js';
+import { admin, adminDesdeToken, isConfigured } from './_supabase.js';
 
 // HCE opera dos cuentas de Stripe. La principal cobra en pesos; la segunda
 // recibe dos cosas distintas: los cobros en dólares que enruta _stripe.js y los
@@ -38,6 +38,35 @@ async function listarTodos(stripe) {
   }
 
   return todos;
+}
+
+// Las funciones de checkout de París, Step 1, Step 2 y el simulador guardan
+// `curso` y `programa` en la sesión de Checkout, no en el pago. Sin leer las
+// sesiones, esos cobros salían como "Inscripción HCE" y, en la cuenta de
+// dólares, se confundían con CNADOT.
+async function metadataDeSesiones(stripe) {
+  const mapa = new Map();
+  for await (const sesion of stripe.checkout.sessions.list({ created: { gte: DESDE }, status: 'complete', limit: 100 })) {
+    const pi = typeof sesion.payment_intent === 'string' ? sesion.payment_intent : sesion.payment_intent?.id;
+    if (pi) mapa.set(pi, sesion.metadata || {});
+    if (mapa.size >= 3000) break;
+  }
+  return mapa;
+}
+
+// Programa del cobro, para el reporte de ventas por programa.
+function programaDe(pi, curso, cnadot) {
+  if (cnadot) return 'cnadot';
+  const m = pi.metadata || {};
+  if (m.programa) return m.programa;
+  if (m.tipo === 'alumni_pass' || /alumni/i.test(curso)) return 'alumni';
+  if (m.tipo === 'curso_portal' || m.course_id) return 'curso';
+  if (/nursing/i.test(curso)) return 'nursing';
+  if (/step\s*2|simulation course/i.test(curso)) return 'step2';
+  if (/\bsim\b|simulador/i.test(curso)) return 'sim';
+  if (/step\s*1/i.test(curso)) return 'step1';
+  if (/par[ií]s|diploma/i.test(curso)) return 'paris';
+  return 'otro';
 }
 
 // Los conceptos de CNADOT llevan anexo "A nombre de: X | Inst: Y" para que
@@ -104,6 +133,7 @@ function mapearPago(pi, gateway) {
     pi.metadata?.customer_name ||
     '';
 
+  const curso = nombreDelCurso(pi, charge, cnadot);
   const cardBrand = charge?.payment_method_details?.card?.brand || 'card';
   const last4     = charge?.payment_method_details?.card?.last4 || '';
 
@@ -115,7 +145,9 @@ function mapearPago(pi, gateway) {
     studentEmail:   email  || 'sin-email@stripe.com',
     studentCountry: charge?.billing_details?.address?.country || 'MX',
     institucion:    anexo.institucion || pi.metadata?.institucion || '',
-    courseName:     nombreDelCurso(pi, charge, cnadot),
+    courseName:     curso,
+    programa:       programaDe(pi, curso, cnadot),
+    reembolsado:    (charge?.amount_refunded || 0) / 100,
     courseId:       pi.metadata?.course_id || (cnadot ? 'cnadot' : 'general'),
     extras:         pi.metadata?.extras || '',
     amount:         pi.amount / 100,
@@ -163,10 +195,13 @@ export const handler = async (event = {}) => {
   const resultados = await Promise.allSettled(
     activas.map(async (gateway) => {
       const stripe = new Stripe(process.env[gateway.envVar]);
-      const intents = await listarTodos(stripe);
+      const [intents, sesiones] = await Promise.all([
+        listarTodos(stripe),
+        metadataDeSesiones(stripe).catch((err) => { console.error('Sesiones de Checkout:', err.message); return new Map(); }),
+      ]);
       return intents
         .filter((pi) => pi.status === 'succeeded')
-        .map((pi) => mapearPago(pi, gateway));
+        .map((pi) => mapearPago({ ...pi, metadata: { ...(sesiones.get(pi.id) || {}), ...(pi.metadata || {}) } }, gateway));
     })
   );
 
@@ -188,11 +223,27 @@ export const handler = async (event = {}) => {
 
   payments.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  // Carritos abandonados y pagos rechazados que avisó cobros-seguimiento (para
+  // el reporte). Sin la tabla, simplemente no se muestran.
+  let seguimiento = [];
+  try {
+    const { data, error } = await admin().from('cobros_avisos')
+      .select('tipo, email, programa, creado_en')
+      .in('tipo', ['carrito', 'pago_fallido'])
+      .gte('creado_en', new Date(Date.now() - 400 * 24 * 3600 * 1000).toISOString())
+      .order('creado_en', { ascending: false })
+      .limit(2000);
+    if (!error) seguimiento = data || [];
+  } catch {
+    seguimiento = [];
+  }
+
   return {
     statusCode: 200,
     headers,
     body: JSON.stringify({
       payments,
+      seguimiento,
       gateways: activas.map((g) => g.id),
       errores: errores.length ? errores : undefined,
     }),
