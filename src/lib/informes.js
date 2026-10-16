@@ -180,6 +180,25 @@ const ACCIONES_ADMIN = {
   solicitud_rechazada: (o, c) => `rechazó la solicitud de ${o} para ${c}`,
   curso_clonado: (o, c) => `clonó un curso como ${c}`,
   leccion_copiada: (o, c) => `copió una lección a ${c}`,
+  alumno_creado: (o) => `creó la cuenta de alumno de ${o}`,
+  admin_creado: (o) => `creó la cuenta de administrador de ${o}`,
+  division_asignar: (o, c, d) => `agregó ${d?.alumnos === 1 ? 'un alumno' : `${d?.alumnos ?? ''} alumnos`.trim()} a una división`,
+  division_quitar: (o, c, d) => `quitó ${d?.alumnos === 1 ? 'un alumno' : `${d?.alumnos ?? ''} alumnos`.trim()} de una división`,
+  asistencia_marcada: (o, c) => `marcó la asistencia de ${o} en ${c}`,
+  asistencia_quitada: (o, c) => `quitó la asistencia de ${o} en ${c}`,
+  certificado_emitido: (o, c, d) => `emitió el certificado de ${o} en ${c}${d?.folio ? ` (folio ${d.folio})` : ''}`,
+  evaluacion_reiniciada: (o, c) => `reinició los intentos de ${o} en ${c}`,
+  alumni_pass_aprobado: () => 'aceptó una solicitud de Alumni Pass',
+  alumni_pass_rechazado: () => 'rechazó una solicitud de Alumni Pass',
+  alumni_registros_reintentados: () => 'reintentó el registro de una solicitud de Alumni Pass',
+};
+
+// Vistas de la línea de tiempo: el aprendizaje va separado de los accesos y
+// de lo que hace el equipo, para que no se mezclen.
+export const VISTAS_EVENTO = {
+  aprendizaje: { nombre: 'Aprendizaje', tipos: ['inscripcion', 'leccion', 'evaluacion', 'tarea', 'sesion', 'certificado', 'descarga'] },
+  accesos: { nombre: 'Accesos', tipos: ['login'] },
+  equipo: { nombre: 'Acciones del equipo', tipos: ['admin'] },
 };
 
 export const TIPOS_EVENTO = {
@@ -199,33 +218,35 @@ export function eventosPlataforma({ perfiles, cursos, lecciones, actividad = [],
   const persona = (id) => nombre.get(id) || 'Un usuario';
   const curso = (id) => cursos.find((c) => Number(c.id) === Number(id))?.title || 'un curso';
   const leccion = (id) => lecciones.find((l) => l.id === id);
+  const cursoDeLeccion = (id) => leccion(id)?.course_id ?? null;
+  const conCurso = (l) => (l?.course_id ? ` (${curso(l.course_id)})` : '');
 
   const eventos = [
     ...actividad.map((a) => {
-      if (a.tipo === 'login') return { tipo: 'login', fecha: a.creado_en, userId: a.user_id, texto: `${persona(a.user_id)} ha iniciado sesión` };
-      if (a.tipo === 'descarga') return { tipo: 'descarga', fecha: a.creado_en, userId: a.user_id, texto: `${persona(a.user_id)} descargó el archivo ${a.detalle?.nombre || ''} (${curso(a.course_id)})` };
-      const texto = ACCIONES_ADMIN[a.detalle?.accion]?.(persona(a.objetivo_user_id), curso(a.course_id)) || a.detalle?.accion || 'hizo un cambio';
-      return { tipo: 'admin', fecha: a.creado_en, userId: a.user_id, texto: `${persona(a.user_id)} ${texto}` };
+      if (a.tipo === 'login') return { tipo: 'login', fecha: a.creado_en, userId: a.user_id, courseId: null, texto: `${persona(a.user_id)} inició sesión` };
+      if (a.tipo === 'descarga') return { tipo: 'descarga', fecha: a.creado_en, userId: a.user_id, courseId: a.course_id, texto: `${persona(a.user_id)} descargó el archivo ${a.detalle?.nombre || ''} (${curso(a.course_id)})` };
+      const texto = ACCIONES_ADMIN[a.detalle?.accion]?.(persona(a.objetivo_user_id), curso(a.course_id), a.detalle) || 'hizo un cambio en el panel';
+      return { tipo: 'admin', fecha: a.creado_en, userId: a.user_id, courseId: a.course_id, texto: `${persona(a.user_id)} ${texto}` };
     }),
-    ...inscripciones.map((i) => ({ tipo: 'inscripcion', fecha: i.created_at, userId: i.user_id, texto: `${persona(i.user_id)} fue inscrito en ${curso(i.course_id)}${i.origen === 'pago' ? ' (pagó)' : ''}` })),
+    ...inscripciones.map((i) => ({ tipo: 'inscripcion', fecha: i.created_at, userId: i.user_id, courseId: i.course_id, texto: `${persona(i.user_id)} fue inscrito en ${curso(i.course_id)}${i.origen === 'pago' ? ' (pagó)' : ''}` })),
     ...progreso.filter((p) => p.completada && p.completada_en).map((p) => {
       const l = leccion(p.leccion_id);
-      return { tipo: 'leccion', fecha: p.completada_en, userId: p.user_id, texto: `${persona(p.user_id)} completó la unidad ${l?.titulo || ''} (${curso(p.course_id)})` };
+      return { tipo: 'leccion', fecha: p.completada_en, userId: p.user_id, courseId: p.course_id, texto: `${persona(p.user_id)} completó la unidad ${l?.titulo || ''} (${curso(p.course_id)})` };
     }),
     ...intentos.map((i) => {
       const l = leccion(i.leccion_id);
       const texto = i.calificacion == null
-        ? `respondió la encuesta ${l?.titulo || ''}`
-        : `${i.aprobado ? 'ha aprobado' : 'no aprobó'} la unidad ${l?.titulo || ''} (score: ${Number(i.calificacion).toFixed(2)}%)`;
-      return { tipo: 'evaluacion', fecha: i.enviado_en, userId: i.user_id, aprobado: i.aprobado, texto: `${persona(i.user_id)} ${texto}` };
+        ? `respondió la encuesta ${l?.titulo || ''}${conCurso(l)}`
+        : `${i.aprobado ? 'aprobó' : 'no aprobó'} ${l?.titulo || 'una evaluación'}${conCurso(l)} con ${Number(i.calificacion).toFixed(0)}%`;
+      return { tipo: 'evaluacion', fecha: i.enviado_en, userId: i.user_id, courseId: cursoDeLeccion(i.leccion_id), aprobado: i.aprobado, texto: `${persona(i.user_id)} ${texto}` };
     }),
     ...examenesFinales.map((e) => ({
-      tipo: 'evaluacion', fecha: e.creado_en, userId: e.user_id, aprobado: !!e.datos?.aprobado,
-      texto: `${persona(e.user_id)} ${e.datos?.aprobado ? 'ha aprobado' : 'no aprobó'} el examen final de ${curso(e.course_id)} (score: ${Number(e.datos?.calificacion || 0).toFixed(2)}%)`,
+      tipo: 'evaluacion', fecha: e.creado_en, userId: e.user_id, courseId: e.course_id, aprobado: !!e.datos?.aprobado,
+      texto: `${persona(e.user_id)} ${e.datos?.aprobado ? 'aprobó' : 'no aprobó'} el examen final de ${curso(e.course_id)} con ${Number(e.datos?.calificacion || 0).toFixed(0)}%`,
     })),
-    ...entregas.map((e) => ({ tipo: 'tarea', fecha: e.creada_en, userId: e.user_id, texto: `${persona(e.user_id)} entregó la tarea ${leccion(e.leccion_id)?.titulo || ''}` })),
-    ...asistencias.filter((r) => r.asistio && r.verificado_en).map((r) => ({ tipo: 'sesion', fecha: r.verificado_en, userId: r.user_id, texto: `${persona(r.user_id)} asistió a la sesión ${leccion(r.leccion_id)?.titulo || ''}` })),
-    ...certificados.map((c) => ({ tipo: 'certificado', fecha: c.created_at, userId: c.user_id, texto: `${persona(c.user_id)} obtuvo el certificado de ${curso(c.course_id)}` })),
+    ...entregas.map((e) => ({ tipo: 'tarea', fecha: e.creada_en, userId: e.user_id, courseId: cursoDeLeccion(e.leccion_id), texto: `${persona(e.user_id)} entregó la tarea ${leccion(e.leccion_id)?.titulo || ''}${conCurso(leccion(e.leccion_id))}` })),
+    ...asistencias.filter((r) => r.asistio && r.verificado_en).map((r) => ({ tipo: 'sesion', fecha: r.verificado_en, userId: r.user_id, courseId: cursoDeLeccion(r.leccion_id), texto: `${persona(r.user_id)} asistió a la sesión ${leccion(r.leccion_id)?.titulo || ''}${conCurso(leccion(r.leccion_id))}` })),
+    ...certificados.map((c) => ({ tipo: 'certificado', fecha: c.created_at, userId: c.user_id, courseId: c.course_id, texto: `${persona(c.user_id)} obtuvo el certificado de ${curso(c.course_id)}` })),
   ];
 
   return eventos.filter((e) => e.fecha).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));

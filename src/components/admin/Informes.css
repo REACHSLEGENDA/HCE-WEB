@@ -92,3 +92,6 @@
   .inf-grupo-selector { width: 100%; }
   .inf-grupos .inf-buscar { min-width: 0; flex-basis: 100%; min-height: 44px; }
 }
+
+/* Vistas de la línea de tiempo: Aprendizaje / Accesos / Acciones del equipo. */
+.inf-vistas { align-self: flex-start; max-width: 100%; overflow-x: auto; }
