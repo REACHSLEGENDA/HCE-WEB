@@ -2196,26 +2196,19 @@ const AdminDashboard = () => {
     try {
       const nombreCompleto = `${newStudentForm.nombres} ${newStudentForm.apellidos}`.trim();
       // La cuenta que crea un administrador ya nace aprobada y con acceso.
-      const { userId } = await llamarUsuarioCrear({
+      await llamarUsuarioCrear({
         tipo: 'alumno',
         email: newStudentForm.email.trim(),
         password: newStudentForm.password,
         nombre_completo: nombreCompleto,
         telefono: newStudentForm.telefono,
         pais: newStudentForm.pais,
+        estado: newStudentForm.estado,
+        grado: newStudentForm.grado,
         especialidad: newStudentForm.especialidad,
         institucion: newStudentForm.institucion,
         cargo: newStudentForm.cargo
       });
-
-      // Estado y grado no viajan en el alta; se completan aparte.
-      const extras = {};
-      if (newStudentForm.estado.trim()) extras.estado = newStudentForm.estado.trim();
-      if (newStudentForm.grado.trim()) extras.grado = newStudentForm.grado.trim();
-      if (userId && Object.keys(extras).length > 0) {
-        const { error: extrasError } = await supabase.from('profiles').update(extras).eq('id', userId);
-        if (extrasError) showToast(`La cuenta se creó, pero no se guardó estado/grado: ${extrasError.message}`, 'warning');
-      }
 
       showToast(`¡Alumno ${nombreCompleto} registrado correctamente!`, 'success');
       handleCloseAddStudentModal();

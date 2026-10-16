@@ -10,7 +10,7 @@
 
 import { admin, adminDesdeToken, registrarAccionAdmin, json, isConfigured as supabaseListo } from './_supabase.js';
 
-const CAMPOS_OPCIONALES = ['telefono', 'pais', 'especialidad', 'institucion', 'cargo'];
+const CAMPOS_OPCIONALES = ['telefono', 'pais', 'estado', 'grado', 'especialidad', 'institucion', 'cargo'];
 const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Los errores de Supabase llegan en inglés: se traducen los que puede ver el admin.

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Plus, Trash2, Search, UserMinus, Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { esTablaFaltante, extraerCorreos } from '../../lib/cursos';
+import { esTablaFaltante, extraerCorreos, llamarCuenta } from '../../lib/cursos';
 import { traerTodo } from '../../lib/traerTodo';
 import { tasaFinalizacion } from '../../lib/informes';
 import './AdminLms.css';
@@ -119,9 +119,16 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
 
   const asignarMiembros = async (ids, divisionId) => {
     if (!ids.length) return;
-    const { error } = await supabase.from('profiles').update({ division_id: divisionId }).in('id', ids);
-    if (error) { notificar(error.message, 'error'); return false; }
+    // Por el servidor: desde el navegador Supabase no deja editar perfiles ajenos.
+    try {
+      const { actualizados } = await llamarCuenta('division', { userIds: ids, divisionId });
+      if (!actualizados) { notificar('No se pudo guardar el cambio. Recarga la página e intenta de nuevo.', 'error'); return false; }
+    } catch (err) {
+      notificar(err.message, 'error');
+      return false;
+    }
     await onPerfilesCambiados?.();
+    if (ids.length === 1) notificar(divisionId === null ? 'Alumno quitado de la división.' : 'Alumno agregado a la división.', 'success');
     return true;
   };
 
@@ -181,7 +188,7 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
         {pestana === 'miembros' && (
           <>
             <div className="reglas-grupo">
-              <label className="biblioteca-buscar"><Search size={14} /><input type="search" placeholder="Buscar alumno para agregar" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} /></label>
+              <label className="biblioteca-buscar"><Search size={14} /><input type="search" name="buscar-alumno-division" autoComplete="off" placeholder="Buscar alumno para agregar" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} /></label>
               {candidatos.length > 0 && (
                 <ul className="lms-copiar-lista">
                   {candidatos.map((p) => (

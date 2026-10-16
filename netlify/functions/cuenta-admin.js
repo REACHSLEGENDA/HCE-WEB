@@ -11,6 +11,10 @@
 //   rechazar  { userId }   la solicitud queda cerrada; no puede entrar
 //   bloquear  { userId }   suspende una cuenta activa
 //   activar   { userId }   quita la suspensión
+//   division  { userIds, divisionId }  mete (o saca, con divisionId null) a
+//             alumnos de una división. Va por aquí porque desde el navegador
+//             Supabase no deja editar el perfil de otra persona (no daba error:
+//             simplemente no se guardaba).
 
 import { admin, adminDesdeToken, registrarAccionAdmin, json, isConfigured as supabaseListo } from './_supabase.js';
 import { inscribir } from './_inscripciones.js';
@@ -59,7 +63,26 @@ export const handler = async (event) => {
     const administrador = await adminDesdeToken(event.headers);
     if (!administrador) return json(403, { error: 'Solo un administrador puede hacer esto.' });
 
-    const { accion, userId, grupoId = null, courseIds = [] } = JSON.parse(event.body || '{}');
+    const { accion, userId, grupoId = null, courseIds = [], userIds = [], divisionId = null } = JSON.parse(event.body || '{}');
+
+    if (accion === 'division') {
+      const ids = [...new Set((Array.isArray(userIds) ? userIds : []).map(String))].filter(Boolean).slice(0, 2000);
+      if (!ids.length) return json(400, { error: 'No elegiste alumnos.' });
+      const db = admin();
+      if (divisionId !== null) {
+        const { data: division, error: errDivision } = await db.from('divisiones').select('id').eq('id', Number(divisionId)).maybeSingle();
+        if (errDivision) throw new Error(errDivision.message);
+        if (!division) return json(404, { error: 'Esa división ya no existe.' });
+      }
+      const { data, error } = await db.from('profiles')
+        .update({ division_id: divisionId === null ? null : Number(divisionId) })
+        .in('id', ids)
+        .select('id');
+      if (error) throw new Error(error.message);
+      await registrarAccionAdmin({ adminId: administrador.id, accion: divisionId === null ? 'division_quitar' : 'division_asignar', detalle: { divisionId, alumnos: (data || []).length } });
+      return json(200, { ok: true, actualizados: (data || []).length });
+    }
+
     if (!userId) return json(400, { error: 'Falta la cuenta.' });
     if (userId === administrador.id && accion !== 'aprobar') {
       return json(400, { error: 'No puedes suspender tu propia cuenta.' });
