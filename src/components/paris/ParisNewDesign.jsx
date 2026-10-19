@@ -150,9 +150,22 @@ function SyllabusSection() {
     );
 }
 
+// Botón dorado de Alumni Pass: visible desde el 17 de octubre de 2026, 10:00 (CDMX).
+const ALUMNI_PASS_DESDE = new Date('2026-10-17T10:00:00-06:00').getTime();
+
 const ParisNewDesign = () => {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [showPromoPopup, setShowPromoPopup] = useState(false);
+    const [alumniVisible, setAlumniVisible] = useState(() => Date.now() >= ALUMNI_PASS_DESDE);
+
+    // Si la página ya estaba abierta, el botón aparece solo al llegar la hora.
+    useEffect(() => {
+        if (alumniVisible) return undefined;
+        const revisar = setInterval(() => {
+            if (Date.now() >= ALUMNI_PASS_DESDE) setAlumniVisible(true);
+        }, 15000);
+        return () => clearInterval(revisar);
+    }, [alumniVisible]);
 
     useEffect(() => {
         // Mismo calendario que el descuento directo: cuando se acaba la promo,
@@ -231,7 +244,13 @@ const ParisNewDesign = () => {
                             <span>Apertura Inscripciones Sólo Step 1</span>
                             <span className="hero-action-detail">28-29 de Octubre • 100% presencial</span>
                         </Link>
-                        {/* Alumni Pass permanece disponible por enlace directo durante las pruebas. */}
+                        {/* Alumni Pass: botón dorado desde el 17 de octubre de 2026, 10:00 (CDMX). */}
+                        {alumniVisible && (
+                            <Link to="/alumni-pass-step1" className="btn hero-action-alumni">
+                                <span>✦ Alumni Pass · Step 1 Refresher</span>
+                                <span className="hero-action-detail">Exclusivo para exalumnos del Diploma · 28 y 29 de octubre</span>
+                            </Link>
+                        )}
                     </div>
                     
                     {/* Hero Countdown */}

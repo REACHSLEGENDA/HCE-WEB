@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Award, CalendarDays, Check, FileUp, Loader2, MailCheck, MapPin, MonitorPlay, PlayCircle, ShieldCheck, Ticket, Users, X } from 'lucide-react';
+import { Award, CalendarDays, Check, FileText, FileUp, GraduationCap, Loader2, MailCheck, MapPin, MonitorPlay, PlayCircle, ShieldCheck, Ticket, Users, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useSEO } from '../hooks/useSEO';
@@ -128,6 +128,30 @@ function PaseConfirmado({ pase }) {
             ({pase.modalidad === 'presencial' ? 'sede y horario' : 'enlace de la transmisión'}).
           </p>
           {pase.avisoCorreo && <p className="ap-aviso ap-aviso--info" role="status">{pase.avisoCorreo}</p>}
+        </div>
+      </div>
+
+      {/* Siguientes pasos: factura y portal de HCE. */}
+      <div className="ap-siguientes">
+        <div className="ap-paso">
+          <FileText size={22} aria-hidden="true" />
+          <div>
+            <h2>¿Necesitas factura?</h2>
+            <p>El concepto, el monto y tu folio ya van llenos. Solo agrega tus datos fiscales y tu constancia.</p>
+          </div>
+          {pase.factura && <a className="ap-cta ap-cta--chico" href={pase.factura}>Solicitar factura</a>}
+        </div>
+        <div className="ap-paso">
+          <GraduationCap size={22} aria-hidden="true" />
+          <div>
+            <h2>Tu portal de HCE</h2>
+            <p>
+              {pase.portal === 'nueva' && <>Te creamos tu acceso: revisa <strong>{pase.email}</strong> y usa el botón «Crear mi contraseña».</>}
+              {pase.portal === 'existente' && <>Ya tienes cuenta con <strong>{pase.email}</strong>: entra con tu contraseña de siempre.</>}
+              {!['nueva', 'existente'].includes(pase.portal) && <>Te enviaremos a <strong>{pase.email}</strong> tu acceso al portal académico, donde verás tus cursos, certificados y avisos.</>}
+            </p>
+          </div>
+          <a className="ap-cta ap-cta--chico ap-cta--contorno" href="/login">Ir al portal</a>
         </div>
       </div>
     </section>

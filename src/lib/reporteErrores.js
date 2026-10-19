@@ -12,6 +12,7 @@
 // Límite: 8 reportes por sesión del navegador y cada error distinto una sola vez.
 
 import { supabase } from './supabase';
+import { esVersionVieja, recargarPorVersionNueva } from './versionNueva';
 
 const ENDPOINT = '/.netlify/functions/reportar-error';
 const MAX_POR_SESION = 8;
@@ -119,6 +120,9 @@ export function reportarError(error, { origen = 'error', componente = '', archiv
       500,
     );
     const stack = error instanceof Error ? recortarStack(error.stack) : '';
+    // Versión vieja en el navegador: se recarga y no es un error del portal.
+    // Si ya se recargó hace menos de un minuto, sí se reporta.
+    if (esVersionVieja(mensaje) && recargarPorVersionNueva()) return null;
     if (esRuido({ mensaje, stack, archivo })) return null;
 
     const ruta = typeof window !== 'undefined' ? window.location.pathname : '';

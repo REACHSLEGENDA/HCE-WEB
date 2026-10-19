@@ -23,7 +23,7 @@ import { getStripe } from './_stripe.js';
 import { admin, adminDesdeToken, json, isConfigured as supabaseListo, registrarAccionAdmin } from './_supabase.js';
 import { isConfigured as brevoListo, enviarCorreo } from './_brevo.js';
 import { plantillaHce } from './_notificaciones.js';
-import { confirmarAlumniDesdeSesion, PRECIOS_ALUMNI, GRABACIONES_ALUMNI, importeAlumni, totalAlumni } from './_alumni-pass.js';
+import { confirmarAlumniDesdeSesion, enlaceFacturaAlumni, PRECIOS_ALUMNI, GRABACIONES_ALUMNI, importeAlumni, totalAlumni } from './_alumni-pass.js';
 import { sincronizarRegistrosAlumni } from './_alumni-registros.js';
 import { EDICIONES_ALUMNI } from '../../src/data/alumniPass.js';
 import { correosAvisoAdmin } from './_admins.js';
@@ -193,6 +193,7 @@ async function pagoInfo(db, cuerpo) {
   return json(200, {
     nombre: r.nombre, email: r.email, modalidad: r.modalidad, grabaciones: r.grabaciones,
     pagado: r.pagado, folio: r.folio, presencial: cupo,
+    factura: r.pagado ? enlaceFacturaAlumni(r) : '', portal: r.portal_modo || (r.portal_invitado_en ? 'enviada' : ''),
     correoEnviado: !!r.brevo_sincronizado_en,
     avisoCorreo: r.pagado && !r.brevo_sincronizado_en ? 'Tu pago está confirmado. El envío del pase por correo está pendiente; conserva tu folio.' : '',
     precios: { ...PRECIOS_MXN, grabaciones: GRABACIONES_MXN },
@@ -203,7 +204,8 @@ function resumenConfirmado(resultado) {
   const r = resultado.registro;
   return { folio: r.folio, nombre: r.nombre, modalidad: r.modalidad,
     grabaciones: r.grabaciones, email: r.email,
-    correoEnviado: resultado.correoEnviado, avisoCorreo: resultado.avisoCorreo };
+    correoEnviado: resultado.correoEnviado, avisoCorreo: resultado.avisoCorreo,
+    factura: enlaceFacturaAlumni(r), portal: r.portal_modo || (r.portal_invitado_en ? 'enviada' : '') };
 }
 
 async function cerrarCheckout(db, r) {

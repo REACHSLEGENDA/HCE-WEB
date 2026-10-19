@@ -83,5 +83,107 @@ export async function confirmarAlumniDesdeSesion(db, sesion, { exigirCorreo = fa
     avisoCorreo = actual.brevo_sincronizado_en ? 'El aviso al equipo está pendiente.' : 'Tu pago está confirmado. El envío del pase por correo está pendiente; conserva tu folio.';
     if (exigirCorreo) throw err;
   }
+
+  // Invitación al portal (una vez). Si falla, el pago y el pase no se afectan.
+  try {
+    actual = await invitarAlPortal(db, actual);
+  } catch (err) {
+    console.error('Alumni Pass: invitación al portal pendiente:', err.message);
+  }
   return { registro: actual, correoEnviado: !!actual.brevo_sincronizado_en, avisoCorreo };
+}
+
+const SITIO = 'https://healthcareexp.com';
+const conceptoAlumni = (r) => `Alumni Pass · Step 1 Refresher (${r.modalidad === 'presencial' ? 'presencial' : 'virtual'}${r.grabaciones ? ' + grabaciones' : ''})`;
+
+/** Enlace a /facturacion con concepto, monto y folio ya puestos (sin datos personales). */
+export function enlaceFacturaAlumni(r) {
+  const params = {
+    concepto: conceptoAlumni(r),
+    monto: `${Number(r.importe || 0).toLocaleString('es-MX')} ${String(r.moneda || 'mxn').toUpperCase()}`,
+    folio: r.folio || '',
+  };
+  return `${SITIO}/facturacion?${Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&')}`;
+}
+
+/**
+ * Le da acceso al portal de HCE a quien pagó su Alumni Pass:
+ *   - sin cuenta: se le crea (ya aprobada, con sus datos) y le llega un correo
+ *     de HCE con el enlace para crear su contraseña;
+ *   - con cuenta: le llega un correo para entrar con la que ya tiene.
+ * En los dos casos el correo trae el botón de factura. Se manda una sola vez
+ * (portal_invitado_en, supabase/alumni-pass-portal.sql).
+ */
+async function invitarAlPortal(db, r) {
+  if (!r?.pagado || r.portal_invitado_en || !db.auth?.admin?.generateLink || !isConfigured()) return r;
+  if (!('portal_invitado_en' in r)) return r; // falta correr la migración
+  const email = String(r.email || '').trim().toLowerCase();
+  if (!email) return r;
+
+  // Se aparta antes: si la página y Stripe confirman a la vez, solo uno invita.
+  const fecha = new Date().toISOString();
+  const { data: apartado, error: errApartar } = await db.from('alumni_pass_registros')
+    .update({ portal_invitado_en: fecha }).eq('id', r.id).is('portal_invitado_en', null).select('id').maybeSingle();
+  if (errApartar) throw new Error(errApartar.message);
+  if (!apartado) return r;
+  try {
+    return await mandarInvitacion(db, r, email, fecha);
+  } catch (err) {
+    await db.from('alumni_pass_registros').update({ portal_invitado_en: null }).eq('id', r.id);
+    throw err;
+  }
+}
+
+async function mandarInvitacion(db, r, email, fecha) {
+
+  const { data: existente, error: errPerfil } = await db.from('profiles').select('id').ilike('email', email).maybeSingle();
+  if (errPerfil) throw new Error(errPerfil.message);
+
+  let modo = 'existente';
+  let enlace = `${SITIO}/login`;
+  if (!existente) {
+    const nombre = r.nombres ? [r.nombres, r.apellido_paterno, r.apellido_materno].filter(Boolean).join(' ') : r.nombre;
+    const { data: link, error: errLink } = await db.auth.admin.generateLink({
+      type: 'invite',
+      email,
+      options: { redirectTo: `${SITIO}/restablecer-contrasena?bienvenida=1`, data: { nombre_completo: nombre } },
+    });
+    if (errLink || !link?.properties?.action_link) throw new Error(errLink?.message || 'No se pudo crear el acceso.');
+    modo = 'nueva';
+    enlace = link.properties.action_link;
+    const datos = {
+      email, nombre_completo: nombre, rol: 'estudiante',
+      ...(r.telefono ? { telefono: r.telefono } : {}),
+      ...(r.pais ? { pais: r.pais } : {}),
+      ...(r.especialidad ? { especialidad: r.especialidad } : {}),
+      ...(r.hospital ? { institucion: r.hospital } : {}),
+      aprobado: true, aprobado_en: new Date().toISOString(), activo: true,
+    };
+    const userId = link.user?.id;
+    if (userId) {
+      const res = await db.from('profiles').update(datos).eq('id', userId).select('id').maybeSingle();
+      if (!res.error && !res.data) await db.from('profiles').insert([{ id: userId, ...datos }]);
+    }
+  }
+
+  const factura = enlaceFacturaAlumni(r);
+  const p = (html) => `<p style="margin:0 0 16px;line-height:1.7;color:#334155;font-size:15px;">${html}</p>`;
+  const cuerpo = modo === 'nueva'
+    ? p(`Hola ${escapar(r.nombres || String(r.nombre || '').split(/\s+/)[0] || '')}:`)
+      + p(`Tu Alumni Pass (folio <strong>${escapar(r.folio)}</strong>) ya está pagado. Te creamos tu acceso al <strong>portal académico de HCE</strong>, donde verás tus cursos, certificados, avisos y, si las incluiste, tus grabaciones.`)
+      + p('Usa el botón para crear tu contraseña. Si el enlace ya venció, entra a healthcareexp.com/login y elige "¿Olvidaste tu contraseña?" con este mismo correo.')
+      + p(`¿Necesitas factura? <a href="${escapar(factura)}" style="color:#005fe6;font-weight:600;">Solicítala aquí</a>: el concepto, el monto y el folio ya van llenos.`)
+    : p(`Hola ${escapar(r.nombres || String(r.nombre || '').split(/\s+/)[0] || '')}:`)
+      + p(`Tu Alumni Pass (folio <strong>${escapar(r.folio)}</strong>) ya está pagado. Entra al portal académico de HCE con tu cuenta de siempre para ver tus cursos, certificados y avisos. Si no recuerdas tu contraseña, elige "¿Olvidaste tu contraseña?" con este mismo correo.`)
+      + p(`¿Necesitas factura? <a href="${escapar(factura)}" style="color:#005fe6;font-weight:600;">Solicítala aquí</a>: el concepto, el monto y el folio ya van llenos.`);
+  await enviarCorreo({
+    para: [email],
+    asunto: modo === 'nueva' ? 'Tu acceso al portal de HCE' : 'Tu Alumni Pass ya está en tu portal de HCE',
+    claveIdempotencia: `alumni-portal-${r.id}`,
+    html: plantillaHce(cuerpo, { boton: modo === 'nueva' ? 'Crear mi contraseña' : 'Entrar a mi portal', enlace }),
+  });
+
+  const { error: errGuardar } = await db.from('alumni_pass_registros').update({ portal_modo: modo }).eq('id', r.id);
+  if (errGuardar) console.error('Alumni Pass: no se guardó el tipo de invitación:', errGuardar.message);
+  return { ...r, portal_invitado_en: fecha, portal_modo: modo };
 }
