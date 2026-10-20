@@ -713,4 +713,4 @@ Basado en "Propuesta SEO, AEO y LLMs — healthcareexp.com" (APEN DEV, 15 oct).
   a /app.html (200) y 404 real para lo demás. robots.txt y llms.txt nuevos. Sin meta keywords.
 - Decisiones: Diploma de París = presencial INER (la propuesta decía "en línea"); el diplomado
   de insuficiencia cardiaca NO se publica (se retiró el 25 ago) → /insuficiencia-cardiaca 302 a
-  /programas. Consultas muestran "pendiente de revisión médica" hasta tener revisor (campo `revisor`).
+  /programas. Sin aviso de "pendiente de revisión" (decisión de Christian); `revisor` opcional.

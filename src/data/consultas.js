@@ -9,8 +9,8 @@
 //
 // Regla de contenido: solo información general y verificable, con fuente. No es
 // consejo médico ni promete avales o equivalencias que HCE no haya confirmado.
-// `revisor` queda vacío hasta que un instructor revise la consulta (la página
-// muestra "pendiente de revisión médica" mientras tanto).
+// `revisor`: nombre del instructor que revisó la consulta (si se agrega, la
+// página muestra "Revisado por…").
 
 export const AUTOR = 'Equipo académico de HCE – Healthcare Training Experience';
 

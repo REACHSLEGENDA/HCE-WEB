@@ -139,7 +139,6 @@ function Indice() {
                     <p className="cs-codigo">{c.codigo} · {c.cluster}</p>
                     <h3>{c.tituloCorto}</h3>
                     <p className="cs-extracto">{c.extracto}</p>
-                    {!c.revisor && <p className="cs-pendiente"><TriangleAlert size={14} aria-hidden="true" /> Pendiente de revisión médica</p>}
                     <Link to={`/consultas/${c.slug}`} className="cs-abrir">Abrir consulta <ArrowRight size={16} aria-hidden="true" /></Link>
                   </article>
                 );
@@ -199,15 +198,6 @@ function Ficha({ c }) {
             </aside>
           </div>
 
-          {!c.revisor && (
-            <div className="cs-aviso" role="status">
-              <TriangleAlert size={22} aria-hidden="true" />
-              <div>
-                <p className="cs-aviso-titulo">Consulta pendiente de revisión médica</p>
-                <p>Contenido educativo para profesionales de la salud. No sustituye el juicio clínico ni los protocolos de tu hospital.</p>
-              </div>
-            </div>
-          )}
           {c.revisor && <p className="cs-revisado">Revisado por {c.revisor}</p>}
         </div>
       </header>
