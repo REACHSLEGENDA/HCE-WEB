@@ -240,10 +240,6 @@ const ParisNewDesign = () => {
                     <p className="hero-sub">Certifícate con la más alta tecnología de talla internacional.</p>
                     <div className="hero-actions">
                         <Link to="/inscripciones-step1" className="btn btn-primary">Inscripción Step 1</Link>
-                        <Link to="/inscripciones-step1" className="btn btn-outline hero-action-step1">
-                            <span>Apertura Inscripciones Sólo Step 1</span>
-                            <span className="hero-action-detail">28-29 de Octubre • 100% presencial</span>
-                        </Link>
                         {/* Alumni Pass: botón dorado desde el 17 de octubre de 2026, 10:00 (CDMX). */}
                         {alumniVisible && (
                             <Link to="/alumni-pass-step1" className="btn hero-action-alumni">

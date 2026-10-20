@@ -178,10 +178,10 @@
     text-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-/* Keep all three actions aligned with the hero copy. */
+/* Botón rojo (inscripción) y dorado (Alumni Pass), uno debajo del otro. */
 .paris-redesign .hero-actions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
     width: 100%;
     max-width: 600px;
@@ -198,13 +198,6 @@
     text-align: center;
     gap: 4px;
     white-space: normal;
-}
-
-.paris-redesign .hero-actions .hero-action-step1 {
-    flex-direction: column;
-    background: rgba(255, 255, 255, 0.1);
-    border-color: #00d2ff;
-    color: white;
 }
 
 .paris-redesign .hero-actions .hero-action-detail {
