@@ -129,11 +129,32 @@ export default function DivisionMarca({ division, notificar, onGuardada }) {
           <input type="text" value={datos.dominio} onChange={(e) => cambiar('dominio', e.target.value)} placeholder="cursos.hospitalx.com" />
         </label>
         <details className="dm-pasos">
-          <summary>Cómo activar {datos.slug ? subdominio : 'su dirección'} (una vez, 5 minutos)</summary>
+          <summary>Activar su dirección propia (opcional, una vez por división)</summary>
+          <p className="dm-pasos-intro">
+            El <strong>enlace de registro</strong> de arriba ya funciona. Esto solo hace falta si quieres que la institución
+            entre por <strong>{slugOk ? `${datos.slug}.healthcareexp.com` : 'su subdominio'}</strong>{datos.dominio ? <> o por <strong>{datos.dominio}</strong></> : null}.
+            Primero <strong>guarda</strong> esta pantalla.
+          </p>
           <ol>
-            <li><strong>Netlify</strong> → el sitio de HCE → Domain management → <em>Add domain alias</em> → escribe <code>{datos.slug}.healthcareexp.com</code>{datos.dominio ? <> (y <code>{datos.dominio}</code>)</> : null}.</li>
-            <li><strong>Donde está el DNS de healthcareexp.com</strong>: crea un registro <code>CNAME</code> con nombre <code>{datos.slug}</code> que apunte al sitio de Netlify (el mismo destino que usa <code>www</code>). Si es dominio propio, la institución crea ese CNAME en su DNS.</li>
-            <li><strong>Supabase</strong> → Authentication → URL Configuration → Redirect URLs → agrega <code>https://*.healthcareexp.com/**</code> (una sola vez para todas las divisiones){datos.dominio ? <> y <code>{`https://${datos.dominio}/**`}</code></> : null}.</li>
+            <li>
+              <strong>Netlify:</strong> entra al proyecto <code>hce-web</code> → <em>Domain management</em> → <em>Add a domain</em> → escribe
+              <span className="dm-copiable"><code>{datos.slug}.healthcareexp.com</code><button type="button" onClick={() => copiar(`${datos.slug}.healthcareexp.com`)} disabled={!slugOk} aria-label="Copiar subdominio"><Copy size={12} /></button></span>
+              y confirma. {datos.dominio ? <>Repite con <code>{datos.dominio}</code>.</> : null}
+            </li>
+            <li>
+              <strong>DNS:</strong> Netlify te dirá si hace falta. Si el DNS de healthcareexp.com lo maneja Netlify, se configura solo.
+              Si está en otro lado (GoDaddy, Cloudflare…), crea un registro:
+              <span className="dm-registro">Tipo <code>CNAME</code> · Nombre <code>{datos.slug}</code> · Destino <span className="dm-copiable"><code>hce-web.netlify.app</code><button type="button" onClick={() => copiar('hce-web.netlify.app')} aria-label="Copiar destino"><Copy size={12} /></button></span></span>
+              {datos.dominio ? <>Para <code>{datos.dominio}</code>, la institución crea en su DNS un <code>CNAME</code> con ese mismo destino.</> : null}
+            </li>
+            <li>
+              <strong>Supabase:</strong> <code>https://*.healthcareexp.com/**</code> ya está en Redirect URLs, no hagas nada.
+              {datos.dominio ? <> Solo agrega <code>{`https://${datos.dominio}/**`}</code> para su dominio propio.</> : null}
+            </li>
+            <li>
+              <strong>Prueba:</strong> en 10 a 30 minutos (lo que tarda el certificado de seguridad) abre
+              <a href={subdominio} target="_blank" rel="noreferrer"> {subdominio}</a>: debe aparecer la entrada con su logo.
+            </li>
           </ol>
         </details>
       </section>

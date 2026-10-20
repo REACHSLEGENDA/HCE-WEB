@@ -1031,3 +1031,8 @@
 .dm-pasos { color: var(--text-dark); font-size: .85rem; }
 .dm-pasos summary { cursor: pointer; font-weight: 700; color: var(--hce-azul, #005fe6); min-height: 32px; }
 .dm-pasos ol { margin: 8px 0 0; padding-left: 20px; line-height: 1.7; }
+.dm-pasos-intro { margin: 8px 0 0; color: var(--text-muted); line-height: 1.6; }
+.dm-pasos li { margin-bottom: 10px; }
+.dm-copiable { display: inline-flex; align-items: center; gap: 4px; margin: 0 4px; }
+.dm-copiable button { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-main); color: var(--text-dark); cursor: pointer; }
+.dm-registro { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 6px 0; padding: 8px 10px; border-radius: 10px; background: var(--bg-gray); }
