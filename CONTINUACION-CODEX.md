@@ -714,3 +714,17 @@ Basado en "Propuesta SEO, AEO y LLMs — healthcareexp.com" (APEN DEV, 15 oct).
 - Decisiones: Diploma de París = presencial INER (la propuesta decía "en línea"); el diplomado
   de insuficiencia cardiaca NO se publica (se retiró el 25 ago) → /insuficiencia-cardiaca 302 a
   /programas. Sin aviso de "pendiente de revisión" (decisión de Christian); `revisor` opcional.
+
+## 17. Más consultas, pósters de programas y nuevas preguntas frecuentes (20 oct) — Claude
+
+- 8 consultas nuevas en src/data/consultas.js (14 en total): complicaciones-ecmo, circuito-ecmo,
+  anticoagulacion-ecmo (sin dosis), canulacion-ecmo, destete-ecmo, ecpr, emergencias-circuito-ecmo,
+  programa-ecmo-hospital (programa `hospitales` → /para-hospitales; en JSON-LD sale como Service).
+  Fotos en public/consultas/*.webp (galería INER 2025).
+- Pósters con logo (los del inicio: /assets/componentes/expparis|expnur|expsim.webp) en
+  `PROGRAMAS[].poster`. Componente `TarjetaPrograma` en Consultas.jsx: índice de consultas,
+  lateral y CTA de cada consulta, hub /programas, /para-hospitales y lateral de FAQ.
+- /preguntas-frecuentes rediseñada: buscador, pestañas por tema (`tema` en FAQ_PROGRAMAS:
+  'programas' | 'pagos'), tarjetas numeradas, enlace "Leer la consulta" (`consulta` en cada FAQ),
+  lateral de contacto y programas. Índice de consultas con filtros por tema.
+- llms.txt con las 14 consultas agrupadas. Sitemap: 27 URLs.

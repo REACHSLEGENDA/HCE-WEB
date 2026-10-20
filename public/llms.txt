@@ -12,12 +12,30 @@ Datos actualizados al 20 de octubre de 2026. Sitio oficial: https://healthcareex
 - [Capacitación en ECMO para hospitales](https://healthcareexp.com/para-hospitales)
 
 ## Consultas (guías clínicas con fuentes)
-- [¿Qué es la ECMO?](https://healthcareexp.com/consultas/que-es-ecmo)
-- [ECMO VV vs VA: diferencias](https://healthcareexp.com/consultas/ecmo-vv-vs-va)
-- [Cómo obtener una certificación en ECMO (ELSO)](https://healthcareexp.com/consultas/certificacion-ecmo)
+Contenido educativo general para profesionales de la salud, con fuentes oficiales (ELSO, SEMICYUC y otras). No es consejo médico ni indica dosis.
+
+### ECMO: conceptos
+- [¿Qué es la ECMO?](https://healthcareexp.com/consultas/que-es-ecmo): qué es, cómo funciona y cuándo se usa.
+- [ECMO VV vs VA: diferencias](https://healthcareexp.com/consultas/ecmo-vv-vs-va): soporte respiratorio frente a soporte respiratorio y circulatorio.
+- [Partes del circuito ECMO](https://healthcareexp.com/consultas/circuito-ecmo): cánulas, bomba centrífuga, oxigenador, mezclador de gases, intercambiador de calor y consola.
+- [Canulación en ECMO](https://healthcareexp.com/consultas/canulacion-ecmo): canulación periférica y central, configuraciones y cuidados del sitio.
+- [Complicaciones de ECMO](https://healthcareexp.com/consultas/complicaciones-ecmo): sangrado, trombosis, hemólisis, infección, isquemia de la extremidad y fallas del circuito.
+- [Destete de ECMO](https://healthcareexp.com/consultas/destete-ecmo): criterios generales y prueba de desconexión en VV y en VA.
+- [ECMO en RCP (ECPR)](https://healthcareexp.com/consultas/ecpr): ECMO VA durante la reanimación y qué necesita un programa.
+
+### Enfermería en ECMO
 - [Cuidados de enfermería en ECMO](https://healthcareexp.com/consultas/cuidados-enfermeria-ecmo)
+- [Anticoagulación en ECMO: lo que enfermería debe vigilar](https://healthcareexp.com/consultas/anticoagulacion-ecmo): pruebas (TTPa, anti-Xa, ACT) y señales de sangrado o trombosis.
+
+### Simulación y formación
 - [Simulación clínica en ECMO](https://healthcareexp.com/consultas/simulacion-ecmo)
+- [Emergencias del circuito ECMO](https://healthcareexp.com/consultas/emergencias-circuito-ecmo): aire, caída de flujo, falla de bomba u oxigenador y decanulación.
+- [Cómo obtener una certificación en ECMO (ELSO)](https://healthcareexp.com/consultas/certificacion-ecmo)
+
+### Hospitales y cardiología
+- [Cómo arrancar un programa de ECMO en tu hospital](https://healthcareexp.com/consultas/programa-ecmo-hospital): equipo, protocolos, formación, simulación y resultados.
 - [Insuficiencia cardiaca avanzada](https://healthcareexp.com/consultas/ic-avanzada)
+
 - [Todas las consultas](https://healthcareexp.com/consultas)
 - [Preguntas frecuentes](https://healthcareexp.com/preguntas-frecuentes)
 
@@ -43,3 +61,9 @@ Sí. El ECMO Nursing Care Course de HCE está diseñado por y para enfermería e
 
 **¿Existe un simulador de ECMO en línea?**
 Sí. ECMO SIM es un simulador clínico 100% en línea que HCE ofrece en Latinoamérica: https://healthcareexp.com/simulador-ecmo-sim
+
+**¿HCE capacita a equipos de hospital?**
+Sí. Ofrece formación para equipos ECMO nuevos, simulación con ECMO SIM, capacitación a la medida y un portal con la marca de la institución: https://healthcareexp.com/para-hospitales
+
+**¿Cómo verifico un certificado de HCE?**
+Cada certificado tiene folio y código QR; se verifica en https://healthcareexp.com/verificar

@@ -257,7 +257,7 @@ export const PAGINAS = [
         about: { '@type': 'MedicalEntity', name: c.palabraClave },
         keywords: [c.palabraClave, ...c.buscar].join(', '),
         speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.guia-respuesta'] },
-        mentions: PROGRAMAS_CTA[c.programa] ? { '@type': 'Course', name: PROGRAMAS_CTA[c.programa].nombre, url: `${SITIO}${PROGRAMAS_CTA[c.programa].enlace}` } : undefined,
+        mentions: PROGRAMAS_CTA[c.programa] ? { '@type': c.programa === 'hospitales' ? 'Service' : 'Course', name: PROGRAMAS_CTA[c.programa].nombre, url: `${SITIO}${PROGRAMAS_CTA[c.programa].enlace}` } : undefined,
       },
       faqSchema(c.faqs),
       migas([{ nombre: 'Consultas', ruta: '/consultas' }, { nombre: c.tituloCorto, ruta: p.ruta }]),
