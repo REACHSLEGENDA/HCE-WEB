@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, Gamepad2, Presentation } from 'lucide-react';
 import FirmaHCE from './FirmaHCE';
+import { DEFINICION_HCE } from '../data/programas';
 import './Hero.css';
 
 const Hero = () => {
@@ -26,6 +27,9 @@ const Hero = () => {
           <p>
             Domina el soporte extracorpóreo y las terapias críticas mediante aprendizaje inmersivo, simulación avanzada y entrenamiento de alto desempeño, diseñado para equipos multidisciplinarios de salud.
           </p>
+
+          {/* Frase-definición idéntica en inicio, Quiénes somos, pie y llms.txt. */}
+          <p className="hero-definicion">{DEFINICION_HCE}</p>
 
           <div className="hero-actions">
             <a href="/simulador-ecmo-sim" className="btn btn-primary hero-btn-shadow">

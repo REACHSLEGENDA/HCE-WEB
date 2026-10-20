@@ -18,9 +18,194 @@
     Cache-Control = "public, max-age=0, must-revalidate"
     Content-Type = "application/manifest+json; charset=utf-8"
 
-# El redirect SPA va al final: solo actua cuando NO existe un archivo estatico
-# con esa ruta, por lo que /sw.js, /manifest.json y /icons/* se sirven tal cual.
+# ---------------------------------------------------------------------------
+# Direcciones viejas (sitio anterior en WordPress): redirección permanente 301
+# a su página actual, para no perder enlaces ni posicionamiento.
+[[redirects]]
+  from = "/ecmosim"
+  to = "/simulador-ecmo-sim"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/ecmosim/*"
+  to = "/simulador-ecmo-sim"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/shop"
+  to = "/programas"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/shop/*"
+  to = "/programas"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/shop-2"
+  to = "/programas"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/shop-2/*"
+  to = "/programas"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/inscripciones-ecmo-2a"
+  to = "/programas"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/inscripciones-ecmo-2a/*"
+  to = "/programas"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guias"
+  to = "/consultas"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/guias/*"
+  to = "/consultas"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/feed"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/feed/*"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/comments/feed/*"
+  to = "/"
+  status = 301
+  force = true
+
+# Insuficiencia cardiaca: el diplomado no está publicado (se retiró el 25 ago
+# 2026). Mientras tanto, redirección temporal 302 a los programas.
+[[redirects]]
+  from = "/insuficiencia-cardiaca"
+  to = "/programas"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/insuficiencia-cardiaca/*"
+  to = "/programas"
+  status = 302
+  force = true
+
+# ---------------------------------------------------------------------------
+# Páginas de la aplicación (portal, inscripciones, verificación): app.html es la
+# copia genérica de la SPA (scripts/seo-paginas.mjs). Las páginas públicas con
+# SEO propio (/paris-diploma-ecmo.html, /consultas/*.html...) se sirven tal cual
+# porque existe el archivo y estas reglas no llevan "force".
+[[redirects]]
+  from = "/login"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/confirmacion"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/restablecer-contrasena"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard/*"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/classroom/*"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/retroalimentacion"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/inscripciones-diploma-paris-ecmo"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/inscripciones-ecmo-nursing"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/inscripcion-step2-privada-2026"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/alumni-pass-step1"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/programas-diploma-paris-2026"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/debug-checkout-preview-2026"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/debug-checkout-nursing-preview-2026"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/verificar/*"
+  to = "/app.html"
+  status = 200
+
+# Todo lo demás no existe: 404 real (antes respondía 200 con "página no
+# encontrada", un soft-404 que confundía a Google). La SPA dibuja su 404.
 [[redirects]]
   from = "/*"
-  to = "/index.html"
-  status = 200
+  to = "/app.html"
+  status = 404

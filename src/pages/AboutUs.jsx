@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import './AboutUs.css'; 
 
 import { useSEO } from '../hooks/useSEO';
+import { DEFINICION_HCE } from '../data/programas';
 
 const AboutUs = () => {
   const [showVideoModal, setShowVideoModal] = useState(false);
@@ -52,6 +53,7 @@ const AboutUs = () => {
             <p className="au-hero-desc">
               Fusionamos simulación inmersiva, tecnología clínica y experiencia internacional. Prepárate para el manejo del paciente crítico sin comprometer la vida real.
             </p>
+            <p className="au-hero-desc au-definicion">{DEFINICION_HCE}</p>
 
             <div className="au-hero-actions">
               <button 

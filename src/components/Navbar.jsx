@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Users, Heart, Activity, Award, Gamepad2, PlayCircle, Hospital, Home as HomeIcon, Image, Camera, LogIn, User, LogOut, ExternalLink, MessageSquare } from 'lucide-react';
+import { X, Users, Heart, Activity, Award, Gamepad2, PlayCircle, Hospital, Home as HomeIcon, Image, Camera, LogIn, User, LogOut, ExternalLink, MessageSquare, Building2, BookOpen, HelpCircle } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
@@ -151,8 +151,19 @@ const Navbar = () => {
           <div className="menu-section">
             <h3>Experiencias</h3>
             <ul className="menu-list">
+              <li><Link to="/programas" onClick={() => toggleNav(false)}><Award size={18} /> Todos los programas</Link></li>
               <li><Link to="/ecmo-nursing-care" onClick={() => toggleNav(false)}><NurseCap size={18} /> ECMO Nursing Care</Link></li>
               <li><Link to="/paris-diploma-ecmo" onClick={() => toggleNav(false)}><Award size={18} /> Paris Diploma ECMO</Link></li>
+              <li><Link to="/para-hospitales" onClick={() => toggleNav(false)}><Building2 size={18} /> Para hospitales</Link></li>
+            </ul>
+          </div>
+
+          {/* Consultas */}
+          <div className="menu-section">
+            <h3>Aprende</h3>
+            <ul className="menu-list">
+              <li><Link to="/consultas" onClick={() => toggleNav(false)}><BookOpen size={18} /> Consultas de ECMO</Link></li>
+              <li><Link to="/preguntas-frecuentes" onClick={() => toggleNav(false)}><HelpCircle size={18} /> Preguntas frecuentes</Link></li>
             </ul>
           </div>
  

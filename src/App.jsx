@@ -4,6 +4,7 @@ import CookieBanner from './components/CookieBanner';
 import Home from './pages/Home';
 import { AuthProvider } from './context/AuthContext';
 import { MarcaProvider, hostDeDivision } from './context/MarcaContext';
+import { conReintento } from './lib/versionNueva';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -17,38 +18,43 @@ import ErrorBoundary from './components/ErrorBoundary';
  * que buscamos. El resto de rutas -- incluidas AdminDashboard (6k lineas),
  * Dashboard, Classroom y las paginas de inscripcion -- salen del chunk inicial.
  * ------------------------------------------------------------------------ */
-const ChatBot = lazy(() => import('./components/ChatBot'));
-const InstallApp = lazy(() => import('./components/InstallApp'));
+const ChatBot = lazy(() => conReintento(() => import('./components/ChatBot')));
+const InstallApp = lazy(() => conReintento(() => import('./components/InstallApp')));
 
-const Login = lazy(() => import('./pages/Login'));
-const Confirmacion = lazy(() => import('./pages/Confirmacion'));
-const RestablecerPassword = lazy(() => import('./pages/RestablecerPassword'));
+const Login = lazy(() => conReintento(() => import('./pages/Login')));
+const Confirmacion = lazy(() => conReintento(() => import('./pages/Confirmacion')));
+const RestablecerPassword = lazy(() => conReintento(() => import('./pages/RestablecerPassword')));
 
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Classroom = lazy(() => import('./pages/Classroom'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const Dashboard = lazy(() => conReintento(() => import('./pages/Dashboard')));
+const Classroom = lazy(() => conReintento(() => import('./pages/Classroom')));
+const AdminDashboard = lazy(() => conReintento(() => import('./pages/AdminDashboard')));
 
-const ParisDiploma = lazy(() => import('./pages/ParisDiploma'));
-const AboutUs = lazy(() => import('./pages/AboutUs'));
-const Nursing = lazy(() => import('./pages/Nursing'));
-const EcmoSim = lazy(() => import('./pages/EcmoSim'));
-const Instructores = lazy(() => import('./pages/Instructores'));
-const Retroalimentacion = lazy(() => import('./pages/Retroalimentacion'));
-const Inscripciones = lazy(() => import('./pages/Inscripciones'));
-const InscripcionesStep1 = lazy(() => import('./pages/InscripcionesStep1'));
-const InscripcionesStep2 = lazy(() => import('./pages/InscripcionesStep2'));
-const AlumniPass = lazy(() => import('./pages/AlumniPass'));
-const Programas = lazy(() => import('./pages/Programas'));
-const SecretPreview = lazy(() => import('./pages/SecretPreview'));
-const InscripcionesNursing = lazy(() => import('./pages/InscripcionesNursing'));
-const SecretNursingPreview = lazy(() => import('./pages/SecretNursingPreview'));
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-const Facturacion = lazy(() => import('./pages/Facturacion'));
-const Gallery = lazy(() => import('./pages/Gallery'));
-const Comunidad = lazy(() => import('./pages/Comunidad'));
-const VerificarCertificado = lazy(() => import('./pages/VerificarCertificado'));
-const NotFound = lazy(() => import('./pages/NotFound'));
-const SinConexion = lazy(() => import('./pages/SinConexion'));
+const ParisDiploma = lazy(() => conReintento(() => import('./pages/ParisDiploma')));
+const AboutUs = lazy(() => conReintento(() => import('./pages/AboutUs')));
+const Nursing = lazy(() => conReintento(() => import('./pages/Nursing')));
+const EcmoSim = lazy(() => conReintento(() => import('./pages/EcmoSim')));
+const Instructores = lazy(() => conReintento(() => import('./pages/Instructores')));
+const Retroalimentacion = lazy(() => conReintento(() => import('./pages/Retroalimentacion')));
+const Inscripciones = lazy(() => conReintento(() => import('./pages/Inscripciones')));
+const InscripcionesStep1 = lazy(() => conReintento(() => import('./pages/InscripcionesStep1')));
+const InscripcionesStep2 = lazy(() => conReintento(() => import('./pages/InscripcionesStep2')));
+const AlumniPass = lazy(() => conReintento(() => import('./pages/AlumniPass')));
+const Programas = lazy(() => conReintento(() => import('./pages/Programas')));
+const SecretPreview = lazy(() => conReintento(() => import('./pages/SecretPreview')));
+const InscripcionesNursing = lazy(() => conReintento(() => import('./pages/InscripcionesNursing')));
+const SecretNursingPreview = lazy(() => conReintento(() => import('./pages/SecretNursingPreview')));
+const PrivacyPolicy = lazy(() => conReintento(() => import('./pages/PrivacyPolicy')));
+const Facturacion = lazy(() => conReintento(() => import('./pages/Facturacion')));
+const Gallery = lazy(() => conReintento(() => import('./pages/Gallery')));
+const Comunidad = lazy(() => conReintento(() => import('./pages/Comunidad')));
+const VerificarCertificado = lazy(() => conReintento(() => import('./pages/VerificarCertificado')));
+const NotFound = lazy(() => conReintento(() => import('./pages/NotFound')));
+const SinConexion = lazy(() => conReintento(() => import('./pages/SinConexion')));
+// Consultas (blog clínico), preguntas frecuentes, hub de programas y hospitales.
+const Consultas = lazy(() => conReintento(() => import('./pages/Consultas')));
+const PreguntasFrecuentes = lazy(() => conReintento(() => import('./pages/Consultas')).then((m) => ({ default: m.PreguntasFrecuentes })));
+const ProgramasHub = lazy(() => conReintento(() => import('./pages/Consultas')).then((m) => ({ default: m.Programas })));
+const ParaHospitales = lazy(() => conReintento(() => import('./pages/Consultas')).then((m) => ({ default: m.ParaHospitales })));
 
 /* ------------------------------------------------------------------------ */
 
@@ -275,6 +281,12 @@ function App() {
               {/* Pública, sin sesión: a esta página lleva el QR del certificado (noindex). */}
               <Route path="/verificar" element={<VerificarCertificado />} />
               <Route path="/verificar/:folio" element={<VerificarCertificado />} />
+              {/* Consultas, preguntas frecuentes, programas y hospitales (SEO: src/data/seo.js). */}
+              <Route path="/consultas" element={<Consultas />} />
+              <Route path="/consultas/:slug" element={<Consultas />} />
+              <Route path="/preguntas-frecuentes" element={<PreguntasFrecuentes />} />
+              <Route path="/programas" element={<ProgramasHub />} />
+              <Route path="/para-hospitales" element={<ParaHospitales />} />
 
               {/* Comodín: va al final porque React Router evalúa en orden y
                   esta ruta coincide con todo lo que no encajó antes. */}

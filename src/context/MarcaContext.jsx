@@ -27,6 +27,17 @@ export function MarcaProvider({ children }) {
   const [publica, setPublica] = useState(null);
   const [deCuenta, setDeCuenta] = useState(null);
 
+  // En la dirección de una división no se indexa nada: es su portal privado,
+  // no una copia del sitio de HCE para los buscadores.
+  useEffect(() => {
+    if (!hostDeDivision()) return undefined;
+    const m = document.createElement('meta');
+    m.name = 'robots';
+    m.content = 'noindex, nofollow';
+    document.head.appendChild(m);
+    return () => m.remove();
+  }, []);
+
   // Por dirección o por enlace (antes de iniciar sesión).
   useEffect(() => {
     const desdeUrl = new URLSearchParams(window.location.search).get('division') || '';

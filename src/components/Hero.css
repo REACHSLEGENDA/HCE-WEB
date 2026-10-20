@@ -145,3 +145,6 @@
   .hero-actions a, .hero-actions button { width: 100%; text-align: center; }
   .hce-home-hero { padding-top: 90px; }
 }
+
+/* Frase-definición de HCE (la misma en todo el sitio, para Google y las IA). */
+.hce-home-hero .hero-definicion { max-width: 640px; margin: 14px 0 0; font-size: .92rem; line-height: 1.6; opacity: .78; }

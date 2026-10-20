@@ -1278,3 +1278,5 @@
   from { transform: scale(0.95); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+.au-definicion { margin-top: 12px; font-size: .95rem; opacity: .85; }

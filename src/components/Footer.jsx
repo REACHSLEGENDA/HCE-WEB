@@ -1,6 +1,7 @@
 import { ChevronRight, ArrowUpRight, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './Footer.css';
+import { DEFINICION_HCE } from '../data/programas';
 
 const Footer = () => {
   return (
@@ -18,17 +19,20 @@ const Footer = () => {
             <a href="https://healthcareexp.com/">
               <img src="/assets/componentes/firma-hce.png" alt="HCE - Healthcare Training Experience" />
             </a>
-            <p>
-              Redefiniendo el estándar de la educación médica continua. Fusionamos ciencia, tecnología de simulación avanzada y excelencia académica para empoderar a los líderes del futuro en salud.
-            </p>
+            {/* Misma frase-definición que en el inicio, Quiénes somos y llms.txt
+                (los buscadores con IA aprenden por repetición consistente). */}
+            <p>{DEFINICION_HCE}</p>
           </div>
 
           {/* 1. Navegación */}
           <div className="f-col">
             <h4>Navegación</h4>
             <ul className="f-nav">
+              <li><Link to="/programas"><ChevronRight size={12} /> Programas</Link></li>
+              <li><Link to="/consultas"><ChevronRight size={12} /> Consultas de ECMO</Link></li>
+              <li><Link to="/preguntas-frecuentes"><ChevronRight size={12} /> Preguntas frecuentes</Link></li>
+              <li><Link to="/para-hospitales"><ChevronRight size={12} /> Para hospitales</Link></li>
               <li><Link to="/aviso-de-privacidad"><ChevronRight size={12} /> Privacidad</Link></li>
-              <li><a href="#"><ChevronRight size={12} /> FAQ</a></li>
             </ul>
           </div>
 

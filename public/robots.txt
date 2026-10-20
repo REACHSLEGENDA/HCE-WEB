@@ -1,8 +1,30 @@
+# Buscadores tradicionales y con IA (GPTBot, OAI-SearchBot, ChatGPT-User,
+# ClaudeBot, PerplexityBot, Google-Extended...): pueden leer todo el sitio
+# público. Quedan fuera facturación, inscripciones y el portal de alumnos.
 User-agent: *
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: anthropic-ai
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
 Allow: /
-Disallow: /debug-checkout-preview-2026
-Disallow: /inscripcion-step2-privada-2026
-Disallow: /programas-diploma-paris-2026
+Disallow: /facturacion
+Disallow: /inscripciones-
+Disallow: /inscripcion-
 Disallow: /alumni-pass-step1
+Disallow: /programas-diploma-paris-2026
+Disallow: /debug-checkout-
+Disallow: /dashboard
+Disallow: /classroom/
+Disallow: /admin
+Disallow: /login
+Disallow: /confirmacion
+Disallow: /restablecer-contrasena
 
 Sitemap: https://healthcareexp.com/sitemap.xml

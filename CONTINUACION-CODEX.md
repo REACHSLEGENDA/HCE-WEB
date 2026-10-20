@@ -698,3 +698,19 @@ texto, segundo, creada_en, actualizada_en) con RLS de dueño.
 2. Sin conexión: botón "Guardar sin conexión" en PDFs/lecturas → IndexedDB del
    dispositivo; página `/classroom/sin-conexion` (dentro del alcance del service
    worker, sin pedir sesión) que lista y abre lo guardado.
+
+## 16. SEO, AEO y LLMs aplicado (20 oct) — Claude
+
+Basado en "Propuesta SEO, AEO y LLMs — healthcareexp.com" (APEN DEV, 15 oct).
+- Datos: src/data/seo.js (títulos, descripciones, JSON-LD: EducationalOrganization con
+  desambiguación de Dual Code, Course/CourseInstance/Event, MedicalWebPage, FAQPage,
+  BreadcrumbList, Person por instructor, Service, ItemList), src/data/consultas.js (6
+  consultas + FAQ), src/data/programas.js (DEFINICION_HCE, programas), src/data/instructores.js.
+- Páginas: /consultas y /consultas/:slug (diseño como apen.mx), /preguntas-frecuentes,
+  /programas (hub), /para-hospitales — todo en src/pages/Consultas.jsx/.css.
+- scripts/seo-paginas.mjs (postbuild): HTML por página con contenido sin JS, sitemap con
+  lastmod real (git), app.html genérico. netlify.toml: 301 de URLs viejas, rutas de la app
+  a /app.html (200) y 404 real para lo demás. robots.txt y llms.txt nuevos. Sin meta keywords.
+- Decisiones: Diploma de París = presencial INER (la propuesta decía "en línea"); el diplomado
+  de insuficiencia cardiaca NO se publica (se retiró el 25 ago) → /insuficiencia-cardiaca 302 a
+  /programas. Consultas muestran "pendiente de revisión médica" hasta tener revisor (campo `revisor`).

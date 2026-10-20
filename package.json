@@ -15,7 +15,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verificar": "npm run lint && npm run test && npm run check:lms && npm run check:alumni && npm run check:ui && npm run check:asistente && npm run build"
+    "verificar": "npm run lint && npm run test && npm run check:lms && npm run check:alumni && npm run check:ui && npm run check:asistente && npm run build",
+    "postbuild": "node scripts/seo-paginas.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

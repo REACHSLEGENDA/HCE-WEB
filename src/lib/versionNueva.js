@@ -37,3 +37,16 @@ export function instalarRecargaPorVersion() {
     if (recargarPorVersionNueva()) evento.preventDefault();
   });
 }
+
+/**
+ * Carga una página diferida y, si falla (red que se cortó un momento), lo
+ * intenta otra vez antes de rendirse. Si el archivo ya no existe (versión
+ * nueva publicada), el error sigue su camino y la página se recarga una vez.
+ */
+export function conReintento(cargar, { intentos = 2, esperaMs = 800 } = {}) {
+  return cargar().catch((err) => {
+    if (intentos <= 0) throw err;
+    return new Promise((ok) => setTimeout(ok, esperaMs))
+      .then(() => conReintento(cargar, { intentos: intentos - 1, esperaMs: esperaMs * 2 }));
+  });
+}
