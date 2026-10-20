@@ -178,8 +178,8 @@ function Ficha({ c }) {
                 <span className={`cs-insignia cs-insignia--${c.tono}`}>{c.insignia}</span>
               </div>
               <div className="cs-voz">
-                <span className="cs-voz-logo" aria-hidden="true">HCE</span>
-                <p>HCE explica: “{c.lineaHce}”</p>
+                <span className="cs-voz-logo"><img src="/assets/componentes/firma-hce.png" alt="Logo de HCE" width="60" height="40" /></span>
+                <p><strong>HCE – Healthcare Training Experience</strong> explica: “{c.lineaHce}”</p>
               </div>
               <h1>{c.titulo}</h1>
             </div>
