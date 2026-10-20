@@ -447,3 +447,8 @@
   font-size:.8rem;
   color:var(--a-muted);
 }
+
+/* Entrada con la marca de una división (logo propio en lugar del de HCE). */
+.login-page .auth-marca { display: inline-flex; align-items: center; min-height: 48px; }
+.login-page .auth-marca img { max-height: 56px; max-width: 220px; width: auto; object-fit: contain; }
+.login-page .auth-marca strong { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--a-text); }

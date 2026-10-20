@@ -1,0 +1,30 @@
+/* Mis notas (aula). Usa los colores del aula: --aula-* con respaldo. */
+.notas-leccion { display: grid; gap: 12px; margin-top: 20px; padding: 18px; border: 1px solid var(--aula-borde, #d5dfea); border-radius: 18px; background: var(--aula-superficie, #fff); color: var(--aula-texto, #0a192f); }
+.notas-leccion header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.notas-leccion h3 { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 1rem; }
+.notas-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.notas-form { display: grid; gap: 8px; }
+.notas-leccion textarea { width: 100%; min-height: 64px; padding: 10px 12px; border: 1px solid var(--aula-borde, #d5dfea); border-radius: 12px; background: var(--aula-suave, #eef3f8); color: inherit; font: inherit; font-size: .92rem; resize: vertical; }
+.notas-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.notas-minuto { display: inline-flex; align-items: center; gap: 6px; color: var(--aula-muted, #4f5f78); font-size: .82rem; cursor: pointer; }
+.notas-minuto input { accent-color: var(--aula-acento, #00838f); }
+.notas-guardar, .notas-secundario, .notas-descargar { min-height: 40px; padding: 0 16px; border-radius: 100px; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
+.notas-guardar { margin-left: auto; border: 0; background: var(--hce-azul, #005fe6); color: #fff; }
+.notas-guardar:disabled { opacity: .5; cursor: not-allowed; }
+.notas-secundario, .notas-descargar { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--aula-borde, #d5dfea); background: transparent; color: inherit; }
+.notas-vacio { margin: 0; color: var(--aula-muted, #4f5f78); font-size: .88rem; }
+.notas-lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.notas-lista li { display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: 8px 10px; padding: 10px 12px; border-radius: 12px; background: var(--aula-suave, #eef3f8); }
+.notas-lista li p { grid-column: 2; margin: 0; white-space: pre-wrap; line-height: 1.55; font-size: .92rem; }
+.notas-lista li:not(:has(.notas-chip)) p, .notas-lista li:not(:has(.notas-chip)) .notas-edicion { grid-column: 1 / 3; }
+.notas-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 9px; border: 0; border-radius: 100px; background: var(--aula-acento, #00838f); color: #fff; font: inherit; font-size: .75rem; font-weight: 700; cursor: pointer; }
+.notas-chip:disabled { cursor: default; opacity: .8; }
+.notas-edicion { grid-column: 2; display: grid; gap: 6px; }
+.notas-iconos { display: flex; gap: 2px; }
+.notas-iconos button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--aula-muted, #4f5f78); cursor: pointer; }
+.notas-iconos button:hover { background: var(--aula-borde, #d5dfea); color: inherit; }
+.notas-leccion :is(button, textarea, input):focus-visible { outline: 3px solid var(--aula-acento, #00838f); outline-offset: 2px; }
+@media (max-width: 600px) {
+  .notas-leccion { padding: 14px; }
+  .notas-guardar { width: 100%; }
+}

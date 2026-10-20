@@ -11,6 +11,8 @@
 //   rechazar  { userId }   la solicitud queda cerrada; no puede entrar
 //   bloquear  { userId }   suspende una cuenta activa
 //   activar   { userId }   quita la suspensión
+//   division-sincronizar { divisionId }  inscribe a todos sus alumnos en sus
+//             cursos (si la división tiene inscripción automática)
 //   division  { userIds, divisionId }  mete (o saca, con divisionId null) a
 //             alumnos de una división. Va por aquí porque desde el navegador
 //             Supabase no deja editar el perfil de otra persona (no daba error:
@@ -18,6 +20,7 @@
 
 import { admin, adminDesdeToken, registrarAccionAdmin, json, isConfigured as supabaseListo } from './_supabase.js';
 import { inscribir } from './_inscripciones.js';
+import { inscribirEnDivision } from './_divisiones.js';
 import { notificar } from './_notificaciones.js';
 import { isConfigured as brevoListo, upsertContact, addToList } from './_brevo.js';
 
@@ -80,7 +83,15 @@ export const handler = async (event) => {
         .select('id');
       if (error) throw new Error(error.message);
       await registrarAccionAdmin({ adminId: administrador.id, accion: divisionId === null ? 'division_quitar' : 'division_asignar', detalle: { divisionId, alumnos: (data || []).length } });
-      return json(200, { ok: true, actualizados: (data || []).length });
+      // Al entrar a la división, quedan inscritos a sus cursos (si así está configurada).
+      const { inscritos } = divisionId === null ? { inscritos: 0 } : await inscribirEnDivision(db, divisionId, { userIds: (data || []).map((x) => x.id) });
+      return json(200, { ok: true, actualizados: (data || []).length, inscritos });
+    }
+
+    if (accion === 'division-sincronizar') {
+      if (!divisionId) return json(400, { error: 'Falta la división.' });
+      const { inscritos } = await inscribirEnDivision(admin(), divisionId);
+      return json(200, { ok: true, inscritos });
     }
 
     if (!userId) return json(400, { error: 'Falta la cuenta.' });

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useMarca, estiloMarca } from '../context/MarcaContext';
 import {
   LogIn,
   UserPlus,
@@ -57,6 +58,8 @@ function PhoneSelect({ value, onChange }) {
 
 const Login = () => {
   const { login, signUp, resetPassword, user, profile, loading: authLoading } = useAuth();
+  // Entrada por la dirección o el enlace de una división (su logo y su registro).
+  const { marca, slugRegistro } = useMarca();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -168,7 +171,8 @@ const Login = () => {
         grado,
         especialidad,
         institucion,
-        cargo
+        cargo,
+        slugRegistro
       );
       setSuccessMsg('Tu cuenta fue creada. Revisa tu correo por si necesitas confirmarla y después inicia sesión.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -215,15 +219,21 @@ const Login = () => {
   };
 
   return (
-    <div className="login-page">
-      <header className="auth-topbar"><Link to="/" aria-label="HCE, ir al inicio"><img src="/assets/componentes/ghghg-scaled.png" alt="HCE Healthcare Training Experience" width="184" height="48" /></Link><Link to="/" className="auth-toplink">Volver al sitio <ArrowRight size={16} /></Link></header>
+    <div className="login-page" style={estiloMarca(marca, ['--a-accent', '--a-button'])}>
+      <header className="auth-topbar">
+        {marca ? (
+          <span className="auth-marca">{marca.logo_url ? <img src={marca.logo_url} alt={marca.nombre} height="48" /> : <strong>{marca.nombre}</strong>}</span>
+        ) : (
+          <><Link to="/" aria-label="HCE, ir al inicio"><img src="/assets/componentes/ghghg-scaled.png" alt="HCE Healthcare Training Experience" width="184" height="48" /></Link><Link to="/" className="auth-toplink">Volver al sitio <ArrowRight size={16} /></Link></>
+        )}
+      </header>
       <main className="login-container">
         <section className="auth-intro" aria-label="Escuela HCE">
-          <span className="auth-eyebrow">ESCUELA HCE</span>
+          <span className="auth-eyebrow">{marca ? marca.nombre.toUpperCase() : 'ESCUELA HCE'}</span>
           <h1>Tu siguiente<br />paso empieza aquí.</h1>
-          <p>Un espacio para seguir aprendiendo, conectar con tu formación y avanzar en la práctica clínica.</p>
+          <p>{marca?.bienvenida || 'Un espacio para seguir aprendiendo, conectar con tu formación y avanzar en la práctica clínica.'}</p>
           <div className="auth-benefits"><span>01 / Tus cursos</span><span>02 / Tu progreso</span><span>03 / Tus certificados</span></div>
-          <p className="auth-intro-note">Healthcare Training Experience<br /><strong>Educación médica continua.</strong></p>
+          <p className="auth-intro-note">{marca ? <>Portal de {marca.nombre}<br /><strong>Con tecnología de HCE Healthcare Training Experience.</strong></> : <>Healthcare Training Experience<br /><strong>Educación médica continua.</strong></>}</p>
         </section>
         <div className={`login-card ${activeTab === 'signup' ? 'large-card' : ''}`}>
           {/* Logo / Badge */}

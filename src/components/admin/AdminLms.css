@@ -1002,3 +1002,32 @@
 .alumni-admin button:focus-visible, .alumni-admin input:focus-visible, .alumni-admin textarea:focus-visible { outline: 3px solid var(--primary-cyan, #06b6d4); outline-offset: 2px; }
 .alumni-acciones .btn-crm-action { min-height: 44px; white-space: normal; text-align: center; }
 @media (max-width: 600px) { .alumni-acciones .btn-crm-action { flex: 1 1 100%; justify-content: center; } }
+
+/* Divisiones → Marca y acceso */
+.dm { display: grid; gap: 18px; }
+.dm-bloque { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--border-color); border-radius: 16px; background: var(--bg-main); }
+.dm-bloque h5 { margin: 0; font-size: 1rem; color: var(--text-dark); }
+.dm-vista { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 22px; border-radius: 14px; background: var(--bg-gray); text-align: center; }
+.dm-vista img { max-height: 64px; max-width: 220px; object-fit: contain; }
+.dm-vista strong { font-size: 1.3rem; color: var(--text-dark); }
+.dm-vista-boton { padding: 10px 22px; border-radius: 100px; background: var(--dm-color); color: #fff; font-weight: 700; font-size: .9rem; }
+.dm-vista small { color: var(--text-muted); font-size: .72rem; }
+.dm-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.dm-subir { cursor: pointer; margin: 0; }
+.dm-subir input { display: none; }
+.dm-color { display: inline-flex; align-items: center; gap: 8px; color: var(--text-dark); font-size: .85rem; font-weight: 600; }
+.dm-color input[type='color'] { width: 40px; height: 34px; padding: 0; border: 1px solid var(--border-color); border-radius: 8px; background: none; }
+.dm-color input[type='text'] { width: 90px; min-height: 34px; padding: 0 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main); color: var(--text-dark); font-family: monospace; }
+.dm-campo { display: grid; gap: 6px; color: var(--text-dark); font-size: .85rem; font-weight: 600; }
+.dm-campo :is(input, textarea) { min-height: 40px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-main); color: var(--text-dark); font: inherit; font-weight: 400; }
+.dm-prefijo { display: flex; align-items: stretch; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; }
+.dm-prefijo input { flex: 1; min-width: 0; border: 0 !important; border-radius: 0 !important; }
+.dm-prefijo span { display: flex; align-items: center; padding: 0 10px; background: var(--bg-gray); color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+.dm-error { color: #b42318; font-weight: 600; }
+.dm-enlace { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: var(--bg-gray); color: var(--text-dark); font-size: .85rem; }
+.dm-enlace code, .dm-pasos code { word-break: break-all; }
+.dm-check { display: flex; align-items: flex-start; gap: 8px; color: var(--text-dark); font-size: .88rem; line-height: 1.5; cursor: pointer; }
+.dm-check input { margin-top: 3px; accent-color: var(--hce-azul, #005fe6); }
+.dm-pasos { color: var(--text-dark); font-size: .85rem; }
+.dm-pasos summary { cursor: pointer; font-weight: 700; color: var(--hce-azul, #005fe6); min-height: 32px; }
+.dm-pasos ol { margin: 8px 0 0; padding-left: 20px; line-height: 1.7; }

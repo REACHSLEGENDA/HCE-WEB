@@ -1,8 +1,9 @@
 import React, { Suspense, lazy, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import CookieBanner from './components/CookieBanner';
 import Home from './pages/Home';
 import { AuthProvider } from './context/AuthContext';
+import { MarcaProvider, hostDeDivision } from './context/MarcaContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -47,6 +48,7 @@ const Gallery = lazy(() => import('./pages/Gallery'));
 const Comunidad = lazy(() => import('./pages/Comunidad'));
 const VerificarCertificado = lazy(() => import('./pages/VerificarCertificado'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const SinConexion = lazy(() => import('./pages/SinConexion'));
 
 /* ------------------------------------------------------------------------ */
 
@@ -202,10 +204,14 @@ const LimiteDeErrores = ({ children }) => {
 
 /* ------------------------------------------------------------------------ */
 
+// En la dirección de una división, el inicio es la entrada a su portal.
+const Inicio = () => (hostDeDivision() ? <Navigate to="/login" replace /> : <Home />);
+
 function App() {
   return (
     <Router>
       <AuthProvider>
+        <MarcaProvider>
         <NotificationProvider>
           <ScrollToTop />
           <PortalPWA />
@@ -217,7 +223,7 @@ function App() {
           <LimiteDeErrores>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Inicio />} />
               <Route path="/login" element={<Login />} />
               <Route path="/confirmacion" element={<Confirmacion />} />
               <Route path="/restablecer-contrasena" element={<RestablecerPassword />} />
@@ -229,6 +235,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* Materiales guardados en el dispositivo: sin sesión, para verlos sin internet. */}
+              <Route path="/classroom/sin-conexion" element={<SinConexion />} />
               <Route
                 path="/classroom/:id"
                 element={
@@ -275,6 +283,7 @@ function App() {
           </Suspense>
           </LimiteDeErrores>
         </NotificationProvider>
+        </MarcaProvider>
       </AuthProvider>
     </Router>
   );

@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { esTablaFaltante, extraerCorreos, llamarCuenta } from '../../lib/cursos';
 import { traerTodo } from '../../lib/traerTodo';
 import { tasaFinalizacion } from '../../lib/informes';
+import DivisionMarca from './DivisionMarca';
 import './AdminLms.css';
 
 // Filas de una tabla solo de ciertos alumnos, en tandas: una lista enorme de
@@ -19,7 +20,8 @@ async function deLosAlumnos(tabla, columnas, ids) {
 }
 
 // Divisiones: otras asociaciones dentro del mismo portal, cada una con sus
-// alumnos, sus cursos y sus grupos.
+// alumnos, sus cursos y sus grupos. Como en TalentLMS, cada una puede tener su
+// dirección, su logo, su catálogo y su registro por enlace (pestaña Marca y acceso).
 
 export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados, notificar, confirmar }) {
   const [divisiones, setDivisiones] = useState(null);
@@ -121,8 +123,9 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
     if (!ids.length) return;
     // Por el servidor: desde el navegador Supabase no deja editar perfiles ajenos.
     try {
-      const { actualizados } = await llamarCuenta('division', { userIds: ids, divisionId });
+      const { actualizados, inscritos } = await llamarCuenta('division', { userIds: ids, divisionId });
       if (!actualizados) { notificar('No se pudo guardar el cambio. Recarga la página e intenta de nuevo.', 'error'); return false; }
+      if (inscritos) notificar(`Quedaron inscritos a los cursos de la división (${inscritos} ${inscritos === 1 ? 'inscripción' : 'inscripciones'}).`, 'success');
     } catch (err) {
       notificar(err.message, 'error');
       return false;
@@ -150,6 +153,15 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
       : await supabase.from('division_cursos').insert([{ division_id: abierta.id, course_id: courseId }]);
     if (error) { notificar(error.message, 'error'); return; }
     await cargar();
+    // Curso nuevo en la división: sus alumnos quedan inscritos (si así está configurada).
+    if (!tiene) {
+      try {
+        const { inscritos } = await llamarCuenta('division-sincronizar', { divisionId: abierta.id });
+        if (inscritos) notificar(`${inscritos} ${inscritos === 1 ? 'alumno quedó inscrito' : 'alumnos quedaron inscritos'} al curso.`, 'success');
+      } catch (err) {
+        notificar(`El curso quedó en la división, pero no se pudo inscribir a sus alumnos: ${err.message}`, 'warning');
+      }
+    }
   };
 
   const alternarGrupo = async (g) => {
@@ -180,7 +192,7 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
         </div>
 
         <nav className="reporte-pestanas notif-pestanas" role="tablist">
-          {[['miembros', `Alumnos (${miembros.length})`], ['cursos', 'Cursos'], ['grupos', 'Grupos'], ['resumen', 'Resumen']].map(([id, n]) => (
+          {[['miembros', `Alumnos (${miembros.length})`], ['cursos', 'Cursos'], ['grupos', 'Grupos'], ['marca', 'Marca y acceso'], ['resumen', 'Resumen']].map(([id, n]) => (
             <button key={id} type="button" role="tab" aria-selected={pestana === id} className={pestana === id ? 'activa' : ''} onClick={() => setPestana(id)}>{n}</button>
           ))}
         </nav>
@@ -223,7 +235,7 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
 
         {pestana === 'cursos' && (
           <div className="reglas-grupo">
-            <small className="lms-ayuda" style={{ marginLeft: 0 }}>Los cursos que ofrece esta asociación. Un curso puede estar en varias divisiones.</small>
+            <small className="lms-ayuda" style={{ marginLeft: 0 }}>Los cursos de esta institución. Son exclusivos: solo los ven sus alumnos (un curso puede estar en varias divisiones). Con la inscripción automática, al marcarlo sus alumnos quedan inscritos.</small>
             <div className="reglas-lista" style={{ maxHeight: 420 }}>
               {cursos.filter((c) => !isNaN(Number(c.id))).map((c) => (
                 <label key={c.id} className="lms-check">
@@ -233,6 +245,10 @@ export default function DivisionesAdmin({ perfiles, cursos, onPerfilesCambiados,
               ))}
             </div>
           </div>
+        )}
+
+        {pestana === 'marca' && (
+          <DivisionMarca key={abierta.id} division={abierta} notificar={notificar} onGuardada={async (d) => { setAbierta(d); await cargar(); }} />
         )}
 
         {pestana === 'grupos' && (

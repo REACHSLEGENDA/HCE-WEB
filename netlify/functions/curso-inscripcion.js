@@ -20,6 +20,7 @@
 import { admin, usuarioDesdeToken, adminDesdeToken, cuentaHabilitada, esEsquemaFaltante, registrarAccionAdmin, json, isConfigured as supabaseListo } from './_supabase.js';
 import { getStripe } from './_stripe.js';
 import { inscribir, inscribirDesdeSesion, importeEnMoneda, TIPO_COBRO } from './_inscripciones.js';
+import { cursoDisponiblePara } from './_divisiones.js';
 
 async function cargarCurso(db, courseId) {
   const { data, error } = await db
@@ -299,6 +300,9 @@ export const handler = async (event) => {
 
     const reglas = await cargarReglas(db, curso.id);
     if (accion === 'gratis' || accion === 'checkout') {
+      // Divisiones: un curso de otra institución (o fuera del catálogo propio).
+      const { disponible, motivo } = await cursoDisponiblePara(db, user.id, curso.id);
+      if (!disponible) return json(403, { error: motivo, estado: 'otra-division' });
       const rechazo = await revisarReglas(db, curso, reglas, user.id);
       if (rechazo) return rechazo;
     }

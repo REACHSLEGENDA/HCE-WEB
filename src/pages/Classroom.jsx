@@ -2,6 +2,7 @@ import { descargarCertificadoAlumno, rutaVerificacion } from '../lib/certificado
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useMarca } from '../context/MarcaContext';
 import { supabase } from '../lib/supabase';
 import { getSafeAvatarUrl } from '../lib/avatar';
 import { getYouTubeEmbedUrl, getYouTubePlayerError, getYouTubeVideoId } from '../lib/youtube';
@@ -21,6 +22,7 @@ import {
   avanceDelCurso,
   leccionesCompletas,
   enlaceTemporal,
+  BUCKET_BIBLIOTECA,
   cargarEntregas,
   entregarTarea,
   UMBRAL_VIDEO,
@@ -40,6 +42,8 @@ import { leerVistaAlumno, fijarVistaAlumno } from '../lib/vista';
 import { FranjaVistaAlumno } from '../components/CambioVista';
 import { detectarVideo, detectarPagina, midePorcentaje, crearReproductorVimeo, adaptarVideoHtml } from '../lib/videos';
 import TextoLeccion from '../components/TextoLeccion';
+import NotasLeccion from '../components/NotasLeccion';
+import BotonSinConexion from '../components/BotonSinConexion';
 import { emitirCertificado, generarImagenCertificado, descargarArchivo } from '../lib/certificados';
 import {
   ArrowLeft,
@@ -153,6 +157,7 @@ const Classroom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, profile, refetchProfile } = useAuth();
+  const { marca } = useMarca();
   const { showToast, showAlert, showConfirm } = useNotification();
   const currentUserAvatarUrl = getSafeAvatarUrl(profile?.avatar_url, user?.user_metadata?.avatar_url);
 
@@ -1898,7 +1903,9 @@ const Classroom = () => {
           <button onClick={() => irAlPortal()} className="back-btn" aria-label="Volver al Portal">
             <ArrowLeft size={16} /> <span className="aula-btn-texto">Volver al Portal</span>
           </button>
-          <img src="/assets/componentes/firma-hce.png" alt="HCE Logo" className="header-logo" />
+          {marca?.logo_url
+            ? <img src={marca.logo_url} alt={marca.nombre} className="header-logo header-logo--division" />
+            : <img src="/assets/componentes/firma-hce.png" alt="HCE Logo" className="header-logo" />}
         </div>
         {/* Curso y avance siempre a la vista, sin ocupar la pantalla. */}
         <div className="aula-cabecera-curso">
@@ -2098,9 +2105,18 @@ const Classroom = () => {
                     {materialUrl ? (
                       <>
                         <iframe src={materialUrl} title={leccionActual.titulo} className="leccion-pdf" />
-                        <a href={materialUrl} target="_blank" rel="noopener noreferrer" className="leccion-enlace">
-                          <ExternalLink size={14} /> Abrir el documento en otra pestaña
-                        </a>
+                        <div className="leccion-enlaces">
+                          <a href={materialUrl} target="_blank" rel="noopener noreferrer" className="leccion-enlace">
+                            <ExternalLink size={14} /> Abrir el documento en otra pestaña
+                          </a>
+                          <BotonSinConexion
+                            id={`${course.id}:${leccionActual.id}:pdf`}
+                            cursoId={course.id} curso={course.title} leccionId={leccionActual.id}
+                            titulo={leccionActual.titulo} tipo="pdf" nombre={`${leccionActual.titulo}.pdf`}
+                            obtenerUrl={() => enlaceTemporal('curso-materiales', rutaMaterial)}
+                            notificar={showToast}
+                          />
+                        </div>
                       </>
                     ) : materialError ? (
                       <div className="video-player-error" role="alert">
@@ -2148,6 +2164,14 @@ const Classroom = () => {
                     {leccionActual.contenido?.texto
                       ? <TextoLeccion texto={leccionActual.contenido.texto} />
                       : <p className="leccion-vacia">Esta lección todavía no tiene contenido.</p>}
+                    {leccionActual.contenido?.texto && (
+                      <BotonSinConexion
+                        id={`${course.id}:${leccionActual.id}:texto`}
+                        cursoId={course.id} curso={course.title} leccionId={leccionActual.id}
+                        titulo={leccionActual.titulo} tipo="texto" texto={leccionActual.contenido.texto}
+                        notificar={showToast}
+                      />
+                    )}
                   </div>
                 )}
 
@@ -2246,10 +2270,39 @@ const Classroom = () => {
                           <button type="button" className="leccion-archivo-descargar" onClick={() => abrirArchivo(a, true)} title="Descargar" aria-label={`Descargar ${a.nombre}`}>
                             <Download size={15} />
                           </button>
+                          <BotonSinConexion
+                            compacto
+                            id={`${course.id}:${leccionActual.id}:archivo-${a.id}`}
+                            cursoId={course.id} curso={course.title} leccionId={leccionActual.id}
+                            titulo={a.nombre} tipo="archivo" nombre={a.nombre}
+                            obtenerUrl={() => enlaceTemporal(BUCKET_BIBLIOTECA, a.ruta)}
+                            notificar={showToast}
+                          />
                         </li>
                       ))}
                     </ul>
                   </div>
+                )}
+
+                {!esAdminReal && (
+                  <NotasLeccion
+                    key={leccionActual.id}
+                    userId={user?.id}
+                    alumno={profile?.nombre_completo || ''}
+                    curso={course}
+                    leccion={leccionActual}
+                    lecciones={lecciones}
+                    obtenerSegundo={proveedorVideo === 'youtube' ? () => playerRef.current?.getCurrentTime?.() || 0 : undefined}
+                    irASegundo={(segundo) => {
+                      const p = playerRef.current;
+                      if (!p?.seekTo) return;
+                      // No deja adelantarse más allá de lo ya visto (igual que el reproductor).
+                      p.seekTo(Math.min(segundo, maxTimeWatchedRef.current || segundo), true);
+                      p.playVideo?.();
+                      document.getElementById('youtube-classroom-player')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }}
+                    notificar={showToast}
+                  />
                 )}
 
                 <div className="classroom-player-controls">

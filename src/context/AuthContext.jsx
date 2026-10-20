@@ -288,7 +288,8 @@ export const AuthProvider = ({ children }) => {
     grado = '',
     especialidad = '',
     institucion = '',
-    cargo = ''
+    cargo = '',
+    division = ''
   ) => {
     const nombreCompleto = `${nombres} ${apellidos}`.trim();
     const { data, error } = await supabase.auth.signUp({
@@ -307,7 +308,9 @@ export const AuthProvider = ({ children }) => {
           especialidad,
           institucion,
           cargo,
-          rol: 'estudiante'
+          rol: 'estudiante',
+          // Registro desde la dirección o el enlace de una división.
+          ...(division ? { division } : {}),
         }
       }
     });
@@ -339,6 +342,7 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({
           email, nombres, apellidos, telefono,
           pais, estado, grado, especialidad, institucion, cargo,
+          ...(division ? { division } : {}),
         }),
       }).catch((err) => console.error('Error registering portal contact in Brevo:', err));
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useMarca, estiloMarca } from '../context/MarcaContext';
 import { useNotification } from '../context/NotificationContext';
 import { supabase } from '../lib/supabase';
 import { getSafeAvatarUrl } from '../lib/avatar';
@@ -161,6 +162,16 @@ const Dashboard = () => {
   const [appInstalada] = useState(enAppInstalada);
 
   const { user, profile, logout, updateUserMetadata, updateProfile } = useAuth();
+  // Alumnos de una división ven su logo y su color (como en TalentLMS).
+  const { marca } = useMarca();
+  // Sin internet: aviso con el enlace a los materiales guardados en el dispositivo.
+  const [sinInternet, setSinInternet] = useState(() => typeof navigator !== 'undefined' && navigator.onLine === false);
+  useEffect(() => {
+    const cambia = () => setSinInternet(navigator.onLine === false);
+    window.addEventListener('online', cambia);
+    window.addEventListener('offline', cambia);
+    return () => { window.removeEventListener('online', cambia); window.removeEventListener('offline', cambia); };
+  }, []);
   const { showToast } = useNotification();
   const navigate = useNavigate();
 
@@ -419,6 +430,31 @@ const Dashboard = () => {
   const [reglasCursos, setReglasCursos] = useState({});
   const [lugaresOcupados, setLugaresOcupados] = useState({});
   const [misSolicitudes, setMisSolicitudes] = useState({});
+  // Divisiones (catálogo exclusivo): qué cursos son de cada división y si la
+  // del alumno solo ve los suyos. Sin la migración, nada se oculta.
+  const [cursosDivision, setCursosDivision] = useState(null);
+  const [catalogoPropio, setCatalogoPropio] = useState(false);
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    let vigente = true;
+    const miDivision = profile?.division_id ? Number(profile.division_id) : null;
+    Promise.all([
+      supabase.from('division_cursos').select('division_id, course_id'),
+      miDivision ? supabase.from('divisiones').select('catalogo').eq('id', miDivision).maybeSingle() : Promise.resolve({ data: null }),
+    ]).then(([{ data: filas, error }, { data: division }]) => {
+      if (!vigente) return;
+      setCursosDivision(error ? null : (filas || []));
+      setCatalogoPropio(division?.catalogo === 'propio');
+    }).catch(() => { if (vigente) setCursosDivision(null); });
+    return () => { vigente = false; };
+  }, [user?.id, profile?.division_id]);
+  const fueraDeMiDivision = (courseId) => {
+    if (!cursosDivision) return false;
+    const miDivision = profile?.division_id ? Number(profile.division_id) : null;
+    const de = cursosDivision.filter((f) => Number(f.course_id) === Number(courseId)).map((f) => Number(f.division_id));
+    if (de.length && !de.includes(miDivision)) return true;
+    return Boolean(miDivision && catalogoPropio && !de.includes(miDivision));
+  };
   const [reglasListas, setReglasListas] = useState(false);
   useEffect(() => {
     if (!user?.id) return undefined;
@@ -1044,7 +1080,7 @@ const Dashboard = () => {
       completed,
       inProgress,
       enrolled,
-      oculto: reglas.oculto_catalogo,
+      oculto: reglas.oculto_catalogo || fueraDeMiDivision(course.id),
       porGrupo: reglas.modo_acceso === 'grupo',
       requiereSolicitud: reglas.requiere_solicitud && !esCursoDePago(course),
       solicitud: misSolicitudes[Number(course.id)] || null,
@@ -1230,7 +1266,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="crm-layout" data-theme={effectiveTheme}>
+    <div className="crm-layout" data-theme={effectiveTheme} style={estiloMarca(marca, ['--hce-azul'])}>
       {esAdmin && <FranjaVistaAlumno />}
       {/* Fondo oscuro para cerrar el cajón tocando fuera. Solo visible en móvil. */}
       {!isSidebarCollapsed && (
@@ -1252,11 +1288,18 @@ const Dashboard = () => {
         </button>
         <div className="sidebar-header">
           <div className="logo-container">
-            <img 
-              src={isSidebarCollapsed ? "/assets/componentes/firma-hce.png" : "/assets/componentes/ghghg-scaled.png"} 
-              alt="HCE Logo" 
-              className="sidebar-logo" 
-            />
+            {marca?.logo_url ? (
+              <img src={marca.logo_url} alt={marca.nombre} className="sidebar-logo sidebar-logo--division" />
+            ) : marca ? (
+              <span className="sidebar-marca-nombre">{marca.nombre}</span>
+            ) : (
+              <img
+                src={isSidebarCollapsed ? "/assets/componentes/firma-hce.png" : "/assets/componentes/ghghg-scaled.png"}
+                alt="HCE Logo"
+                className="sidebar-logo"
+              />
+            )}
+            {marca && !isSidebarCollapsed && <small className="sidebar-marca-hce">con tecnología de HCE</small>}
           </div>
         </div>
 
@@ -1333,6 +1376,11 @@ const Dashboard = () => {
 
         {/* Content View */}
         <main className="crm-content-area">
+          {sinInternet && (
+            <div className="aviso-sin-internet" role="status">
+              Estás sin internet. Tus materiales guardados se pueden ver en <a href="/classroom/sin-conexion">Materiales sin conexión</a>.
+            </div>
+          )}
           {/* Los comunicados viven en "Avisos" del inicio (InicioAlumno). */}
 
           {/* Cuenta nueva: entra al portal, pero sus cursos se abren hasta que la activen. */}

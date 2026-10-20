@@ -167,7 +167,7 @@ export default async () => {
     const { data: inscripciones } = await db
       .from('inscripciones')
       .select('user_id, course_id, created_at')
-      .in('origen', ['admin', 'grupo'])
+      .in('origen', ['admin', 'grupo', 'division'])
       .gte('created_at', new Date(ahora - 120 * MIN).toISOString())
       .order('created_at')
       .limit(60);

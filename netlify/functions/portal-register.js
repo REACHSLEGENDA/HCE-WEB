@@ -2,6 +2,7 @@ import { LISTS, isConfigured, buildAttributes, upsertContact, addToList, enviarC
 import { admin, isConfigured as supabaseListo } from './_supabase.js';
 import { notificar } from './_notificaciones.js';
 import { CORREO_ACADEMIA, correosExtra } from './_admins.js';
+import { inscribirEnDivision } from './_divisiones.js';
 
 // Alta en el Portal Académico. Se llama desde AuthContext.signUp, justo después
 // de que Supabase crea la cuenta. Entrar a la lista dispara en Brevo el correo
@@ -54,6 +55,26 @@ async function avisarAdministradores(email) {
   });
 }
 
+// Registro por el enlace (o la dirección) de una división: queda dentro de
+// ella, aprobado si la división así lo tiene, e inscrito a sus cursos. Solo
+// vale si la propia cuenta se registró con esa división (user_metadata), para
+// que nadie pueda meter a otra persona en una división desde fuera.
+async function unirADivision(perfil, slug) {
+  const db = admin();
+  const limpio = String(slug || '').trim().toLowerCase();
+  if (!/^[a-z0-9-]{1,40}$/.test(limpio)) return;
+  const { data: usuario } = await db.auth.admin.getUserById(perfil.id);
+  if (String(usuario?.user?.user_metadata?.division || '').toLowerCase() !== limpio) return;
+  const { data: division, error } = await db.from('divisiones')
+    .select('id, registro_abierto, aprobacion_auto').eq('slug', limpio).maybeSingle();
+  if (error || !division?.registro_abierto) return;
+  const cambios = { division_id: division.id };
+  if (division.aprobacion_auto) Object.assign(cambios, { aprobado: true, aprobado_en: new Date().toISOString() });
+  const { error: errPerfil } = await db.from('profiles').update(cambios).eq('id', perfil.id);
+  if (errPerfil) throw new Error(errPerfil.message);
+  await inscribirEnDivision(db, division.id, { userIds: [perfil.id] });
+}
+
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -80,6 +101,14 @@ export const handler = async (event) => {
       perfil = await cuentaPendienteNueva(email);
     }
     if (!perfil) return { statusCode: 200, body: JSON.stringify({ ok: true }) };
+
+    if (payload.division) {
+      try {
+        await unirADivision(perfil, payload.division);
+      } catch (err) {
+        console.error('Registro por división:', err.message);
+      }
+    }
     const partes = String(perfil.nombre_completo || '').trim().split(/\s+/);
     await upsertContact(email, buildAttributes({
       ...perfil,

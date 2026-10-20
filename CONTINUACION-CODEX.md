@@ -642,3 +642,59 @@ El código no manda nada de esto hasta que se corra (degrada solo).
   tandas de 40). Campanita: casos nuevos en `avisoPortal`.
 - Las listas de carrito de Brevo (#9, #10, #11) siguen recibiendo contactos pero
   no tienen automatización; el carrito real ahora es cobros-seguimiento.
+
+## 14. Estado al 19 oct — Claude
+
+Publicado: reporte de ventas (src/lib/ventas.js + ReporteVentas), divisiones por
+servidor (cuenta-admin `division`), línea de tiempo separada (Aprendizaje / Accesos /
+Equipo), botón dorado Alumni Pass desde 17 oct 10:00, factura + invitación al portal
+después de pagar (`invitarAlPortal` en _alumni-pass.js; SQL alumni-pass-portal.sql
+YA corrido; Redirect URL `https://healthcareexp.com/**` YA agregada), recarga sola
+con versión vieja (src/lib/versionNueva.js). SEO sigue en `git stash`
+"propuesta-seo-15oct" esperando aprobación. Siguiente propuesta pendiente de OK:
+Divisiones como TalentLMS (subdominio, logo, catálogo propio, registro por enlace).
+
+## 15. EN CURSO (19 oct) — Claude: Divisiones como TalentLMS + notas y materiales sin internet
+
+Si Claude se queda sin créditos, Codex termina esto. Revisa `git status`/`git diff`
+para ver hasta dónde llegó; abajo cada punto se marca ✅ cuando quedó hecho.
+
+### A. Divisiones como TalentLMS (cada institución = mini portal) — ✅ HECHO (sin publicar)
+Archivos: supabase/divisiones-marca.sql (probado en PGlite), netlify/functions/_divisiones.js,
+cuenta-admin (division-sincronizar), curso-inscripcion (bloqueo), portal-register (unirADivision),
+src/context/MarcaContext.jsx, Login/Dashboard/Classroom, src/components/admin/DivisionMarca.jsx,
+tests/divisiones.test.js.
+SQL nuevo `supabase/divisiones-marca.sql` (idempotente): columnas en `divisiones`:
+`slug` (único, para `slug.healthcareexp.com` y `/login?division=slug`), `dominio`
+(propio, opcional), `logo_url`, `color`, `bienvenida`, `catalogo` ('propio' |
+'propio_y_hce'), `inscripcion_auto` (bool), `registro_abierto` (bool),
+`aprobacion_auto` (bool). RPC pública `division_publica(p_host text, p_slug text)`
+SECURITY DEFINER que devuelve solo datos de marca. Bucket público `divisiones` para logos.
+1. Marca: `src/lib/marcaDivision.js` + contexto; se resuelve por host (dominio o
+   subdominio) o `?division=slug`, o por `profiles.division_id` con sesión. Logo/nombre/
+   color en Login, barra del portal y aula; "con tecnología de HCE" al pie. En un host
+   de división, `/` lleva a `/login`.
+2. Registro por enlace: `signUp` manda `division` en metadata y a portal-register; el
+   servidor valida contra user_metadata, asigna `division_id`, aprueba si
+   `aprobacion_auto` e inscribe a los cursos de la división si `inscripcion_auto`.
+3. Catálogo exclusivo: curso asignado a divisiones solo lo ven sus alumnos; división
+   con `catalogo='propio'` solo ve sus cursos. Se oculta en Dashboard y se bloquea en
+   curso-inscripcion (gratis/checkout).
+4. Inscripción automática: al asignar curso a la división o agregar alumnos (cuenta-
+   admin `division`) se inscriben si `inscripcion_auto`.
+5. Admin: pestaña "Marca y acceso" en DivisionesAdmin (slug, dominio, logo, color,
+   catálogo, opciones, enlace de registro para copiar e instrucciones de subdominio).
+Para cada subdominio Christian agrega el dominio en Netlify (Domain management → Add
+domain alias), el CNAME en su DNS y `https://*.healthcareexp.com/**` en Supabase.
+
+### B. Aula: notas por lección y materiales sin internet — ✅ HECHO (sin publicar)
+Archivos: supabase/aula-notas.sql (probado en PGlite), src/lib/notas.js, src/components/NotasLeccion.*,
+src/lib/sinConexion.js, src/components/BotonSinConexion.jsx, src/pages/SinConexion.*, ruta en App.jsx,
+aviso sin internet en Dashboard, tests/notas.test.js. Falta: Christian corre los 2 SQL y aprueba publicar.
+SQL `supabase/aula-notas.sql`: tabla `leccion_notas` (user_id, course_id, leccion_id,
+texto, segundo, creada_en, actualizada_en) con RLS de dueño.
+1. Notas en el aula: panel "Mis notas" por lección; si es video, guarda el minuto y
+   al tocarlo salta ahí; editar/borrar; descargar todas las notas del curso en PDF.
+2. Sin conexión: botón "Guardar sin conexión" en PDFs/lecturas → IndexedDB del
+   dispositivo; página `/classroom/sin-conexion` (dentro del alcance del service
+   worker, sin pedir sesión) que lista y abre lo guardado.
