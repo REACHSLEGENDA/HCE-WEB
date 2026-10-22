@@ -54,7 +54,8 @@ const Webinars = () => {
         setWebinars((data || []).filter(w => w.activo));
       } catch (err) {
         console.warn('Error loading webinars from Supabase, loading from localStorage:', err.message);
-        const local = localStorage.getItem('webinars');
+        let local = null;
+        try { local = localStorage.getItem('webinars'); } catch { /* sin almacenamiento */ }
         if (local) {
           setWebinars(JSON.parse(local).filter(w => w.activo));
         } else {
@@ -72,7 +73,7 @@ const Webinars = () => {
             }
           ];
           setWebinars(defaultWebinars);
-          localStorage.setItem('webinars', JSON.stringify(defaultWebinars));
+          try { localStorage.setItem('webinars', JSON.stringify(defaultWebinars)); } catch { /* sin almacenamiento */ }
         }
       }
     };

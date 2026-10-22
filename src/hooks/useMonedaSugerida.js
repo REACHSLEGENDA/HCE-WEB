@@ -17,7 +17,8 @@ export function useMonedaSugerida(setMoneda, yaEligio) {
   useEffect(() => {
     if (yaEligio) return;
 
-    const guardada = sessionStorage.getItem(CLAVE_CACHE);
+    let guardada = null;
+    try { guardada = sessionStorage.getItem(CLAVE_CACHE); } catch { /* sin almacenamiento */ }
     if (guardada) {
       setMoneda(guardada);
       return;
@@ -29,7 +30,7 @@ export function useMonedaSugerida(setMoneda, yaEligio) {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelado || !data?.moneda) return;
-        sessionStorage.setItem(CLAVE_CACHE, data.moneda);
+        try { sessionStorage.setItem(CLAVE_CACHE, data.moneda); } catch { /* sin almacenamiento */ }
         setMoneda(data.moneda);
       })
       .catch(() => {

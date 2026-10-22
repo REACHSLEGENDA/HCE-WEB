@@ -15,9 +15,15 @@ const PATRON = /Unable to preload CSS|Failed to fetch dynamically imported modul
 
 export const esVersionVieja = (texto) => PATRON.test(String(texto || ''));
 
+// Una página vieja suele pedir varios archivos que ya no existen a la vez
+// (la sección y el asistente, por ejemplo): el primero dispara la recarga y
+// los demás llegan mientras la página se descarga. Esos no se reportan.
+let recargando = false;
+
 /** Recarga la página una vez. Devuelve true si va a recargar. */
 export function recargarPorVersionNueva() {
   if (typeof window === 'undefined') return false;
+  if (recargando) return true;
   try {
     const ultima = Number(window.sessionStorage.getItem(CLAVE) || 0);
     if (Date.now() - ultima < ESPERA_MS) return false;
@@ -26,8 +32,27 @@ export function recargarPorVersionNueva() {
     // Sin almacenamiento no hay forma de evitar un ciclo: no se recarga.
     return false;
   }
+  recargando = true;
   window.location.reload();
   return true;
+}
+
+/**
+ * Después de recargar, si un archivo sigue sin cargar pero sí existe en el
+ * servidor, fue la red del celular (señal que se cae), no el portal. Devuelve
+ * true solo si se confirmó que el archivo existe.
+ */
+export async function archivoExiste(texto) {
+  const url = String(texto || '').match(/https?:\/\/[^\s'"]+\/assets\/[^\s'"]+\.(?:js|css)/)?.[0];
+  if (!url || typeof fetch === 'undefined') return false;
+  try {
+    if (new URL(url).origin !== window.location.origin) return false;
+    const r = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+    return r.ok && /javascript|css/.test(r.headers.get('content-type') || '');
+  } catch {
+    // Sin respuesta tampoco hay red: no es un error del portal.
+    return true;
+  }
 }
 
 /** Vite avisa con este evento cuando no pudo precargar un archivo. */

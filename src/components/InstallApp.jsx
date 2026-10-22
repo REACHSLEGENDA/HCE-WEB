@@ -38,7 +38,8 @@ const yaInstalada = () =>
   window.navigator.standalone === true;
 
 const descartadoHacePoco = () => {
-  const guardado = Number(localStorage.getItem(STORAGE_KEY));
+  let guardado = 0;
+  try { guardado = Number(localStorage.getItem(STORAGE_KEY)); } catch { /* sin almacenamiento */ }
   if (!guardado) return false;
   return Date.now() - guardado < DIAS_DE_ESPERA * 24 * 60 * 60 * 1000;
 };
@@ -87,7 +88,7 @@ export default function InstallApp() {
   }, [elegible]);
 
   const cerrar = () => {
-    localStorage.setItem(STORAGE_KEY, String(Date.now()));
+    try { localStorage.setItem(STORAGE_KEY, String(Date.now())); } catch { /* sin almacenamiento */ }
     setCerrado(true);
   };
 

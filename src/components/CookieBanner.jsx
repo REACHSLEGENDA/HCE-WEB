@@ -5,6 +5,12 @@ import './CookieBanner.css';
 
 const STORAGE_KEY = 'hce_cookie_consent';
 
+// Safari con "Bloquear todas las cookies" lanza SecurityError al tocar
+// localStorage: sin almacenamiento el banner solo se cierra en esta visita.
+const guardarPreferencias = (valor) => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(valor)); } catch { /* sin almacenamiento */ }
+};
+
 export default function CookieBanner() {
   const [visible, setVisible] = useState(() => {
     try { return !localStorage.getItem(STORAGE_KEY); }
@@ -22,12 +28,12 @@ export default function CookieBanner() {
   }, [visible]);
 
   const accept = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ necessary: true, analysis: true, advertising: true }));
+    guardarPreferencias({ necessary: true, analysis: true, advertising: true });
     setVisible(false);
   };
 
   const savePrefs = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ necessary: true, ...prefs }));
+    guardarPreferencias({ necessary: true, ...prefs });
     setVisible(false);
   };
 

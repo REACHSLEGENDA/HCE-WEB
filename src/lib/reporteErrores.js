@@ -12,7 +12,7 @@
 // Límite: 8 reportes por sesión del navegador y cada error distinto una sola vez.
 
 import { supabase } from './supabase';
-import { esVersionVieja, recargarPorVersionNueva } from './versionNueva';
+import { archivoExiste, esVersionVieja, recargarPorVersionNueva } from './versionNueva';
 
 const ENDPOINT = '/.netlify/functions/reportar-error';
 const MAX_POR_SESION = 8;
@@ -52,6 +52,9 @@ const RUIDO = [
   // Navegadores dentro de apps y traductores automáticos.
   /_AutofillCallbackHandler|__gCrWeb|instantSearchSDKJSBridge|zaloJSV2|WeixinJSBridge|ucbrowser|Java exception was raised/i,
   /Non-Error promise rejection captured/i,
+  // Revisores de enlaces de Outlook/Bing (abren los enlaces de los correos en un
+  // navegador automático): no son personas ni errores del sitio.
+  /Object Not Found Matching Id:\d+, MethodName:\w+, ParamCount:\d+/i,
   /play\(\) (request was interrupted|failed because the user)/i,
   /The play\(\) request was interrupted|NotAllowedError: play\(\)/i,
 ];
@@ -142,7 +145,10 @@ export function reportarError(error, { origen = 'error', componente = '', archiv
       version: versionApp(),
     };
 
+    const versionVieja = esVersionVieja(mensaje);
     void (async () => {
+      // Archivo que sí existe: fue la red, no el portal.
+      if (versionVieja && await archivoExiste(mensaje)) return;
       const token = await tokenSesion();
       await fetch(ENDPOINT, {
         method: 'POST',
