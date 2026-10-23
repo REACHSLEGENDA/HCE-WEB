@@ -20,6 +20,9 @@ export const esVersionVieja = (texto) => PATRON.test(String(texto || ''));
 // los demás llegan mientras la página se descarga. Esos no se reportan.
 let recargando = false;
 
+/** Si la página ya se está recargando (los errores de ahí en adelante sobran). */
+export const estaRecargando = () => recargando;
+
 /** Recarga la página una vez. Devuelve true si va a recargar. */
 export function recargarPorVersionNueva() {
   if (typeof window === 'undefined') return false;
@@ -43,11 +46,13 @@ export function recargarPorVersionNueva() {
  * true solo si se confirmó que el archivo existe.
  */
 export async function archivoExiste(texto) {
-  const url = String(texto || '').match(/https?:\/\/[^\s'"]+\/assets\/[^\s'"]+\.(?:js|css)/)?.[0];
-  if (!url || typeof fetch === 'undefined') return false;
+  // "…imported module: https://…/assets/x.js" o "Unable to preload CSS for /assets/x.css".
+  const ruta = String(texto || '').match(/(?:https?:\/\/[^\s'"]+)?\/assets\/[^\s'"]+\.(?:js|css)/)?.[0];
+  if (!ruta || typeof fetch === 'undefined') return false;
   try {
-    if (new URL(url).origin !== window.location.origin) return false;
-    const r = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+    const url = new URL(ruta, window.location.href);
+    if (url.origin !== window.location.origin) return false;
+    const r = await fetch(url.href, { method: 'HEAD', cache: 'no-store' });
     return r.ok && /javascript|css/.test(r.headers.get('content-type') || '');
   } catch {
     // Sin respuesta tampoco hay red: no es un error del portal.
@@ -69,7 +74,14 @@ export function instalarRecargaPorVersion() {
  * nueva publicada), el error sigue su camino y la página se recarga una vez.
  */
 export function conReintento(cargar, { intentos = 2, esperaMs = 800 } = {}) {
-  return cargar().catch((err) => {
+  return cargar().then((modulo) => {
+    if (modulo) return modulo;
+    // Cuando el archivo no carga y ya se pidió recargar, Vite entrega
+    // `undefined` en vez de un error, y React fallaba con "e._result.default".
+    // Si la página se está recargando, se espera a la recarga sin pintar nada.
+    if (recargando) return new Promise(() => {});
+    throw new Error('Failed to fetch dynamically imported module');
+  }).catch((err) => {
     if (intentos <= 0) throw err;
     return new Promise((ok) => setTimeout(ok, esperaMs))
       .then(() => conReintento(cargar, { intentos: intentos - 1, esperaMs: esperaMs * 2 }));

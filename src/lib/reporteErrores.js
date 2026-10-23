@@ -12,7 +12,7 @@
 // Límite: 8 reportes por sesión del navegador y cada error distinto una sola vez.
 
 import { supabase } from './supabase';
-import { archivoExiste, esVersionVieja, recargarPorVersionNueva } from './versionNueva';
+import { archivoExiste, esVersionVieja, estaRecargando, recargarPorVersionNueva } from './versionNueva';
 
 const ENDPOINT = '/.netlify/functions/reportar-error';
 const MAX_POR_SESION = 8;
@@ -117,6 +117,9 @@ async function tokenSesion() {
 export function reportarError(error, { origen = 'error', componente = '', archivo = '', forzar = false } = {}) {
   try {
     if (!forzar && !activo()) return null;
+    // La página ya se está recargando por una versión nueva: lo que falle
+    // mientras se descarga no es un error del portal.
+    if (estaRecargando()) return null;
     if (error == null) return null;
     const mensaje = limpiar(
       error instanceof Error ? `${error.name && error.name !== 'Error' ? `${error.name}: ` : ''}${error.message}` : typeof error === 'string' ? error : (() => { try { return JSON.stringify(error); } catch { return String(error); } })(),

@@ -81,6 +81,13 @@
   status = 301
   force = true
 
+# Alguien llegó a /nosotros (enlace viejo): lleva a la página actual.
+[[redirects]]
+  from = "/nosotros"
+  to = "/quienes-somos"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/feed"
   to = "/"

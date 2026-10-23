@@ -13,7 +13,7 @@ describe('Recarga por versión nueva', () => {
   beforeEach(() => {
     recargar = vi.fn();
     delete window.location;
-    window.location = { ...original, origin: 'https://healthcareexp.com', reload: recargar };
+    window.location = { ...original, href: 'https://healthcareexp.com/nosotros', origin: 'https://healthcareexp.com', reload: recargar };
     sessionStorage.clear();
   });
   afterEach(() => { window.location = original; vi.unstubAllGlobals(); });
@@ -46,5 +46,18 @@ describe('Recarga por versión nueva', () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, headers: new Headers({ 'content-type': 'text/html' }) })));
     expect(await archivoExiste(msg)).toBe(false);
     expect(await archivoExiste('TypeError: Importing a module script failed.')).toBe(false);
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, headers: new Headers({ 'content-type': 'text/css' }) })));
+    expect(await archivoExiste('Unable to preload CSS for /assets/InstallApp-CyU2CgQm.css')).toBe(true);
+  });
+
+  it('si Vite entrega undefined en vez del módulo, no llega a React', async () => {
+    const { conReintento, recargarPorVersionNueva } = await paginaNueva();
+    const cargar = vi.fn(async () => undefined);
+    await expect(conReintento(cargar, { intentos: 1, esperaMs: 1 })).rejects.toThrow(/dynamically imported module/);
+    expect(cargar).toHaveBeenCalledTimes(2);
+    // Con la recarga en camino, la carga se queda esperando (no pinta un error).
+    recargarPorVersionNueva();
+    const pendiente = await Promise.race([conReintento(cargar, { intentos: 0 }).then(() => 'resuelta'), new Promise((ok) => setTimeout(() => ok('esperando'), 30))]);
+    expect(pendiente).toBe('esperando');
   });
 });
