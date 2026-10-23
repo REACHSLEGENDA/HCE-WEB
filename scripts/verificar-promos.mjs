@@ -54,6 +54,9 @@ for (const [programa, archivo] of Object.entries(FORMULARIOS)) {
   const cuerpo = fin > 0 ? resto.slice(0, fin) : resto.slice(0, 6000);
 
   const codigos = new Set([...cuerpo.matchAll(/code === '([A-Z0-9-]+)'/g)].map((m) => m[1]));
+  // Formularios con tabla de códigos (const CODIGOS_STEP1 = { MEDOCT26: {…} }).
+  const tabla = fuente.match(/const CODIGOS_[A-Z0-9_]+ = \{([\s\S]*?)\n\};/)?.[1] || '';
+  for (const m of tabla.matchAll(/^\s+'?([A-Z0-9-]+)'?:\s*\{/gm)) codigos.add(m[1]);
   for (const codigo of codigos) {
     if (SOLO_EN_FORMULARIO[codigo]) continue;
     if (!enServidor[programa]?.has(codigo)) {

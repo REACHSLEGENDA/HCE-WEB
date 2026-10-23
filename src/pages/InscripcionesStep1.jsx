@@ -13,8 +13,19 @@ import './Inscripciones.css';
 
 const USD_RATE = 17.5;
 
-// Sin códigos de descuento por ahora (octubre 2026).
-const ACEPTA_CODIGOS = false;
+// Códigos de descuento vigentes. Solo los muestra: el cobro lo decide el
+// servidor (netlify/functions/_promos.js), que tiene la misma tabla y fechas.
+// Fuera de fechas el campo del código desaparece solo.
+const CODIGOS_STEP1 = {
+  // Día del Médico: Step 1 a $7,000 del viernes 23 al domingo 25 de octubre de 2026.
+  MEDOCT26: { type: 'fixed_price', fixedPrice: 7000, desde: '2026-10-23T00:00:00-06:00', hasta: '2026-10-25T23:59:59-06:00' },
+};
+const enFechas = (c, ahora = new Date()) => ahora >= new Date(c.desde) && ahora <= new Date(c.hasta);
+const codigoVigente = (codigo) => {
+  const c = CODIGOS_STEP1[codigo];
+  return c && enFechas(c) ? c : null;
+};
+const hayCodigosVigentes = () => Object.values(CODIGOS_STEP1).some((c) => enFechas(c));
 
 const EXTRA_CATALOG = {
   ecmo_sim: {
@@ -79,7 +90,8 @@ export default function Inscripciones() {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const [promoInput, setPromoInput] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState(null); // { code: string, discount: number }
+  const [appliedPromo, setAppliedPromo] = useState(null); // { code, type, fixedPrice | discount }
+  const [aceptaCodigos] = useState(hayCodigosVigentes);
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
@@ -116,11 +128,18 @@ export default function Inscripciones() {
     });
   };
 
-  // Octubre 2026: este programa no acepta códigos de descuento, meses sin
-  // intereses, becas ni transferencias (el servidor tampoco: ver _promos.js).
+  // Solo los códigos de CODIGOS_STEP1 dentro de sus fechas (sin meses sin
+  // intereses, becas ni transferencias).
   const applyPromo = () => {
-    setAppliedPromo(null);
-    if (promoInput.trim()) setApiError('Código no válido');
+    setApiError('');
+    const codigo = promoInput.trim().toUpperCase();
+    const promo = codigoVigente(codigo);
+    if (!promo) {
+      setAppliedPromo(null);
+      if (codigo) setApiError('Código no válido o vencido');
+      return;
+    }
+    setAppliedPromo({ code: codigo, type: promo.type, fixedPrice: promo.fixedPrice });
   };
 
   const availableExtras = perfil ? PROFILES[perfil].extras.map((id) => ({ id, ...EXTRA_CATALOG[id] })) : [];
@@ -542,7 +561,7 @@ export default function Inscripciones() {
             )}
 
             {/* Promo code field: oculto mientras el programa no acepte códigos */}
-            {ACEPTA_CODIGOS && perfil && (
+            {aceptaCodigos && perfil && (
               <div className="ins-promo-wrap" style={{ marginTop: '1rem', borderTop: '1px dashed var(--ins-border)', paddingTop: '1rem' }}>
                 {!appliedPromo ? (
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -566,6 +585,8 @@ export default function Inscripciones() {
                     <div style={{ fontSize: '0.8rem', color: appliedPromo.type === 'free' ? '#065f46' : (appliedPromo.type === 'installments' || appliedPromo.type === 'mixed') ? '#1d4ed8' : '#065f46', fontWeight: 600 }}>
                       {appliedPromo.type === 'free'
                         ? `🎓 ${appliedPromo.code} — Beca / Transferencia aplicada`
+                        : appliedPromo.type === 'fixed_price'
+                        ? `✓ ${appliedPromo.code} — Precio especial ${fmt(moneda === 'usd' ? Math.ceil(appliedPromo.fixedPrice / USD_RATE) : appliedPromo.fixedPrice, cur)}`
                         : `✓ ${appliedPromo.code} ${appliedPromo.type === 'installments' ? '(Pagos a meses desbloqueado)' : appliedPromo.type === 'mixed' ? `(-${appliedPromo.discount * 100}% + Meses sin intereses)` : `(-${appliedPromo.discount * 100}%)`}`
                       }
                     </div>
