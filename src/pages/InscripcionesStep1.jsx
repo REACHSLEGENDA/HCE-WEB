@@ -17,8 +17,8 @@ const USD_RATE = 17.5;
 // servidor (netlify/functions/_promos.js), que tiene la misma tabla y fechas.
 // Fuera de fechas el campo del código desaparece solo.
 const CODIGOS_STEP1 = {
-  // Día del Médico: Step 1 a $7,000 del viernes 23 al domingo 25 de octubre de 2026.
-  MEDOCT26: { type: 'fixed_price', fixedPrice: 7000, desde: '2026-10-23T00:00:00-06:00', hasta: '2026-10-25T23:59:59-06:00' },
+  // Día del Médico: Step 1 a $8,000 (20%) del viernes 23 al domingo 25 de octubre de 2026.
+  MEDOCT26: { type: 'fixed_price', fixedPrice: 8000, desde: '2026-10-23T00:00:00-06:00', hasta: '2026-10-25T23:59:59-06:00' },
 };
 const enFechas = (c, ahora = new Date()) => ahora >= new Date(c.desde) && ahora <= new Date(c.hasta);
 const codigoVigente = (codigo) => {

@@ -15,7 +15,7 @@
 const VIGENCIAS = {
   // Step 1 a $7,000 (30% directo): del 6 al 15 de octubre de 2026.
   step1oct: ['2026-10-06T00:00:00-06:00', '2026-10-15T23:59:59-06:00'],
-  // Día del Médico: Step 1 a $7,000 con el código MEDOCT26, del viernes 23 al
+  // Día del Médico: Step 1 a $8,000 (20%) con el código MEDOCT26, del viernes 23 al
   // domingo 25 de octubre de 2026 (hora de la Ciudad de México).
   medoct26: ['2026-10-23T00:00:00-06:00', '2026-10-25T23:59:59-06:00'],
 };
@@ -28,9 +28,9 @@ const VIGENCIAS = {
 // Octubre 2026: todos los descuentos con código están desactivados (Paris,
 // Step 1 y Nursing). Para reactivar uno, agregarlo aquí y en su formulario.
 const CODIGOS = {
-  // Día del Médico (23–25 oct 2026): Step 1 de $10,000 a $7,000. Debe
+  // Día del Médico (23–25 oct 2026): Step 1 de $10,000 a $8,000 (20%). Debe
   // coincidir con CODIGOS_STEP1 de src/pages/InscripcionesStep1.jsx.
-  MEDOCT26: { programas: ['step1'], precioFijo: 7000, vigencia: 'medoct26' },
+  MEDOCT26: { programas: ['step1'], precioFijo: 8000, vigencia: 'medoct26' },
 };
 
 // Descuentos que se aplican sin que el alumno escriba nada. Cada uno con su
