@@ -21,9 +21,10 @@ import './AlumniPass.css';
 
 const USD_RATE = 17.5; // Igual que la función.
 const PRECIOS = { presencial: 7000, virtual: 4000 };
-// 26 oct 2026: modalidad virtual cerrada (sold out). El servidor también la
-// rechaza (VIRTUAL_CERRADA en netlify/functions/alumni-pass.js).
+// 26 oct 2026: se quitó la modalidad virtual; solo queda presencial. El
+// servidor también la rechaza (VIRTUAL_CERRADA en netlify/functions/alumni-pass.js).
 const VIRTUAL_CERRADA = true;
+const MODALIDADES = VIRTUAL_CERRADA ? ['presencial'] : ['presencial', 'virtual'];
 const cerrada = (m) => (m === 'presencial' ? false : VIRTUAL_CERRADA);
 const GRABACIONES = 1299;
 const MAX_PDF = 3.5 * 1024 * 1024;
@@ -182,7 +183,7 @@ function PaginaPago({ token, cancelado }) {
   const [moneda, setMoneda] = useState('mxn');
   const [eligioMoneda, setEligioMoneda] = useState(false);
   const [grabaciones, setGrabaciones] = useState(false);
-  const [modalidad, setModalidad] = useState('');
+  const [modalidad, setModalidad] = useState(VIRTUAL_CERRADA ? 'presencial' : '');
   const [pagando, setPagando] = useState(false);
   const [errorPago, setErrorPago] = useState('');
   const pagandoRef = useRef(false);
@@ -260,7 +261,7 @@ function PaginaPago({ token, cancelado }) {
           <div className="ap-campo-grupo">
             <span className="ap-etiqueta">Modalidad</span>
             <div className="ap-chips">
-              {['presencial', 'virtual'].map((m) => (
+              {MODALIDADES.map((m) => (
                 <button key={m} type="button" disabled={(m === 'presencial' && agotado) || cerrada(m)}
                   className={modalidad === m ? 'activa' : ''} aria-pressed={modalidad === m} onClick={() => setModalidad(m)}>
                   {m === 'presencial' ? `Presencial · ${dinero(PRECIOS.presencial, moneda)}${agotado ? ' (agotado)' : ''}` : `Virtual · ${cerrada(m) ? 'sold out' : dinero(PRECIOS.virtual, moneda)}`}
@@ -268,7 +269,7 @@ function PaginaPago({ token, cancelado }) {
               ))}
             </div>
             {agotado && info.modalidad === 'presencial' && <small className="ap-error-texto">{VIRTUAL_CERRADA ? 'Los lugares presenciales se agotaron.' : 'Los lugares presenciales se agotaron; puedes asegurar tu lugar en la modalidad virtual.'}</small>}
-            {VIRTUAL_CERRADA && info.modalidad === 'virtual' && <small className="ap-error-texto">La modalidad virtual se agotó (sold out){agotado ? '.' : '; puedes asegurar tu lugar en la modalidad presencial.'}</small>}
+            {VIRTUAL_CERRADA && info.modalidad === 'virtual' && <small className="ap-error-texto">La modalidad virtual ya no está disponible{agotado ? '.' : '; puedes asegurar tu lugar en la modalidad presencial.'}</small>}
           </div>
           <label className={`ap-extra${grabaciones ? ' activa' : ''}`}>
             <input type="checkbox" checked={grabaciones} onChange={(e) => setGrabaciones(e.target.checked)} />
@@ -307,7 +308,7 @@ export default function AlumniPass() {
   const [params, setParams] = useSearchParams();
   const formularioRef = useRef(null);
   const [cupo, setCupo] = useState(null);
-  const [modalidad, setModalidad] = useState('');
+  const [modalidad, setModalidad] = useState(VIRTUAL_CERRADA ? 'presencial' : '');
   const [grabaciones, setGrabaciones] = useState(false);
   const [datos, setDatos] = useState({ nombres: '', apellido_paterno: '', apellido_materno: '', email: '', telefono: '', ciudad: '', pais: '', hospital: '', especialidad: '', edicion_diploma: '' });
   const [paisOtro, setPaisOtro] = useState('');
@@ -361,7 +362,7 @@ export default function AlumniPass() {
   const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email.trim());
   const requerido = (v, msg) => (String(v).trim().length < 2 ? msg : '');
   const errores = {
-    modalidad: !modalidad ? 'Elige la modalidad.' : (modalidad === 'presencial' && agotado ? 'Los lugares presenciales se agotaron.' : cerrada(modalidad) ? 'La modalidad virtual está agotada (sold out).' : ''),
+    modalidad: !modalidad ? 'Elige la modalidad.' : (modalidad === 'presencial' && agotado ? 'Los lugares presenciales se agotaron.' : cerrada(modalidad) ? 'La modalidad virtual ya no está disponible.' : ''),
     nombres: requerido(datos.nombres, 'Escribe tu nombre o nombres como aparecen en tu diploma.'),
     apellido_paterno: requerido(datos.apellido_paterno, 'Escribe tu apellido paterno.'),
     email: !emailValido ? 'Escribe un correo válido: ahí te llegará tu enlace de pago.' : '',
@@ -550,9 +551,9 @@ export default function AlumniPass() {
       </section>
 
       <section className="ap-seccion">
-        <h2 className="ap-titulo-seccion">Elige tu modalidad</h2>
+        <h2 className="ap-titulo-seccion">{MODALIDADES.length === 1 ? 'Modalidad' : 'Elige tu modalidad'}</h2>
         {errorCupo && <p className="ap-nota" role="status">No pudimos consultar los lugares disponibles. El cupo se verificará al preparar tu pago; enviar la solicitud no aparta un lugar.</p>}
-        <div className="ap-modalidades" role="radiogroup" aria-label="Modalidad">
+        <div className={`ap-modalidades${MODALIDADES.length === 1 ? ' ap-modalidades--una' : ''}`} role="radiogroup" aria-label="Modalidad">
           <button
             type="button" role="radio" aria-checked={modalidad === 'presencial'} disabled={ocupado || agotado}
             className={`ap-tarjeta${modalidad === 'presencial' ? ' activa' : ''}${agotado ? ' agotada' : ''}`}
@@ -568,20 +569,21 @@ export default function AlumniPass() {
             </ul>
             {agotado && <span className="ap-cupo agotado">Agotado</span>}
           </button>
-          <button
-            type="button" role="radio" aria-checked={modalidad === 'virtual'} disabled={ocupado || VIRTUAL_CERRADA}
-            className={`ap-tarjeta${modalidad === 'virtual' ? ' activa' : ''}${VIRTUAL_CERRADA ? ' agotada' : ''}`}
-            onClick={() => elegir('virtual')}
-          >
-            <span className="ap-tarjeta-icono"><MonitorPlay size={22} /></span>
-            <span className="ap-tarjeta-nombre">Virtual · streaming en vivo</span>
-            <span className="ap-precio">{dinero(PRECIOS.virtual, 'mxn')}</span>
-            <ul>
-              <li><Check size={15} /> Transmisión en tiempo real.</li>
-              <li><Check size={15} /> Espacio de preguntas e interacción con los profesores de París.</li>
-            </ul>
-            {VIRTUAL_CERRADA && <span className="ap-cupo agotado">Sold out</span>}
-          </button>
+          {!VIRTUAL_CERRADA && (
+            <button
+              type="button" role="radio" aria-checked={modalidad === 'virtual'} disabled={ocupado}
+              className={`ap-tarjeta${modalidad === 'virtual' ? ' activa' : ''}`}
+              onClick={() => elegir('virtual')}
+            >
+              <span className="ap-tarjeta-icono"><MonitorPlay size={22} /></span>
+              <span className="ap-tarjeta-nombre">Virtual · streaming en vivo</span>
+              <span className="ap-precio">{dinero(PRECIOS.virtual, 'mxn')}</span>
+              <ul>
+                <li><Check size={15} /> Transmisión en tiempo real.</li>
+                <li><Check size={15} /> Espacio de preguntas e interacción con los profesores de París.</li>
+              </ul>
+            </button>
+          )}
         </div>
 
         <label className={`ap-extra${grabaciones ? ' activa' : ''}`}>
@@ -611,9 +613,9 @@ export default function AlumniPass() {
         <form className="ap-formulario" onSubmit={enviar} noValidate aria-busy={ocupado}>
           <fieldset className="ap-controles" disabled={ocupado}>
           <div className="ap-campo-grupo">
-            <span className="ap-etiqueta">Modalidad que te interesa *</span>
+            <span className="ap-etiqueta">{MODALIDADES.length === 1 ? 'Modalidad' : 'Modalidad que te interesa *'}</span>
             <div className="ap-chips">
-              {['presencial', 'virtual'].map((m) => (
+              {MODALIDADES.map((m) => (
                 <button key={m} type="button" disabled={(m === 'presencial' && agotado) || cerrada(m)}
                   className={modalidad === m ? 'activa' : ''} aria-pressed={modalidad === m} onClick={() => elegir(m)}>
                   {m === 'presencial' ? `Presencial${agotado ? ' (agotado)' : ''}` : `Virtual${cerrada(m) ? ' (sold out)' : ''}`}

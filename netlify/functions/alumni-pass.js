@@ -33,11 +33,11 @@ const PAGINA = `${SITIO}/alumni-pass-step1`;
 const PRECIOS_MXN = PRECIOS_ALUMNI;
 const GRABACIONES_MXN = GRABACIONES_ALUMNI;
 const CUPO_PRESENCIAL = 30;
-// 26 oct 2026: la modalidad virtual se cerró (sold out). Nadie puede pedirla ni
+// 26 oct 2026: se quitó la modalidad virtual. Nadie puede pedirla ni
 // pagarla; quien ya pagó virtual conserva su pase. Debe coincidir con
 // VIRTUAL_CERRADA de src/pages/AlumniPass.jsx.
 const VIRTUAL_CERRADA = true;
-const ERROR_VIRTUAL = 'La modalidad virtual está agotada (sold out). Elige la modalidad presencial.';
+const ERROR_VIRTUAL = 'La modalidad virtual ya no está disponible. Elige la modalidad presencial.';
 // Un lugar presencial queda apartado mientras su cobro de Stripe sigue abierto.
 const APARTADO_MIN = 35;
 const BUCKET = 'alumni-diplomas';
