@@ -1,6 +1,7 @@
 import { ShieldCheck } from 'lucide-react';
 import './Partners.css';
 
+// `ancho`: logos horizontales (más anchos que altos) que necesitan más espacio.
 const logos = [
   { src: "/assets/componentes/logo.webp",       alt: "Institución 1" },
   { src: "/assets/componentes/534.webp",        alt: "Institución 2" },
@@ -13,6 +14,7 @@ const logos = [
   { src: "/assets/componentes/images.webp",     alt: "Institución 9" },
   { src: "/assets/componentes/fleci.jpeg",      alt: "FLECI" },
   { src: "/assets/componentes/alat.png",        alt: "ALAT" },
+  { src: "/assets/logo-cenatra.svg",            alt: "Salud – CENATRA, Centro Nacional de Trasplantes", ancho: true },
 ];
 
 const Partners = () => (
@@ -22,6 +24,7 @@ const Partners = () => (
         <ShieldCheck size={15} />
         Confianza Global
       </div>
+      <p className="partners-subtitle">Instituciones que han confiado en nosotros</p>
     </div>
     <div className="partners-marquee-wrap">
       <div className="partners-fade partners-fade--left" />
@@ -29,7 +32,7 @@ const Partners = () => (
       <div className="partners-track">
         {/* Duplicated for seamless infinite loop */}
         {[...logos, ...logos].map((logo, i) => (
-          <div key={i} className="partners-logo-item">
+          <div key={i} className={`partners-logo-item${logo.ancho ? ' partners-logo-item--ancho' : ''}`}>
             <img src={logo.src} alt={logo.alt} />
           </div>
         ))}

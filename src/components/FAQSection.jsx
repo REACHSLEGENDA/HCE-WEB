@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, MessageCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './FAQSection.css';
 
 const FAQ_NURSING = [
@@ -163,7 +164,7 @@ const FAQ_PARIS = [
     a: (
       <>
         Puedes asegurar tu cupo de inmediato directamente en nuestro formulario de inscripción.{' '}
-        <a href="/inscripciones-step1" style={{ color: '#0047ff', fontWeight: 700 }}>Da clic aquí →</a>
+        <Link to="/inscripciones-step1" style={{ color: '#0047ff', fontWeight: 700 }}>Da clic aquí →</Link>
         <br /><br />
         <em>📩 ¿Tienes otra duda? Escríbenos a <strong>info@healthcareexp.com</strong> o utiliza el botón de WhatsApp. ¡Nuestro equipo de admisiones te atenderá de inmediato!</em>
       </>

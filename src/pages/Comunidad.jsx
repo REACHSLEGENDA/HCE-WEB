@@ -77,11 +77,55 @@ const FORUM_CATEGORIES = [
   { id: 'ECMO Nursing Care', label: 'ECMO Nursing Care', icon: NurseCap, desc: 'Cuidado crítico de enfermería en ECMO' },
   { id: 'Paris Diploma ECMO', label: 'Paris International Diploma in ECMO', icon: Award, desc: 'Diploma internacional de París en ECMO' },
   { id: 'ECMO SIM', label: 'Simulador ECMO SIM', icon: Gamepad2, desc: 'Entrenamiento interactivo y simulador clínico' },
-  { id: 'Experiencia Docente', label: 'Comentarios Docentes / Instructores', icon: Award, desc: 'Experiencias de nuestros profesores y facilitadores clínicos' },
+  // Categoría fusionada: muestra los testimonios guardados con cualquiera de los
+  // dos valores de `experiences`; los nuevos se guardan con su `id`.
+  { id: 'Experiencia Docente', experiences: ['Experiencia Docente', 'Entrenamiento Intrahospitalario In Situ'], label: 'Docentes y Entrenamiento In Situ', icon: Users, desc: 'Profesores, facilitadores y simulación en hospitales' },
   { id: 'Conferencias Virtuales', label: 'Conferencias Virtuales Académicas para Instituciones y Grupos Hospitalarios', icon: Video, desc: 'Ponencias y conferencias virtuales especializadas' },
-  { id: 'Webinars portal', label: 'Webinars portal', icon: PlayCircle, desc: 'Webinars en vivo y educación continua' },
-  { id: 'Entrenamiento Intrahospitalario In Situ', label: 'Entrenamiento Intrahospitalario In Situ', icon: Users, desc: 'Capacitación y simulación in situ en hospitales' }
+  { id: 'Webinars portal', label: 'Webinars portal', icon: PlayCircle, desc: 'Webinars en vivo y educación continua' }
 ];
+
+// Valores de testimonials.experience que pertenecen a una categoría del foro.
+const experienciasDe = (categoryId) => {
+  const cat = FORUM_CATEGORIES.find(c => c.id === categoryId);
+  return cat?.experiences || [categoryId];
+};
+
+const defaultsDe = (categoryId) => {
+  const exps = experienciasDe(categoryId);
+  return DEFAULT_TESTIMONIALS.filter(t => exps.includes(t.experience));
+};
+
+// Respaldo local: une el de la categoría con los que quedaron guardados con
+// los ids de las categorías fusionadas (sin repetir).
+const leerRespaldo = (categoryId) => {
+  const claves = [...new Set([categoryId, ...experienciasDe(categoryId)])];
+  const vistos = new Set();
+  const lista = [];
+  claves.forEach((clave) => {
+    try {
+      const guardado = JSON.parse(localStorage.getItem(`backup_testimonials_${clave}`) || 'null');
+      if (Array.isArray(guardado)) {
+        guardado.forEach((item) => {
+          if (!item || vistos.has(item.id)) return;
+          vistos.add(item.id);
+          lista.push(item);
+        });
+      }
+    } catch { /* respaldo ilegible o sin acceso a localStorage */ }
+  });
+  return lista;
+};
+
+// Guarda todo bajo la clave de la categoría y borra las claves viejas de las
+// categorías fusionadas (su contenido ya va incluido en `lista`).
+const guardarRespaldo = (categoryId, lista) => {
+  try {
+    localStorage.setItem(`backup_testimonials_${categoryId}`, JSON.stringify(lista));
+    experienciasDe(categoryId)
+      .filter(clave => clave !== categoryId)
+      .forEach(clave => localStorage.removeItem(`backup_testimonials_${clave}`));
+  } catch { /* sin acceso a localStorage */ }
+};
 
 const areRolesRedundant = (degree, cargo) => {
   if (!degree || !cargo) return false;
@@ -210,30 +254,23 @@ const Comunidad = () => {
             institucion
           )
         `)
-        .eq('experience', category)
+        .in('experience', experienciasDe(category))
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       // Filter default seed testimonials for this category
-      const categoryDefaults = DEFAULT_TESTIMONIALS.filter(t => t.experience === category);
-      
+      const categoryDefaults = defaultsDe(category);
+
       // Combine database results with defaults
       const combined = [...(data || []), ...categoryDefaults];
       setTestimonials(combined);
 
       // Save local backup
-      localStorage.setItem(`backup_testimonials_${category}`, JSON.stringify(data || []));
+      guardarRespaldo(category, data || []);
     } catch (err) {
       console.warn('Error fetching testimonials from database, using fallback:', err.message);
-      const backup = localStorage.getItem(`backup_testimonials_${category}`);
-      const categoryDefaults = DEFAULT_TESTIMONIALS.filter(t => t.experience === category);
-      
-      if (backup) {
-        setTestimonials([...JSON.parse(backup), ...categoryDefaults]);
-      } else {
-        setTestimonials(categoryDefaults);
-      }
+      setTestimonials([...leerRespaldo(category), ...defaultsDe(category)]);
     } finally {
       setTestimonialsLoading(false);
     }
@@ -290,14 +327,11 @@ const Comunidad = () => {
         }
       };
 
-      const backup = localStorage.getItem(`backup_testimonials_${forumCategory}`);
-      const list = backup ? JSON.parse(backup) : [];
-      const updatedList = [localItem, ...list];
-      localStorage.setItem(`backup_testimonials_${forumCategory}`, JSON.stringify(updatedList));
-      
+      const updatedList = [localItem, ...leerRespaldo(forumCategory)];
+      guardarRespaldo(forumCategory, updatedList);
+
       // Combine with defaults to update UI
-      const categoryDefaults = DEFAULT_TESTIMONIALS.filter(t => t.experience === forumCategory);
-      setTestimonials([...updatedList, ...categoryDefaults]);
+      setTestimonials([...updatedList, ...defaultsDe(forumCategory)]);
       
       showToast('Comentario guardado localmente', 'success');
       setNewComment('');
@@ -326,15 +360,9 @@ const Comunidad = () => {
     
     try {
       if (typeof commentId === 'string' && commentId.startsWith('local_')) {
-        const backup = localStorage.getItem(`backup_testimonials_${forumCategory}`);
-        if (backup) {
-          const list = JSON.parse(backup);
-          const updatedList = list.filter(item => item.id !== commentId);
-          localStorage.setItem(`backup_testimonials_${forumCategory}`, JSON.stringify(updatedList));
-          
-          const categoryDefaults = DEFAULT_TESTIMONIALS.filter(t => t.experience === forumCategory);
-          setTestimonials([...updatedList, ...categoryDefaults]);
-        }
+        const updatedList = leerRespaldo(forumCategory).filter(item => item.id !== commentId);
+        guardarRespaldo(forumCategory, updatedList);
+        setTestimonials([...updatedList, ...defaultsDe(forumCategory)]);
         showToast('Comentario eliminado', 'success');
         return;
       }

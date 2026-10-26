@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { Link } from 'react-router-dom';
 import { Users, Globe, GraduationCap, Laptop2, BarChart3 } from 'lucide-react';
 import './Impact.css';
 
@@ -73,7 +74,7 @@ const METRICAS = [
     icon: Laptop2,
     objetivo: 50,
     titulo: 'Clases magistrales',
-    detalle: <>Contenido premium disponible 24/7 en nuestro <a href="/login" className="imp-link">Portal Científico</a>.</>,
+    detalle: <>Contenido premium disponible 24/7 en nuestro <Link to="/login" className="imp-link">Portal Científico</Link>.</>,
   },
 ];
 

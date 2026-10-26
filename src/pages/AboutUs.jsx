@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useInView } from 'react-intersection-observer';
+import { Link } from 'react-router-dom';
 import { Globe, Users, Activity, Shield, Sparkles, ArrowRight, PlayCircle, Award, Target, MonitorPlay, Zap, Gamepad2, Laptop, GraduationCap, CheckCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -224,6 +225,14 @@ const AboutUs = () => {
                     <p>Diplomado de Manejo de Avanzada en Insuficiencia Cardiaca; Primer programa en español avalado por la ISHLT.</p>
                   </div>
                 </div>
+                <div className="au-tl-item">
+                  <div className="au-tl-dot"></div>
+                  <div className="au-tl-content">
+                    <span className="au-tl-year">2026</span>
+                    <h4>Colaboración con CENATRA</h4>
+                    <p>Colaboración con CENATRA para la creación y lanzamiento de CNADOT, primer programa nacional avanzado de donación de órganos y tejidos en México.</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -260,6 +269,7 @@ const AboutUs = () => {
                   'Certificación europea en simulación clínica (EuSim Level 1)',
                   'Diplomado en Educación de Profesionales de la Salud (UAQ y FLASIC)',
                   'Formación en Debriefing (Penn State College of Nursing) y modelo RCDP',
+                  'Curso CRM y factores humanos avalado por FLASIC y Simulación 360',
                 ].map((c, i) => (
                   <div key={i} className="au-founder-cred-item">
                     <CheckCircle size={16} className="au-founder-cred-icon" />
@@ -407,7 +417,7 @@ const AboutUs = () => {
               <div className="au-stat-label">Experiencias Élite</div>
             </div>
             <div className={`au-stat-item au-reveal ${statsInView ? 'active' : ''}`} style={{ transitionDelay: '0.4s' }}>
-              <div className="au-stat-num" style={{ fontSize: '2.8rem', paddingBottom: '0.5rem' }}>ISHLT</div>
+              <div className="au-stat-num au-stat-num--texto">Diversas Sociedades e Instituciones Internacionales</div>
               <div className="au-stat-label">Respaldo Académico</div>
             </div>
 
@@ -426,19 +436,19 @@ const AboutUs = () => {
               <Users size={56} />
             </div>
             <h2 className="au-h2" style={{ marginBottom: '1.5rem', color: '#0f172a', position: 'relative', zIndex: 2 }}>
-              Únete a la nueva generación de <span className="au-gradient-text">Líderes Biomédicos</span>
+              Únete a la nueva generación de <span className="au-gradient-text">Profesionales de la Salud</span>
             </h2>
             <p className="au-cta-desc">
               Transformamos la manera en la que aprendes, interactúas y salvas vidas. Explora nuestros programas, involúcrate en nuestros simuladores y vive la experiencia real HCE.
             </p>
             
             <div className="au-cta-actions">
-              <a href="/paris-diploma-ecmo" className="au-btn au-btn-cta">
-                Ver Diplomado ECMO
-              </a>
-              <a href="/simulador-ecmo-sim" className="au-btn au-btn-dark">
+              <Link to="/paris-diploma-ecmo" className="au-btn au-btn-cta">
+                Certificación en ECMO
+              </Link>
+              <Link to="/simulador-ecmo-sim" className="au-btn au-btn-dark">
                 Simulador Clínico
-              </a>
+              </Link>
             </div>
           </div>
         </div>

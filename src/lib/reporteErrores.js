@@ -71,6 +71,13 @@ export function esRuido({ mensaje = '', stack = '', archivo = '' } = {}) {
       if (origen !== window.location.origin) return true;
     } catch { /* archivo raro: se evalúa por el resto */ }
   }
+  // Script que mete el navegador o una app (navegadores dentro de Facebook,
+  // Instagram, traductores…): su recorrido no pasa por ningún archivo del sitio.
+  // Los errores del portal siempre pasan por /assets/ (o /src/ en desarrollo).
+  const marcos = String(stack || '').split('\n').filter((l) => /^\s*at\s|@/.test(l));
+  const delSitio = (l) => /\/assets\/|\/src\/|\/tests?\/|file:/.test(l)
+    || (typeof window !== 'undefined' && l.includes(window.location.origin));
+  if (marcos.length && !marcos.some(delSitio)) return true;
   // Sin conexión, cualquier falla es de red.
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return true;
   return false;

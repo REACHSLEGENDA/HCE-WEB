@@ -16,6 +16,9 @@ describe('reporteErrores (navegador)', () => {
     expect(esRuido({ mensaje: 'Error raro', archivo: 'https://www.googletagmanager.com/gtm.js' })).toBe(true);
     expect(esRuido({ mensaje: 'Object Not Found Matching Id:7, MethodName:simulateEvent, ParamCount:1' })).toBe(true);
     expect(esRuido({ mensaje: 'Object Not Found Matching Id:2, MethodName:update, ParamCount:4' })).toBe(true);
+    // Script inyectado por un navegador dentro de una app: no pasa por el sitio.
+    expect(esRuido({ mensaje: "TypeError: Cannot read properties of null (reading 'innerText')", stack: "TypeError: Cannot read properties of null (reading 'innerText')\n    at <anonymous>:1:52\n    at <anonymous>:3:4" })).toBe(true);
+    expect(esRuido({ mensaje: "TypeError: Cannot read properties of null (reading 'x')", stack: "TypeError: x\n    at Ficha (https://healthcareexp.com/assets/Consultas-a1.js:1:2)" })).toBe(false);
     expect(esRuido({ mensaje: "ReferenceError: Cannot access 'x' before initialization" })).toBe(false);
     expect(esRuido({ mensaje: 'TypeError: Failed to fetch dynamically imported module: https://healthcareexp.com/assets/a.js' })).toBe(false);
   });

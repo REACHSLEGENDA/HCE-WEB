@@ -9,7 +9,7 @@
 // del sitemap. Cambia fechas y textos aquí cuando cambien en el sitio.
 
 import { AUTOR, CONSULTAS, FAQ_ECMO, FAQ_PROGRAMAS, PROGRAMAS_CTA } from './consultas.js';
-import { DEFINICION_HCE, PROGRAMAS } from './programas.js';
+import { DEFINICION_HCE, HOSPITALES_H1, HOSPITALES_TEXTO, PROGRAMAS, PROGRAMAS_H1, PROGRAMAS_TEXTO } from './programas.js';
 import { INSTRUCTORES } from './instructores.js';
 
 export const SITIO = 'https://healthcareexp.com';
@@ -122,13 +122,13 @@ export const PAGINAS = [
   },
   {
     ruta: '/programas',
-    titulo: 'Cursos de ECMO y cuidados críticos en México y Latinoamérica | HCE',
-    descripcion: 'Compara los programas de HCE: Diploma de París en ECMO, curso de ECMO para enfermería y simulador ECMO SIM. Público, modalidad e inicio.',
+    titulo: 'Cursos de ECMO y alianzas académicas en México y Latinoamérica | HCE',
+    descripcion: 'Programas propios de HCE en ECMO, cuidados críticos y simulación clínica (Diploma de París en ECMO, ECMO Nursing Care y ECMO SIM) y alianzas académicas con instituciones y sociedades médicas.',
     imagen: OG('hce.jpg'),
     prioridad: 0.9,
-    h1: 'Cursos de ECMO y cuidados críticos en México y Latinoamérica',
+    h1: PROGRAMAS_H1,
     texto: {
-      respuesta: DEFINICION_HCE,
+      respuesta: PROGRAMAS_TEXTO,
       tabla: { encabezados: ['Programa', 'Para quién', 'Modalidad', 'Inicio'], filas: PROGRAMAS.map((p) => [p.nombre, p.publico, p.modalidad, p.inicio]) },
       enlaces: PROGRAMAS.map((p) => ({ ruta: p.ruta, texto: p.nombre })),
     },
@@ -200,12 +200,12 @@ export const PAGINAS = [
   },
   {
     ruta: '/para-hospitales',
-    titulo: 'Capacitación en ECMO para hospitales | HCE',
-    descripcion: 'Capacitación en ECMO y cuidados críticos para equipos de hospital: programas para equipos ECMO nuevos, simulación con ECMO SIM y formación a la medida.',
+    titulo: 'Capacitación en ECMO para tu hospital | HCE',
+    descripcion: 'Entrenamos a tu equipo en ECMO según las necesidades de tu hospital: simulación, el simulador ECMO SIM y un portal con bibliografía científica y seguimiento de avance.',
     imagen: OG('hce.jpg'),
     prioridad: 0.7,
-    h1: 'Capacitación en ECMO para hospitales',
-    texto: { respuesta: 'HCE capacita a equipos de hospital en ECMO y cuidados críticos: programas para equipos ECMO nuevos, simulación con ECMO SIM, formación a la medida y un portal con la marca de la institución para dar seguimiento al avance.' },
+    h1: HOSPITALES_H1,
+    texto: { respuesta: HOSPITALES_TEXTO },
     archivos: ['src/pages/Consultas.jsx'],
     schema: (p) => [
       { '@type': 'Service', name: p.h1, serviceType: 'Capacitación médica para hospitales', provider: proveedor, areaServed: 'Latinoamérica', url: `${SITIO}${p.ruta}` },

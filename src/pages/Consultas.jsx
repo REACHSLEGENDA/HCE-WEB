@@ -5,7 +5,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
-  Activity, ArrowRight, BookOpenCheck, Building2, ClipboardCheck, CreditCard, ExternalLink, FileCheck2, FileSearch,
+  ArrowRight, BookOpenCheck, Building2, ClipboardCheck, CreditCard, ExternalLink, FileCheck2, FileSearch,
   GraduationCap, HeartPulse, Link2, Mail, MessageCircle, MonitorPlay, Plus, Search, ShieldCheck, Stethoscope, TriangleAlert, Users,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -13,11 +13,30 @@ import Footer from '../components/Footer';
 import NotFound from './NotFound';
 import { useSEO } from '../hooks/useSEO';
 import { AUTOR, CONSULTAS, FAQ_ECMO, FAQ_PROGRAMAS, PROGRAMAS_CTA, consultaPorSlug } from '../data/consultas';
-import { DEFINICION_HCE, PROGRAMAS } from '../data/programas';
+import { HOSPITALES_H1, HOSPITALES_TEXTO, PROGRAMAS, PROGRAMAS_H1, PROGRAMAS_TEXTO } from '../data/programas';
 import './Consultas.css';
 
 const WHATSAPP = 'https://wa.me/525659271906';
-const ICONOS = { ecmo: Activity, enfermeria: Stethoscope, formacion: GraduationCap, simulacion: MonitorPlay, ic: HeartPulse };
+
+// Ícono propio de ECMO con el trazo de lucide (24x24, sin relleno): la bomba
+// (círculo) y el oxigenador (rectángulo) unidos por las líneas del circuito,
+// con flechas del sentido del flujo.
+function IconoEcmo({ size = 24, strokeWidth = 2, ...props }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="5.5" cy="12" r="3.5" />
+      <rect x="15" y="8" width="7" height="8" rx="1.5" />
+      <path d="M18.5 10.5v3" />
+      <path d="M5.5 8.5V7a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      <path d="M18.5 16v1a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-1.5" />
+      <path d="m11 3 2 2-2 2" />
+      <path d="m13 17-2 2 2 2" />
+    </svg>
+  );
+}
+
+const ICONOS = { ecmo: IconoEcmo, enfermeria: Stethoscope, formacion: GraduationCap, simulacion: MonitorPlay, ic: HeartPulse };
 const ICONOS_BLOQUE = [FileSearch, ClipboardCheck, ShieldCheck, BookOpenCheck];
 const fecha = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
 const sinAcentos = (t) => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -132,12 +151,12 @@ function Indice() {
               <label className="cs-buscador">
                 <span className="cs-sr">Buscar una consulta</span>
                 <Search size={20} aria-hidden="true" />
-                <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Busca ECMO VV, enfermería, certificación…" />
+                <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Busca ECMO V-V, enfermería, certificación…" />
               </label>
             </div>
             <figure className="cs-hero-foto">
-              <img src="/consultas/portada.webp" alt="Generación del Diploma de París en ECMO de HCE" width="1200" height="900" />
-              <figcaption>Generación del Diploma de París · INER 2025</figcaption>
+              <img src="/consultas/portada.webp" alt="Instructor de HCE muestra la bomba y el oxigenador de un circuito de ECMO a un grupo de profesionales durante una simulación" width="1200" height="900" />
+              <figcaption>Práctica con el circuito de ECMO · Paris ECMO Simulation Course, Santiago de Chile 2025</figcaption>
             </figure>
           </div>
         </div>
@@ -291,7 +310,17 @@ function Ficha({ c }) {
                 {s.nota && (
                   <div className="cs-nota" role="note">
                     <TriangleAlert size={20} aria-hidden="true" />
-                    <p>{s.nota}</p>
+                    <p>
+                      {s.nota}
+                      {s.notaEnlace?.url && (
+                        <>
+                          {' '}
+                          <a className="cs-nota-enlace" href={s.notaEnlace.url} target="_blank" rel="noopener noreferrer">
+                            {s.notaEnlace.texto} <ExternalLink size={13} aria-hidden="true" />
+                          </a>
+                        </>
+                      )}
+                    </p>
                   </div>
                 )}
                 {i === 0 && p && (
@@ -398,7 +427,7 @@ export function PreguntasFrecuentes() {
                 <label className="cs-buscador">
                   <span className="cs-sr">Buscar una pregunta</span>
                   <Search size={20} aria-hidden="true" />
-                  <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Busca factura, certificado, ECMO VV…" />
+                  <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Busca factura, certificado, ECMO V-V…" />
                 </label>
               </div>
               <div className="cs-faq-resumen">
@@ -481,15 +510,15 @@ export function PreguntasFrecuentes() {
 const GRUPOS_FAQ = [
   { id: 'programas', titulo: 'Programas y fechas', icono: GraduationCap, faqs: FAQ_PROGRAMAS.filter((f) => f.tema === 'programas') },
   { id: 'pagos', titulo: 'Inscripción, pagos y documentos', icono: CreditCard, faqs: FAQ_PROGRAMAS.filter((f) => f.tema === 'pagos') },
-  { id: 'ecmo', titulo: 'Sobre ECMO', icono: Activity, faqs: FAQ_ECMO },
+  { id: 'ecmo', titulo: 'Sobre ECMO', icono: IconoEcmo, faqs: FAQ_ECMO },
 ];
 
 // ---- Hub de programas -----------------------------------------------------------------
 
 export function Programas() {
   useSEO({
-    title: 'Cursos de ECMO y cuidados críticos en México y Latinoamérica',
-    description: 'Todos los programas de HCE: Diploma de París en ECMO, ECMO Nursing Care y ECMO SIM. Compara público, modalidad e inicio.',
+    title: 'Cursos de ECMO y alianzas académicas en México y Latinoamérica',
+    description: 'Programas propios de HCE en ECMO, cuidados críticos y simulación clínica: Diploma de París en ECMO, ECMO Nursing Care y ECMO SIM, y alianzas académicas con instituciones y sociedades médicas.',
   });
   return (
     <div className="cs-pagina">
@@ -501,12 +530,12 @@ export function Programas() {
             <div className="cs-hero-grid">
               <div>
                 <p className="cs-eyebrow">Programas HCE</p>
-                <h1>Cursos de ECMO y cuidados críticos en México y Latinoamérica</h1>
-                <p className="cs-lead">{DEFINICION_HCE} Compara los programas y elige el que va contigo.</p>
+                <h1>{PROGRAMAS_H1}</h1>
+                <p className="cs-lead">{PROGRAMAS_TEXTO}</p>
               </div>
               <figure className="cs-hero-foto">
-                <img src="/consultas/programas.webp" alt="Profesores del Diploma de París en ECMO en el INER" width="1200" height="900" />
-                <figcaption>Diploma de París · INER, Ciudad de México</figcaption>
+                <img src="/consultas/programas.webp" alt="Prof. Matthieu Schmidt, Dra. Jenifer Trejo Guerra y Prof. Alain Combes en el Paris International Diploma in ECMO, INER" width="1200" height="900" />
+                <figcaption>Prof. Matthieu Schmidt, Dra. Jenifer Trejo Guerra y Prof. Alain Combes · Diploma de París, INER 2025</figcaption>
               </figure>
             </div>
           </div>
@@ -564,14 +593,14 @@ export function Programas() {
 
 export function ParaHospitales() {
   useSEO({
-    title: 'Capacitación en ECMO para hospitales',
-    description: 'Capacitación en ECMO y cuidados críticos para equipos de hospital: programas para equipos ECMO nuevos, simulación con ECMO SIM y formación a la medida.',
+    title: 'Capacitación en ECMO para tu hospital',
+    description: 'Entrenamos a tu equipo en ECMO según las necesidades de tu hospital: simulación, el simulador ECMO SIM y un portal con bibliografía científica y seguimiento de avance.',
   });
   const servicios = [
     { icono: Users, titulo: 'Equipos ECMO nuevos', texto: 'Formación para médicos, enfermería y perfusión que arrancan un programa de ECMO: bases, protocolos y trabajo en equipo.' },
     { icono: MonitorPlay, titulo: 'Simulación con ECMO SIM', texto: 'Práctica en línea de decisiones y emergencias del circuito para todo el equipo, a su ritmo.' },
     { icono: Building2, titulo: 'Capacitación a la medida', texto: 'Programas según las necesidades de tu hospital: temas, fechas y número de participantes.' },
-    { icono: GraduationCap, titulo: 'Portal propio para tu institución', texto: 'Tus profesionales entran a un portal con el logo de tu hospital, sus cursos y sus reportes de avance.' },
+    { icono: GraduationCap, titulo: 'Portal propio para tu institución', texto: 'Tus profesionales entran a un portal con sus cursos, bibliografía científica y reportes de avance.' },
   ];
   return (
     <div className="cs-pagina">
@@ -583,16 +612,16 @@ export function ParaHospitales() {
             <div className="cs-hero-grid">
               <div>
                 <p className="cs-eyebrow">Hospitales e instituciones</p>
-                <h1>Capacitación en ECMO para hospitales</h1>
-                <p className="cs-lead">Entrenamos a tu equipo en ECMO y cuidados críticos con profesores internacionales, simulación y un portal con seguimiento de avance.</p>
+                <h1>{HOSPITALES_H1}</h1>
+                <p className="cs-lead">{HOSPITALES_TEXTO}</p>
                 <div className="cs-cta-botones">
                   <a className="cs-boton-azul" href={`${WHATSAPP}?text=${encodeURIComponent('Hola, me interesa capacitación en ECMO para mi hospital.')}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} /> Hablar con HCE</a>
                   <a className="cs-boton-linea" href="mailto:academia@healthcareexp.com?subject=Capacitaci%C3%B3n%20para%20hospital">academia@healthcareexp.com</a>
                 </div>
               </div>
               <figure className="cs-hero-foto">
-                <img src="/consultas/hospitales.webp" alt="Instructores de HCE con un equipo de salud durante una práctica de ECMO" width="1200" height="900" />
-                <figcaption>Práctica con equipos de salud · HCE, INER 2025</figcaption>
+                <img src="/consultas/hospitales.webp" alt="Instructores de HCE guían a médicos y enfermería en el manejo de la consola de ECMO durante un taller de simulación" width="1200" height="900" />
+                <figcaption>Taller de simulación en ECMO con equipos de salud · Santiago de Chile 2025</figcaption>
               </figure>
             </div>
           </div>

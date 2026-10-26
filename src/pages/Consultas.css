@@ -121,6 +121,9 @@
 .cs-nota { display: flex; gap: 12px; margin-top: 22px; padding: 16px 18px; border: 1px solid #fcd34d; border-radius: 10px; background: #fffbeb; color: #78350f; }
 .cs-nota p { margin: 0; font-size: .9rem; font-weight: 600; line-height: 1.6; }
 .cs-nota svg { flex-shrink: 0; }
+.cs-nota-enlace { color: #92400e; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.cs-nota-enlace:hover { color: #78350f; }
+.cs-nota-enlace svg { vertical-align: -2px; }
 .cs-cta-medio { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 32px; padding: 22px 24px; border: 1px solid #b2ebf2; border-radius: 10px; background: var(--cs-celeste); }
 .cs-cta-medio p { margin: 0; color: var(--cs-marino); font-weight: 900; line-height: 1.4; }
 .cs-cta-medio a { display: inline-flex; align-items: center; gap: 6px; color: var(--cs-marino); font-size: 10px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; text-decoration: none; white-space: nowrap; }

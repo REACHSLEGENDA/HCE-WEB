@@ -1,7 +1,8 @@
 // Después de `vite build`: genera un HTML por página pública con su título,
 // descripción, imagen para compartir, canonical, datos estructurados y el
 // texto de la página dentro de #root (los crawlers de IA y las vistas previas
-// no ejecutan JavaScript; React lo reemplaza al cargar). También escribe
+// no ejecutan JavaScript; React lo reemplaza al cargar; oculto a la vista, ver
+// ESTILO_ESTATICO). También escribe
 // sitemap.xml con la fecha real de cada página (último commit de sus fuentes).
 // Los datos viven en src/data/seo.js.
 //
@@ -74,7 +75,12 @@ function contenido(p) {
       for (const parrafo of s.parrafos || []) cuerpo += `<p>${esc(parrafo)}</p>`;
       if (s.puntos) cuerpo += lista(s.puntos);
       if (s.tabla) cuerpo += tabla(s.tabla);
-      if (s.nota) cuerpo += `<p><em>${esc(s.nota)}</em></p>`;
+      if (s.nota) {
+        const enlace = s.notaEnlace?.url
+          ? ` <a href="${esc(s.notaEnlace.url)}" rel="noopener">${esc(s.notaEnlace.texto)} ↗</a>`
+          : '';
+        cuerpo += `<p><em>${esc(s.nota)}</em>${enlace}</p>`;
+      }
     }
     cuerpo += `<h2>La visión del equipo académico</h2><p>${esc(c.vision)}</p>`;
     cuerpo += `<h2>Preguntas frecuentes</h2>${preguntas(c.faqs)}`;
@@ -90,8 +96,20 @@ function contenido(p) {
   if (p.faqs) cuerpo += preguntas(p.faqs);
   const nav = PAGINAS.filter((x) => !x.noindex && x.prioridad >= 0.7 && x.ruta !== p.ruta)
     .map((x) => `<a href="${x.ruta}">${esc(x.h1)}</a>`).join(' · ');
-  return `<main class="seo-estatico" style="max-width:820px;margin:0 auto;padding:32px 16px;font-family:Inter,system-ui,sans-serif;color:#0a192f;line-height:1.6">${cuerpo}<nav style="margin-top:32px;font-size:14px">${nav}</nav></main>`;
+  return `<main class="seo-estatico">${cuerpo}<nav>${nav}</nav></main>`;
 }
+
+// El texto de #root es para buscadores, lectores de IA y navegadores sin
+// JavaScript. Con JavaScript, el visitante no debe verlo: antes se pintaba unos
+// segundos como texto plano ("una especie de código") hasta que React montaba.
+// Se oculta solo visualmente (fuera de pantalla con clip, NO display:none, para
+// que siga en el HTML y en el árbol de accesibilidad) y el visitante ve el fondo
+// liso de la página hasta que React lo reemplaza. Sin JavaScript, el <noscript>
+// lo vuelve a mostrar con un formato legible.
+const ESTILO_ESTATICO = [
+  '<style>.seo-estatico{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;border:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important}</style>',
+  '<noscript><style>.seo-estatico{position:static!important;width:auto!important;height:auto!important;max-width:820px;margin:0 auto!important;padding:32px 16px!important;overflow:visible!important;clip:auto!important;clip-path:none!important;white-space:normal!important;font-family:Inter,system-ui,sans-serif;color:#0a192f;line-height:1.6}.seo-estatico nav{margin-top:32px;font-size:14px}</style></noscript>',
+].join('\n    ');
 
 function htmlDe(p) {
   let html = base;
@@ -102,7 +120,8 @@ function htmlDe(p) {
     .replace(/\s*<meta (property="og:|name="twitter:|name="robots")[^>]*>/g, '')
     .replace(/\s*<meta name="keywords"[^>]*>/g, '')
     .replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/g, '');
-  html = html.replace('</head>', `    ${etiquetas(p)}\n  </head>`);
+  html = html.replace('</head>', `    ${etiquetas(p)}\n    ${ESTILO_ESTATICO}\n  </head>`);
+  if (!html.includes('<div id="root"></div>')) console.warn(`SEO: no se encontró <div id="root"></div> para ${p.ruta}; la página queda sin texto base.`);
   html = html.replace('<div id="root"></div>', `<div id="root">${contenido(p)}</div>`);
   return html;
 }

@@ -33,6 +33,11 @@ const PAGINA = `${SITIO}/alumni-pass-step1`;
 const PRECIOS_MXN = PRECIOS_ALUMNI;
 const GRABACIONES_MXN = GRABACIONES_ALUMNI;
 const CUPO_PRESENCIAL = 30;
+// 26 oct 2026: la modalidad virtual se cerró (sold out). Nadie puede pedirla ni
+// pagarla; quien ya pagó virtual conserva su pase. Debe coincidir con
+// VIRTUAL_CERRADA de src/pages/AlumniPass.jsx.
+const VIRTUAL_CERRADA = true;
+const ERROR_VIRTUAL = 'La modalidad virtual está agotada (sold out). Elige la modalidad presencial.';
 // Un lugar presencial queda apartado mientras su cobro de Stripe sigue abierto.
 const APARTADO_MIN = 35;
 const BUCKET = 'alumni-diplomas';
@@ -116,6 +121,7 @@ async function solicitar(db, cuerpo) {
   if (!d.nombre || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return json(400, { error: 'Escribe tu nombre completo y un correo válido.' });
   if (d.telefono.replace(/\D/g, '').length < 8 || [d.ciudad, d.pais, d.hospital, d.especialidad].some(v => v.length < 2)) return json(400, { error: 'Completa teléfono con lada, ciudad, país, hospital y especialidad.' });
   if (!modalidad) return json(400, { error: 'Elige la modalidad: presencial o virtual.' });
+  if (modalidad === 'virtual' && VIRTUAL_CERRADA) return json(409, { error: ERROR_VIRTUAL, estado: 'virtual-cerrada' });
   if (cuerpo.acepta !== true) return json(400, { error: 'Debes aceptar el aviso de privacidad.' });
   const previa = await db.from('alumni_pass_registros').select('*').eq('solicitud_clave', clave).maybeSingle();
   if (previa.error) throw new Error(previa.error.message);
@@ -237,6 +243,7 @@ async function pagar(db, cuerpo) {
   const grabaciones = cuerpo.grabaciones === true;
   const moneda = cuerpo.moneda;
   if (!Object.hasOwn(PRECIOS_MXN, modalidad) || !['mxn', 'usd'].includes(moneda)) return json(400, { error: 'Selecciona una modalidad y moneda válidas.' });
+  if (modalidad === 'virtual' && VIRTUAL_CERRADA) return json(409, { error: ERROR_VIRTUAL, estado: 'virtual-cerrada' });
   if (r.stripe_session_id) {
     const { stripe: anterior } = getStripe(r.checkout_moneda || r.moneda);
     const abierta = await anterior.checkout.sessions.retrieve(r.stripe_session_id);
@@ -254,7 +261,7 @@ async function pagar(db, cuerpo) {
     p_id: r.id, p_modalidad: modalidad, p_moneda: moneda, p_grabaciones: grabaciones,
   });
   if (errReserva) {
-    if (/ALUMNI_AGOTADO/.test(errReserva.message)) return json(409, { error: 'Los lugares presenciales se agotaron. Puedes elegir la modalidad virtual.', estado: 'agotado' });
+    if (/ALUMNI_AGOTADO/.test(errReserva.message)) return json(409, { error: VIRTUAL_CERRADA ? 'Los lugares presenciales se agotaron.' : 'Los lugares presenciales se agotaron. Puedes elegir la modalidad virtual.', estado: 'agotado' });
     throw new Error(errReserva.message);
   }
   if (!reserva?.checkout_intento) throw new Error('No se pudo preparar tu pago. Vuelve a intentar.');

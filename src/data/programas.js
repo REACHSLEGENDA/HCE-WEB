@@ -4,6 +4,13 @@
 
 export const DEFINICION_HCE = 'HCE – Healthcare Training Experience es una organización de educación médica continua especializada en ECMO, cuidados críticos y simulación clínica para profesionales de la salud de Latinoamérica.';
 
+// Encabezado y texto de /programas y /para-hospitales (los usan la página y el
+// HTML estático de src/data/seo.js, así no se desfasan).
+export const PROGRAMAS_H1 = 'Líderes en Cursos de ECMO y Alianzas Académicas en México y Latinoamérica';
+export const PROGRAMAS_TEXTO = 'En HCE – Healthcare Training Experience desarrollamos programas propios de alta especialización en ECMO, cuidados críticos y simulación clínica. Como academia comprometida con la vanguardia médica, unimos fuerzas mediante colaboraciones científicas en salud cardiovascular, neumología, procuración y donación de órganos y tejidos, entre otras, junto a reconocidas instituciones, colegios y sociedades médicas de la región.';
+export const HOSPITALES_H1 = 'Capacitación en ECMO para tu Hospital';
+export const HOSPITALES_TEXTO = 'Entrenamos a tu equipo en ECMO según las necesidades de tu hospital, realizamos simulación, llevamos nuestro simulador ECMO SIM y creamos un portal para tu entrenamiento con bibliografía científica y seguimiento de avance.';
+
 export const PROGRAMAS = [
   {
     id: 'paris',
@@ -38,8 +45,8 @@ export const PROGRAMAS = [
     nombre: 'ECMO SIM',
     ruta: '/simulador-ecmo-sim',
     inscripcion: '/simulador-ecmo-sim',
-    publico: 'Profesionales de la salud y equipos de hospital',
-    modalidad: '100% en línea',
+    publico: 'Profesionales y equipos multidisciplinarios interesados en entrenarse en ECMO',
+    modalidad: 'Simulador virtual',
     inicio: 'Disponible',
     distintivo: 'Simulador clínico 3D con ventilador y consola ECMO que reaccionan a cada decisión',
     resumen: 'Simulador clínico virtual 100% en línea que recrea una terapia intensiva en 3D con ventilador y consola ECMO, para practicar decisiones y emergencias del circuito.',

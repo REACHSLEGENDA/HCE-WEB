@@ -118,13 +118,13 @@ async function entorno(s) {
 const evento = cuerpo => ({ httpMethod: 'POST', headers: {}, body: JSON.stringify(cuerpo) });
 const body = r => JSON.parse(r.body);
 const opciones = s => ({ accion: 'pagar', token: s.filas[0].token, modalidad: 'presencial', moneda: 'usd', grabaciones: true });
-const solicitud = () => ({ accion:'solicitar', solicitudClave:randomUUID(), nombre:'Ana López', email:'ana@example.test', telefono:'5555555555', ciudad:'CDMX', pais:'México', hospital:'Hospital QA', especialidad:'Perfusión', modalidad:'virtual', acepta:true, diploma:{tipo:'application/pdf',base64:Buffer.from('%PDF QA').toString('base64')} });
+const solicitud = () => ({ accion:'solicitar', solicitudClave:randomUUID(), nombre:'Ana López', email:'ana@example.test', telefono:'5555555555', ciudad:'CDMX', pais:'México', hospital:'Hospital QA', especialidad:'Perfusión', modalidad:'presencial', acepta:true, diploma:{tipo:'application/pdf',base64:Buffer.from('%PDF QA').toString('base64')} });
 async function cobro(s,e) { assert.equal((await e.endpoint(evento(opciones(s)))).statusCode,200); const sesion=Object.values(s.sesiones)[0]; sesion.payment_status='paid'; sesion.status='complete'; return clon(sesion); }
 let pruebas = 0;
 async function check(nombre,fn) { await fn(); console.log('PASS',nombre); pruebas++; }
 
 await check('solicitud completa se guarda una sola vez al reintentar', async () => {
-  const s=base(), e=await entorno(s), d={ accion:'solicitar', solicitudClave:randomUUID(), nombre:'Ana López', email:'ana@example.test', telefono:'5555555555', ciudad:'CDMX', pais:'México', hospital:'Hospital QA', especialidad:'Perfusión', modalidad:'virtual', acepta:true, diploma:{tipo:'application/pdf',base64:Buffer.from('%PDF QA').toString('base64')} };
+  const s=base(), e=await entorno(s), d={ accion:'solicitar', solicitudClave:randomUUID(), nombre:'Ana López', email:'ana@example.test', telefono:'5555555555', ciudad:'CDMX', pais:'México', hospital:'Hospital QA', especialidad:'Perfusión', modalidad:'presencial', acepta:true, diploma:{tipo:'application/pdf',base64:Buffer.from('%PDF QA').toString('base64')} };
   assert.equal((await e.endpoint(evento(d))).statusCode,200); assert.equal((await e.endpoint(evento(d))).statusCode,200);
   assert.equal(s.filas.length,2); assert.equal(s.archivos.length,1); assert.equal(s.enviados.length,2);
   assert.equal(s.formularios.length,1);assert.equal(s.formspree.length,1);assert.equal(s.contactos.length,1);assert.equal(s.listas.length,0);
@@ -188,11 +188,16 @@ await check('total USD con grabaciones es 475 y reintentos reutilizan Checkout',
 await check('dos peticiones simultáneas comparten la clave del mismo cobro', async () => {
   const s=base(),e=await entorno(s);await Promise.all([e.endpoint(evento(opciones(s))),e.endpoint(evento(opciones(s)))]);assert.equal(Object.keys(s.sesiones).length,1);
 });
-await check('cambiar modalidad cierra el cobro anterior y guarda lo realmente pagado', async () => {
+await check('cambiar opciones cierra el cobro anterior y guarda lo realmente pagado', async () => {
   const s=base(),e=await entorno(s);await e.endpoint(evento(opciones(s)));
-  const r=await e.endpoint(evento({...opciones(s),modalidad:'virtual',grabaciones:false}));assert.equal(r.statusCode,200);assert.equal(s.sesiones.cs_qa_1.status,'expired');
+  const r=await e.endpoint(evento({...opciones(s),grabaciones:false}));assert.equal(r.statusCode,200);assert.equal(s.sesiones.cs_qa_1.status,'expired');
   s.sesiones.cs_qa_2.payment_status='paid';s.sesiones.cs_qa_2.status='complete';
-  await e.confirmar(e.db,clon(s.sesiones.cs_qa_2));assert.equal(s.filas[0].modalidad,'virtual');assert.equal(s.filas[0].importe,229);assert.equal(s.filas[0].grabaciones,false);
+  await e.confirmar(e.db,clon(s.sesiones.cs_qa_2));assert.equal(s.filas[0].modalidad,'presencial');assert.equal(s.filas[0].importe,400);assert.equal(s.filas[0].grabaciones,false);
+});
+await check('modalidad virtual cerrada (sold out): no se puede pedir ni pagar', async () => {
+  const s=base(),e=await entorno(s);
+  const pedir=await e.endpoint(evento({...solicitud(),modalidad:'virtual'}));assert.equal(pedir.statusCode,409);assert.equal(body(pedir).estado,'virtual-cerrada');
+  const pagar=await e.endpoint(evento({...opciones(s),modalidad:'virtual'}));assert.equal(pagar.statusCode,409);assert.equal(Object.keys(s.sesiones).length,0);
 });
 await check('fallo al guardar Checkout no entrega enlace y expira la sesión', async () => {
   const s=base(),e=await entorno(s);s.fallarGuardado=true;

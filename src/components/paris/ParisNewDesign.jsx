@@ -141,9 +141,9 @@ function SyllabusSection() {
                 {/* CTA */}
                 <div className="syl-cta">
                     <p className="syl-cta-text">¿Listo para dominar el soporte ECMO al más alto nivel?</p>
-                    <a href="/inscripciones-step1" className="syl-cta-btn">
+                    <Link to="/inscripciones-step1" className="syl-cta-btn">
                         Inscríbete ahora
-                    </a>
+                    </Link>
                 </div>
             </div>
         </section>
@@ -591,7 +591,7 @@ const ParisNewDesign = () => {
                                 <span className="faculty-role-tag">Director del Programa</span>
                                 <div className="faculty-name">Prof. Alain Combes</div>
                                 <div className="faculty-bio">
-                                    ExPresidente de EuroELSO. Jefe de la UCI del Hosp. Pitié-Salpêtrière, Paris. Investigador principal de EOLIA. +372 publicaciones.
+                                    Expresidente de EuroELSO. Jefe de la UCI del Hosp. Pitié-Salpêtrière, Paris. Investigador principal de EOLIA. +372 publicaciones.
                                 </div>
                             </div>
                         </div>
@@ -604,7 +604,7 @@ const ParisNewDesign = () => {
                                 <span className="faculty-role-tag">Presidente Científico</span>
                                 <div className="faculty-name">Prof. Matthieu Schmidt</div>
                                 <div className="faculty-bio">
-                                    Presidente actual de EuroELSO. Presidente del Comité Científico de EuroELSO (2018-2022). Médico de la UCI del Hosp. Pitié-Salpêtrière.
+                                    Presidente de EuroELSO 2026-2028. Presidente del Comité Científico de EuroELSO (2018-2022). Médico de la UCI del Hosp. Pitié-Salpêtrière.
                                 </div>
                             </div>
                         </div>

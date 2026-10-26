@@ -1,5 +1,6 @@
 import React from 'react';
 import { useInView } from 'react-intersection-observer';
+import { Link } from 'react-router-dom';
 import { Star, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, Heart, Stethoscope, Activity, Gamepad2, HeartPulse, Award, Calendar } from 'lucide-react';
 import './Experiences.css';
 
@@ -20,7 +21,7 @@ const ExperienceCard = ({ title, description, link, img, imgClass, containerClas
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
   
   return (
-    <a href={link} ref={ref} className={`exp-premium-card reveal ${inView ? 'active' : ''} ${badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'disabled-card' : ''}`} style={{ transitionDelay: `${delay}s`, pointerEvents: badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'none' : 'auto' }}>
+    <Link to={link} ref={ref} className={`exp-premium-card reveal ${inView ? 'active' : ''} ${badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'disabled-card' : ''}`} style={{ transitionDelay: `${delay}s`, pointerEvents: badge?.toUpperCase() === 'PRÓXIMAMENTE' ? 'none' : 'auto' }}>
       <div className="card-glass-glow"></div>
       <div className={`exp-img-container ${containerClass || ''}`}>
         {badge && <div className={`status-badge ${badgeClass}`}>{badge}</div>}
@@ -45,7 +46,7 @@ const ExperienceCard = ({ title, description, link, img, imgClass, containerClas
             </span>
         </div>
       </div>
-    </a>
+    </Link>
   );
 };
 

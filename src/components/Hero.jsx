@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, Gamepad2, Presentation } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import FirmaHCE from './FirmaHCE';
 import { DEFINICION_HCE } from '../data/programas';
 import './Hero.css';
@@ -32,9 +33,9 @@ const Hero = () => {
           <p className="hero-definicion">{DEFINICION_HCE}</p>
 
           <div className="hero-actions">
-            <a href="/simulador-ecmo-sim" className="btn btn-primary hero-btn-shadow">
+            <Link to="/simulador-ecmo-sim" className="btn btn-primary hero-btn-shadow">
               Nuestro Simulador <Gamepad2 />
-            </a>
+            </Link>
             <a href="https://campus.healthcareexp.com/plus/login" target="_blank" rel="noreferrer" className="btn btn-outline">
               Ver Campus Virtual <Presentation />
             </a>

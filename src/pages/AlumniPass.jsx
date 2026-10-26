@@ -21,6 +21,10 @@ import './AlumniPass.css';
 
 const USD_RATE = 17.5; // Igual que la función.
 const PRECIOS = { presencial: 7000, virtual: 4000 };
+// 26 oct 2026: modalidad virtual cerrada (sold out). El servidor también la
+// rechaza (VIRTUAL_CERRADA en netlify/functions/alumni-pass.js).
+const VIRTUAL_CERRADA = true;
+const cerrada = (m) => (m === 'presencial' ? false : VIRTUAL_CERRADA);
 const GRABACIONES = 1299;
 const MAX_PDF = 3.5 * 1024 * 1024;
 const TIPOS = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
@@ -95,7 +99,7 @@ function Encabezado({ onInscribirme }) {
           <p className="ap-programa">Diploma Internacional de París en ECMO</p>
           <div className="ap-datos">
             <span><CalendarDays size={16} /> 28 y 29 de octubre de 2026</span>
-            <span><MapPin size={16} /> Presencial o virtual</span>
+            <span><MapPin size={16} /> {VIRTUAL_CERRADA ? 'Presencial · INER, CDMX' : 'Presencial o virtual'}</span>
           </div>
           <p className="ap-lema">
             Refresca tu conocimiento y conéctate en vivo con la facultad de París, con el
@@ -197,7 +201,9 @@ function PaginaPago({ token, cancelado }) {
       if (!vigente) return;
       setInfo(r);
       setGrabaciones(!!r.grabaciones);
-      setModalidad(r.modalidad === 'presencial' && r.presencial?.restantes <= 0 ? 'virtual' : r.modalidad);
+      const presencialAgotado = r.presencial?.restantes <= 0;
+      setModalidad(r.modalidad === 'presencial' && presencialAgotado && !VIRTUAL_CERRADA ? 'virtual'
+        : r.modalidad === 'virtual' && VIRTUAL_CERRADA && !presencialAgotado ? 'presencial' : r.modalidad);
     }).catch((err) => { if (vigente) setError(err.message); });
     return () => { vigente = false; };
   }, [token, recarga]);
@@ -213,7 +219,7 @@ function PaginaPago({ token, cancelado }) {
     } catch (err) {
       setErrorPago(err.message);
       if (err.estado === 'agotado') {
-        setModalidad('virtual');
+        if (!VIRTUAL_CERRADA) setModalidad('virtual');
         setInfo((previa) => ({ ...previa, presencial: { ...previa.presencial, restantes: 0 } }));
       }
       if (err.estado === 'pagado') void cargar();
@@ -255,13 +261,14 @@ function PaginaPago({ token, cancelado }) {
             <span className="ap-etiqueta">Modalidad</span>
             <div className="ap-chips">
               {['presencial', 'virtual'].map((m) => (
-                <button key={m} type="button" disabled={m === 'presencial' && agotado}
+                <button key={m} type="button" disabled={(m === 'presencial' && agotado) || cerrada(m)}
                   className={modalidad === m ? 'activa' : ''} aria-pressed={modalidad === m} onClick={() => setModalidad(m)}>
-                  {m === 'presencial' ? `Presencial · ${dinero(PRECIOS.presencial, moneda)}${agotado ? ' (agotado)' : ''}` : `Virtual · ${dinero(PRECIOS.virtual, moneda)}`}
+                  {m === 'presencial' ? `Presencial · ${dinero(PRECIOS.presencial, moneda)}${agotado ? ' (agotado)' : ''}` : `Virtual · ${cerrada(m) ? 'sold out' : dinero(PRECIOS.virtual, moneda)}`}
                 </button>
               ))}
             </div>
-            {agotado && info.modalidad === 'presencial' && <small className="ap-error-texto">Los lugares presenciales se agotaron; puedes asegurar tu lugar en la modalidad virtual.</small>}
+            {agotado && info.modalidad === 'presencial' && <small className="ap-error-texto">{VIRTUAL_CERRADA ? 'Los lugares presenciales se agotaron.' : 'Los lugares presenciales se agotaron; puedes asegurar tu lugar en la modalidad virtual.'}</small>}
+            {VIRTUAL_CERRADA && info.modalidad === 'virtual' && <small className="ap-error-texto">La modalidad virtual se agotó (sold out){agotado ? '.' : '; puedes asegurar tu lugar en la modalidad presencial.'}</small>}
           </div>
           <label className={`ap-extra${grabaciones ? ' activa' : ''}`}>
             <input type="checkbox" checked={grabaciones} onChange={(e) => setGrabaciones(e.target.checked)} />
@@ -277,7 +284,7 @@ function PaginaPago({ token, cancelado }) {
             <div className="ap-total"><span>Total</span><strong>{totalTexto}</strong></div>
           </div>
           {errorPago && <p className="ap-aviso ap-aviso--error" role="alert">{errorPago}</p>}
-          <button type="button" className="ap-cta ap-cta--ancho" onClick={pagar} disabled={pagando || (modalidad === 'presencial' && agotado)}>
+          <button type="button" className="ap-cta ap-cta--ancho" onClick={pagar} disabled={pagando || (modalidad === 'presencial' && agotado) || cerrada(modalidad)}>
             {pagando ? 'Abriendo el pago seguro…' : 'Pagar mi Alumni Pass'}
           </button>
           <p className="ap-legal">Pago seguro con Stripe.</p>
@@ -293,7 +300,7 @@ function PaginaPago({ token, cancelado }) {
 export default function AlumniPass() {
   useSEO({
     title: 'Alumni Pass · Step 1 Refresher',
-    description: 'Exclusivo para exalumnos del Diploma Internacional de París en ECMO: 28 y 29 de octubre de 2026, presencial o virtual.',
+    description: 'Exclusivo para exalumnos del Diploma Internacional de París en ECMO: 28 y 29 de octubre de 2026, presencial en el INER, Ciudad de México.',
     noindex: true,
   });
 
@@ -354,7 +361,7 @@ export default function AlumniPass() {
   const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email.trim());
   const requerido = (v, msg) => (String(v).trim().length < 2 ? msg : '');
   const errores = {
-    modalidad: !modalidad ? 'Elige presencial o virtual.' : (modalidad === 'presencial' && agotado ? 'Los lugares presenciales se agotaron.' : ''),
+    modalidad: !modalidad ? 'Elige la modalidad.' : (modalidad === 'presencial' && agotado ? 'Los lugares presenciales se agotaron.' : cerrada(modalidad) ? 'La modalidad virtual está agotada (sold out).' : ''),
     nombres: requerido(datos.nombres, 'Escribe tu nombre o nombres como aparecen en tu diploma.'),
     apellido_paterno: requerido(datos.apellido_paterno, 'Escribe tu apellido paterno.'),
     email: !emailValido ? 'Escribe un correo válido: ahí te llegará tu enlace de pago.' : '',
@@ -562,8 +569,8 @@ export default function AlumniPass() {
             {agotado && <span className="ap-cupo agotado">Agotado</span>}
           </button>
           <button
-            type="button" role="radio" aria-checked={modalidad === 'virtual'} disabled={ocupado}
-            className={`ap-tarjeta${modalidad === 'virtual' ? ' activa' : ''}`}
+            type="button" role="radio" aria-checked={modalidad === 'virtual'} disabled={ocupado || VIRTUAL_CERRADA}
+            className={`ap-tarjeta${modalidad === 'virtual' ? ' activa' : ''}${VIRTUAL_CERRADA ? ' agotada' : ''}`}
             onClick={() => elegir('virtual')}
           >
             <span className="ap-tarjeta-icono"><MonitorPlay size={22} /></span>
@@ -573,6 +580,7 @@ export default function AlumniPass() {
               <li><Check size={15} /> Transmisión en tiempo real.</li>
               <li><Check size={15} /> Espacio de preguntas e interacción con los profesores de París.</li>
             </ul>
+            {VIRTUAL_CERRADA && <span className="ap-cupo agotado">Sold out</span>}
           </button>
         </div>
 
@@ -606,9 +614,9 @@ export default function AlumniPass() {
             <span className="ap-etiqueta">Modalidad que te interesa *</span>
             <div className="ap-chips">
               {['presencial', 'virtual'].map((m) => (
-                <button key={m} type="button" disabled={m === 'presencial' && agotado}
+                <button key={m} type="button" disabled={(m === 'presencial' && agotado) || cerrada(m)}
                   className={modalidad === m ? 'activa' : ''} aria-pressed={modalidad === m} onClick={() => elegir(m)}>
-                  {m === 'presencial' ? `Presencial${agotado ? ' (agotado)' : ''}` : 'Virtual'}
+                  {m === 'presencial' ? `Presencial${agotado ? ' (agotado)' : ''}` : `Virtual${cerrada(m) ? ' (sold out)' : ''}`}
                 </button>
               ))}
             </div>

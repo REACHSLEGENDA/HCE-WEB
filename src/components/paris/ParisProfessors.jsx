@@ -8,15 +8,15 @@ const professors = [
     name: 'Prof. Alain Combes',
     role: 'Jefe UCI Pitié-Salpêtrière, Paris',
     image: '/assets/componentes/Alain-Combes.jpg',
-    description: 'Líder en uno de los centros de ECMO más grandes del mundo. Profesor de Medicina de Cuidados Intensivos en la Sorbonne Université. Investigador principal de EOLIA y +372 publicaciones.',
+    description: 'Expresidente de EuroELSO. Líder en uno de los centros de ECMO más grandes del mundo. Profesor de Medicina de Cuidados Intensivos en la Sorbonne Université. Investigador principal de EOLIA y +372 publicaciones.',
     highlights: ['+372 Publicaciones', 'Presidente EuroELSO 2017-2020']
   },
   {
     name: 'Prof. Matthieu Schmidt',
     role: 'Médico UCI Pitié-Salpêtrière, Paris',
     image: '/assets/componentes/WhatsApp-Image-2024-04-09-at-11.02.32-7-1.jpeg',
-    description: 'Profesor de Medicina de Cuidados Intensivos. Presidente del Comité Científico de EuroELSO 2018-2022. Investigador de 3 ensayos clínicos multicéntricos y +235 publicaciones.',
-    highlights: ['+235 Publicaciones', 'Comité EuroELSO 2018-2022']
+    description: 'Presidente de EuroELSO 2026-2028. Profesor de Medicina de Cuidados Intensivos. Presidente del Comité Científico de EuroELSO 2018-2022. Investigador de 3 ensayos clínicos multicéntricos y +235 publicaciones.',
+    highlights: ['+235 Publicaciones', 'Presidente EuroELSO 2026-2028']
   },
   {
     name: 'Enf. Hugo Guillou',
