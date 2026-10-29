@@ -63,9 +63,9 @@ function database(s) {
   } };
 }
 
-async function entorno(s) {
+async function entorno(s, { abiertas = true } = {}) {
   const db = database(s);
-  const context = vm.createContext({ console: { error() {}, log() {} }, Buffer, AbortSignal, crypto: { randomUUID }, process: { env: { STRIPE_WEBHOOK_SECRET: 'qa' } },
+  const context = vm.createContext({ console: { error() {}, log() {} }, Buffer, AbortSignal, crypto: { randomUUID }, process: { env: { STRIPE_WEBHOOK_SECRET: 'qa', INSCRIPCIONES_PARIS_ABIERTAS: abiertas ? '1' : '' } },
     fetch: async (url,opts) => {
       assert.equal(url,'https://formspree.io/f/xdeapenv'); assert.equal(opts.headers.Accept,'application/json');
       s.formspree.push(JSON.parse(opts.body));
@@ -103,7 +103,7 @@ async function entorno(s) {
     const mod = new vm.SourceTextModule(await fs.readFile(new URL('../netlify/functions/'+archivo, import.meta.url), 'utf8'), { context });
     cache.set(archivo,mod);
     await mod.link(async spec => {
-      if (['./_alumni-pass.js','./_alumni-registros.js','./_admins.js'].includes(spec)) return cargar(spec.slice(2));
+      if (['./_alumni-pass.js','./_alumni-registros.js','./_admins.js','./_cierres.js'].includes(spec)) return cargar(spec.slice(2));
       if (!mocks[spec]) throw Error('Falta mock: '+spec);
       const valores = mocks[spec];
       return new vm.SyntheticModule(Object.keys(valores), function() { for (const [k,v] of Object.entries(valores)) this.setExport(k,v); }, { context });
@@ -193,6 +193,11 @@ await check('cambiar opciones cierra el cobro anterior y guarda lo realmente pag
   const r=await e.endpoint(evento({...opciones(s),grabaciones:false}));assert.equal(r.statusCode,200);assert.equal(s.sesiones.cs_qa_1.status,'expired');
   s.sesiones.cs_qa_2.payment_status='paid';s.sesiones.cs_qa_2.status='complete';
   await e.confirmar(e.db,clon(s.sesiones.cs_qa_2));assert.equal(s.filas[0].modalidad,'presencial');assert.equal(s.filas[0].importe,400);assert.equal(s.filas[0].grabaciones,false);
+});
+await check('inscripciones de París cerradas: no se puede pedir ni pagar el Alumni Pass', async () => {
+  const s=base(),e=await entorno(s,{abiertas:false});
+  const pedir=await e.endpoint(evento(solicitud()));assert.equal(pedir.statusCode,409);assert.equal(body(pedir).estado,'cerrado');
+  const pagar=await e.endpoint(evento(opciones(s)));assert.equal(pagar.statusCode,409);assert.equal(Object.keys(s.sesiones).length,0);
 });
 await check('modalidad virtual cerrada (sold out): no se puede pedir ni pagar', async () => {
   const s=base(),e=await entorno(s);

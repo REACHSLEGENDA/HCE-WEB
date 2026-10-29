@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Award, CalendarDays, Check, FileText, FileUp, GraduationCap, Loader2, MailCheck, MapPin, MonitorPlay, PlayCircle, ShieldCheck, Ticket, Users, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import InscripcionesCerradas from '../components/InscripcionesCerradas';
+import { INSCRIPCIONES_PARIS_CERRADAS } from '../lib/cierreParis';
 import Footer from '../components/Footer';
 import { useSEO } from '../hooks/useSEO';
 import { useMonedaSugerida } from '../hooks/useMonedaSugerida';
@@ -243,6 +245,15 @@ function PaginaPago({ token, cancelado }) {
     return <section className="ap-seccion ap-centro"><p className="ap-cargando"><Loader2 size={20} className="ap-girando" /> Cargando tu enlace de pago…</p></section>;
   }
   if (info.pagado) return <PaseConfirmado pase={info} />;
+  if (INSCRIPCIONES_PARIS_CERRADAS) {
+    return (
+      <section className="ap-seccion ap-centro">
+        <div className="ap-aviso ap-aviso--info" role="status">
+          <p>Las inscripciones del Diploma de París 2026 ya están cerradas. Si ya pagaste y no ves tu pase, escríbenos a <a href="mailto:academia@healthcareexp.com">academia@healthcareexp.com</a>.</p>
+        </div>
+      </section>
+    );
+  }
 
   const agotado = info.presencial?.restantes <= 0;
   const convertir = (importe) => moneda === 'usd' ? Math.ceil(importe / USD_RATE) : importe;
@@ -525,6 +536,9 @@ export default function AlumniPass() {
       </div>
     );
   }
+
+  // Inscripciones de París cerradas (src/lib/cierreParis.js).
+  if (INSCRIPCIONES_PARIS_CERRADAS) return <InscripcionesCerradas />;
 
   return (
     <div className="ap-pagina">

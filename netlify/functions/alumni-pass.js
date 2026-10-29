@@ -20,6 +20,7 @@
 // El precio se decide AQUÍ; la página solo lo muestra (supabase/alumni-pass.sql).
 
 import { getStripe } from './_stripe.js';
+import { MENSAJE_CIERRE_PARIS, parisCerrado } from './_cierres.js';
 import { admin, adminDesdeToken, json, isConfigured as supabaseListo, registrarAccionAdmin } from './_supabase.js';
 import { isConfigured as brevoListo, enviarCorreo } from './_brevo.js';
 import { plantillaHce } from './_notificaciones.js';
@@ -375,6 +376,8 @@ export const handler = async (event) => {
     const db = admin();
 
     if (cuerpo.accion === 'cupo') return json(200, { presencial: await lugaresPresenciales(db) });
+    // Inscripciones de París cerradas: ni solicitudes ni pagos nuevos (ver _cierres.js).
+    if ((cuerpo.accion === 'solicitar' || cuerpo.accion === 'pagar') && parisCerrado()) return json(409, { error: MENSAJE_CIERRE_PARIS, estado: 'cerrado' });
     if (cuerpo.accion === 'solicitar') return await solicitar(db, cuerpo);
     if (cuerpo.accion === 'pago-info') return await pagoInfo(db, cuerpo);
     if (cuerpo.accion === 'pagar') return await pagar(db, cuerpo);

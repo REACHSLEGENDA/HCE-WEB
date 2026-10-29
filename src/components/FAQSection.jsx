@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { INSCRIPCIONES_PARIS_CERRADAS } from '../lib/cierreParis';
 import './FAQSection.css';
 
 const FAQ_NURSING = [
@@ -163,8 +164,10 @@ const FAQ_PARIS = [
     q: '¿Cómo inscribirse?',
     a: (
       <>
-        Puedes asegurar tu cupo de inmediato directamente en nuestro formulario de inscripción.{' '}
-        <Link to="/inscripciones-step1" style={{ color: '#0047ff', fontWeight: 700 }}>Da clic aquí →</Link>
+        {INSCRIPCIONES_PARIS_CERRADAS
+          ? 'Las inscripciones de la generación 2026 ya están cerradas. Escríbenos y te avisamos cuando abra la próxima generación.'
+          : <>Puedes asegurar tu cupo de inmediato directamente en nuestro formulario de inscripción.{' '}
+            <Link to="/inscripciones-step1" style={{ color: '#0047ff', fontWeight: 700 }}>Da clic aquí →</Link></>}
         <br /><br />
         <em>📩 ¿Tienes otra duda? Escríbenos a <strong>info@healthcareexp.com</strong> o utiliza el botón de WhatsApp. ¡Nuestro equipo de admisiones te atenderá de inmediato!</em>
       </>

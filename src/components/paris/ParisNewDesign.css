@@ -1362,3 +1362,12 @@
 }
 
 
+
+/* Inscripciones cerradas (src/lib/cierreParis.js): aviso en lugar del botón rojo. */
+.paris-redesign .hero-actions .hero-cerradas {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    cursor: default;
+    box-shadow: none;
+}

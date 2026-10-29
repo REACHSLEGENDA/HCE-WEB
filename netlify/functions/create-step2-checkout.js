@@ -1,4 +1,5 @@
 import { getStripe } from './_stripe.js';
+import { respuestaCierreParis } from './_cierres.js';
 
 /* ---------------------------------------------------------------------------
  * Cobro de Step 2 (práctico) para inscripciones por enlace privado.
@@ -38,6 +39,9 @@ export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
+  // Inscripciones de París cerradas (ver _cierres.js).
+  const cierre = respuestaCierreParis();
+  if (cierre) return cierre;
 
   try {
     const { perfil, moneda = 'mxn', email = '' } = JSON.parse(event.body);

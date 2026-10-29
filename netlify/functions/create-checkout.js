@@ -1,4 +1,5 @@
 import { getStripe } from './_stripe.js';
+import { respuestaCierreParis } from './_cierres.js';
 import { precioConPromo, habilitaMeses, promoAutomatica } from './_promos.js';
 import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
 
@@ -44,6 +45,9 @@ export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
+  // Inscripciones de París cerradas (ver _cierres.js).
+  const cierre = respuestaCierreParis();
+  if (cierre) return cierre;
 
   // Octubre 2026: inscripción al diploma completo cerrada (solo Step 1).
   // Para reabrirla, true aquí y en src/pages/Inscripciones.jsx.

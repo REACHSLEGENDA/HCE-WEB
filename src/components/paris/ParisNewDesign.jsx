@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { ShieldCheck, Calendar, Clock, Sparkles, MapPin, ExternalLink, BookOpen, Activity, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { INSCRIPCIONES_PARIS_CERRADAS } from '../../lib/cierreParis';
+
+// Con las inscripciones cerradas, los botones de inscribirse no se pintan.
+const LinkInscripcion = INSCRIPCIONES_PARIS_CERRADAS ? () => null : Link;
 import './ParisNewDesign.css';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
@@ -141,9 +145,9 @@ function SyllabusSection() {
                 {/* CTA */}
                 <div className="syl-cta">
                     <p className="syl-cta-text">¿Listo para dominar el soporte ECMO al más alto nivel?</p>
-                    <Link to="/inscripciones-step1" className="syl-cta-btn">
+                    <LinkInscripcion to="/inscripciones-step1" className="syl-cta-btn">
                         Inscríbete ahora
-                    </Link>
+                    </LinkInscripcion>
                 </div>
             </div>
         </section>
@@ -170,7 +174,7 @@ const ParisNewDesign = () => {
     useEffect(() => {
         // Mismo calendario que el descuento directo: cuando se acaba la promo,
         // se acaba el popup. Antes del 1 de septiembre tampoco sale.
-        if (promoMesPatrioActiva() && PROMO_MES_PATRIO.popupParis) {
+        if (!INSCRIPCIONES_PARIS_CERRADAS && promoMesPatrioActiva() && PROMO_MES_PATRIO.popupParis) {
             const timer = setTimeout(() => {
                 setShowPromoPopup(true);
             }, 1000);
@@ -239,9 +243,11 @@ const ParisNewDesign = () => {
                     <div className="h1-style">¡Conviértete en un <br />especialista en <span className="gradient-text">ECMO</span>!</div>
                     <p className="hero-sub">Certifícate con la más alta tecnología de talla internacional.</p>
                     <div className="hero-actions">
-                        <Link to="/inscripciones-step1" className="btn btn-primary">Inscripción Step 1</Link>
+                        {INSCRIPCIONES_PARIS_CERRADAS
+                            ? <span className="btn hero-cerradas" role="status">Inscripciones cerradas · Generación 2026</span>
+                            : <LinkInscripcion to="/inscripciones-step1" className="btn btn-primary">Inscripción Step 1</LinkInscripcion>}
                         {/* Alumni Pass: botón dorado desde el 17 de octubre de 2026, 10:00 (CDMX). */}
-                        {alumniVisible && (
+                        {alumniVisible && !INSCRIPCIONES_PARIS_CERRADAS && (
                             <Link to="/alumni-pass-step1" className="btn hero-action-alumni">
                                 <span>✦ Alumni Pass · Step 1 Refresher</span>
                                 <span className="hero-action-detail">Exclusivo para exalumnos del Diploma · 28 y 29 de octubre</span>
@@ -484,7 +490,7 @@ const ParisNewDesign = () => {
                         <span className="tag">Terapeutas Respiratorios</span>
                     </div>
                     <div style={{ textAlign: 'center', marginTop: '3rem', position: 'relative', zIndex: 3 }}>
-                        <Link to="/inscripciones-step1" className="btn btn-primary">Certifícate</Link>
+                        <LinkInscripcion to="/inscripciones-step1" className="btn btn-primary">Certifícate</LinkInscripcion>
                     </div>
                 </div>
             </section>
@@ -537,7 +543,7 @@ const ParisNewDesign = () => {
                         <p style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '2rem', lineHeight: '1.7' }}>
                             Jefe de la unidad de cuidados intensivos del <strong>Hospital La Pitié-Salpétrière</strong> de París, Francia, quien con su equipo ha entrenado a más de 2000 profesionales de la salud a nivel internacional.
                         </p>
-                        <Link to="/inscripciones-step1" className="btn btn-primary">Inscríbete ahora</Link>
+                        <LinkInscripcion to="/inscripciones-step1" className="btn btn-primary">Inscríbete ahora</LinkInscripcion>
                     </div>
                     <div className="experience-lead-img">
                         <img src="/assets/paris/DSC_0164.jpg" alt="Prof. Alain Combes Podium" />
@@ -637,7 +643,7 @@ const ParisNewDesign = () => {
                     </div>
                     
                     <div style={{ textAlign: 'center', marginTop: '4rem' }}>
-                        <Link to="/inscripciones-step1" className="btn btn-primary">Inscríbete ahora</Link>
+                        <LinkInscripcion to="/inscripciones-step1" className="btn btn-primary">Inscríbete ahora</LinkInscripcion>
                     </div>
                 </div>
             </section>
@@ -673,7 +679,7 @@ const ParisNewDesign = () => {
                             <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', lineHeight: '1.8', marginBottom: '3rem' }}>
                                 Sé parte de un entrenamiento revolucionario en Latinoamérica con herramientas de entrenamiento como <strong>ECMO SIM</strong>. Potenciamos tus habilidades para convertirte en un líder en ECMO.
                             </p>
-                            <Link to="/inscripciones-step1" className="btn btn-primary btn-lg">Empezar</Link>
+                            <LinkInscripcion to="/inscripciones-step1" className="btn btn-primary btn-lg">Empezar</LinkInscripcion>
                         </div>
                     </div>
                 </div>
@@ -723,7 +729,7 @@ const ParisNewDesign = () => {
                                 <a href="https://share.google/sHSrTC0wdg5BJAodK" target="_blank" rel="noopener noreferrer" className="btn btn-outline sede-v2-map-btn">
                                     <ExternalLink size={16} /> Ver en Maps
                                 </a>
-                                <Link to="/inscripciones-step1" className="btn btn-primary">Inscríbete ahora</Link>
+                                <LinkInscripcion to="/inscripciones-step1" className="btn btn-primary">Inscríbete ahora</LinkInscripcion>
                             </div>
                         </div>
 
@@ -746,7 +752,7 @@ const ParisNewDesign = () => {
                         <p style={{ fontSize: '1.3rem', marginBottom: '3.5rem', color: 'var(--text-muted)', maxWidth: '800px', marginInline: 'auto', lineHeight: '1.6' }}>
                             Entrenarte en ECMO te brinda acceso a formación de élite para desarrollar habilidades clave que no solo fortalecen tu perfil, sino que elevan el nivel clínico de todo tu equipo.
                         </p>
-                        <Link to="/inscripciones-step1" className="btn btn-primary">Acceder a formación de élite</Link>
+                        <LinkInscripcion to="/inscripciones-step1" className="btn btn-primary">Acceder a formación de élite</LinkInscripcion>
                     </div>
                 </div>
             </section>
@@ -801,7 +807,7 @@ const ParisNewDesign = () => {
                         <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.6', marginBottom: '1.2rem' }}>
                             Si eres enfermero(a), puedes complementar tu inscripción al Diploma Internacional con el <strong>ECMO Nursing Care Course</strong> con un <strong>20% de descuento</strong>. Próxima edición por confirmar — ideal como preparación teórica y práctica antes de la certificación en París en Octubre.
                         </p>
-                        <Link 
+                        <LinkInscripcion 
                             to="/inscripciones-step1" 
                             className="btn btn-primary"
                             style={{ 
@@ -815,7 +821,7 @@ const ParisNewDesign = () => {
                             }}
                         >
                             ¡Inscríbete ya!
-                        </Link>
+                        </LinkInscripcion>
                     </div>
                 </div>
             </section>
@@ -1048,7 +1054,7 @@ const ParisNewDesign = () => {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <Link
+                            <LinkInscripcion
                                 to="/inscripciones-step1"
                                 onClick={() => setShowPromoPopup(false)}
                                 style={{
@@ -1064,8 +1070,8 @@ const ParisNewDesign = () => {
                                 }}
                             >
                                 Inscribirme a Sólo Step 1
-                            </Link>
-                            <Link
+                            </LinkInscripcion>
+                            <LinkInscripcion
                                 to="/inscripciones-step1"
                                 onClick={() => setShowPromoPopup(false)}
                                 style={{
@@ -1081,7 +1087,7 @@ const ParisNewDesign = () => {
                                 }}
                             >
                                 Inscribirme al Diploma completo
-                            </Link>
+                            </LinkInscripcion>
                             {/* Los grupos siguen teniendo su código propio: ese sí va por WhatsApp. */}
                             <a
                                 href="https://wa.me/5215659271906?text=Hola,%20somos%20un%20grupo%20y%20queremos%20el%20descuento%20de%20equipos%20del%20Diploma%20de%20Par%C3%ADs."

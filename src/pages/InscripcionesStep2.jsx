@@ -4,6 +4,8 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useMonedaSugerida } from '../hooks/useMonedaSugerida';
 import Navbar from '../components/Navbar';
+import InscripcionesCerradas from '../components/InscripcionesCerradas';
+import { INSCRIPCIONES_PARIS_CERRADAS } from '../lib/cierreParis';
 import Footer from '../components/Footer';
 import ConsentimientoLegal from '../components/ConsentimientoLegal';
 import ConfirmacionInscripcion from '../components/ConfirmacionInscripcion';
@@ -196,6 +198,9 @@ export default function Inscripciones() {
       setLoading(false);
     }
   };
+
+  // Inscripciones de París cerradas: solo quien ya pagó puede terminar su registro.
+  if (INSCRIPCIONES_PARIS_CERRADAS && payStatus !== 'success') return <InscripcionesCerradas />;
 
   if (payStatus === 'success') {
     return (
