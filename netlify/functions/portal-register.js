@@ -8,23 +8,24 @@ import { inscribirEnDivision } from './_divisiones.js';
 // de que Supabase crea la cuenta. Entrar a la lista dispara en Brevo el correo
 // de bienvenida con la ficha de perfil del alumno.
 //
-// Además avisa a los administradores que hay una cuenta nueva esperando acceso
-// a sus cursos (si está configurada AVISO_REGISTROS_PARA).
+// Además avisa a los administradores de la cuenta nueva. Desde el 29 oct 2026
+// la cuenta queda activa al registrarse (supabase/cuentas-sin-aprobacion.sql):
+// abre los cursos gratuitos de inmediato y los de pago al pagarlos.
 
 const escapar = (texto) => String(texto || '').replace(/[&<>"']/g, (c) => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
 ));
 
-// Solo se avisa de cuentas reales y recién creadas que siguen pendientes: esta
-// función es pública y así nadie la usa para llenar de correos a los admins.
-async function cuentaPendienteNueva(email) {
+// Solo se avisa de cuentas reales y recién creadas (15 minutos): esta función
+// es pública y así nadie la usa para llenar de correos a los admins.
+async function cuentaNueva(email) {
   if (!supabaseListo()) return null;
   const { data, error } = await admin()
     .from('profiles')
     .select('id, nombre_completo, email, telefono, institucion, pais, especialidad, cargo, created_at, aprobado')
     .eq('email', email.trim().toLowerCase())
     .maybeSingle();
-  if (error || !data || data.aprobado !== false) return null;
+  if (error || !data) return null;
   const minutos = (Date.now() - new Date(data.created_at).getTime()) / 60000;
   return minutos >= 0 && minutos <= 15 ? data : null;
 }
@@ -33,24 +34,24 @@ async function avisarAdministradores(email) {
   const para = [...new Set([...correosExtra(), CORREO_ACADEMIA])];
 
   // El perfil lo crea Supabase al registrarse; se le da un momento.
-  let cuenta = await cuentaPendienteNueva(email);
+  let cuenta = await cuentaNueva(email);
   if (!cuenta) {
     await new Promise((r) => setTimeout(r, 2000));
-    cuenta = await cuentaPendienteNueva(email);
+    cuenta = await cuentaNueva(email);
   }
   if (!cuenta) return;
 
   const fila = (etiqueta, valor) => (valor ? `<p style="margin:4px 0"><strong>${etiqueta}:</strong> ${escapar(valor)}</p>` : '');
   await enviarCorreo({
     para,
-    asunto: `Nueva cuenta por activar: ${cuenta.nombre_completo || cuenta.email}`,
+    asunto: `Nueva cuenta en el portal: ${cuenta.nombre_completo || cuenta.email}`,
     html: `
-      <p>Una persona nueva se registró en el portal. Ya puede entrar, pero sus cursos quedan cerrados hasta que le des acceso y le asignes su grupo.</p>
+      <p>Una persona nueva se registró en el portal. Su cuenta ya está activa y puede tomar los cursos gratuitos. Si compra un curso de pago, te llegará el aviso del pago; si ese curso es por generación, asígnale su grupo.</p>
       ${fila('Nombre', cuenta.nombre_completo)}
       ${fila('Correo', cuenta.email)}
       ${fila('Institución', cuenta.institucion)}
       ${fila('País', cuenta.pais)}
-      <p style="margin-top:18px"><a href="https://healthcareexp.com/admin">Abrir el panel para activarla</a> (Alumnos → Cuentas por activar).</p>
+      <p style="margin-top:18px"><a href="https://healthcareexp.com/admin">Ver en el panel</a> (Alumnos). No hace falta activarla.</p>
     `,
   });
 }
@@ -95,10 +96,10 @@ export const handler = async (event) => {
     // Esta ruta es pública (el registro puede exigir confirmar el correo).
     // Solo una cuenta real recién creada puede disparar la bienvenida. Los
     // atributos salen de su perfil; el cuerpo no puede pisar otro contacto.
-    let perfil = await cuentaPendienteNueva(email);
+    let perfil = await cuentaNueva(email);
     if (!perfil) {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      perfil = await cuentaPendienteNueva(email);
+      perfil = await cuentaNueva(email);
     }
     if (!perfil) return { statusCode: 200, body: JSON.stringify({ ok: true }) };
 
