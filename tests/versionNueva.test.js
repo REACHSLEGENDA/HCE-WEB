@@ -38,18 +38,6 @@ describe('Recarga por versión nueva', () => {
     expect(recargar).toHaveBeenCalledTimes(1);
   });
 
-  it('distingue la red del celular de un archivo que de verdad falta', async () => {
-    const { archivoExiste } = await paginaNueva();
-    const msg = 'TypeError: Failed to fetch dynamically imported module: https://healthcareexp.com/assets/Consultas-C5e10hgo.js';
-    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, headers: new Headers({ 'content-type': 'application/javascript' }) })));
-    expect(await archivoExiste(msg)).toBe(true);
-    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, headers: new Headers({ 'content-type': 'text/html' }) })));
-    expect(await archivoExiste(msg)).toBe(false);
-    expect(await archivoExiste('TypeError: Importing a module script failed.')).toBe(false);
-    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, headers: new Headers({ 'content-type': 'text/css' }) })));
-    expect(await archivoExiste('Unable to preload CSS for /assets/InstallApp-CyU2CgQm.css')).toBe(true);
-  });
-
   it('si Vite entrega undefined en vez del módulo, no llega a React', async () => {
     const { conReintento, recargarPorVersionNueva } = await paginaNueva();
     const cargar = vi.fn(async () => undefined);

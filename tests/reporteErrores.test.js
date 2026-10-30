@@ -43,6 +43,11 @@ describe('reporteErrores (navegador)', () => {
     expect(enviados[0].mensaje).toBe('Falla de prueba única');
   });
 
+  it('un archivo que no carga (versión vieja o robot sin almacenamiento) nunca se reporta', () => {
+    expect(reportarError(new Error('Failed to fetch dynamically imported module: https://healthcareexp.com/assets/Consultas-CeXdgHpb.js'), { forzar: true })).toBeNull();
+    expect(reportarError(new Error('Unable to preload CSS for /assets/InstallApp-CyU2CgQm.css'), { forzar: true })).toBeNull();
+  });
+
   it('no reporta fuera de producción salvo que se fuerce', () => {
     expect(reportarError(new Error('En desarrollo'))).toBeNull();
   });

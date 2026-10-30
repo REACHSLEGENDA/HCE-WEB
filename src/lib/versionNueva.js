@@ -40,26 +40,6 @@ export function recargarPorVersionNueva() {
   return true;
 }
 
-/**
- * Después de recargar, si un archivo sigue sin cargar pero sí existe en el
- * servidor, fue la red del celular (señal que se cae), no el portal. Devuelve
- * true solo si se confirmó que el archivo existe.
- */
-export async function archivoExiste(texto) {
-  // "…imported module: https://…/assets/x.js" o "Unable to preload CSS for /assets/x.css".
-  const ruta = String(texto || '').match(/(?:https?:\/\/[^\s'"]+)?\/assets\/[^\s'"]+\.(?:js|css)/)?.[0];
-  if (!ruta || typeof fetch === 'undefined') return false;
-  try {
-    const url = new URL(ruta, window.location.href);
-    if (url.origin !== window.location.origin) return false;
-    const r = await fetch(url.href, { method: 'HEAD', cache: 'no-store' });
-    return r.ok && /javascript|css/.test(r.headers.get('content-type') || '');
-  } catch {
-    // Sin respuesta tampoco hay red: no es un error del portal.
-    return true;
-  }
-}
-
 /** Vite avisa con este evento cuando no pudo precargar un archivo. */
 export function instalarRecargaPorVersion() {
   if (typeof window === 'undefined') return;

@@ -12,7 +12,7 @@
 // Límite: 8 reportes por sesión del navegador y cada error distinto una sola vez.
 
 import { supabase } from './supabase';
-import { archivoExiste, esVersionVieja, estaRecargando, recargarPorVersionNueva } from './versionNueva';
+import { esVersionVieja, estaRecargando, recargarPorVersionNueva } from './versionNueva';
 
 const ENDPOINT = '/.netlify/functions/reportar-error';
 const MAX_POR_SESION = 8;
@@ -133,9 +133,11 @@ export function reportarError(error, { origen = 'error', componente = '', archiv
       500,
     );
     const stack = error instanceof Error ? recortarStack(error.stack) : '';
-    // Versión vieja en el navegador: se recarga y no es un error del portal.
-    // Si ya se recargó hace menos de un minuto, sí se reporta.
-    if (esVersionVieja(mensaje) && recargarPorVersionNueva()) return null;
+    // Archivo que no carga (versión vieja abierta, señal que se cae, robots con
+    // navegadores viejos y sin almacenamiento): se intenta recargar y nunca se
+    // reporta. No es un error del portal: Vite publica todos los archivos de una
+    // versión a la vez, así que un archivo faltante siempre es de una anterior.
+    if (esVersionVieja(mensaje)) { recargarPorVersionNueva(); return null; }
     if (esRuido({ mensaje, stack, archivo })) return null;
 
     const ruta = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -155,10 +157,7 @@ export function reportarError(error, { origen = 'error', componente = '', archiv
       version: versionApp(),
     };
 
-    const versionVieja = esVersionVieja(mensaje);
     void (async () => {
-      // Archivo que sí existe: fue la red, no el portal.
-      if (versionVieja && await archivoExiste(mensaje)) return;
       const token = await tokenSesion();
       await fetch(ENDPOINT, {
         method: 'POST',
