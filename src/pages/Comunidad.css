@@ -598,3 +598,20 @@
   border-color: rgba(0, 188, 212, 0.5) !important;
   color: #00838f !important;
 }
+
+/* Logotipo del curso en la tarjeta de categoría (París, Nursing, ECMO SIM). */
+.forum-category-logo {
+  flex-shrink: 0;
+  width: 64px;
+  height: 48px;
+  padding: 5px;
+  border-radius: 10px;
+  background-color: #0a192f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s ease;
+}
+.forum-category-logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.forum-category-card:hover .forum-category-logo,
+.forum-category-card.active .forum-category-logo { box-shadow: 0 4px 12px rgba(0, 188, 212, 0.35); }

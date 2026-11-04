@@ -1,3 +1,4 @@
+import CursosPorAsignar from '../../components/admin/CursosPorAsignar';
 // Vista de administración: students. Estado y operaciones permanecen en AdminDashboard.
 export default function VistaAlumnos({ contexto }) {
   const {
@@ -70,6 +71,8 @@ export default function VistaAlumnos({ contexto }) {
                 notificar={showToast}
                 confirmar={showConfirm}
               />
+
+              <CursosPorAsignar perfiles={profiles} cursos={courses} notificar={showToast} />
 
               <SolicitudesInscripcion perfiles={profiles} cursos={courses} notificar={showToast} />
 

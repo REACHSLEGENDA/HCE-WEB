@@ -18,7 +18,6 @@ import {
   PlayCircle,
   Users,
   Award,
-  Video,
   Camera
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -72,15 +71,16 @@ const formatDateSafe = (dateStr) => {
   }
 };
 
+// El orden es el de las tarjetas: el Diploma de París va primero y es la
+// categoría que se abre al entrar. `logo`: logotipo del curso en la tarjeta.
 const FORUM_CATEGORIES = [
+  { id: 'Paris Diploma ECMO', label: 'Paris International Diploma in ECMO', icon: Award, logo: '/assets/componentes/curso-paris.webp', desc: 'Diploma internacional de París en ECMO' },
   { id: 'Insuficiencia Cardiaca', label: 'Manejo de Avanzada en Insuficiencia Cardíaca', icon: Heart, desc: 'Soporte e insuficiencia cardíaca avanzada' },
-  { id: 'ECMO Nursing Care', label: 'ECMO Nursing Care', icon: NurseCap, desc: 'Cuidado crítico de enfermería en ECMO' },
-  { id: 'Paris Diploma ECMO', label: 'Paris International Diploma in ECMO', icon: Award, desc: 'Diploma internacional de París en ECMO' },
-  { id: 'ECMO SIM', label: 'Simulador ECMO SIM', icon: Gamepad2, desc: 'Entrenamiento interactivo y simulador clínico' },
+  { id: 'ECMO Nursing Care', label: 'ECMO Nursing Care', icon: NurseCap, logo: '/assets/componentes/curso-nursing.webp', desc: 'Cuidado crítico de enfermería en ECMO' },
+  { id: 'ECMO SIM', label: 'Simulador ECMO SIM', icon: Gamepad2, logo: '/assets/componentes/curso-sim.webp', desc: 'Entrenamiento interactivo y simulador clínico' },
   // Categoría fusionada: muestra los testimonios guardados con cualquiera de los
-  // dos valores de `experiences`; los nuevos se guardan con su `id`.
-  { id: 'Experiencia Docente', experiences: ['Experiencia Docente', 'Entrenamiento Intrahospitalario In Situ'], label: 'Docentes y Entrenamiento In Situ', icon: Users, desc: 'Profesores, facilitadores y simulación en hospitales' },
-  { id: 'Conferencias Virtuales', label: 'Conferencias Virtuales Académicas para Instituciones y Grupos Hospitalarios', icon: Video, desc: 'Ponencias y conferencias virtuales especializadas' },
+  // valores de `experiences`; los nuevos se guardan con su `id`.
+  { id: 'Experiencia Docente', experiences: ['Experiencia Docente', 'Entrenamiento Intrahospitalario In Situ', 'Conferencias Virtuales'], label: 'Docentes, Conferencias y Entrenamiento In Situ', icon: Users, desc: 'Profesores, conferencias virtuales para instituciones y simulación en hospitales' },
   { id: 'Webinars portal', label: 'Webinars portal', icon: PlayCircle, desc: 'Webinars en vivo y educación continua' }
 ];
 
@@ -171,7 +171,7 @@ const Comunidad = () => {
   const { showToast, showConfirm } = useNotification();
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
-  const [forumCategory, setForumCategory] = useState('Insuficiencia Cardiaca');
+  const [forumCategory, setForumCategory] = useState(FORUM_CATEGORIES[0].id);
   const [testimonials, setTestimonials] = useState([]);
   const [testimonialsLoading, setTestimonialsLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -415,9 +415,15 @@ const Comunidad = () => {
                     className={`forum-category-card ${isActive ? 'active' : ''}`}
                     onClick={() => setForumCategory(cat.id)}
                   >
-                    <div className="forum-category-icon-wrapper">
-                      <IconComp size={22} />
-                    </div>
+                    {cat.logo ? (
+                      <div className="forum-category-logo">
+                        <img src={cat.logo} alt="" loading="lazy" />
+                      </div>
+                    ) : (
+                      <div className="forum-category-icon-wrapper">
+                        <IconComp size={22} />
+                      </div>
+                    )}
                     <div className="forum-category-info">
                       <h4>{cat.label}</h4>
                       <p>{cat.desc}</p>

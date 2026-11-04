@@ -156,6 +156,10 @@ function SyllabusSection() {
 
 // Botón dorado de Alumni Pass: visible desde el 17 de octubre de 2026, 10:00 (CDMX).
 const ALUMNI_PASS_DESDE = new Date('2026-10-17T10:00:00-06:00').getTime();
+// Próxima generación (4 nov 2026): octubre de 2027, sede en Latinoamérica por
+// confirmar; inscripciones a partir de diciembre de 2027. El contador cuenta
+// hacia el inicio de octubre de 2027 hasta que haya fecha exacta.
+const PROXIMA_EDICION = new Date('2027-10-01T00:00:00-06:00').getTime();
 
 const ParisNewDesign = () => {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -183,7 +187,7 @@ const ParisNewDesign = () => {
     }, []);
 
     useEffect(() => {
-        const targetDate = new Date('2026-10-28T00:00:00').getTime();
+        const targetDate = PROXIMA_EDICION;
         const interval = setInterval(() => {
             const now = new Date().getTime();
             const distance = targetDate - now;
@@ -244,7 +248,7 @@ const ParisNewDesign = () => {
                     <p className="hero-sub">Certifícate con la más alta tecnología de talla internacional.</p>
                     <div className="hero-actions">
                         {INSCRIPCIONES_PARIS_CERRADAS
-                            ? <span className="btn hero-cerradas" role="status">Inscripciones cerradas · Generación 2026</span>
+                            ? <span className="btn hero-cerradas" role="status">Próximas inscripciones: diciembre 2027</span>
                             : <LinkInscripcion to="/inscripciones-step1" className="btn btn-primary">Inscripción Step 1</LinkInscripcion>}
                         {/* Alumni Pass: botón dorado desde el 17 de octubre de 2026, 10:00 (CDMX). */}
                         {alumniVisible && !INSCRIPCIONES_PARIS_CERRADAS && (
@@ -258,7 +262,7 @@ const ParisNewDesign = () => {
                     {/* Hero Countdown */}
                     <div className="hero-countdown reveal active">
                         <div className="countdown-label">
-                            <Calendar size={16} /> <span>Save the date: 28 de Octubre</span>
+                            <Calendar size={16} /> <span>Save the date: octubre 2027</span>
                         </div>
                         <div className="countdown-timer">
                             <div className="time-item">
@@ -295,19 +299,12 @@ const ParisNewDesign = () => {
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <Calendar size={14} style={{ color: '#00d2ff' }} />
-                                <span><strong>28 al 31 de Octubre, 2026</strong></span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Clock size={14} style={{ color: '#00d2ff' }} />
-                                <span><strong>8 AM a 6 PM</strong></span>
+                                <span><strong>Octubre 2027</strong></span>
                             </div>
                         </div>
 
                         <div className="hero-venue-info" style={{ marginTop: '1rem' }}>
-                            <MapPin size={12} /> 
-                            <a href="https://share.google/sHSrTC0wdg5BJAodK" target="_blank" rel="noopener noreferrer" className="hero-venue-link">
-                                Sede: INER, Ciudad de México
-                            </a>
+                            <MapPin size={12} /> <span>Sede 2027: Latinoamérica (LATAM)</span>
                         </div>
                     </div>
                 </div>
