@@ -4,6 +4,12 @@ import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
 
 const USD_RATE = 17.5; // Debe coincidir con USD_RATE de la página de inscripción: es lo que ve el alumno.
 
+// Precio Buen Fin (13 nov 2026, sin fecha de fin): el curso se cobra $4,000 MXN
+// o USD 200 (20% sobre $5,000 MXN / USD 250). Debe coincidir con la página
+// (src/pages/InscripcionesNursing.jsx). Para quitarlo: BUEN_FIN = false.
+const BUEN_FIN = true;
+const PRECIO_CURSO = BUEN_FIN ? { mxn: 4000, usd: 200 } : { mxn: 5000, usd: 250 };
+
 const LEGAL_TEXT = '*Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.';
 
 // Carrito abandonado: el contacto entra a la lista de recuperación de Brevo.
@@ -64,13 +70,15 @@ export const handler = async (event) => {
 
     const now = new Date();
 
-    const mxnToUnit = (mxn, isBase = false) => {
-      // El descuento sale del catálogo compartido, nunca de una lista local.
-      const finalMXN = isBase ? precioConPromo(mxn, promoCode, 'nursing', now) : mxn;
+    const mxnToUnit = (mxn) => {
       // En USD se cobra el dólar entero hacia arriba, igual que lo redondea la página.
-      const amount = currency === 'usd' ? Math.ceil(finalMXN / USD_RATE) : finalMXN;
+      const amount = currency === 'usd' ? Math.ceil(mxn / USD_RATE) : mxn;
       return Math.round(amount * 100); // cents
     };
+    // El curso tiene precio propio en cada moneda (PRECIO_CURSO); los códigos del
+    // catálogo compartido solo pueden bajarlo en pesos.
+    const cursoMXN = precioConPromo(PRECIO_CURSO.mxn, promoCode, 'nursing', now);
+    const cursoUnit = currency === 'usd' ? PRECIO_CURSO.usd * 100 : cursoMXN * 100;
 
     // Validate extras server-side
     const validExtras = extras.filter(
@@ -85,7 +93,7 @@ export const handler = async (event) => {
             name: `Curso ECMO Nursing Care — ${activeProfileLabel}`,
             description: `Healthcare Training Experience · Curso especializado en cuidados de enfermería ECMO. ${LEGAL_TEXT}`,
           },
-          unit_amount: mxnToUnit(PRICES_MXN[perfil], true),
+          unit_amount: cursoUnit,
         },
         quantity: 1,
       },
@@ -107,8 +115,7 @@ export const handler = async (event) => {
       'https://hce-web.netlify.app';
 
     // Codificar datos del pago en la URL de éxito
-    const baseAmount = PRICES_MXN[perfil];
-    const discountedBase = precioConPromo(baseAmount, promoCode, 'nursing', now);
+    const discountedBase = cursoMXN;
     
     const totalMXN = discountedBase + validExtras.reduce((s, e) => s + PRICES_MXN[e], 0);
 
@@ -140,7 +147,7 @@ export const handler = async (event) => {
         perfil: activeProfileLabel,
         extras: validExtras.join(', '),
         email,
-        promo_applied: promoCode || 'none',
+        promo_applied: promoCode || (BUEN_FIN ? 'BUENFIN20' : 'none'),
         total_mxn: totalMXN.toString(),
         moneda: currency,
         pasarela,
@@ -152,7 +159,7 @@ export const handler = async (event) => {
           perfil: activeProfileLabel,
           extras: validExtras.join(', '),
           email,
-          promo_applied: promoCode || 'none',
+          promo_applied: promoCode || (BUEN_FIN ? 'BUENFIN20' : 'none'),
           total_mxn: totalMXN.toString(),
           moneda: currency,
           pasarela,

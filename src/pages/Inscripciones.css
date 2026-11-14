@@ -1448,3 +1448,12 @@
   text-decoration: underline;
   font-weight: 600;
 }
+
+/* Precio Buen Fin (ECMO Nursing, nov 2026). */
+.ins-hero-badge--buenfin {
+  display: table;
+  margin: 0.6rem auto 0;
+  background: rgba(227, 24, 55, 0.18);
+  color: #ffb3bd;
+  border-color: rgba(227, 24, 55, 0.45);
+}

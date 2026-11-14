@@ -26,6 +26,16 @@ function NurseCap({ size = 24, className = "" }) {
 
 const USD_RATE = 17.5;
 
+// Precio Buen Fin (13 nov 2026, sin fecha de fin): $4,000 MXN / USD 200 en vez
+// de $5,000 MXN / USD 250 (20%). Debe coincidir con PRECIO_CURSO de
+// netlify/functions/create-nursing-checkout.js. Para quitarlo: BUEN_FIN = false
+// en los dos archivos.
+const BUEN_FIN = true;
+const PRECIO_REGULAR = { mxn: 5000, usd: 250 };
+const PRECIO_CURSO = BUEN_FIN ? { mxn: 4000, usd: 200 } : PRECIO_REGULAR;
+// Inscripción para grupos: oculta mientras dure el precio Buen Fin.
+const MOSTRAR_GRUPOS = !BUEN_FIN;
+
 const EXTRA_CATALOG = {
   ecmo_sim: {
     label: 'Simulador ECMO SIM',
@@ -147,15 +157,20 @@ export default function InscripcionesNursing() {
   };
 
   const availableExtras = perfil ? PROFILES[perfil].extras.map((id) => ({ id, ...EXTRA_CATALOG[id] })) : [];
-  const rawBase = perfil ? PROFILES[perfil].price : 0;
+  const rawBase = perfil ? PRECIO_CURSO.mxn : 0;
   const isFree = appliedPromo?.type === 'free';
   const baseDiscount = (perfil && appliedPromo && !isFree) ? Math.floor(rawBase * appliedPromo.discount) : 0;
   const baseMXN = isFree ? 0 : rawBase - baseDiscount;
   
   const extrasMXN = isFree ? 0 : [...extras].reduce((s, id) => s + EXTRA_CATALOG[id].price, 0);
   const totalMXN = baseMXN + extrasMXN;
-  const displayBase = moneda === 'usd' ? Math.ceil(baseMXN / USD_RATE) : baseMXN;
-  const displayTotal = moneda === 'usd' ? Math.ceil(totalMXN / USD_RATE) : totalMXN;
+  // En USD el curso tiene precio propio; los extras se convierten uno por uno,
+  // igual que los cobra el servidor.
+  const displayBase = moneda === 'usd' ? (isFree ? 0 : PRECIO_CURSO.usd) : baseMXN;
+  const displayTotal = moneda === 'usd'
+    ? displayBase + (isFree ? 0 : [...extras].reduce((s, id) => s + Math.ceil(EXTRA_CATALOG[id].price / USD_RATE), 0))
+    : totalMXN;
+  const displayRegular = moneda === 'usd' ? PRECIO_REGULAR.usd : PRECIO_REGULAR.mxn;
   const cur = moneda.toUpperCase();
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -250,6 +265,7 @@ export default function InscripcionesNursing() {
       <div className="ins-hero">
         <div className="ins-hero-inner hce-container">
           <span className="ins-hero-badge">3.ª EDICIÓN · INICIO 22 DE FEBRERO 2027</span>
+          {BUEN_FIN && <span className="ins-hero-badge ins-hero-badge--buenfin">PRECIO BUEN FIN · 20% DE DESCUENTO</span>}
           <h1 className="ins-hero-title">Inscripciones</h1>
           <p className="ins-hero-sub">
             Personaliza tu inscripción al programa ECMO Nursing Care Course y asegura tu lugar de manera segura.
@@ -263,7 +279,8 @@ export default function InscripcionesNursing() {
         {/* ── LEFT: selection flow ── */}
         <div className="ins-main">
 
-          {/* Announcement Banner */}
+          {/* Announcement Banner (inscripción para grupos) */}
+          {MOSTRAR_GRUPOS && (
           <div style={{
             background: 'linear-gradient(135deg, rgba(227, 24, 55, 0.05) 0%, rgba(227, 24, 55, 0.02) 100%)',
             border: '1px solid rgba(227, 24, 55, 0.15)',
@@ -324,6 +341,7 @@ export default function InscripcionesNursing() {
               WhatsApp
             </a>
           </div>
+          )}
 
           {/* STEP 1 — profile cards */}
           <section className="ins-section">
@@ -519,8 +537,16 @@ export default function InscripcionesNursing() {
                 <>
                   <div className="ins-summary-line">
                     <span>{perfil === 'otro' && customOtro ? `Otro: ${customOtro}` : PROFILES[perfil].label}</span>
-                    <span>{fmt(displayBase, cur)}</span>
+                    <span>
+                      {BUEN_FIN && !isFree && <s style={{ opacity: 0.55, fontWeight: 500, marginRight: '6px' }}>{fmt(displayRegular, cur)}</s>}
+                      {fmt(displayBase, cur)}
+                    </span>
                   </div>
+                  {BUEN_FIN && !isFree && (
+                    <div className="ins-summary-promo-nota">
+                      <span>Precio Buen Fin −20%</span>
+                    </div>
+                  )}
                   {[...extras].map((id) => {
                     const ex = EXTRA_CATALOG[id];
                     const price = moneda === 'usd' ? Math.ceil(ex.price / USD_RATE) : ex.price;
@@ -644,7 +670,7 @@ export default function InscripcionesNursing() {
         </aside>
       </div>
 
-      {showPopup && (
+      {MOSTRAR_GRUPOS && showPopup && (
         <div style={{
           position: 'fixed',
           top: 0,
