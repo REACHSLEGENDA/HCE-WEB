@@ -82,7 +82,8 @@ const FAQ_NURSING = [
     q: '¿Cómo puedo inscribirme?',
     a: (
       <>
-        Las inscripciones se encuentran actualmente <strong>SOLD OUT</strong>. Mantente atento a nuestras redes sociales para el anuncio de la 3era edición.
+        ¡Es muy sencillo! Asegura tu lugar en la 3.ª edición (inicio: 22 de febrero de 2027){' '}
+        <Link to="/inscripciones-ecmo-nursing" style={{ color: '#0047ff', fontWeight: 700 }}>dando clic aquí →</Link>
         <br /><br />
         <em>📩 ¿Tienes otra duda? Escríbenos a <strong>info@healthcareexp.com</strong> o utiliza el botón de WhatsApp. ¡Nuestro equipo de admisiones te atenderá de inmediato!</em>
       </>

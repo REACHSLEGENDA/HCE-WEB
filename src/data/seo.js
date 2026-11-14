@@ -172,7 +172,7 @@ export const PAGINAS = [
   {
     ruta: '/ecmo-nursing-care',
     titulo: 'Curso ECMO para Enfermería | ECMO Nursing Care Course – HCE',
-    descripcion: 'El primer entrenamiento en ECMO diseñado por y para enfermería: cuidado del circuito, vigilancia, complicaciones y simulación. Fechas y registro.',
+    descripcion: 'El primer entrenamiento en ECMO diseñado por y para enfermería: cuidado del circuito, vigilancia, complicaciones y simulación. 3.ª edición: inicia el 22 de febrero de 2027.',
     imagen: OG('nursing.jpg'),
     prioridad: 0.9,
     h1: 'Curso de ECMO para enfermería: ECMO Nursing Care Course',

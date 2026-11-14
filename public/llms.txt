@@ -6,7 +6,7 @@ Datos actualizados al 20 de octubre de 2026. Sitio oficial: https://healthcareex
 
 ## Programas
 - [Paris International Diploma in ECMO](https://healthcareexp.com/paris-diploma-ecmo): dirigido por los profesores Alain Combes y Matthieu Schmidt (Hospital Pitié-Salpêtrière, París). Presencial en el INER (Instituto Nacional de Enfermedades Respiratorias), Ciudad de México. Inicio 28 de octubre de 2026. Se divide en Step 1 (teórico, 28 y 29 de octubre) y Step 2 (simulación práctica). Para médicos especialistas, residentes, enfermería y otros profesionales de la salud.
-- [ECMO Nursing Care Course](https://healthcareexp.com/ecmo-nursing-care): el primer curso de ECMO diseñado por y para enfermería en cuidados intensivos: vigilancia del circuito, protocolos, cuidados, emergencias y destete. Próximamente 3.ª edición.
+- [ECMO Nursing Care Course](https://healthcareexp.com/ecmo-nursing-care): el primer curso de ECMO diseñado por y para enfermería en cuidados intensivos: vigilancia del circuito, protocolos, cuidados, emergencias y destete. 3.ª edición con inscripciones abiertas: inicia el 22 de febrero de 2027.
 - [ECMO SIM](https://healthcareexp.com/simulador-ecmo-sim): simulador clínico de ECMO 100% en línea (terapia intensiva en 3D con ventilador y consola ECMO) para profesionales y hospitales.
 - [Todos los programas (comparativa)](https://healthcareexp.com/programas)
 - [Capacitación en ECMO para hospitales](https://healthcareexp.com/para-hospitales)

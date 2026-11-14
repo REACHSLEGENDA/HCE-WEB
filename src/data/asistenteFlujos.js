@@ -313,10 +313,10 @@ export const FLUJOS = {
 
   // ── Experiencias abiertas ────────────────────────────────────────────────────
   disponibles: {
-    text: 'Esto es lo que está abierto ahora mismo:\n\n**Paris International Diploma in ECMO** — Step 1 y 2\nCertificación internacional presencial, con el Hospital Pitié-Salpêtrière de París.\nInicio: **28 de octubre de 2026** · Sede: **INER, Ciudad de México**\n\n**Solo Step 1 (Teórico)**\nLa parte teórica del diploma, por separado.\n**28 y 29 de octubre**, 100% presencial.\n\n**ECMO Sim** — simulador virtual, disponible todo el año.\n\n**Webinars gratuitos** — sesiones en vivo con expertos.\n\nECMO Nursing Care está agotado; la 3.ª edición se anuncia pronto.',
+    text: 'Esto es lo que está abierto ahora mismo:\n\n**ECMO Nursing Care Course** — 3.ª edición, inscripciones abiertas. La fase virtual inicia el **22 de febrero de 2027**.\n\n**ECMO Sim** — simulador virtual, disponible todo el año.\n\n**Webinars gratuitos** — sesiones en vivo con expertos.\n\nEl **Paris International Diploma in ECMO** ya cerró la generación 2026; la próxima es del **8 al 12 de noviembre de 2027** y las inscripciones se abren próximamente.',
     buttons: [
-      { label: 'Diploma completo',       next: 'paris' },
-      { label: 'Solo Step 1',            next: 'step1' },
+      { label: 'ECMO Nursing Care',      next: 'nursing' },
+      { label: 'Diploma de París 2027',  next: 'paris' },
       { label: 'Webinars gratuitos',     next: 'webinars' },
       { label: 'Hablar con un asesor',   next: 'contacto' },
       { label: 'Inicio',                 next: 'home_portal' },
@@ -344,10 +344,9 @@ export const FLUJOS = {
 
   // ── Programas ────────────────────────────────────────────────────────────────
   programas: {
-    text: 'HCE ofrece estas experiencias de formación:\n\n**Diploma Paris ECMO** — Certificación internacional presencial. Inscripciones abiertas, inicia el 28 de octubre.\n\n**Solo Step 1** — La parte teórica del diploma, por separado. 28 y 29 de octubre.\n\n**ECMO Sim** — Simulador clínico virtual, 100% online, todo el año.\n\n**ECMO Nursing Care** — Formación para enfermería en UCI. Agotado; 3.ª edición próximamente.\n\n**Webinars gratuitos** — Sesiones en vivo con expertos, con constancia de asistencia.\n\n¿Sobre cuál te gustaría saber más?',
+    text: 'HCE ofrece estas experiencias de formación:\n\n**Diploma Paris ECMO** — Certificación internacional presencial. Próxima generación: 8 al 12 de noviembre de 2027; inscripciones próximamente.\n\n**ECMO Sim** — Simulador clínico virtual, 100% online, todo el año.\n\n**ECMO Nursing Care** — Formación para enfermería en UCI. 3.ª edición con inscripciones abiertas: inicia el 22 de febrero de 2027.\n\n**Webinars gratuitos** — Sesiones en vivo con expertos, con constancia de asistencia.\n\n¿Sobre cuál te gustaría saber más?',
     buttons: [
       { label: 'Diploma Paris ECMO',   next: 'paris' },
-      { label: 'Solo Step 1',          next: 'step1' },
       { label: 'ECMO Sim',             next: 'ecmo_sim' },
       { label: 'ECMO Nursing Care',    next: 'nursing' },
       { label: 'Webinars gratuitos',   next: 'webinars' },
@@ -357,21 +356,19 @@ export const FLUJOS = {
 
   // ── Paris ────────────────────────────────────────────────────────────────────
   paris: {
-    text: '**Paris International Diploma in ECMO**\n\nEl programa de formación en ECMO más completo de Latinoamérica, desarrollado en colaboración con el Hospital Pitié-Salpêtrière de París — centro de referencia mundial.\n\nAbarca desde los fundamentos del circuito hasta el manejo clínico avanzado: destete, anticoagulación, ventilación en paciente crítico, manejo de complicaciones y casos clínicos reales.\n\nLa inscripción cubre el **Step 1 y el Step 2**.\n\nInicio: **28 de octubre de 2026**\nSede: **INER, Ciudad de México**\n\nCupo limitado.',
+    text: '**Paris International Diploma in ECMO**\n\nEl programa de formación en ECMO más completo de Latinoamérica, desarrollado en colaboración con el Hospital Pitié-Salpêtrière de París — centro de referencia mundial.\n\nAbarca desde los fundamentos del circuito hasta el manejo clínico avanzado: destete, anticoagulación, ventilación en paciente crítico, manejo de complicaciones y casos clínicos reales.\n\nIncluye el **Step 1 y el Step 2**.\n\nPróxima generación: **8 al 12 de noviembre de 2027**. Las inscripciones se abren próximamente.',
     buttons: [
       { label: 'Ver temario completo',  next: 'temario' },
       { label: 'Quiénes lo imparten',   next: 'instructores' },
-      { label: 'Quiero inscribirme',    next: 'inscripcion_paris' },
-      { label: 'Solo quiero el Step 1', next: 'step1' },
+      { label: 'Avísenme al abrir',     next: 'contacto' },
       { label: 'Inicio',                next: 'home_portal' },
     ],
   },
 
   // ── Step 1 ───────────────────────────────────────────────────────────────────
   step1: {
-    text: '**Step 1 Teórico — por separado**\n\nEs la fase teórica del Paris International Diploma in ECMO, abierta como inscripción independiente para quien no quiere llevar el diploma completo.\n\n**28 y 29 de octubre**, 100% presencial en el INER, Ciudad de México.\n\nSi después decides continuar, el Step 2 es la fase práctica del mismo programa.',
+    text: '**Step 1 Teórico**\n\nEs la fase teórica del Paris International Diploma in ECMO. Las inscripciones de la generación 2026 ya cerraron; la próxima generación es del **8 al 12 de noviembre de 2027**.',
     buttons: [
-      { label: 'Inscribirme al Step 1',  action: 'step1_buy' },
       { label: 'Ver el diploma completo', next: 'paris' },
       { label: 'Hablar con un asesor',   next: 'contacto' },
       { label: 'Inicio',                 next: 'home_portal' },
@@ -383,7 +380,6 @@ export const FLUJOS = {
     text: 'El programa cubre **23 temas** en **5 módulos**:\n\n**Fundamentos** — Circuito ECMO, canulación V-V, transferencia de gases, anticoagulación\n\n**Indicaciones** — Shock cardiogénico, SDRA, embolia pulmonar, E-RCP, shock séptico, vía aérea crítica\n\n**Manejo Clínico Avanzado** — Ventilación mecánica en ECMO, manejo de hipoxemia, decúbito prono, destete V-A y V-V, farmacocinética\n\n**Complicaciones** — Neurológicas, edema pulmonar V-A, infecciones\n\n**Práctica Clínica** — Implementación de programa ECMO, cuidados de enfermería, casos clínicos',
     buttons: [
       { label: 'Quiénes lo imparten',  next: 'instructores' },
-      { label: 'Quiero inscribirme',   next: 'inscripcion_paris' },
       { label: 'Volver',               next: 'paris' },
     ],
   },
@@ -392,7 +388,6 @@ export const FLUJOS = {
   instructores: {
     text: 'El programa es impartido por referentes mundiales en ECMO:\n\n**Prof. Alain Combes** — Director del Programa. Hosp. Pitié-Salpêtrière, Francia\n\n**Prof. Matthieu Schmidt** — Presidente Científico. Hosp. Pitié-Salpêtrière, Francia\n\n**Enf. Hugo Guillou** — CEO Pratico Santé, Francia\n\n**Enf. Emric Besnard** — Presidente Pratico Santé, Francia\n\nHCE también cuenta con docentes nacionales e internacionales especializados.',
     buttons: [
-      { label: 'Quiero inscribirme',  next: 'inscripcion_paris' },
       { label: 'Volver a Paris',      next: 'paris' },
       { label: 'Inicio',              next: 'home_portal' },
     ],
@@ -400,9 +395,8 @@ export const FLUJOS = {
 
   // ── Inscripción Paris ────────────────────────────────────────────────────────
   inscripcion_paris: {
-    text: 'Puedes completar tu inscripción directamente en nuestro sitio web.\n\nSi tienes dudas sobre perfiles, complementos o formas de pago, un asesor puede orientarte sin compromiso.',
+    text: 'Las inscripciones de la generación 2026 ya cerraron. La próxima generación es del **8 al 12 de noviembre de 2027** y las inscripciones se abren próximamente.\n\nSi quieres que te avisemos, un asesor te aparta el aviso sin compromiso.',
     buttons: [
-      { label: 'Ir a inscripción',       action: 'inscribirse' },
       { label: 'Hablar con un asesor',   next: 'contacto' },
       { label: 'Inicio',                 next: 'home_portal' },
     ],
@@ -420,10 +414,10 @@ export const FLUJOS = {
 
   // ── Nursing Care ─────────────────────────────────────────────────────────────
   nursing: {
-    text: '**ECMO Nursing Care Course**\n\nFormación especializada para enfermeros/as y profesionales de cuidados intensivos. Cubre los protocolos, monitoreo y cuidados específicos del paciente bajo soporte ECMO desde la perspectiva de enfermería en UCI.\n\nLa 2.ª edición está **agotada**. La **3.ª edición** se anunciará próximamente.\n\nSi quieres que te avisemos en cuanto abran las inscripciones, escríbenos y te apartamos el aviso.',
+    text: '**ECMO Nursing Care Course**\n\nFormación especializada para enfermeros/as y profesionales de cuidados intensivos. Cubre los protocolos, monitoreo y cuidados específicos del paciente bajo soporte ECMO desde la perspectiva de enfermería en UCI.\n\n**Inscripciones abiertas** para la **3.ª edición**: la fase virtual inicia el **22 de febrero de 2027**.',
     buttons: [
+      { label: 'Inscribirme',            action: 'nursing_buy' },
       { label: 'Ver el curso',           action: 'nursing_page' },
-      { label: 'Avísenme de la 3.ª ed.', next: 'contacto' },
       { label: 'Ver otros programas',    next: 'programas' },
       { label: 'Inicio',                 next: 'home_portal' },
     ],
@@ -454,7 +448,7 @@ export const FLUJOS = {
 
 // Acciones que entiende el chat (ver ChatBot.jsx → ejecutarAccion).
 export const ACCIONES_FLUJO = [
-  'inscribirse', 'login', 'ecmo_sim_buy', 'step1_buy', 'nursing_page',
+  'inscribirse', 'login', 'ecmo_sim_buy', 'step1_buy', 'nursing_buy', 'nursing_page',
   'portal_webinars', 'webinars_landing', 'whatsapp', 'email',
 ];
 

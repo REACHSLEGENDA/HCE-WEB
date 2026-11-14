@@ -805,7 +805,7 @@ const Dashboard = () => {
       badge: 'INSCRIPCIONES ABIERTAS',
       badgeClass: 'badge-danger',
       icon: NurseCap,
-      startDate: 'Próximamente: 3.ª Edición'
+      startDate: 'Inicio: 22 de febrero, 2027'
     },
     {
       id: 3,

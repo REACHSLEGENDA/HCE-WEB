@@ -93,6 +93,27 @@ const Nursing = () => {
   const { ref: heroRef, inView: heroInView } = useInView({ triggerOnce: true, threshold: 0.1 });
 
     const [activeModule, setActiveModule] = useState(null);
+  // 3.ª edición: la fase virtual inicia el 22 de febrero de 2027 (13 nov 2026).
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  useEffect(() => {
+    const targetDate = new Date('2027-02-22T00:00:00-06:00');
+    const updateTimer = () => {
+      const difference = targetDate.getTime() - new Date().getTime();
+      if (difference <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+      setTimeLeft({
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+      });
+    };
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
   const [activeFaq, setActiveFaq] = useState(null);
   const facultyTrackRef = React.useRef(null);
   const lastInteractionRef = React.useRef(0);
@@ -198,7 +219,7 @@ const Nursing = () => {
         <div className="n-hero-banner-wrap hce-container">
           <div className="n-hero-text">
             <span style={{ color: '#e31837', fontWeight: '800', letterSpacing: '2px', marginBottom: '0.8rem', fontSize: '1.1rem', textTransform: 'uppercase', fontFamily: "'Outfit', sans-serif" }}>
-              PRÓXIMAMENTE · 3.ª EDICIÓN
+              3.ª EDICIÓN · INSCRIPCIONES ABIERTAS
             </span>
             <span className="n-sec-badge">PROGRAMA DE ALTA ESPECIALIDAD</span>
             <h1 className="n-hero-title-text">
@@ -208,21 +229,41 @@ const Nursing = () => {
               Entrenamiento diseñado e impartido 100% por enfermería para enfermería.
             </p>
 
-            {/* El cronómetro vuelve cuando haya fecha confirmada de la 3.ª edición. */}
+            {/* Cronómetro de inicio estilo Paris: 22 de febrero de 2027. */}
             <div className="hero-countdown reveal active">
                 <div className="countdown-label">
-                    <Calendar size={16} /> <span>Fecha de la 3.ª edición por confirmar</span>
+                    <Calendar size={16} /> <span>Save the date: 22 de febrero, 2027</span>
+                </div>
+                <div className="countdown-timer">
+                    <div className="time-item">
+                        <span className="time-value">{timeLeft.days}</span>
+                        <span className="time-label">Días</span>
+                    </div>
+                    <span className="time-sep">:</span>
+                    <div className="time-item">
+                        <span className="time-value">{timeLeft.hours}</span>
+                        <span className="time-label">Hrs</span>
+                    </div>
+                    <span className="time-sep">:</span>
+                    <div className="time-item">
+                        <span className="time-value">{timeLeft.minutes}</span>
+                        <span className="time-label">Min</span>
+                    </div>
+                    <span className="time-sep">:</span>
+                    <div className="time-item">
+                        <span className="time-value">{timeLeft.seconds}</span>
+                        <span className="time-label">Seg</span>
+                    </div>
                 </div>
             </div>
 
 
 
-            <button 
-              className="n-hero-cta-btn" 
-              disabled
-              style={{ cursor: 'not-allowed', backgroundColor: '#475569', borderColor: '#475569' }}
+            <button
+              className="n-hero-cta-btn"
+              onClick={() => navigate('/inscripciones-ecmo-nursing')}
             >
-              ¡SOLD OUT! 🚀 Próximamente 3.ª Edición
+              INSCRÍBETE AHORA
             </button>
           </div>
         </div>
@@ -248,11 +289,11 @@ const Nursing = () => {
               </div>
               <div className="n-intro-sidebar">
                 <div className="n-intro-card-box">
-                  <span className="section-badge badge-limited" style={{ fontSize: '0.65rem', padding: '0.35rem 0.9rem', marginBottom: '0.8rem', display: 'inline-flex' }}>SOLD OUT</span>
+                  <span className="section-badge badge-limited" style={{ fontSize: '0.65rem', padding: '0.35rem 0.9rem', marginBottom: '0.8rem', display: 'inline-flex' }}>CUPO LIMITADO</span>
                   <h4>ECMO Nursing Care Course</h4>
                   <p>Asegura tu lugar en el programa líder de alta especialización en cuidado de enfermería en ECMO.</p>
-                  <button className="n-btn n-btn-brand" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', opacity: 0.8 }}>
-                    ¡SOLD OUT! 🚀 Próximamente 3.ª Edición
+                  <button className="n-btn n-btn-brand" onClick={() => navigate('/inscripciones-ecmo-nursing')}>
+                    Inscríbete Ahora <ArrowRight size={18} />
                   </button>
                 </div>
               </div>
@@ -319,7 +360,7 @@ const Nursing = () => {
                     borderRadius: '6px',
                   }}>
                     <Calendar size={13} />
-                    <span>Próximamente: 3.ª Edición</span>
+                    <span>Inicio: 22 de febrero, 2027</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '0.5rem' }}>
@@ -333,7 +374,7 @@ const Nursing = () => {
                   </div>
                 </div>
               </div>
-              <button className="n-phase-btn-red" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569' }}>¡SOLD OUT! 🚀 Próximamente 3.ª Edición</button>
+              <button className="n-phase-btn-red" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscripciones Abiertas</button>
             </div>
 
             {/* Card 2 — 100% Presencial */}
@@ -479,16 +520,16 @@ const Nursing = () => {
           <div className="n-timeline-container">
             {/* Step 1 */}
             <div className="n-card-base n-timeline-step">
-              <span className="n-timeline-badge active">Fase Virtual: 2 Meses · Fecha de inicio por confirmar.</span>
+              <span className="n-timeline-badge active">Fase Virtual: 2 Meses, inicio 22 de febrero 2027.</span>
               <h3>Entrenamiento Teórico (Aprendizaje Híbrido)</h3>
               <p>Aprendizaje sincrónico y asincrónico a través de nuestra plataforma virtual. Cubre de manera progresiva los fundamentos del soporte ECMO, Fisiología y Hemodinamia Aplicada, Monitoreo Integral del Binomio Paciente-Circuito, Detección Precoz de Complicaciones.</p>
               <div style={{ marginTop: '1.2rem', textAlign: 'left' }}>
-                <button 
-                  className="n-phase-btn-red" 
-                  disabled 
-                  style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569', padding: '0.6rem 1.4rem', fontSize: '0.82rem', borderRadius: '30px' }}
+                <button
+                  className="n-btn n-btn-brand"
+                  onClick={() => navigate('/inscripciones-ecmo-nursing')}
+                  style={{ padding: '0.6rem 1.4rem', fontSize: '0.82rem', borderRadius: '30px' }}
                 >
-                  ¡SOLD OUT! 🚀 Próximamente 3.ª Edición
+                  ¡Inscríbete ya!
                 </button>
               </div>
             </div>
@@ -875,7 +916,7 @@ const Nursing = () => {
           </div>
           
           <div className="n-section-cta">
-            <button className="n-sales-btn large" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff', borderColor: '#475569' }}>¡SOLD OUT! 🚀 Próximamente 3.ª Edición</button>
+            <button className="n-sales-btn large" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Inscribirme al Curso Ahora <ArrowRight size={20} /></button>
           </div>
         </div>
       </section>
@@ -973,7 +1014,15 @@ const Nursing = () => {
                 q: "¿Cómo puedo inscribirme?",
                 a: (
                   <>
-                    Las inscripciones se encuentran actualmente <strong>SOLD OUT</strong>. Mantente atento a nuestras redes sociales para el anuncio de la 3era edición.
+                    ¡Es muy sencillo! Puedes asegurar tu lugar de inmediato haciendo{' '}
+                    <a
+                      href="/inscripciones-ecmo-nursing"
+                      onClick={(e) => { e.preventDefault(); navigate('/inscripciones-ecmo-nursing'); }}
+                      style={{ color: '#00d2ff', textDecoration: 'underline', fontWeight: 'bold' }}
+                    >
+                      clic aquí
+                    </a>{' '}
+                    para acceder directamente a nuestro formulario de registro y pasarela de pago seguro.
                   </>
                 )
               }
@@ -1015,11 +1064,11 @@ const Nursing = () => {
         <div className="hce-container">
           <div className="n-final-card">
             <div className="n-final-content">
-              <span className="section-badge badge-limited">SOLD OUT</span>
+              <span className="section-badge badge-limited">CUPO LIMITADO</span>
               <h2>Fortalece tu práctica. <span className="red-text">Salva más vidas.</span></h2>
               <p>Formación de alta especialidad en ECMO, liderada por enfermería, para enfermería.</p>
               <div className="n-final-actions">
-                <button className="btn-buy-final" disabled style={{ cursor: 'not-allowed', backgroundColor: '#475569', color: '#fff' }}>¡SOLD OUT! 🚀 Próximamente 3.ª Edición</button>
+                <button className="btn-buy-final" onClick={() => navigate('/inscripciones-ecmo-nursing')}>Reserva tu lugar <ArrowRight size={18} /></button>
                 <button className="btn-info-final" onClick={() => {
                   const el = document.getElementById('temario-section');
                   if (el) el.scrollIntoView({ behavior: 'smooth' });

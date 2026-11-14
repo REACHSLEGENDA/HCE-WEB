@@ -196,6 +196,11 @@ export default function ChatBot() {
       setIsOpen(false);
       return;
     }
+    if (btn.action === 'nursing_buy') {
+      navigate('/inscripciones-ecmo-nursing');
+      setIsOpen(false);
+      return;
+    }
     if (btn.action === 'nursing_page') {
       navigate('/ecmo-nursing-care');
       setIsOpen(false);

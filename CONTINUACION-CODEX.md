@@ -728,3 +728,101 @@ Basado en "Propuesta SEO, AEO y LLMs — healthcareexp.com" (APEN DEV, 15 oct).
   'programas' | 'pagos'), tarjetas numeradas, enlace "Leer la consulta" (`consulta` en cada FAQ),
   lateral de contacto y programas. Índice de consultas con filtros por tema.
 - llms.txt con las 14 consultas agrupadas. Sitemap: 27 URLs.
+
+
+## 18. LISTA DE CAMBIOS PEDIDOS (13 nov 2026) — Claude. Marcar [x] al terminar
+
+Pedido de Christian/Jenifer. Prioridad 1 = Nursing (lanzan el viernes). Si Claude se queda
+sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/data/consultas.js.
+
+### P1. ECMO Nursing Care Course — reabrir inscripciones (igual que la edición pasada) — HECHO 13 nov (falta subir)
+- [x] Mismos precios y flujo de siempre (InscripcionesNursing.jsx + create-nursing-checkout + nursing-register).
+- [x] Nursing.jsx: quitar "SOLD OUT / Próximamente 3.ª edición" y "Fecha de la 3.ª edición por confirmar";
+      poner inicio **22 de febrero de 2027** (la fase virtual inicia en febrero) y botón de inscripción.
+- [x] Mismo flujo que París: página de inscripción → Stripe → formulario de registro → correos Brevo,
+      Formspree, recibo, aviso a academia. Revisar que todo funcione (lanzan el viernes).
+- [x] programas.js / seo.js / llms.txt / FAQ: Nursing con inicio 22 feb 2027 e inscripciones abiertas.
+
+### P2. Reporte de inscritos por entrenamiento (admin, descargable)
+- [ ] Basado en "MARZO 2025 CONSOLIDADO - Ok (4).xlsx" (Downloads). Por cada inscrito: si compró
+      también simulador o nursing, si obtuvo descuento y qué %, si solicitó factura. Descarga Excel.
+
+### P3. Textos de páginas
+- [ ] Tarjetas de instructores: "Imparte: Diplomado de París ECMO" → "Certificación en ECMO".
+- [ ] /programas tabla, París: modalidad "Presencial: Step 1 (teórico) y Step 2 (práctico con simulación
+      clínica de alta fidelidad)"; inicio "Próximamente inscripciones 2027".
+- [ ] /para-hospitales tarjeta "Simulación con ECMO SIM": "Nuestro simulador virtual ECMO SIM permite un
+      entrenamiento inmersivo, adaptable a sesiones individuales o dinámicas de equipo. Con una capacidad
+      técnica probada, hemos realizado simulaciones masivas y coordinadas con hasta 200 profesionales en
+      tiempo real."
+- [ ] En todo el sitio: ECMO SIM ya no "con ventilador y consola ECMO" → "un paciente en ECMO cuyas
+      constantes reaccionan a cada decisión"; "en línea" → "virtual" para ECMO SIM.
+
+### P4. Consultas (src/data/consultas.js)
+- [ ] Índice: orden → Qué es ECMO, Partes del circuito, ECMO V-V vs V-A, Complicaciones; luego
+      Simulación, Cuidados de enfermería, Certificación; después el resto.
+- [ ] Ocultar por ahora la consulta Insuficiencia cardiaca avanzada (ic-avanzada) (sin borrar).
+- [ ] Tarjeta Simulación: ícono de control de videojuego; "en línea" → "virtual".
+- [ ] **que-es-ecmo**: ficha "Quién la maneja" → "Equipo ECMO"; intro de pacientes: "Se considera ECMO para
+  pacientes con insuficiencia respiratoria o cardiaca grave que no responden al tratamiento convencional
+  optimizado."; coma en "Por eso, la formación del equipo…".
+- [ ] **ecmo-vv-vs-va**: Apoyo = "Total o parcial en ECMO V-V (los pulmones pueden no funcionar en su
+  totalidad y ECMO puede soportar el 100% de la función respiratoria del paciente); parcial en ECMO V-A (el
+  corazón nativo debe conservar un % de funcionalidad mínimo para poder conectar un ECMO V-A al paciente)";
+  "¿Necesita que el corazón funcione?" V-A = "Sí; soporta su función pero no la sustituye por completo."
+  (sin "en parte"); tras "…distinta entre la parte alta y la baja" agregar "(Oxigenación diferencial entre
+  el hemicuerpo superior e inferior del paciente)"; CTA → "Inscríbete al Step 1 y Step 2 del Diploma
+  Internacional de París en ECMO".
+- [ ] **certificacion-ecmo**: borrar bloque 3 "¿Qué es la certificación CES-A?", la fuente/enlace de AmSECT
+  (es de EUA) y "La visión del equipo académico" (redundante).
+- [ ] **cuidados-enfermeria-ecmo** (y donde aplique):
+  - Emergencias del circuito: "Fallo de la bomba o de energía eléctrica, embolia aérea masiva en el circuito,
+    fallo agudo o trombosis del oxigenador de membrana, rotura o desconexión de tubuladuras, falla en el
+    suministro de gas, isquemia de extremidad inferior (en ECMO V-A periférico), síndrome de arlequín,
+    sangrado o trombosis del circuito y/o paciente, decanulación accidental, entre otros."
+  - "Flujo, revoluciones, presiones…" → "Integridad del circuito, flujo, revoluciones, presiones, color de
+    las líneas, coágulos, fibrina, aire."
+  - "Fijación, sitio de inserción…" → sitio de inserción primero; después de sangrado, trombosis.
+  - "Pinzas a la mano, consola cargada, plan de emergencia" → "algoritmos de respuesta ante una emergencia".
+  - Competencias: Revisión sistemática del circuito; Interpretar gasometrías y pruebas de coagulación;
+    Interpretar alarmas de la consola de ECMO; Pedir ayuda y responder ante emergencias en ECMO (ej. de la
+    lista de emergencias); Movilización…; Comunicación clara con el equipo (quitar "y con la familia").
+  - Visión → "La visión de HCE para enfermería": "HCE creó el ECMO Nursing Care Course con la visión de que
+    enfermería es quien más tiempo está junto a la cama del paciente, turno a turno." (quitar lo de la
+    oferta en español).
+  - Siempre que se mencione un curso, hipervínculo (ej. "¿Cómo me formo en ECMO si soy enfermera?" → Nursing).
+  - FAQ "¿Hay cursos solo para enfermería?": "…centrado en monitoreo, protocolos y cuidados de enfermería en
+    ECMO" (quitar destete).
+  - FAQ "¿Enfermería puede ser especialista en ECMO?": "Sí, ya que enfermería forma parte crucial del equipo
+    multidisciplinario en ECMO." (quitar AmSECT / ECMO Specialist – Adult).
+- [ ] **simulacion-ecmo**: respuesta rápida "…practicarlas sin poner en riesgo al paciente…" y "Lo ideal es
+  combinar simulación presencial con consola real y práctica frecuente apoyado con un simulador como ECMO
+  SIM para reforzar como educación continua."; "Entrena las manos y el trabajo…" → "Domina las habilidades
+  y el trabajo en equipo con un circuito y consola reales."; "Permite repetir decisiones… en línea" →
+  "Simulador ECMO SIM"; título "¿Simulación presencial o virtual?", "manos" → "habilidades", "ECMO SIM
+  recrea una terapia intensiva en 3D con un paciente en ECMO cuyas constantes reaccionan a cada decisión.";
+  visión "…el primer contacto con una emergencia en ECMO no debería ser con un paciente real."; FAQ
+  "¿Existe un simulador de ECMO virtual?" → "Sí. ECMO SIM es un simulador clínico 100% virtual que HCE trae
+  a Latinoamérica."; FAQ certificación: quitar lo de pedir al organizador, dejar hasta "revisa con ELSO…";
+  FAQ hospitales: hipervínculo a /para-hospitales.
+- [ ] **circuito-ecmo**: extracto "Cánulas, bomba, oxigenador, mezclador de gases, termorregulador y consola:
+  qué hace cada elemento."; ficha "Mezclador de gases (FmO₂ y flujo de gas de barrido)" y "Termorregulador"
+  (no intercambiador de calor); tabla: "Extrae/drena" en lugar de "saca" (en todo el sitio); "chattering"
+  o balanceo de las líneas; bomba revisa "Revoluciones, flujo, temperatura y ruidos"; oxigenador revisa
+  "Presiones, color de la sangre antes y después, coágulos"; mezclador: "Regula la mezcla de gases y flujo
+  de gas de barrido de CO₂", revisa "FmO₂ y flujo de gas de barrido" (FmO₂ en lugar de FiO₂ en todo);
+  termorregulador revisa "Temperatura programada, temperatura sensada y nivel de agua"; cánulas revisan
+  "Sitio de canulación, fijación, sangrado, trombosis y datos de infección"; borrar la sección "¿Qué
+  controla el flujo y qué controla el gas?"; FAQ oxigenador: "…cuando su desempeño cae o aparecen signos de
+  falla o trombosis del mismo. Debe existir un protocolo de cambio de oxigenador en el hospital."
+- [ ] **complicaciones-ecmo**: ficha "Del circuito": "Falla o trombosis del oxigenador, falla de la bomba,
+  falla de la electricidad, falla del suministro de aire, embolismo aéreo masivo, decanulación, etc.";
+  "Cómo se previenen": "Revisión sistemática del circuito, protocolos del equipo, entrenamiento continuo del
+  equipo a través de simulación, anticoagulación vigilada y revisión de tendencias de los parámetros del
+  circuito." Tabla: Sangrado "Sitio de canulación, mucosas, drenajes, accesos vasculares, caída de
+  hemoglobina"; Hemólisis "Color de la orina/efluente, marcadores de laboratorio como hemoglobina libre,
+  ruidos en la bomba centrífuga, etc."; Infección "…resultado en cultivos"; Isquemia "Pulsos, coloración
+  de la extremidad, llenado capilar, temperatura, dolor"; Falla del circuito "Alarmas, cambios de flujo,
+  cambios en las presiones, ruidos de la bomba y desempeño del oxigenador". FAQ más común: "manejo de la
+  anticoagulación" (no "equilibrio"); FAQ pierna V-A: "Porque la cánula en la arteria femoral puede
+  disminuir el flujo distal hacia la pierna canulada; …".

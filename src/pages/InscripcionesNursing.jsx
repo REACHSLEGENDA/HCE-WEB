@@ -249,7 +249,7 @@ export default function InscripcionesNursing() {
       {/* HERO */}
       <div className="ins-hero">
         <div className="ins-hero-inner hce-container">
-          <span className="ins-hero-badge">PROGRAMAS 2026</span>
+          <span className="ins-hero-badge">3.ª EDICIÓN · INICIO 22 DE FEBRERO 2027</span>
           <h1 className="ins-hero-title">Inscripciones</h1>
           <p className="ins-hero-sub">
             Personaliza tu inscripción al programa ECMO Nursing Care Course y asegura tu lugar de manera segura.
