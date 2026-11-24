@@ -9,13 +9,14 @@ import React from 'react';
 //   # Título, ## Subtítulo
 //   - viñeta   /   1. lista numerada
 //   **negritas**, *cursivas* y [texto del enlace](https://…)
+//   Una dirección https://… suelta también se vuelve enlace.
 //   Una línea en blanco separa párrafos.
 
 const ENLACE_SEGURO = /^https?:\/\//i;
 
 function enLinea(texto, claveBase) {
   const partes = [];
-  const patron = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)\s]+\))/g;
+  const patron = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)\s]+\)|https?:\/\/[^\s<>()]+)/g;
   let ultimo = 0;
   let m;
   let i = 0;
@@ -27,6 +28,11 @@ function enLinea(texto, claveBase) {
 
     if (token.startsWith('**')) {
       partes.push(<strong key={clave}>{token.slice(2, -2)}</strong>);
+    } else if (/^https?:\/\//i.test(token)) {
+      // Dirección suelta: el punto o la coma final no son parte del enlace.
+      const url = token.replace(/[.,;:!?]+$/, '');
+      partes.push(<a key={clave} href={url} target="_blank" rel="noopener noreferrer">{url}</a>);
+      if (url.length < token.length) partes.push(token.slice(url.length));
     } else if (token.startsWith('[')) {
       const [, etiqueta, url] = token.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/);
       partes.push(ENLACE_SEGURO.test(url)
@@ -39,6 +45,21 @@ function enLinea(texto, claveBase) {
   }
   if (ultimo < texto.length) partes.push(texto.slice(ultimo));
   return partes;
+}
+
+/**
+ * Fuentes al final de una lectura: una por línea. Las ligas se vuelven enlace
+ * solas y se puede poner el nombre antes ("ELSO Guidelines https://…").
+ */
+export function FuentesLeccion({ fuentes }) {
+  const lineas = String(fuentes || '').replace(/\r\n/g, '\n').split('\n').map((l) => l.trim().replace(/^[-*]\s+/, '')).filter(Boolean);
+  if (!lineas.length) return null;
+  return (
+    <aside className="fuentes-leccion" aria-label="Fuentes">
+      <h4>{lineas.length === 1 ? 'Fuente' : 'Fuentes'}</h4>
+      <ul>{lineas.map((l, i) => <li key={i}>{enLinea(l, `f${i}`)}</li>)}</ul>
+    </aside>
+  );
 }
 
 export default function TextoLeccion({ texto }) {
@@ -69,7 +90,9 @@ export default function TextoLeccion({ texto }) {
       const tipo = vineta ? 'ul' : 'ol';
       if (!lista || lista.tipo !== tipo) {
         cerrarLista();
-        lista = { tipo, items: [], clave: `l${n}` };
+        // La numerada empieza en el número escrito: si se separó con líneas en
+        // blanco, sigue 2, 3… en lugar de volver a 1.
+        lista = { tipo, items: [], clave: `l${n}`, inicio: numero ? Number(l.match(/^(\d+)/)[1]) : 1 };
       }
       lista.items.push(enLinea((vineta || numero)[1], `i${n}`));
       return;
@@ -92,7 +115,7 @@ export default function TextoLeccion({ texto }) {
       {bloques.map((b) => {
         if (b.tipo === 'ul' || b.tipo === 'ol') {
           const Lista = b.tipo;
-          return <Lista key={b.clave}>{b.items.map((it, i) => <li key={i}>{it}</li>)}</Lista>;
+          return <Lista key={b.clave} start={b.tipo === 'ol' && b.inicio > 1 ? b.inicio : undefined}>{b.items.map((it, i) => <li key={i}>{it}</li>)}</Lista>;
         }
         const Etiqueta = b.tipo;
         return <Etiqueta key={b.clave}>{b.contenido}</Etiqueta>;

@@ -1,0 +1,38 @@
+/* Editor de texto con formato (src/components/admin/EditorTextoFormato.jsx). */
+.etf { display: grid; gap: 0; }
+.etf-barra {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 6px; border: 1px solid var(--border-color); border-bottom: 0; border-radius: 8px 8px 0 0;
+  background: var(--bg-main);
+}
+.etf-botones { display: flex; flex-wrap: wrap; gap: 2px; }
+.etf-botones button {
+  display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 32px;
+  border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--text-dark); cursor: pointer;
+}
+.etf-botones button:hover:not(:disabled) { border-color: var(--border-color); background: var(--bg-gray); }
+.etf-botones button:disabled { opacity: .35; cursor: default; }
+.etf-botones button:focus-visible, .etf-pestanas button:focus-visible { outline: 2px solid var(--primary-cyan); outline-offset: 1px; }
+.etf-pestanas { display: inline-flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--bg-gray); }
+.etf-pestanas button {
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--text-muted); font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer;
+}
+.etf-pestanas button.activa { background: var(--bg-main); color: var(--text-dark); box-shadow: 0 1px 3px rgba(15, 23, 42, .12); }
+.etf-texto { border-radius: 0 0 8px 8px !important; }
+.etf-vista {
+  min-height: 180px; max-height: 420px; overflow: auto; padding: 14px 16px;
+  border: 1px solid var(--border-color); border-radius: 0 0 8px 8px; background: var(--bg-main);
+}
+.etf-vacio { margin: 0; color: var(--text-muted); font-size: .88rem; }
+.etf-ayuda { margin-top: 6px; color: var(--text-muted); font-size: .78rem; line-height: 1.5; }
+
+/* La vista previa usa los mismos estilos del aula (Classroom.css no se carga en el admin). */
+.etf-vista .texto-leccion { max-width: none; color: var(--text-dark); font-size: .95rem; line-height: 1.7; }
+.etf-vista .texto-leccion h3 { margin: 1.2em 0 .5em; font-size: 1.15rem; color: var(--text-dark); }
+.etf-vista .texto-leccion h4 { margin: 1em 0 .4em; font-size: 1rem; color: var(--text-dark); }
+.etf-vista .texto-leccion > :first-child { margin-top: 0; }
+.etf-vista .texto-leccion p { margin: 0 0 1em; }
+.etf-vista .texto-leccion :is(ul, ol) { margin: 0 0 1em; padding-left: 1.4em; }
+.etf-vista .texto-leccion li { margin-bottom: .35em; }
+.etf-vista .texto-leccion a { color: var(--primary-cyan); font-weight: 600; }

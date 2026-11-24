@@ -858,3 +858,21 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
   /quienes-somos). París: sección de sede = "Sede por anunciar · 2027" (8–12 nov 2027), sin INER.
   ECMO SIM: "100% virtual" y "un paciente en ECMO" en EcmoSim.jsx y asistente. Nursing: una sola
   sección de FAQ (FAQNursing, la completa); se quitó la repetida de Nursing.jsx.
+
+## 21. Editor de lecturas más fácil + fuentes + preguntas de repaso (24 nov 2026, noche) — Claude, SUBIDO
+- Barra de formato para lecturas, tareas e instrucciones: src/components/admin/EditorTextoFormato.jsx (+ .css)
+  con Título, Subtítulo, Negritas, Cursiva, Viñetas, Numerada, Enlace (Ctrl+B / Ctrl+I / Ctrl+K) y pestaña
+  "Vista previa". Al pegar desde Word / Google Docs / web convierte el HTML al formato del aula
+  (src/lib/formatoTexto.js: htmlAFormato, envolver, prefijarLineas, insertarEnlace).
+- TextoLeccion.jsx: las direcciones https://… se vuelven enlace solas; las listas numeradas siguen la
+  numeración aunque haya líneas en blanco entre puntos (<ol start>).
+- Aula: .texto-leccion y la descripción de la lección ya ocupan todo el ancho (antes max-width 70ch).
+- Preguntas de repaso al final de una Lectura (no califican): columna leccion_contenido.repaso jsonb
+  (supabase/leccion-repaso-fuentes.sql, la corre Christian). Editor: src/components/admin/EditorRepaso.jsx;
+  alumno: src/components/RepasoLeccion.jsx ("Comprueba lo que aprendiste"). Validación en
+  src/lib/lecciones.js (repasoValido, problemaRepaso, faltaRepaso). cargarContenidos pide `repaso` y, si la
+  columna no existe, cae a las columnas de antes. Al guardar sin la migración solo falla si hay preguntas.
+- Pruebas: tests/formatoTexto.test.js, tests/texto-leccion.test.jsx, tests/repaso-leccion.test.jsx.
+- (misma noche) Campo "Fuentes" (leccion_contenido.fuentes text, misma migración) y preguntas de repaso
+  también en lecciones de Página web: TIPOS_CON_REPASO = ['texto', 'web'] en src/lib/lecciones.js.
+  En el aula: FuentesLeccion (export de TextoLeccion.jsx) debajo del texto / de la página, y luego RepasoLeccion.

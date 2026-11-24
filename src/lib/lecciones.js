@@ -37,8 +37,48 @@ export const falta = (error, codigo) => error?.code === codigo || (codigo === '4
 export async function cargarContenidos(ids) {
   if (!ids.length) return { data: [], error: null };
   const consulta = (columnas) => supabase.from('leccion_contenido').select(columnas).in('leccion_id', ids);
+  // `fuentes` y `repaso` (preguntas al final) llegan con leccion-repaso-fuentes.sql.
+  const completa = await consulta(`${COLUMNAS_CONTENIDO}, enlace, fuentes, repaso`);
+  if (!completa.error || !(falta(completa.error, '42703') || faltaRepaso(completa.error))) return completa;
   const res = await consulta(`${COLUMNAS_CONTENIDO}, enlace`);
   return falta(res.error, '42703') ? consulta(COLUMNAS_CONTENIDO) : res;
+}
+
+/** Las columnas `fuentes` / `repaso` todavía no existen (falta correr leccion-repaso-fuentes.sql). */
+export const faltaRepaso = (error) => ['42703', 'PGRST204'].includes(error?.code) && /repaso|fuentes/.test(error?.message || '');
+
+/** Lecciones que llevan fuentes y preguntas de repaso al final. */
+export const TIPOS_CON_REPASO = ['texto', 'web'];
+
+/** Preguntas de repaso válidas: con texto, al menos dos opciones y una correcta. */
+export const repasoValido = (lista) => (Array.isArray(lista) ? lista : [])
+  .map((p) => {
+    // Las opciones vacías se quitan; la correcta se recorre con ellas.
+    const crudas = (Array.isArray(p?.opciones) ? p.opciones : []).map((o) => String(o || '').trim());
+    const correcta = Number(p?.correcta) || 0;
+    return {
+      pregunta: String(p?.pregunta || '').trim(),
+      opciones: crudas.filter(Boolean),
+      correcta: crudas[correcta] ? crudas.slice(0, correcta).filter(Boolean).length : -1,
+      explicacion: String(p?.explicacion || '').trim(),
+    };
+  })
+  .filter((p) => p.pregunta && p.opciones.length >= 2 && p.correcta >= 0);
+
+/** Qué le falta a una pregunta de repaso escrita a medias ('' si todo está bien). */
+export function problemaRepaso(lista) {
+  const preguntas = Array.isArray(lista) ? lista : [];
+  for (let i = 0; i < preguntas.length; i += 1) {
+    const p = preguntas[i] || {};
+    const opciones = (p.opciones || []).map((o) => String(o || '').trim());
+    const tieneAlgo = String(p.pregunta || '').trim() || opciones.some(Boolean) || String(p.explicacion || '').trim();
+    if (!tieneAlgo) continue;
+    const n = i + 1;
+    if (!String(p.pregunta || '').trim()) return `Escribe el texto de la pregunta de repaso ${n} (o quítala).`;
+    if (opciones.filter(Boolean).length < 2) return `La pregunta de repaso ${n} necesita al menos dos opciones.`;
+    if (!opciones[p.correcta]) return `Marca cuál es la respuesta correcta de la pregunta de repaso ${n}.`;
+  }
+  return '';
 }
 
 /** El video de una lección: YouTube va en su columna de siempre; lo demás, en `enlace`. */

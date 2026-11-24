@@ -41,7 +41,8 @@ import { cargarReglasCurso, cargarMiApertura, venceAcceso, cursoTerminado, REGLA
 import { leerVistaAlumno, fijarVistaAlumno } from '../lib/vista';
 import { FranjaVistaAlumno } from '../components/CambioVista';
 import { detectarVideo, detectarPagina, midePorcentaje, crearReproductorVimeo, adaptarVideoHtml } from '../lib/videos';
-import TextoLeccion from '../components/TextoLeccion';
+import TextoLeccion, { FuentesLeccion } from '../components/TextoLeccion';
+import RepasoLeccion from '../components/RepasoLeccion';
 import NotasLeccion from '../components/NotasLeccion';
 import BotonSinConexion from '../components/BotonSinConexion';
 import { emitirCertificado, generarImagenCertificado, descargarArchivo } from '../lib/certificados';
@@ -2159,6 +2160,8 @@ const Classroom = () => {
                     ) : (
                       <div className="video-loading-placeholder">Esta lección todavía no tiene página.</div>
                     )}
+                    <FuentesLeccion fuentes={leccionActual.contenido?.fuentes} />
+                    <RepasoLeccion key={leccionActual.id} preguntas={leccionActual.contenido?.repaso} />
                   </div>
                 )}
 
@@ -2167,6 +2170,7 @@ const Classroom = () => {
                     {leccionActual.contenido?.texto
                       ? <TextoLeccion texto={leccionActual.contenido.texto} />
                       : <p className="leccion-vacia">Esta lección todavía no tiene contenido.</p>}
+                    <FuentesLeccion fuentes={leccionActual.contenido?.fuentes} />
                     {leccionActual.contenido?.texto && (
                       <BotonSinConexion
                         id={`${course.id}:${leccionActual.id}:texto`}
@@ -2175,6 +2179,7 @@ const Classroom = () => {
                         notificar={showToast}
                       />
                     )}
+                    <RepasoLeccion key={leccionActual.id} preguntas={leccionActual.contenido?.repaso} />
                   </div>
                 )}
 

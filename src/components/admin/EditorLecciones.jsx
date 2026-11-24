@@ -2,13 +2,15 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ChevronDown, ChevronRight, Edit, Plus, Trash2, Upload, PlayCircle, ListChecks, Users, RefreshCw, Copy, CheckCircle2, AlertTriangle, Loader2, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { esTablaFaltante, llamarClonar } from '../../lib/cursos';
-import { TIPOS_LECCION, cargarContenidos, videoDeLeccion, falta } from '../../lib/lecciones';
+import { TIPOS_LECCION, cargarContenidos, videoDeLeccion, falta, faltaRepaso, repasoValido, problemaRepaso, TIPOS_CON_REPASO } from '../../lib/lecciones';
 import { detectarVideo, detectarPagina, extraerEnlace } from '../../lib/videos';
 import EditorEvaluacion from './EditorEvaluacion';
 import AsistenciaSesion from './AsistenciaSesion';
 import PanelLateral from './PanelLateral';
 import SelectorTipoLeccion from './SelectorTipoLeccion';
 import VistaEnlace from './VistaEnlace';
+import EditorTextoFormato from './EditorTextoFormato';
+import EditorRepaso from './EditorRepaso';
 import { ListaOrdenable, ElementoOrdenable, AsaArrastre } from './Ordenable';
 import { ICONOS_LECCION } from './tiposLeccion';
 import { moverEnLista, cambiosDeOrden, aplicarCambios, seccionDeLeccion } from './ordenLecciones';
@@ -20,7 +22,8 @@ import './AdminLms.css';
 // políticas solo lo permiten a administradores).
 
 const FALTA_MIGRACION = 'Para usar videos de Vimeo u otras plataformas y páginas web, corre en Supabase la migración lms-enlaces.sql.';
-const FALTA_EVALUACIONES = 'Para exámenes, encuestas y secciones corre en Supabase la migración lms-evaluaciones.sql.';
+const FALTA_REPASO = 'Para guardar fuentes y preguntas de repaso, corre en Supabase la migración leccion-repaso-fuentes.sql.';
+const FALTA_EVALUACIONES ='Para exámenes, encuestas y secciones corre en Supabase la migración lms-evaluaciones.sql.';
 const TIPOS_NUEVOS = ['examen', 'encuesta', 'seccion', 'sesion'];
 const esEvaluacion = (tipo) => tipo === 'examen' || tipo === 'encuesta';
 
@@ -35,6 +38,9 @@ const leccionVacia = (tipo = 'video') => ({
   enlace: '',
   archivo_path: '',
   texto: '',
+  // Fuentes y preguntas de repaso al final de una lectura o página web
+  fuentes: '',
+  repaso: [],
   // Sesión en vivo
   inicia_local: '',
   duracion_sesion: 60,
@@ -52,6 +58,8 @@ const formularioDe = (l) => ({
   texto: l.texto || '',
   video: videoDeLeccion(l),
   enlace: l.enlace || '',
+  fuentes: l.fuentes || '',
+  repaso: Array.isArray(l.repaso) ? l.repaso : [],
   inicia_local: aInputLocal(l.sesion?.inicia_en),
   duracion_sesion: l.sesion?.duracion_min ?? 60,
   minutos_minimos: l.sesion?.minutos_minimos ?? 0,
@@ -269,6 +277,13 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
       notificar('Ese enlace no es válido. Debe empezar con https://', 'error');
       return;
     }
+    if (TIPOS_CON_REPASO.includes(editando.tipo)) {
+      const incompleta = problemaRepaso(editando.repaso);
+      if (incompleta) {
+        notificar(incompleta, 'error');
+        return;
+      }
+    }
 
     setGuardando(true);
     // Es nueva si no tiene id, o si la fila se creó en un intento anterior que
@@ -326,7 +341,20 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
         enlace,
         actualizado_en: new Date().toISOString(),
       };
+      const conRepaso = TIPOS_CON_REPASO.includes(editando.tipo);
+      const repaso = conRepaso ? repasoValido(editando.repaso) : [];
+      const fuentes = conRepaso ? (editando.fuentes || '').trim() : '';
+      // Solo se mandan las columnas si hay algo o ya había: así no hace falta
+      // la migración para quien no las usa.
+      if (repaso.length || editando.repaso?.length || original?.repaso?.length) contenido.repaso = repaso.length ? repaso : null;
+      if (fuentes || original?.fuentes) contenido.fuentes = fuentes || null;
       let { error: errContenido } = await supabase.from('leccion_contenido').upsert([contenido], { onConflict: 'leccion_id' });
+      if (errContenido && faltaRepaso(errContenido)) {
+        if (repaso.length || fuentes) throw new Error(FALTA_REPASO);
+        delete contenido.repaso;
+        delete contenido.fuentes;
+        ({ error: errContenido } = await supabase.from('leccion_contenido').upsert([contenido], { onConflict: 'leccion_id' }));
+      }
       // Antes de lms-enlaces.sql no existe la columna: si no se necesita, se guarda sin ella.
       if (errContenido && (falta(errContenido, 'PGRST204') || falta(errContenido, '42703'))) {
         if (enlace) throw new Error(FALTA_MIGRACION);
@@ -878,16 +906,39 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
         {['texto', 'tarea', 'web', 'examen', 'encuesta', 'sesion'].includes(editando.tipo) && (
           <div className="crm-input-group">
             <label htmlFor="leccion-texto">{ETIQUETA_TEXTO[editando.tipo]}</label>
-            <textarea id="leccion-texto" rows={['web', 'examen', 'encuesta', 'sesion'].includes(editando.tipo) ? 4 : 10} value={editando.texto} onChange={cambiar('texto')} className="lms-textarea"
+            <EditorTextoFormato
+              id="leccion-texto"
+              rows={['web', 'examen', 'encuesta', 'sesion'].includes(editando.tipo) ? 5 : 12}
+              value={editando.texto}
+              onChange={(valor) => setEditando({ ...editando, texto: valor })}
               placeholder={editando.tipo === 'texto'
-                ? '# Título\n\nUn párrafo de texto.\n\n- Una viñeta\n- Otra viñeta\n\n**Negritas** y [un enlace](https://…)'
+                ? 'Escribe o pega aquí la lectura. Usa los botones de arriba para dar formato.'
                 : editando.tipo === 'web'
                   ? 'Qué debe hacer el alumno con esta página.'
                   : editando.tipo === 'tarea'
                     ? 'Describe qué tiene que entregar el alumno y cómo se evalúa.'
-                    : 'Lo que el alumno lee antes de empezar.'} />
-            <small>Formato: <code># Título</code>, <code>## Subtítulo</code>, <code>- viñeta</code>, <code>**negritas**</code>, <code>*cursiva*</code>, <code>[texto](https://enlace)</code>. Línea en blanco para separar párrafos.</small>
+                    : 'Lo que el alumno lee antes de empezar.'}
+            />
           </div>
+        )}
+
+        {TIPOS_CON_REPASO.includes(editando.tipo) && (
+          <div className="crm-input-group">
+            <label htmlFor="leccion-fuentes">Fuentes <span className="lms-opcional">(opcional)</span></label>
+            <textarea
+              id="leccion-fuentes"
+              rows={3}
+              className="lms-textarea"
+              value={editando.fuentes}
+              onChange={(e) => setEditando({ ...editando, fuentes: e.target.value })}
+              placeholder={`Una por línea. Ej.:\nELSO Guidelines https://www.elso.org/ecmo-resources/elso-ecmo-guidelines.aspx`}
+            />
+            <small>Pega solo las ligas, una por línea (puedes poner el nombre antes). El alumno las ve al final como enlaces.</small>
+          </div>
+        )}
+
+        {TIPOS_CON_REPASO.includes(editando.tipo) && (
+          <EditorRepaso value={editando.repaso} onChange={(repaso) => setEditando((ed) => ({ ...ed, repaso }))} />
         )}
 
         {esEvaluacion(editando.tipo) && !editando.id && (

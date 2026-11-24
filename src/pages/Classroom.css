@@ -1058,7 +1058,7 @@
 
 .leccion-cabecera p {
   margin: 8px 0 0;
-  max-width: 70ch;
+  max-width: none;
   color: var(--aula-secundario, #475569);
   line-height: 1.55;
 }
@@ -1094,9 +1094,10 @@
   color: var(--aula-muted, #94a3b8);
 }
 
-/* Lectura: columna de texto a medida de lectura cómoda. */
+/* Lectura: ocupa todo el ancho del área de la lección (antes 70ch, que se
+   veía como una columna angosta junto a la página web). */
 .texto-leccion {
-  max-width: 70ch;
+  max-width: none;
   color: var(--aula-texto, #1e293b);
   font-size: 1rem;
   line-height: 1.7;
@@ -1121,6 +1122,13 @@
 .texto-leccion ol { margin: 0 0 1em; padding-left: 1.4em; }
 .texto-leccion li { margin-bottom: 0.35em; }
 .texto-leccion a { color: var(--aula-acento, #0e7490); font-weight: 600; }
+
+/* Fuentes al final de la lectura o de la página web. */
+.fuentes-leccion { margin-top: 8px; padding: 14px 16px; border-left: 3px solid var(--aula-acento, #0e7490); border-radius: 0 12px 12px 0; background: var(--aula-suave, #f4f7fb); color: var(--aula-texto, #1e293b); }
+.fuentes-leccion h4 { margin: 0 0 6px; font-size: .9rem; text-transform: uppercase; letter-spacing: .04em; color: var(--aula-muted, #64748b); }
+.fuentes-leccion ul { display: grid; gap: 6px; margin: 0; padding-left: 1.2em; font-size: .9rem; line-height: 1.5; }
+.fuentes-leccion li { overflow-wrap: anywhere; }
+.fuentes-leccion a { color: var(--aula-acento, #0e7490); font-weight: 600; }
 
 /* Tarea */
 .leccion-tarea h3 {

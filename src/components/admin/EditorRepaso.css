@@ -1,0 +1,53 @@
+/* Preguntas de repaso de una lectura (src/components/admin/EditorRepaso.jsx). */
+.erp {
+  display: grid; gap: 12px; margin: 4px 0 14px; padding: 14px;
+  border: 1px dashed var(--border-color); border-radius: 10px; background: var(--bg-gray);
+}
+.erp-encabezado { display: flex; gap: 10px; align-items: flex-start; color: var(--primary-cyan); }
+.erp-encabezado svg { flex: none; margin-top: 2px; }
+.erp-encabezado h4 { margin: 0 0 4px; font-size: .95rem; color: var(--text-dark); }
+.erp-encabezado h4 span, .erp-opciones legend span, .erp-etiqueta span { font-weight: 400; color: var(--text-muted); }
+.erp-encabezado p { margin: 0; font-size: .8rem; line-height: 1.5; color: var(--text-muted); }
+
+.erp-pregunta {
+  display: grid; gap: 8px; padding: 12px;
+  border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main);
+}
+.erp-pregunta-cabeza { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.erp-pregunta-cabeza label { font-weight: 700; font-size: .85rem; color: var(--text-dark); }
+.erp-pregunta textarea { width: 100%; }
+
+.erp-opciones { display: grid; gap: 6px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.erp-opciones legend { margin-bottom: 4px; padding: 0; font-size: .8rem; font-weight: 600; color: var(--text-dark); }
+.erp-opcion { display: flex; align-items: center; gap: 6px; }
+.erp-opcion input, .erp-explicacion {
+  flex: 1; min-width: 0; width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 8px;
+  background: var(--bg-main); color: var(--text-dark); font: inherit; font-size: .88rem;
+}
+.erp-opcion.correcta input { border-color: #16a34a; background: rgba(22, 163, 74, .06); }
+.erp-marcar {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+  border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); cursor: pointer;
+}
+.erp-opcion.correcta .erp-marcar { color: #16a34a; }
+.erp-marcar:hover { background: var(--bg-gray); }
+.erp-quitar {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;
+  border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;
+}
+.erp-quitar:hover { background: rgba(220, 38, 38, .08); color: #dc2626; }
+.erp-marcar:focus-visible, .erp-quitar:focus-visible, .erp-agregar-opcion:focus-visible { outline: 2px solid var(--primary-cyan); outline-offset: 1px; }
+.erp-agregar-opcion {
+  justify-self: start; display: inline-flex; align-items: center; gap: 4px; margin-left: 42px; padding: 4px 8px;
+  border: 0; border-radius: 6px; background: transparent; color: var(--primary-cyan); font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer;
+}
+.erp-agregar-opcion:hover { background: var(--bg-gray); }
+.erp-etiqueta { font-size: .8rem; font-weight: 600; color: var(--text-dark); }
+.erp-agregar { justify-self: start; }
+
+@media (max-width: 480px) {
+  .erp { padding: 10px; }
+  .erp-pregunta { padding: 10px; }
+  .erp-agregar-opcion { margin-left: 0; }
+}
+.lms-opcional { font-weight: 400; color: var(--text-muted); }
