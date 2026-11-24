@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { INSCRIPCIONES_PARIS_CERRADAS } from '../lib/cierreParis';
+import { FAQ_NURSING_TEXTO } from '../data/nursing';
 import './FAQSection.css';
 
 const FAQ_NURSING = [
@@ -67,13 +68,16 @@ const FAQ_NURSING = [
     q: '¿Cuáles son los métodos de pago y opciones de financiamiento?',
     a: (
       <ul>
-        <li>Pago en línea 100% seguro con tarjeta de crédito o débito directamente en nuestro portal web.</li>
-        <li>Transferencias bancarias directas.</li>
-        <li>Planes de financiamiento en parcialidades mensuales (disponibles para participantes en México).</li>
-        <li>Precios especiales para grupos: ofrecemos tarifas preferenciales para instituciones, hospitales o grupos de colegas.</li>
+        <li>Pago en línea 100% seguro con tarjeta de crédito o débito, en pesos (MXN) o en dólares (USD).</li>
+        <li>Transferencia bancaria: escríbenos por WhatsApp y te compartimos los datos.</li>
+        <li>Factura CFDI 4.0 disponible en healthcareexp.com/facturacion.</li>
+        <li><strong>Grupos e instituciones:</strong> escríbenos y te ayudamos con la inscripción de tu equipo.</li>
       </ul>
     ),
   },
+  // Fechas, precio, clases grabadas, profesores, documento y factura: salen de
+  // src/data/nursing.js (lo mismo que lee Google).
+  ...FAQ_NURSING_TEXTO.map((f) => ({ q: f.pregunta, a: f.respuesta })),
   {
     q: '¿Por qué el cupo es estrictamente limitado?',
     a: 'Debido a que el éxito del profesional de enfermería en ECMO depende enteramente de la destreza manual y la rápida toma de decisiones, los talleres de simulación clínica se realizan en grupos pequeños. Esto garantiza que pases el máximo tiempo interactuando con el circuito y recibas retroalimentación personalizada de los instructores internacionales.',

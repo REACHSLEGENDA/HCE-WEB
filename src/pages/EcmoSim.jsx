@@ -17,7 +17,7 @@ const EcmoSim = () => {
   const { showToast } = useNotification();
   useSEO({
     title: 'ECMO Sim - Simulador Clínico',
-    description: 'ECMO Sim es el simulador clínico virtual 100% online diseñado para profesionales de la salud. Recrea una UCI real en 3D para dominar el soporte ECMO.',
+    description: 'ECMO SIM es el simulador clínico 100% virtual diseñado para profesionales de la salud: una terapia intensiva en 3D con un paciente en ECMO cuyas constantes reaccionan a cada decisión.',
     keywords: 'ECMO Sim, simulador clínico, simulador médico, UCI virtual, soporte extracorpóreo, videojuego médico, simulación médica 3D'
   });
 
@@ -231,7 +231,7 @@ const EcmoSim = () => {
               ECMO <span className="sim-neon-text">Sim.</span>
             </h1>
             <p className="sim-subtitle">
-              Toma el control de la Unidad de Cuidados Intensivos. Interactúa con dispositivos de alta complejidad —desde ventiladores mecánicos hasta consolas de ECMO— con un nivel de realismo que te hará sentir dentro de la unidad.
+              Toma el control de la Unidad de Cuidados Intensivos. Atiende a un paciente en ECMO cuyas constantes reaccionan a cada decisión que tomas, con un nivel de realismo que te hará sentir dentro de la unidad.
               <br /><br />
               <strong>El videojuego de los profesionales de la salud.</strong>
             </p>
@@ -271,7 +271,7 @@ const EcmoSim = () => {
               <div className="sim-f-content">
                 <div className="sim-icon-wrapper"><MonitorPlay size={28} /></div>
                 <h3>Entorno 3D Inmersivo</h3>
-                <p>Navega por una unidad de cuidados intensivos detallada. Interactúa con las bombas, el ventilador y la consola ECMO como si estuvieras allí.</p>
+                <p>Navega por una unidad de cuidados intensivos detallada. Atiende a tu paciente en ECMO y toma decisiones en tiempo real como si estuvieras allí.</p>
                 <button onClick={() => setIsModalOpen(true)} className="btn-gaming-sm mt-4">
                   Desbloquea el Simulador
                 </button>

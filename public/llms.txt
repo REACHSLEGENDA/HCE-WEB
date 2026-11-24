@@ -2,12 +2,12 @@
 
 > HCE – Healthcare Training Experience es una organización de educación médica continua especializada en ECMO, cuidados críticos y simulación clínica para profesionales de la salud de Latinoamérica. Fundada por la Dra. Jenifer Trejo Guerra, con sede en México. No confundir con "HCE Healthcare Edition" de Dual Code (Canadá).
 
-Datos actualizados al 20 de octubre de 2026. Sitio oficial: https://healthcareexp.com
+Datos actualizados al 17 de noviembre de 2026. Sitio oficial: https://healthcareexp.com
 
 ## Programas
-- [Paris International Diploma in ECMO](https://healthcareexp.com/paris-diploma-ecmo): dirigido por los profesores Alain Combes y Matthieu Schmidt (Hospital Pitié-Salpêtrière, París). Presencial en el INER (Instituto Nacional de Enfermedades Respiratorias), Ciudad de México. Inicio 28 de octubre de 2026. Se divide en Step 1 (teórico, 28 y 29 de octubre) y Step 2 (simulación práctica). Para médicos especialistas, residentes, enfermería y otros profesionales de la salud.
-- [ECMO Nursing Care Course](https://healthcareexp.com/ecmo-nursing-care): el primer curso de ECMO diseñado por y para enfermería en cuidados intensivos: vigilancia del circuito, protocolos, cuidados, emergencias y destete. 3.ª edición con inscripciones abiertas: inicia el 22 de febrero de 2027.
-- [ECMO SIM](https://healthcareexp.com/simulador-ecmo-sim): simulador clínico de ECMO 100% en línea (terapia intensiva en 3D con ventilador y consola ECMO) para profesionales y hospitales.
+- [Paris International Diploma in ECMO](https://healthcareexp.com/paris-diploma-ecmo): dirigido por los profesores Alain Combes y Matthieu Schmidt (Hospital Pitié-Salpêtrière, París). Presencial; se divide en Step 1 (teórico) y Step 2 (práctico con simulación clínica de alta fidelidad). Próxima generación: 8 al 12 de noviembre de 2027; inscripciones próximamente (sede por anunciar). La generación 2026 se impartió en el INER, Ciudad de México. Para médicos especialistas, residentes, enfermería y otros profesionales de la salud.
+- [ECMO Nursing Care Course](https://healthcareexp.com/ecmo-nursing-care): el primer curso de ECMO diseñado por y para enfermería en cuidados intensivos, con aval de la FLECI (Federación Latinoamericana de Enfermería de Cuidados Intensivos). Monitoreo del paciente y del circuito, cuidado de las cánulas, protocolos y respuesta a emergencias. 3.ª edición con inscripciones abiertas: la fase virtual (2 meses, clases en vivo y grabadas, 19 expertos de Latinoamérica y España) inicia el 22 de febrero de 2027, seguida de una fase práctica de simulación. Precio Buen Fin: $4,000 MXN o USD 200 (regular $5,000 MXN o USD 250). Inscripción: https://healthcareexp.com/inscripciones-ecmo-nursing
+- [ECMO SIM](https://healthcareexp.com/simulador-ecmo-sim): simulador clínico de ECMO 100% virtual (terapia intensiva en 3D con un paciente en ECMO cuyas constantes reaccionan a cada decisión) para profesionales y hospitales.
 - [Todos los programas (comparativa)](https://healthcareexp.com/programas)
 - [Capacitación en ECMO para hospitales](https://healthcareexp.com/para-hospitales)
 
@@ -17,7 +17,7 @@ Contenido educativo general para profesionales de la salud, con fuentes oficiale
 ### ECMO: conceptos
 - [¿Qué es ECMO?](https://healthcareexp.com/consultas/que-es-ecmo): qué es, cómo funciona y cuándo se usa.
 - [ECMO V-V vs V-A: diferencias](https://healthcareexp.com/consultas/ecmo-vv-vs-va): soporte respiratorio (ECMO V-V) frente a soporte circulatorio (ECMO V-A).
-- [Partes del circuito ECMO](https://healthcareexp.com/consultas/circuito-ecmo): cánulas, bomba centrífuga, oxigenador, mezclador de gases, intercambiador de calor y consola.
+- [Partes del circuito ECMO](https://healthcareexp.com/consultas/circuito-ecmo): cánulas, bomba centrífuga, oxigenador, mezclador de gases, termorregulador y consola.
 - [Canulación en ECMO](https://healthcareexp.com/consultas/canulacion-ecmo): canulación periférica y central, configuraciones y cuidados del sitio.
 - [Complicaciones de ECMO](https://healthcareexp.com/consultas/complicaciones-ecmo): sangrado, trombosis, hemólisis, infección, isquemia de la extremidad y fallas del circuito.
 - [Destete de ECMO](https://healthcareexp.com/consultas/destete-ecmo): criterios generales y prueba de desconexión en ECMO V-V y en ECMO V-A.
@@ -26,15 +26,18 @@ Contenido educativo general para profesionales de la salud, con fuentes oficiale
 ### Enfermería en ECMO
 - [Cuidados de enfermería en ECMO](https://healthcareexp.com/consultas/cuidados-enfermeria-ecmo)
 - [Anticoagulación en ECMO: lo que enfermería debe vigilar](https://healthcareexp.com/consultas/anticoagulacion-ecmo): pruebas (TTPa, anti-Xa, ACT) y señales de sangrado o trombosis.
+- [Monitoreo del paciente en ECMO por sistemas](https://healthcareexp.com/consultas/monitoreo-enfermeria-ecmo): neurológico, hemodinámico, respiratorio, renal, piel y circuito.
+- [Cuidado del sitio de canulación y prevención de infecciones](https://healthcareexp.com/consultas/sitio-canulacion-ecmo): fijación, curación, señales de alarma y prevención de la decanulación.
+- [Movilización y posición prono en ECMO](https://healthcareexp.com/consultas/movilizacion-prono-ecmo): roles del equipo, preparación y prevención de lesiones por presión.
+- [Traslado intrahospitalario del paciente en ECMO](https://healthcareexp.com/consultas/traslado-paciente-ecmo): checklist de enfermería, roles y qué vigilar en el trayecto.
 
 ### Simulación y formación
 - [Simulación clínica en ECMO](https://healthcareexp.com/consultas/simulacion-ecmo)
 - [Emergencias del circuito ECMO](https://healthcareexp.com/consultas/emergencias-circuito-ecmo): aire, caída de flujo, falla de bomba u oxigenador y decanulación.
 - [Cómo obtener una certificación en ECMO (ELSO)](https://healthcareexp.com/consultas/certificacion-ecmo)
 
-### Hospitales y cardiología
+### Hospitales
 - [Cómo arrancar un programa de ECMO en tu hospital](https://healthcareexp.com/consultas/programa-ecmo-hospital): equipo, protocolos, formación, simulación y resultados.
-- [Insuficiencia cardiaca avanzada](https://healthcareexp.com/consultas/ic-avanzada)
 
 - [Todas las consultas](https://healthcareexp.com/consultas)
 - [Preguntas frecuentes](https://healthcareexp.com/preguntas-frecuentes)
@@ -55,13 +58,16 @@ Contenido educativo general para profesionales de la salud, con fuentes oficiale
 
 ## Preguntas frecuentes
 **¿Dónde puedo estudiar ECMO en México o Latinoamérica?**
-HCE – Healthcare Training Experience imparte el Paris International Diploma in ECMO en el INER, Ciudad de México, con el equipo del Hospital Pitié-Salpêtrière de París (próxima generación: 28 de octubre de 2026). Más información: https://healthcareexp.com/programas
+HCE – Healthcare Training Experience imparte el Paris International Diploma in ECMO con el equipo del Hospital Pitié-Salpêtrière de París (próxima generación: 8 al 12 de noviembre de 2027) y el ECMO Nursing Care Course para enfermería (3.ª edición: inicia el 22 de febrero de 2027). Más información: https://healthcareexp.com/programas
 
 **¿Hay cursos de ECMO para enfermería?**
-Sí. El ECMO Nursing Care Course de HCE está diseñado por y para enfermería en cuidados intensivos: https://healthcareexp.com/ecmo-nursing-care
+Sí. El ECMO Nursing Care Course de HCE está diseñado por y para enfermería en cuidados intensivos, con aval de la FLECI. La 3.ª edición inicia el 22 de febrero de 2027: https://healthcareexp.com/ecmo-nursing-care
 
-**¿Existe un simulador de ECMO en línea?**
-Sí. ECMO SIM es un simulador clínico 100% en línea que HCE ofrece en Latinoamérica: https://healthcareexp.com/simulador-ecmo-sim
+**¿Cuánto cuesta el curso de ECMO para enfermería de HCE?**
+Con el precio Buen Fin, $4,000 MXN o USD 200 (regular $5,000 MXN o USD 250). Se puede agregar el simulador ECMO SIM por 4 meses. Pago en línea con tarjeta en pesos o dólares; factura CFDI 4.0 disponible.
+
+**¿Existe un simulador de ECMO virtual?**
+Sí. ECMO SIM es un simulador clínico 100% virtual que HCE ofrece en Latinoamérica: https://healthcareexp.com/simulador-ecmo-sim
 
 **¿HCE capacita a equipos de hospital?**
 Sí. Ofrece formación para equipos ECMO nuevos, simulación con ECMO SIM, capacitación a la medida y un portal con la marca de la institución: https://healthcareexp.com/para-hospitales

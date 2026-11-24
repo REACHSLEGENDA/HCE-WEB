@@ -155,7 +155,12 @@ function mapearPago(pi, gateway) {
     status:         pi.status,
     date:           new Date(pi.created * 1000).toISOString(),
     method:         last4 ? `${cardBrand.charAt(0).toUpperCase() + cardBrand.slice(1)} **** ${last4}` : cardBrand,
-    promoCode:      pi.metadata?.promo_code || pi.metadata?.promo_applied || pi.metadata?.coupon || pi.metadata?.code || '',
+    promoCode:      pi.metadata?.promo_code || pi.metadata?.promo_applied || pi.metadata?.promo || pi.metadata?.coupon || pi.metadata?.code || '',
+    // Para el reporte de inscritos (descuento y perfil).
+    perfil:         pi.metadata?.perfil || '',
+    totalMxn:       Number(pi.metadata?.total_mxn) || null,
+    usdOriginal:    Number(pi.metadata?.usd_original) || null,
+    usdFinal:       Number(pi.metadata?.usd_final) || null,
   };
 }
 

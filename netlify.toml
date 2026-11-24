@@ -81,6 +81,14 @@
   status = 301
   force = true
 
+# Consulta de insuficiencia cardiaca oculta por ahora (16 nov 2026): 302
+# porque volverá a publicarse.
+[[redirects]]
+  from = "/consultas/ic-avanzada"
+  to = "/consultas"
+  status = 302
+  force = true
+
 # Alguien llegó a /nosotros (enlace viejo): lleva a la página actual.
 [[redirects]]
   from = "/nosotros"

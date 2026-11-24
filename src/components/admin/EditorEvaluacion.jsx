@@ -400,6 +400,28 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
               <textarea id="pregunta-texto" autoFocus rows="3" className="lms-textarea" value={editando.texto} onChange={(e) => setEditando({ ...editando, texto: e.target.value })} placeholder="¿De qué depende la normalidad de una variable?" />
             </div>
 
+            {/* Una o varias respuestas: se cambia sin borrar la pregunta. Al pasar
+                a una sola, se queda la primera respuesta correcta marcada. */}
+            {['opcion', 'multiple'].includes(editando.tipo) && (
+              <div className="crm-input-group">
+                <span className="reglas-etiqueta">Tipo de respuesta</span>
+                <div className="lms-segmentos" role="radiogroup" aria-label="Tipo de respuesta">
+                  {[['opcion', esExamen ? 'Una correcta' : 'Una respuesta'], ['multiple', esExamen ? 'Varias correctas' : 'Varias respuestas']].map(([tipo, etiqueta]) => (
+                    <button
+                      key={tipo}
+                      type="button"
+                      role="radio"
+                      aria-checked={editando.tipo === tipo}
+                      className={editando.tipo === tipo ? 'activo' : ''}
+                      onClick={() => setEditando({ ...editando, tipo, correctas: tipo === 'opcion' ? editando.correctas.slice(0, 1) : editando.correctas })}
+                    >
+                      {etiqueta}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {editando.tipo !== 'abierta' && (
               <div className="crm-input-group">
                 <span className="reglas-etiqueta">

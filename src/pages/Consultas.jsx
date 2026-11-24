@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   ArrowRight, BookOpenCheck, Building2, ClipboardCheck, CreditCard, ExternalLink, FileCheck2, FileSearch,
-  GraduationCap, HeartPulse, Link2, Mail, MessageCircle, MonitorPlay, Plus, Search, ShieldCheck, Stethoscope, TriangleAlert, Users,
+  Gamepad2, GraduationCap, HeartPulse, Link2, Mail, MessageCircle, MonitorPlay, Plus, Search, ShieldCheck, Stethoscope, TriangleAlert, Users,
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -36,9 +36,25 @@ function IconoEcmo({ size = 24, strokeWidth = 2, ...props }) {
   );
 }
 
-const ICONOS = { ecmo: IconoEcmo, enfermeria: Stethoscope, formacion: GraduationCap, simulacion: MonitorPlay, ic: HeartPulse };
+const ICONOS = { ecmo: IconoEcmo, enfermeria: Stethoscope, formacion: GraduationCap, simulacion: Gamepad2, ic: HeartPulse };
 const ICONOS_BLOQUE = [FileSearch, ClipboardCheck, ShieldCheck, BookOpenCheck];
 const fecha = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+// Cada vez que un texto menciona un programa, su nombre lleva a su página.
+const ENLACES_PROGRAMA = [
+  ['ECMO Nursing Care Course', '/ecmo-nursing-care'],
+  ['Paris International Diploma in ECMO', '/paris-diploma-ecmo'],
+  ['Diploma Internacional de París en ECMO', '/paris-diploma-ecmo'],
+  ['Diploma de París', '/paris-diploma-ecmo'],
+  ['ECMO SIM', '/simulador-ecmo-sim'],
+  ['página Para hospitales', '/para-hospitales'],
+];
+const PATRON_ENLACES = new RegExp(`(${ENLACES_PROGRAMA.map(([nombre]) => nombre).join('|')})`, 'g');
+function conEnlaces(texto) {
+  return String(texto).split(PATRON_ENLACES).map((parte, i) => {
+    const ruta = ENLACES_PROGRAMA.find(([nombre]) => nombre === parte)?.[1];
+    return ruta ? <Link key={`${parte}-${i}`} to={ruta} className="cs-enlace-texto">{parte}</Link> : parte;
+  });
+}
 const sinAcentos = (t) => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 // Programa al que lleva una consulta, con su póster (la tarjeta con logo del
@@ -82,7 +98,7 @@ function Preguntas({ faqs }) {
       {faqs.map((f) => (
         <details key={f.pregunta}>
           <summary>{f.pregunta}</summary>
-          <p>{f.respuesta}</p>
+          <p>{conEnlaces(f.respuesta)}</p>
         </details>
       ))}
     </div>
@@ -127,7 +143,7 @@ function Tabla({ tabla }) {
 function Indice() {
   useSEO({
     title: 'Consultas de ECMO y medicina crítica',
-    description: 'Respuestas claras sobre ECMO, enfermería crítica, simulación clínica e insuficiencia cardiaca, con fuentes oficiales. Por el equipo académico de HCE.',
+    description: 'Respuestas claras sobre ECMO, enfermería crítica y simulación clínica, con fuentes oficiales. Por el equipo académico de HCE.',
   });
   const [q, setQ] = useState('');
   const [tema, setTema] = useState('');
@@ -263,7 +279,11 @@ function Ficha({ c }) {
             </aside>
           </div>
 
-          {c.revisor && <p className="cs-revisado">Revisado por {c.revisor}</p>}
+          {c.revisor && (
+            <p className="cs-revisado">
+              <ShieldCheck size={16} aria-hidden="true" /> Revisado por <Link to="/quienes-somos">{c.revisor}</Link>, fundadora de HCE · {fecha(c.actualizado)}
+            </p>
+          )}
         </div>
       </header>
 
@@ -282,7 +302,7 @@ function Ficha({ c }) {
         <div className="cs-contenido">
           <section id="respuesta-rapida" className="cs-respuesta">
             <p className="cs-eyebrow cs-eyebrow--claro">Respuesta rápida</p>
-            <p className="guia-respuesta">{c.respuestaRapida}</p>
+            <p className="guia-respuesta">{conEnlaces(c.respuestaRapida)}</p>
           </section>
 
           <section id="ficha-clinica" className="cs-bloque">
@@ -300,10 +320,10 @@ function Ficha({ c }) {
               <section key={s.id} id={s.id} className="cs-bloque cs-bloque--linea">
                 <p className="cs-num">BLOQUE_{String(i + 1).padStart(2, '0')}</p>
                 <h2 className="cs-h2-icono"><Icono size={24} aria-hidden="true" /> {s.titulo}</h2>
-                {(s.parrafos || []).map((p) => <p key={p} className="cs-parrafo">{p}</p>)}
+                {(s.parrafos || []).map((p) => <p key={p} className="cs-parrafo">{conEnlaces(p)}</p>)}
                 {s.puntos && (
                   <ul className="cs-puntos">
-                    {s.puntos.map((p) => <li key={p}><FileCheck2 size={18} aria-hidden="true" />{p}</li>)}
+                    {s.puntos.map((p) => <li key={p}><FileCheck2 size={18} aria-hidden="true" /><span>{conEnlaces(p)}</span></li>)}
                   </ul>
                 )}
                 {s.tabla && <Tabla tabla={s.tabla} />}
@@ -334,10 +354,12 @@ function Ficha({ c }) {
             );
           })}
 
-          <section className="cs-vision">
-            <h2 className="cs-h2-icono"><ShieldCheck size={26} aria-hidden="true" /> La visión del equipo académico</h2>
-            <p>{c.vision}</p>
-          </section>
+          {c.vision && (
+            <section className="cs-vision">
+              <h2 className="cs-h2-icono"><ShieldCheck size={26} aria-hidden="true" /> {c.visionTitulo || 'La visión del equipo académico'}</h2>
+              <p>{conEnlaces(c.vision)}</p>
+            </section>
+          )}
 
           <section className="cs-bloque cs-bloque--linea">
             <h2 className="cs-h2-icono"><Link2 size={22} aria-hidden="true" /> Consultas relacionadas</h2>
@@ -469,7 +491,7 @@ export function PreguntasFrecuentes() {
                           <Plus size={18} aria-hidden="true" className="cs-faq-mas" />
                         </summary>
                         <div className="cs-faq-respuesta">
-                          <p>{f.respuesta}</p>
+                          <p>{conEnlaces(f.respuesta)}</p>
                           {consulta && <Link to={`/consultas/${consulta.slug}`}>Leer la consulta: {consulta.tituloCorto} <ArrowRight size={14} aria-hidden="true" /></Link>}
                         </div>
                       </details>
@@ -598,7 +620,7 @@ export function ParaHospitales() {
   });
   const servicios = [
     { icono: Users, titulo: 'Equipos ECMO nuevos', texto: 'Formación para médicos, enfermería y perfusión que arrancan un programa de ECMO: bases, protocolos y trabajo en equipo.' },
-    { icono: MonitorPlay, titulo: 'Simulación con ECMO SIM', texto: 'Práctica en línea de decisiones y emergencias del circuito para todo el equipo, a su ritmo.' },
+    { icono: MonitorPlay, titulo: 'Simulación con ECMO SIM', texto: 'Nuestro simulador virtual ECMO SIM permite un entrenamiento inmersivo, adaptable a sesiones individuales o dinámicas de equipo. Con una capacidad técnica probada, hemos realizado simulaciones masivas y coordinadas con hasta 200 profesionales en tiempo real.' },
     { icono: Building2, titulo: 'Capacitación a la medida', texto: 'Programas según las necesidades de tu hospital: temas, fechas y número de participantes.' },
     { icono: GraduationCap, titulo: 'Portal propio para tu institución', texto: 'Tus profesionales entran a un portal con sus cursos, bibliografía científica y reportes de avance.' },
   ];

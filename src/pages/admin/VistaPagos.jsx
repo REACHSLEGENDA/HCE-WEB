@@ -1,4 +1,5 @@
 import ReporteVentas from '../../components/admin/ReporteVentas';
+import ReporteInscritos from '../../components/admin/ReporteInscritos';
 
 // Vista de administración: payments. Estado y operaciones permanecen en AdminDashboard.
 export default function VistaPagos({ contexto }) {
@@ -161,6 +162,12 @@ export default function VistaPagos({ contexto }) {
                     >
                       <Mail size={16} /> Formularios
                     </button>
+                    <button
+                      className={`tab-btn ${activePaymentsSubTab === 'inscritos' ? 'active' : ''}`}
+                      onClick={() => { setActivePaymentsSubTab('inscritos'); fetchRealFormSubmissions(); }}
+                    >
+                      <FileSpreadsheet size={16} /> Reporte de inscritos
+                    </button>
                   </div>
 
                   {activePaymentsSubTab === 'formspree' && (
@@ -189,8 +196,18 @@ export default function VistaPagos({ contexto }) {
                   />
                 )}
 
+                {activePaymentsSubTab === 'inscritos' && (
+                  <ReporteInscritos
+                    pagos={stripePayments}
+                    registros={formSubmissions}
+                    cargando={loadingPayments || loadingForms}
+                    onSincronizar={() => { fetchRealStripePayments(); fetchRealFormSubmissions(); }}
+                    notificar={showToast}
+                  />
+                )}
+
                 {/* FORMULARIOS */}
-                {activePaymentsSubTab !== 'stripe' && (
+                {activePaymentsSubTab === 'formspree' && (
                   <div className="sub-section-block">
                     <div className="table-actions-header" style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
                       <div style={{ display: 'flex', gap: '12px', flex: 1, flexWrap: 'wrap' }}>

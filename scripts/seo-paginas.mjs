@@ -82,9 +82,10 @@ function contenido(p) {
         cuerpo += `<p><em>${esc(s.nota)}</em>${enlace}</p>`;
       }
     }
-    cuerpo += `<h2>La visión del equipo académico</h2><p>${esc(c.vision)}</p>`;
+    if (c.vision) cuerpo += `<h2>${esc(c.visionTitulo || 'La visión del equipo académico')}</h2><p>${esc(c.vision)}</p>`;
     cuerpo += `<h2>Preguntas frecuentes</h2>${preguntas(c.faqs)}`;
     cuerpo += `<h2>Fuentes</h2><ul>${c.fuentes.map((f) => `<li><a href="${esc(f.url)}" rel="noopener">${esc(f.nombre)}</a></li>`).join('')}</ul>`;
+    if (c.revisor) cuerpo += `<p>Revisado por <a href="/quienes-somos">${esc(c.revisor)}</a>, fundadora de HCE.</p>`;
     cuerpo += `<p>Publicada el ${esc(c.publicado)} · actualizada el ${esc(c.actualizado)}. Contenido educativo para profesionales de la salud; no sustituye los protocolos institucionales.</p>`;
   }
   if (p.texto) {

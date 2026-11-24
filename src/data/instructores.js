@@ -12,7 +12,7 @@ export const INSTRUCTORES = [
     tag: "Intensivista · ECMO",
     linkedin: "https://www.linkedin.com/in/alain-combes-81534062/",
     courses: [
-      { name: "Diplomado de París ECMO", path: "/paris-diploma-ecmo" }
+      { name: "Certificación en ECMO", path: "/paris-diploma-ecmo" }
     ]
   },
   {
@@ -26,7 +26,7 @@ export const INSTRUCTORES = [
     tag: "UCI · EuroELSO",
     linkedin: "https://www.linkedin.com/in/matthieu-schmidt-b19b6748/",
     courses: [
-      { name: "Diplomado de París ECMO", path: "/paris-diploma-ecmo" }
+      { name: "Certificación en ECMO", path: "/paris-diploma-ecmo" }
     ]
   },
   {
@@ -40,7 +40,7 @@ export const INSTRUCTORES = [
     tag: "Simulación · Enfermería",
     linkedin: "https://www.linkedin.com/in/hugo-guillou-022067160/",
     courses: [
-      { name: "Diplomado de París ECMO", path: "/paris-diploma-ecmo" }
+      { name: "Certificación en ECMO", path: "/paris-diploma-ecmo" }
     ]
   },
   {
@@ -54,7 +54,7 @@ export const INSTRUCTORES = [
     tag: "Simulación · Enfermería",
     linkedin: "https://www.linkedin.com/in/emric-besnard-b8a786221/",
     courses: [
-      { name: "Diplomado de París ECMO", path: "/paris-diploma-ecmo" }
+      { name: "Certificación en ECMO", path: "/paris-diploma-ecmo" }
     ]
   },
 ];

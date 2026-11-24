@@ -8,15 +8,38 @@
 // `archivos` son las fuentes de cada página: su último commit es el lastmod
 // del sitemap. Cambia fechas y textos aquí cuando cambien en el sitio.
 
-import { AUTOR, CONSULTAS, FAQ_ECMO, FAQ_PROGRAMAS, PROGRAMAS_CTA } from './consultas.js';
+import { AUTOR, CONSULTAS, FAQ_ECMO, FAQ_PROGRAMAS, PROGRAMAS_CTA, REVISORA } from './consultas.js';
 import { DEFINICION_HCE, HOSPITALES_H1, HOSPITALES_TEXTO, PROGRAMAS, PROGRAMAS_H1, PROGRAMAS_TEXTO } from './programas.js';
 import { INSTRUCTORES } from './instructores.js';
+import { FAQ_NURSING_TEXTO, NURSING, precioNursing } from './nursing.js';
 
 export const SITIO = 'https://healthcareexp.com';
 export const NOMBRE = 'HCE – Healthcare Training Experience';
 const LOGO = `${SITIO}/icons/icon-512.png`;
 const OG = (archivo) => `${SITIO}/og/${archivo}`;
 const FOTO = (ruta) => `${SITIO}${ruta}`;
+
+// Fundadora, CEO y revisora médica de las consultas. Mismos datos que su
+// ficha en /quienes-somos (src/pages/AboutUs.jsx).
+export const JENIFER = {
+  '@type': 'Person',
+  '@id': `${SITIO}/quienes-somos#jenifer-trejo-guerra`,
+  name: 'Jenifer Trejo Guerra',
+  honorificPrefix: 'Dra.',
+  jobTitle: 'Fundadora y CEO de HCE – Healthcare Training Experience',
+  description: 'Médico cirujano por la Universidad Panamericana, especializada en ECMO y simulación clínica. Embajadora de ECMO SIM de Prático Santé para Latinoamérica.',
+  image: FOTO('/assets/aboutus/jenifer-trejo.webp'),
+  url: `${SITIO}/quienes-somos`,
+  alumniOf: { '@type': 'CollegeOrUniversity', name: 'Universidad Panamericana' },
+  knowsAbout: ['ECMO', 'Oxigenación por membrana extracorpórea', 'Simulación clínica', 'Cuidados críticos', 'Educación médica'],
+  hasCredential: [
+    'Certificación ECMO avalada por ELSO, EuroELSO y ELSO Norteamérica',
+    'Diplomado en ECMO por el Hôpital Pitié-Salpêtrière (París, Francia)',
+    'Certificación europea en simulación clínica (EuSim Level 1)',
+    'Diplomado en Educación de Profesionales de la Salud (UAQ y FLASIC)',
+  ].map((name) => ({ '@type': 'EducationalOccupationalCredential', name })),
+  worksFor: { '@id': `${SITIO}/#organizacion` },
+};
 
 export const ORGANIZACION = {
   '@type': 'EducationalOrganization',
@@ -35,7 +58,7 @@ export const ORGANIZACION = {
     '@type': 'ContactPoint', contactType: 'admisiones', telephone: '+52 56 5927 1906', email: 'academia@healthcareexp.com',
     availableLanguage: ['es', 'en'], areaServed: ['MX', 'Latinoamérica'],
   }],
-  founder: { '@type': 'Person', name: 'Dra. Jenifer Trejo Guerra' },
+  founder: { '@id': JENIFER['@id'], '@type': 'Person', name: 'Dra. Jenifer Trejo Guerra' },
   areaServed: [{ '@type': 'Country', name: 'México' }, { '@type': 'Place', name: 'Latinoamérica' }],
   knowsAbout: ['ECMO', 'Oxigenación por membrana extracorpórea', 'Enfermería en cuidados críticos', 'Simulación clínica', 'Cuidados críticos', 'Insuficiencia cardiaca avanzada'],
   sameAs: [
@@ -44,18 +67,6 @@ export const ORGANIZACION = {
     'https://www.tiktok.com/@hcetraining',
     'https://www.youtube.com/@HealthcareTrainingExperience',
   ],
-};
-
-const SEDE_INER = {
-  '@type': 'Place',
-  name: 'INER — Instituto Nacional de Enfermedades Respiratorias',
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: 'Calz. de Tlalpan 4502, Belisario Domínguez Secc 16',
-    addressLocality: 'Tlalpan, Ciudad de México',
-    postalCode: '14080',
-    addressCountry: 'MX',
-  },
 };
 
 const proveedor = { '@id': `${SITIO}/#organizacion` };
@@ -140,8 +151,8 @@ export const PAGINAS = [
   },
   {
     ruta: '/paris-diploma-ecmo',
-    titulo: 'Diploma Internacional París en ECMO | INER, Ciudad de México – HCE',
-    descripcion: 'Certifícate con los profesores Alain Combes y Matthieu Schmidt (Pitié-Salpêtrière, París). Inicio 28 de octubre de 2026 en el INER, CDMX. Temario, fechas e inscripción.',
+    titulo: 'Diploma Internacional París en ECMO | Certificación en ECMO – HCE',
+    descripcion: 'Certifícate con los profesores Alain Combes y Matthieu Schmidt (Pitié-Salpêtrière, París). Próxima generación: 8 al 12 de noviembre de 2027. Temario, profesores y fechas.',
     imagen: OG('paris.jpg'),
     prioridad: 0.9,
     h1: 'Paris International Diploma in ECMO — Diploma Internacional París en ECMO',
@@ -151,19 +162,19 @@ export const PAGINAS = [
       curso({
         nombre: 'Paris International Diploma in ECMO', descripcion: programa('paris').resumen, ruta: p.ruta, imagen: p.imagen,
         publico: programa('paris').publico,
-        instancias: [{ '@type': 'CourseInstance', courseMode: 'onsite', startDate: '2026-10-28', endDate: '2026-10-31', location: SEDE_INER,
+        instancias: [{ '@type': 'CourseInstance', courseMode: 'onsite', startDate: '2027-11-08', endDate: '2027-11-12',
           instructor: personas().filter((x) => /Combes|Schmidt/.test(x.name)) }],
       }),
       {
         '@type': 'Event',
-        name: 'Paris International Diploma in ECMO 2026',
+        name: 'Paris International Diploma in ECMO 2027',
         description: programa('paris').resumen,
         image: p.imagen,
-        startDate: '2026-10-28T08:00:00-06:00',
-        endDate: '2026-10-31T18:00:00-06:00',
+        startDate: '2027-11-08',
+        endDate: '2027-11-12',
         eventStatus: 'https://schema.org/EventScheduled',
         eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-        location: SEDE_INER,
+        // La sede 2027 todavía no se anuncia (decisión de la dirección).
         organizer: proveedor,
       },
       migas([{ nombre: 'Programas', ruta: '/programas' }, { nombre: 'Diploma de París en ECMO', ruta: p.ruta }]),
@@ -171,22 +182,33 @@ export const PAGINAS = [
   },
   {
     ruta: '/ecmo-nursing-care',
-    titulo: 'Curso ECMO para Enfermería | ECMO Nursing Care Course – HCE',
-    descripcion: 'El primer entrenamiento en ECMO diseñado por y para enfermería: cuidado del circuito, vigilancia, complicaciones y simulación. 3.ª edición: inicia el 22 de febrero de 2027.',
-    imagen: OG('nursing.jpg'),
+    titulo: 'Curso de ECMO para Enfermería 2027 | ECMO Nursing Care Course – HCE',
+    descripcion: 'Curso de ECMO diseñado por y para enfermería, con aval de la FLECI: monitoreo del paciente y del circuito, cánulas, emergencias y simulación. 3.ª edición: inicia el 22 de febrero de 2027. Inscripciones abiertas.',
+    imagen: OG('nursing-2027.jpg'),
     prioridad: 0.9,
     h1: 'Curso de ECMO para enfermería: ECMO Nursing Care Course',
     texto: fichaPrograma(programa('nursing')),
-    archivos: ['src/pages/Nursing.jsx', 'src/data/programas.js'],
+    faqs: FAQ_NURSING_TEXTO,
+    archivos: ['src/pages/Nursing.jsx', 'src/data/programas.js', 'src/data/nursing.js'],
     schema: (p) => [
-      curso({ nombre: 'ECMO Nursing Care Course', descripcion: programa('nursing').resumen, ruta: p.ruta, imagen: p.imagen, publico: programa('nursing').publico }),
+      {
+        ...curso({
+          nombre: 'ECMO Nursing Care Course', descripcion: programa('nursing').resumen, ruta: p.ruta, imagen: p.imagen, publico: programa('nursing').publico,
+          instancias: [{ '@type': 'CourseInstance', courseMode: 'blended', startDate: NURSING.inicio, courseWorkload: 'P2M', name: `ECMO Nursing Care Course — ${NURSING.edicion}` }],
+        }),
+        offers: {
+          '@type': 'Offer', category: 'Paid', price: precioNursing().mxn, priceCurrency: 'MXN',
+          availability: 'https://schema.org/InStock', url: `${SITIO}${NURSING.inscripcion}`,
+        },
+      },
+      faqSchema(FAQ_NURSING_TEXTO),
       migas([{ nombre: 'Programas', ruta: '/programas' }, { nombre: 'ECMO Nursing Care', ruta: p.ruta }]),
     ],
   },
   {
     ruta: '/simulador-ecmo-sim',
     titulo: 'ECMO SIM: Simulador ECMO para Entrenamiento Clínico | HCE',
-    descripcion: 'ECMO SIM: simulador clínico 100% en línea con ventilador y consola ECMO en una terapia intensiva 3D. Para profesionales y para hospitales que entrenan a su equipo.',
+    descripcion: 'ECMO SIM: simulador clínico 100% virtual que recrea una terapia intensiva en 3D con un paciente en ECMO. Para profesionales y para hospitales que entrenan a su equipo.',
     imagen: OG('ecmosim.jpg'),
     prioridad: 0.8,
     h1: 'ECMO SIM: simulador ECMO para entrenamiento clínico',
@@ -215,7 +237,7 @@ export const PAGINAS = [
   {
     ruta: '/consultas',
     titulo: 'Consultas de ECMO y medicina crítica | HCE',
-    descripcion: 'Respuestas claras sobre ECMO, enfermería crítica, simulación clínica e insuficiencia cardiaca, con fuentes oficiales. Por el equipo académico de HCE.',
+    descripcion: 'Respuestas claras sobre ECMO, enfermería crítica y simulación clínica, con fuentes oficiales. Por el equipo académico de HCE.',
     imagen: OG('guias.jpg'),
     prioridad: 0.8,
     h1: 'Consultas de ECMO y medicina crítica',
@@ -250,7 +272,7 @@ export const PAGINAS = [
         inLanguage: 'es',
         datePublished: c.publicado,
         dateModified: c.actualizado,
-        ...(c.revisor ? { lastReviewed: c.actualizado, reviewedBy: { '@type': 'Person', name: c.revisor } } : {}),
+        ...(c.revisor ? { lastReviewed: c.actualizado, reviewedBy: c.revisor === REVISORA ? JENIFER : { '@type': 'Person', name: c.revisor } } : {}),
         author: { '@type': 'Organization', name: AUTOR, url: `${SITIO}/` },
         publisher: proveedor,
         audience: { '@type': 'MedicalAudience', audienceType: 'Clinician' },
@@ -283,7 +305,7 @@ export const PAGINAS = [
     h1: 'Quiénes somos',
     texto: { respuesta: DEFINICION_HCE },
     archivos: ['src/pages/AboutUs.jsx'],
-    schema: (p) => [{ '@type': 'AboutPage', url: `${SITIO}${p.ruta}`, name: p.titulo, about: proveedor }, migas([{ nombre: 'Quiénes somos', ruta: p.ruta }])],
+    schema: (p) => [{ '@type': 'AboutPage', url: `${SITIO}${p.ruta}`, name: p.titulo, about: proveedor, mainEntity: { '@id': JENIFER['@id'] } }, JENIFER, migas([{ nombre: 'Quiénes somos', ruta: p.ruta }])],
   },
   {
     ruta: '/instructores',

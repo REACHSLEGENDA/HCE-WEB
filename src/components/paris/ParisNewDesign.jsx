@@ -678,20 +678,19 @@ const ParisNewDesign = () => {
                 </div>
             </section>
 
-            {/* SECTION 3.6: SEDE 2026 (REDESIGNED) */}
+            {/* SECTION 3.6: SEDE (2027 por anunciar) */}
             <section className="sede-section-v2" id="sede">
                 <div className="container">
                     <div className="sede-v2-grid">
-                        {/* Left: info */}
+                        {/* Left: info. Sede 2027 por anunciar (decisión de la dirección, 24 nov 2026). */}
                         <div className="sede-v2-info reveal">
                             <div className="sede-v2-top">
-                                <img src="/assets/componentes/lgo7-1.png" alt="INER" className="sede-v2-logo" />
-                                <span className="sede-v2-badge"><MapPin size={13} /> Ciudad de México</span>
+                                <span className="sede-v2-badge"><MapPin size={13} /> Latinoamérica</span>
                             </div>
-                            <h2 className="sede-v2-big-title">SEDE Octubre 2026</h2>
-                            <h3 className="sede-v2-title">Instituto Nacional de Enfermedades Respiratorias</h3>
-                            <p className="sede-v2-abbr">(INER)</p>
-                            
+                            <h2 className="sede-v2-big-title">SEDE 2027</h2>
+                            <h3 className="sede-v2-title">Sede por anunciar</h3>
+                            <p className="sede-v2-abbr">Muy pronto daremos a conocer la sede de la próxima generación.</p>
+
                             <div className="sede-v2-schedule" style={{
                                 display: 'flex',
                                 flexDirection: 'column',
@@ -706,31 +705,26 @@ const ParisNewDesign = () => {
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem', color: 'var(--primary)' }}>
                                     <Calendar size={16} style={{ color: '#0047ff' }} />
-                                    <span><strong>Fechas:</strong> 28 al 31 de Octubre 2026</span>
+                                    <span><strong>Fechas:</strong> 8 al 12 de noviembre de 2027</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem', color: 'var(--primary)' }}>
                                     <Clock size={16} style={{ color: '#0047ff' }} />
-                                    <span><strong>Horario:</strong> 8:00 AM a 6:00 PM (Todos los días)</span>
+                                    <span><strong>Inscripciones:</strong> próximamente</span>
                                 </div>
                             </div>
 
-                            <div className="sede-v2-addr">
-                                <MapPin size={16} />
-                                <span>Calz. de Tlalpan 4502, Belisario Domínguez Secc 16, Tlalpan, 14080 CDMX</span>
-                            </div>
                             <div className="sede-v2-actions">
-                                <a href="https://share.google/sHSrTC0wdg5BJAodK" target="_blank" rel="noopener noreferrer" className="btn btn-outline sede-v2-map-btn">
-                                    <ExternalLink size={16} /> Ver en Maps
+                                <a href="https://wa.me/525659271906?text=Hola%2C%20quiero%20que%20me%20avisen%20cuando%20abran%20las%20inscripciones%20del%20Diploma%20de%20Par%C3%ADs%202027." target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                                    Avísame cuando abran inscripciones
                                 </a>
-                                <LinkInscripcion to="/inscripciones-step1" className="btn btn-primary">Inscríbete ahora</LinkInscripcion>
                             </div>
                         </div>
 
                         {/* Right: image */}
                         <div className="sede-v2-img-wrap reveal">
-                            <img src="https://i0.wp.com/gaceta.facmed.unam.mx/wp-content/uploads/2021/03/edificio-de-gobierno.jpeg?resize=1024%2C475&ssl=1" alt="INER Sede 2026" className="sede-v2-img" />
+                            <img src="/consultas/simulacion-ecmo.webp" alt="Simulación con circuito de ECMO en el Diploma de París" className="sede-v2-img" loading="lazy" />
                             <div className="sede-v2-img-badge">
-                                <MapPin size={14} /> INER · CDMX · 2026
+                                <MapPin size={14} /> Sede por anunciar · 2027
                             </div>
                         </div>
                     </div>

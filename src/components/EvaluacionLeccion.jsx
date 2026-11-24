@@ -70,16 +70,18 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
   }, [datos, borradorInicial, intentos.length, claveBorrador, leccion.tipo]);
 
   useImperativeHandle(ref, () => ({
-    estadoSalida: () => ({ enviando: enviandoRef.current, sinGuardar: fase === 'respondiendo' && respondidas > 0 && !borradorGuardado }),
-  }), [fase, respondidas, borradorGuardado]);
+    // sinEnviar: ya contestó algo pero no ha enviado (el aula avisa antes de salir).
+    estadoSalida: () => ({ enviando: enviandoRef.current, sinGuardar: fase === 'respondiendo' && respondidas > 0 && !borradorGuardado, sinEnviar: fase === 'respondiendo' && respondidas > 0, tipo: esExamen ? 'examen' : 'encuesta' }),
+  }), [fase, respondidas, borradorGuardado, esExamen]);
 
   useEffect(() => {
     const salir = (e) => {
-      if (enviandoRef.current || (fase === 'respondiendo' && respondidas > 0 && !borradorGuardado)) { e.preventDefault(); e.returnValue = ''; }
+      // Aunque el borrador quede guardado, se avisa: lo que no se envía no cuenta.
+      if (enviandoRef.current || (fase === 'respondiendo' && respondidas > 0)) { e.preventDefault(); e.returnValue = ''; }
     };
     window.addEventListener('beforeunload', salir);
     return () => window.removeEventListener('beforeunload', salir);
-  }, [fase, respondidas, borradorGuardado]);
+  }, [fase, respondidas]);
 
   const guardarBorrador = (cambios = {}) => {
     const ok = guardarBorradorEvaluacion(claveBorrador, {
@@ -137,6 +139,17 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
     guardarBorrador({ respuestas: siguientes });
     setRespuestas(siguientes);
     if (faltan.includes(p.id)) setFaltan((f) => f.filter((x) => x !== p.id));
+    // Con un clic (opción única o escala), al quedar todo contestado pasa solo a
+    // la pantalla de envío. En varias respuestas o texto libre no, para no
+    // cortarle la respuesta a medias.
+    if (['opcion', 'escala'].includes(p.tipo) && !revisando && preguntas.every((x) => !x.obligatoria || contestada(x, siguientes[x.id]))) {
+      setTimeout(() => {
+        if (enviandoRef.current) return;
+        guardarBorrador({ respuestas: siguientes, revisando: true });
+        setRevisando(true);
+        setConfirmarSalir(false);
+      }, 400);
+    }
   };
 
   const alternarMultiple = (p, indice) => {
@@ -345,15 +358,6 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
               </li>
             );
           })}
-          <li>
-            <button
-              type="button"
-              className={`eval-mapa-punto eval-mapa-revision${revisando ? ' actual' : ''}`}
-              onClick={() => moverPregunta(indice, true)}
-            >
-              Revisar
-            </button>
-          </li>
         </ol>
 
         {!revisando ? (
@@ -365,7 +369,7 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
               </button>
               {esUltima ? (
                 <button type="button" className="back-btn leccion-btn-principal eval-nav-btn" onClick={() => moverPregunta(indice, true)}>
-                  Revisar respuestas <ListChecks size={16} />
+                  Continuar para enviar <ListChecks size={16} />
                 </button>
               ) : (
                 <button type="button" className="back-btn leccion-btn-principal eval-nav-btn" onClick={() => moverPregunta(indice + 1)}>
@@ -376,7 +380,8 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
           </>
         ) : (
           <div className="eval-revision-envio">
-            <h3>Revisa antes de enviar</h3>
+            <h3>{esExamen ? 'Revisa y envía tu examen' : 'Revisa y envía tu encuesta'}</h3>
+            <p className="eval-aviso-envio">Tus respuestas se guardan solo al dar clic en <strong>{esExamen ? 'Enviar examen' : 'Enviar encuesta'}</strong>.</p>
             {faltanObligatorias > 0 ? (
               <p className="eval-estado mal" role="status">
                 <XCircle size={18} /> Te {faltanObligatorias === 1 ? 'falta 1 pregunta' : `faltan ${faltanObligatorias} preguntas`} por contestar.
@@ -414,7 +419,7 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
         <div className="eval-salir">
           {confirmarSalir ? (
             <p role="alert">
-              ¿Salir sin enviar? Se perderán tus respuestas.{' '}
+              ¿Salir sin enviar? Tu {esExamen ? 'examen' : 'encuesta'} no se guardará.{' '}
               <button type="button" className="eval-enlace peligro" onClick={descartarBorrador}>Sí, salir</button>
               {' · '}
               <button type="button" className="eval-enlace" onClick={() => setConfirmarSalir(false)}>Seguir contestando</button>

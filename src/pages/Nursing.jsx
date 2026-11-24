@@ -114,13 +114,9 @@ const Nursing = () => {
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, []);
-  const [activeFaq, setActiveFaq] = useState(null);
   const facultyTrackRef = React.useRef(null);
   const lastInteractionRef = React.useRef(0);
 
-  const toggleFaq = (index) => {
-    setActiveFaq(activeFaq === index ? null : index);
-  };
 
   const handleScroll = (direction) => {
     if (facultyTrackRef.current) {
@@ -920,144 +916,7 @@ const Nursing = () => {
           </div>
         </div>
       </section>
-      {/* FAQ SECTION */}
-      <section className="n-sec-padding n-faq-section" id="faq-section">
-        <div className="n-faq-glow"></div>
-        <div className="hce-container">
-          <div className="n-sec-header center">
-            <span className="n-sec-badge">RESPUESTAS</span>
-            <h2 className="n-sec-title">Preguntas Frecuentes (FAQ)</h2>
-            <p className="n-sec-subtitle">Todo lo que necesitas saber sobre el ECMO Nursing Care Course.</p>
-          </div>
-
-          <div className="n-faq-list">
-            {[
-              {
-                q: "¿Qué es el curso ECMO Nursing Care?",
-                a: "Es el primer programa de entrenamiento de alta especialidad en Latinoamérica y el mundo diseñado por y para profesionales de enfermería. Su objetivo es brindar las herramientas teóricas y prácticas necesarias para liderar con total seguridad, criterio clínico y autonomía el cuidado integral y el monitoreo del paciente en soporte ECMO."
-              },
-              {
-                q: "¿A quién está dirigido este entrenamiento?",
-                a: (
-                  <>
-                    Este curso está diseñado específicamente para profesionales a la cabecera del paciente crítico:
-                    <ul style={{ marginTop: '0.6rem', paddingLeft: '1.2rem', display: 'flex', flexDirection: 'column', gap: '5px', listStyleType: 'disc' }}>
-                      <li>Licenciados/as en Enfermería General.</li>
-                      <li>Enfermeros/as Especialistas en Cuidados Críticos, Intensivos o Cardiovasculares.</li>
-                      <li>Enfermeros/as de unidades coronarias, urgencias y quirófano.</li>
-                      <li>Perfusionistas interesados en el cuidado continuo.</li>
-                    </ul>
-                  </>
-                )
-              },
-              {
-                q: "¿Cuál es el principal enfoque del programa?",
-                a: "ECMO Nursing Care se centra por completo en el día a día al pie de la cama del paciente. Aprenderás a realizar un monitoreo adecuado del binomio circuito-paciente, evaluar el sitio de canulación, prevenir y resolver de inmediato escenarios de crisis, manejar las complicaciones en ECMO, vigilar la anticoagulación segura y comprender la transferencia de gases."
-              },
-              {
-                q: "¿Qué aval otorga este curso?",
-                a: "Al concluir y aprobar satisfactoriamente todas las evaluaciones, recibirás una Certificación Oficial emitida por Healthcare Training Experience (HTE) con el prestigioso aval de la FLECI (Federación Latinoamericana de Enfermería de Cuidados Intensivos)."
-              },
-              {
-                q: "¿Cuál es la modalidad del entrenamiento y cómo está estructurado?",
-                a: (
-                  <>
-                    El curso cuenta con un formato híbrido y optimizado para profesionales en activo, diseñado para equilibrar tus jornadas laborales con una práctica inmersiva de alto impacto:
-                    <div style={{ marginTop: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                      <div>
-                        <strong>• Fase Teórica-Virtual (Plataforma HTE):</strong>
-                        <ul style={{ paddingLeft: '1.2rem', marginTop: '0.3rem', listStyleType: 'circle', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <li><strong>Aprendizaje Asincrónico ("Aprende a tu ritmo"):</strong> Flexibilidad total con acceso 24/7 a clases grabadas, literatura científica y normativas ELSO para avanzar a tu propio paso.</li>
-                          <li><strong>Aprendizaje Sincrónico ("Consolida con expertos"):</strong> Sesiones interactivas en vivo enfocadas en la resolución de dudas, análisis exhaustivo de casos clínicos e insights prácticos directo de la práctica al pie de cama.</li>
-                        </ul>
-                      </div>
-                      <div>
-                        <strong>• Fase Práctica Presencial:</strong>
-                        <ul style={{ paddingLeft: '1.2rem', marginTop: '0.3rem', listStyleType: 'circle', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <li><strong>Ponencias Magistrales ("Inspiración y Evidencia"):</strong> Espacios presenciales exclusivos con enfermeros especialistas de renombre global, quienes compartirán los últimos avances y tendencias en soporte vital extracorpóreo.</li>
-                          <li><strong>Simulación Clínica ("Practica sin riesgo"):</strong> Entrenamiento práctico y deliberado con fidelidad progresiva. Enfrenta fallas mecánicas y clínicas críticas en un entorno seguro de la mano de instructores internacionales.</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </>
-                )
-              },
-              {
-                q: "¿Cuáles son los requisitos de inscripción?",
-                a: (
-                  <ul style={{ paddingLeft: '1.2rem', listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <li>Contar con título o cédula profesional de enfermería (o equivalente en tu país de origen).</li>
-                    <li>Desempeñarse o tener experiencia previa en unidades de cuidados críticos, intermedios, urgencias o quirófano.</li>
-                    <li>Interés por especializarse en terapias de soporte vital avanzado.</li>
-                  </ul>
-                )
-              },
-              {
-                q: "¿Cuáles son los métodos de pago y opciones de financiamiento?",
-                a: (
-                  <>
-                    Buscamos darte todas las facilidades para tu crecimiento profesional:
-                    <ul style={{ paddingLeft: '1.2rem', marginTop: '0.6rem', listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                      <li>Pago en línea 100% seguro con tarjeta de crédito o débito directamente en nuestro portal web.</li>
-                      <li>Transferencias bancarias directas.</li>
-                      <li>Planes de financiamiento en parcialidades mensuales (disponibles para participantes en México).</li>
-                      <li><strong>Precios especiales para grupos:</strong> Ofrecemos tarifas preferenciales para instituciones, hospitales o grupos de colegas. Consulta los detalles con nuestro equipo.</li>
-                    </ul>
-                  </>
-                )
-              },
-              {
-                q: "¿Por qué el cupo es estrictamente limitado?",
-                a: "Debido a que el éxito del profesional de enfermería en ECMO depende enteramente de la destreza manual y de la rápida toma de decisiones, los talleres de simulación clínica se realizan en grupos pequeños. Esto garantiza que pases el máximo tiempo interactuando con el circuito y recibas retroalimentación personalizada de los instructores internacionales."
-              },
-              {
-                q: "¿Cómo puedo inscribirme?",
-                a: (
-                  <>
-                    ¡Es muy sencillo! Puedes asegurar tu lugar de inmediato haciendo{' '}
-                    <a
-                      href="/inscripciones-ecmo-nursing"
-                      onClick={(e) => { e.preventDefault(); navigate('/inscripciones-ecmo-nursing'); }}
-                      style={{ color: '#00d2ff', textDecoration: 'underline', fontWeight: 'bold' }}
-                    >
-                      clic aquí
-                    </a>{' '}
-                    para acceder directamente a nuestro formulario de registro y pasarela de pago seguro.
-                  </>
-                )
-              }
-            ].map((faq, idx) => (
-              <div className={`n-faq-item ${activeFaq === idx ? 'active' : ''}`} key={idx}>
-                <button className="n-faq-trigger" onClick={() => toggleFaq(idx)}>
-                  <h3>{faq.q}</h3>
-                  <span className="n-faq-icon">
-                    {activeFaq === idx ? '−' : '+'}
-                  </span>
-                </button>
-                <div className="n-faq-content" style={{ maxHeight: activeFaq === idx ? '1000px' : '0' }}>
-                  <div className="n-faq-inner">
-                    {faq.a}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="n-faq-footer">
-            <p style={{ marginBottom: '1rem', opacity: 0.8 }}>¿Tienes alguna otra duda? Si la pregunta no está en esta lista, escríbenos a info@healthcareexp.com o utiliza el botón de WhatsApp.</p>
-            <a
-              href="https://wa.me/525659271906?text=Hola,%20tengo%20una%20duda%20sobre%20el%20ECMO%20Nursing%20Care%20Course."
-              target="_blank"
-              rel="noreferrer"
-              className="faq-wa-btn"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#1bd741', color: '#fff', padding: '12px 24px', borderRadius: '50px', textDecoration: 'none', fontWeight: 'bold' }}
-            >
-              <MessageCircle size={18} />
-              ¿Más preguntas? Escríbenos por WhatsApp
-            </a>
-          </div>
-        </div>
-      </section>
+      {/* Preguntas frecuentes: una sola sección, la completa, al final (<FAQNursing />). */}
 
       {/* FINAL SALES BANNER */}
       <section className="n-final-sales-section" id="final-cta">

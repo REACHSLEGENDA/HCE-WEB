@@ -272,3 +272,10 @@
 
 .cs-tabla--ficha table { min-width: 0; }
 @media (max-width: 600px) { .cs-tabla--ficha tbody th { width: 38%; } }
+
+/* Nombre de un programa dentro de un texto: lleva a su página. */
+.cs-enlace-texto { color: var(--cs-azul); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.cs-respuesta .cs-enlace-texto { color: #80deea; }
+
+.cs-revisado { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cs-revisado a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }

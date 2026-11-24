@@ -171,3 +171,6 @@
 @media (prefers-reduced-motion: reduce) {
   .eval-paso .eval-pregunta-alumno { animation: none; }
 }
+
+/* Recordatorio en la pantalla de envío: solo cuenta al dar clic en Enviar. */
+.eval-aviso-envio { margin: -4px 0 12px; color: var(--text-muted, #64748b); font-size: 0.88rem; }

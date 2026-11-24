@@ -8,6 +8,7 @@ import Footer from '../components/Footer';
 import ConsentimientoLegal from '../components/ConsentimientoLegal';
 import ConfirmacionInscripcion from '../components/ConfirmacionInscripcion';
 import './Inscripciones.css';
+import { NURSING, precioNursing } from '../data/nursing';
 
 function NurseCap({ size = 24, className = "" }) {
   return (
@@ -26,13 +27,12 @@ function NurseCap({ size = 24, className = "" }) {
 
 const USD_RATE = 17.5;
 
-// Precio Buen Fin (13 nov 2026, sin fecha de fin): $4,000 MXN / USD 200 en vez
-// de $5,000 MXN / USD 250 (20%). Debe coincidir con PRECIO_CURSO de
-// netlify/functions/create-nursing-checkout.js. Para quitarlo: BUEN_FIN = false
-// en los dos archivos.
-const BUEN_FIN = true;
-const PRECIO_REGULAR = { mxn: 5000, usd: 250 };
-const PRECIO_CURSO = BUEN_FIN ? { mxn: 4000, usd: 200 } : PRECIO_REGULAR;
+// Precio del curso: sale de src/data/nursing.js (precio Buen Fin desde el
+// 13 nov 2026). El cobro lo decide create-nursing-checkout.js, que tiene su
+// propio interruptor BUEN_FIN: cambiar los dos juntos.
+const BUEN_FIN = NURSING.buenFin;
+const PRECIO_REGULAR = NURSING.regular;
+const PRECIO_CURSO = precioNursing();
 // Inscripción para grupos: oculta mientras dure el precio Buen Fin.
 const MOSTRAR_GRUPOS = !BUEN_FIN;
 

@@ -9,10 +9,16 @@
 //
 // Regla de contenido: solo información general y verificable, con fuente. No es
 // consejo médico ni promete avales o equivalencias que HCE no haya confirmado.
-// `revisor`: nombre del instructor que revisó la consulta (si se agrega, la
-// página muestra "Revisado por…").
+// `revisor`: quien revisó la consulta (la página muestra "Revisado por…" con
+// enlace a Quiénes somos, y Google lo recibe como reviewedBy).
+
+import { FAQ_NURSING_TEXTO } from './nursing.js';
 
 export const AUTOR = 'Equipo académico de HCE – Healthcare Training Experience';
+
+// Revisión médica de todas las consultas (24 nov 2026). Su ficha está en
+// /quienes-somos y en seo.js (JENIFER).
+export const REVISORA = 'Dra. Jenifer Trejo Guerra';
 
 const ELSO_GUIAS = { nombre: 'ELSO — Guías clínicas y recursos', url: 'https://www.elso.org/ecmo-resources/elso-ecmo-guidelines.aspx' };
 const ELSO_CERT = { nombre: 'ELSO — Certificación individual', url: 'https://www.elso.org/ecmo-education/individualcertification.aspx' };
@@ -22,7 +28,6 @@ const CUN = { nombre: 'Clínica Universidad de Navarra — Diccionario médico: 
 const ELSEVIER_CCV = { nombre: 'Cirugía Cardiovascular (Elsevier) — Oxigenación por membrana extracorpórea: soporte cardiaco', url: 'https://www.elsevier.es/es-revista-cirugia-cardiovascular-358-articulo-oxigenacion-membrana-extracorporea-soporte-cardiaco-S1134009609701627' };
 const SATI = { nombre: 'SATI — ¿Qué es ECMO? (PDF)', url: 'https://www.sati.org.ar/wp-content/uploads/Que-es-ECMO.pdf' };
 const SEMICYUC = { nombre: 'Medicina Intensiva (SEMICYUC) — Uso de ECMO en la UCI', url: 'https://www.medintensiva.org/es-the-use-ecmo-in-icu--articulo-S2173572718302200' };
-const AMSECT = { nombre: 'AmSECT — Certified ECMO Specialist – Adult (CES-A)', url: 'https://www.amsect.org/certification/ces-a' };
 const ISHLT = { nombre: 'ISHLT — International Society for Heart and Lung Transplantation', url: 'https://ishlt.org/' };
 
 export const PROGRAMAS_CTA = {
@@ -32,7 +37,7 @@ export const PROGRAMAS_CTA = {
   hospitales: { nombre: 'Capacitación para hospitales', enlace: '/para-hospitales' },
 };
 
-export const CONSULTAS = [
+const TODAS = [
   {
     slug: 'que-es-ecmo',
     codigo: 'ECMO-01',
@@ -50,9 +55,9 @@ export const CONSULTAS = [
     ficha: [
       { dato: 'Qué es', valor: 'Oxigenación por Membrana Extracorpórea (ECMO).' },
       { dato: 'Soporta', valor: 'Sistema respiratorio (intercambio de gases) en ECMO V-V. Sistema circulatorio y hemodinámico en ECMO V-A.' },
-      { dato: 'Componentes', valor: 'Cánulas, bomba centrífuga, oxigenador de membrana de polimetilpenteno, mezclador de gases, calentador, consola de ECMO y tubería.' },
+      { dato: 'Componentes', valor: 'Cánulas, bomba centrífuga, oxigenador de membrana de polimetilpenteno, mezclador de gases, termorregulador, consola de ECMO y tubería.' },
       { dato: 'Duración promedio', valor: 'Días a meses, según la indicación y la evolución del paciente.' },
-      { dato: 'Quién la maneja', valor: 'Intensivistas, cirujanos, perfusionistas, enfermería de cuidados críticos o cardiovasculares, terapeutas respiratorios y kinesiólogos, entre otros.' },
+      { dato: 'Equipo ECMO', valor: 'Intensivistas, cirujanos, perfusionistas, enfermería de cuidados críticos o cardiovasculares, terapeutas respiratorios y kinesiólogos, entre otros.' },
     ],
     secciones: [
       {
@@ -66,12 +71,12 @@ export const CONSULTAS = [
           titulo: 'Partes del circuito y su función',
           encabezados: ['Componente', 'Función'],
           filas: [
-            ['Cánula de drenaje', 'Saca la sangre venosa del paciente.'],
+            ['Cánula de drenaje', 'Extrae (drena) la sangre venosa del paciente.'],
             ['Bomba centrífuga', 'Genera el flujo de sangre por el circuito.'],
             ['Oxigenador de membrana', 'Añade oxígeno y retira CO₂ (el "pulmón artificial").'],
             ['Cánula de retorno', 'Devuelve la sangre a una vena (ECMO V-V) o a una arteria (ECMO V-A).'],
             ['Mezclador de gases (gas blender)', 'Realiza la mezcla precisa de gases (oxígeno y aire) y regula el flujo de gas que se entrega al oxigenador. Funciona con dos variables: el flujo de gas de barrido (sweep), que regula el volumen de gas que atraviesa la membrana y determina la eliminación de dióxido de carbono (CO₂) de la sangre; y la fracción de oxígeno en la membrana (FmO₂), que controla la concentración de oxígeno enviada a la membrana, regulable del 21% al 100%, para ajustar con precisión la oxigenación del paciente.'],
-            ['Calentador', 'Dispositivo termorregulador que circula agua a temperatura controlada por el compartimento térmico integrado en el oxigenador, para mantener la normotermia del paciente durante la circulación extracorpórea. Rango de los dispositivos: de 35 a 40 °C.'],
+            ['Termorregulador (calentador)', 'Dispositivo termorregulador que circula agua a temperatura controlada por el compartimento térmico integrado en el oxigenador, para mantener la normotermia del paciente durante la circulación extracorpórea. Rango de los dispositivos: de 35 a 40 °C.'],
             ['Consola de ECMO', 'Controla la bomba centrífuga y monitorea en tiempo real RPM, flujo y presiones del circuito, y según el modelo, parámetros sanguíneos (Hb, Hto, SvO₂, temperatura venosa y arterial); emite alertas de seguridad ante cualquier parámetro fuera de rango.'],
           ],
         },
@@ -79,7 +84,7 @@ export const CONSULTAS = [
       {
         id: 'cuando-se-usa',
         titulo: '¿En qué pacientes se considera ECMO?',
-        parrafos: ['Es un soporte extracorpóreo en un paciente con insuficiencia respiratoria o cardiaca grave que no responde al tratamiento convencional optimizado. Algunos escenarios descritos en la literatura:'],
+        parrafos: ['Se considera ECMO para pacientes con insuficiencia respiratoria o cardiaca grave que no responden al tratamiento convencional optimizado. Algunos escenarios descritos en la literatura:'],
         puntos: [
           'Síndrome de dificultad respiratoria aguda (SDRA) grave con hipoxemia o hipercapnia refractarias.',
           'Choque cardiogénico refractario (por ejemplo, tras un infarto o una miocarditis).',
@@ -92,7 +97,7 @@ export const CONSULTAS = [
       {
         id: 'que-necesita-un-hospital',
         titulo: '¿Qué necesita un hospital para ofrecer ECMO?',
-        parrafos: ['ECMO no es solo una máquina: requiere un equipo multidisciplinario entrenado en una institución de tercer nivel comprometida, protocolos escritos, disponibilidad las 24 horas y entrenamiento continuo con simulación clínica avanzada. Por eso la formación del equipo es tan importante como contar con los insumos necesarios para un programa de ECMO.'],
+        parrafos: ['ECMO no es solo una máquina: requiere un equipo multidisciplinario entrenado en una institución de tercer nivel comprometida, protocolos escritos, disponibilidad las 24 horas y entrenamiento continuo con simulación clínica avanzada. Por eso, la formación del equipo es tan importante como contar con los insumos necesarios para un programa de ECMO.'],
       },
     ],
     vision: 'En los programas de HCE, ECMO se enseña como un soporte de equipo: médicos, enfermería, perfusionistas y otros profesionales de la salud involucrados en un programa de ECMO aprenden con el mismo lenguaje y practican juntos en simulaciones clínicas antes de enfrentarse al primer paciente.',
@@ -109,7 +114,7 @@ export const CONSULTAS = [
     imagen: { src: '/consultas/que-es-ecmo.webp', alt: 'Circuito y oxigenador de ECMO durante una práctica del Diploma de París en el INER', pie: 'Práctica con circuito de ECMO · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'ecmo-vv-vs-va',
@@ -128,7 +133,7 @@ export const CONSULTAS = [
     ficha: [
       { dato: 'ECMO V-V', valor: 'Soporte respiratorio; retorno a una vena.' },
       { dato: 'ECMO V-A', valor: 'Soporte circulatorio; retorno a una arteria.' },
-      { dato: 'Apoyo', valor: 'Total o parcial en ECMO V-V (los pulmones pueden no funcionar y ECMO los soporta); parcial en ECMO V-A (el corazón debe conservar algo de función).' },
+      { dato: 'Apoyo', valor: 'Total o parcial en ECMO V-V (los pulmones pueden no funcionar en su totalidad y ECMO puede soportar el 100% de la función respiratoria del paciente); parcial en ECMO V-A (el corazón nativo debe conservar un porcentaje mínimo de funcionalidad para poder conectar un ECMO V-A al paciente).' },
       { dato: 'Uso típico ECMO V-V', valor: 'Síndrome de distrés respiratorio agudo (SDRA) grave refractario.' },
       { dato: 'Uso típico ECMO V-A', valor: 'Choque cardiogénico, paro cardiaco refractario (ECPR).' },
     ],
@@ -143,7 +148,7 @@ export const CONSULTAS = [
           filas: [
             ['Qué apoya', 'Pulmones (oxigenación y descarboxilación)', 'Corazón'],
             ['Retorno de la sangre', 'A una vena', 'A una arteria'],
-            ['¿Necesita que el corazón funcione?', 'Sí', 'Sí, en parte: soporta su función pero no la sustituye por completo'],
+            ['¿Necesita que el corazón funcione?', 'Sí', 'Sí; soporta su función pero no la sustituye por completo'],
             ['Apoyo', 'Total o parcial', 'Parcial'],
             ['Uso típico', 'SDRA grave, falla respiratoria', 'Choque cardiogénico, ECPR'],
           ],
@@ -154,7 +159,7 @@ export const CONSULTAS = [
         titulo: '¿Qué se vigila distinto en cada modalidad?',
         puntos: [
           'En ECMO V-V se monitoriza la recirculación: sangre oxigenada que sale por la cánula de retorno y vuelve a la cánula de drenaje sin pasar por el cuerpo.',
-          'En ECMO V-A periférico se vigila la poscarga del ventrículo izquierdo, la perfusión de la pierna canulada y el posible "síndrome arlequín" (oxigenación distinta entre la parte alta y la baja del cuerpo).',
+          'En ECMO V-A periférico se vigila la poscarga del ventrículo izquierdo, la perfusión de la pierna canulada y el posible "síndrome arlequín" (oxigenación diferencial entre el hemicuerpo superior e inferior del paciente).',
           'En ambas: trombosis, sangrados, hemólisis, alteraciones en las presiones del circuito, complicaciones en los sitios de canulación y complicaciones del circuito como insuficiencia del drenaje, entrada de aire, falla de bomba, falla del oxigenador, desconexión o falla en los gases, ruptura del circuito y decanulación accidental.',
         ],
       },
@@ -165,9 +170,9 @@ export const CONSULTAS = [
       },
     ],
     vision: 'Elegir la modalidad correcta es tan importante como manejar bien el circuito. En HCE se entrena con casos clínicos y simulación para reconocer a tiempo cuándo un paciente necesita otra configuración.',
-    ctaIntermedio: 'Practica ECMO V-V y V-A con casos reales en el Diploma de París.',
+    ctaIntermedio: 'Practica ECMO V-V y V-A con casos reales en el Diploma Internacional de París en ECMO.',
     programa: 'paris',
-    relacionadas: ['que-es-ecmo', 'simulacion-ecmo', 'ic-avanzada'],
+    relacionadas: ['que-es-ecmo', 'simulacion-ecmo', 'complicaciones-ecmo'],
     faqs: [
       { pregunta: '¿Qué configuración de ECMO tiene más riesgos?', respuesta: 'Todas las configuraciones de ECMO tienen riesgos, por ser un soporte invasivo con muchas complicaciones potenciales. Por ejemplo, en ECMO V-A puede haber complicaciones vasculares porque la cánula de retorno va a una arteria. El riesgo depende del entrenamiento del equipo y de la condición clínica del paciente.' },
       { pregunta: '¿Qué es el síndrome arlequín?', respuesta: 'Sucede exclusivamente en ECMO V-A periférico, cuando el corazón se está recuperando gracias a ECMO V-A pero los pulmones comienzan a fallar en un paciente que inicialmente solo requería soporte circulatorio. Así, la mitad superior del cuerpo recibe sangre poco oxigenada, que depende de los pulmones nativos, y la mitad inferior recibe sangre oxigenada del ECMO.' },
@@ -177,7 +182,7 @@ export const CONSULTAS = [
     imagen: { src: '/consultas/ecmo-vv-vs-va.webp', alt: 'Clase teórica de ECMO con monitor de signos vitales en el INER', pie: 'Clase del Diploma de París · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'certificacion-ecmo',
@@ -188,9 +193,9 @@ export const CONSULTAS = [
     titulo: 'Cómo obtener una certificación en ECMO (ELSO E-AEC paso a paso)',
     tituloCorto: 'Certificación en ECMO',
     descripcion: 'Cómo obtener la certificación individual de ELSO en ECMO para adultos (E-AEC): cursos teóricos y de simulación, experiencia clínica, examen, vigencia y recertificación.',
-    extracto: 'Requisitos de ELSO, cómo elegir cursos que te sirvan y qué es la CES-A.',
+    extracto: 'Requisitos de ELSO, los pasos y cómo elegir cursos que te sirvan.',
     palabraClave: 'certificación ECMO',
-    buscar: ['ELSO', 'E-AEC', 'examen ECMO', 'ECMO specialist', 'CES-A', 'recertificación'],
+    buscar: ['ELSO', 'E-AEC', 'examen ECMO', 'ECMO specialist', 'recertificación'],
     lineaHce: 'Antes de pagar un curso, pregunta qué aval tiene y guarda tus constancias con horas.',
     respuestaRapida: 'La referencia internacional es ELSO, con certificaciones individuales para adultos (E-AEC) y neonatos/pediatría (E-NPEC). Para la de adultos se combinan formación teórica, simulación, experiencia clínica supervisada y un examen; la certificación dura tres años. Revisa siempre los requisitos vigentes en elso.org antes de aplicar.',
     ficha: [
@@ -225,14 +230,9 @@ export const CONSULTAS = [
           'Un buen programa combina teoría, simulación con consola real y casos clínicos, y lo imparte un equipo que trabaja ECMO todos los días.',
         ],
       },
-      {
-        id: 'ces-a',
-        titulo: '¿Qué es la certificación CES-A?',
-        parrafos: ['El Certified ECMO Specialist – Adult (CES-A) es de AmSECT y es distinta a la de ELSO. Está pensada para especialistas en ECMO (enfermería, terapia respiratoria y profesiones aliadas) con experiencia laboral en ECMO.'],
-      },
     ],
-    vision: 'El Paris International Diploma in ECMO se divide en Step 1 (teórico) y Step 2 (simulación práctica), el mismo esquema que piden las certificaciones. Escríbenos y te decimos qué constancias recibes; no damos por hecha ninguna equivalencia que ELSO no haya confirmado.',
-    ctaIntermedio: 'Inscríbete al Step 1 del Diploma de París.',
+    vision: '', // se quitó a petición de la dirección médica (redundante con la consulta)
+    ctaIntermedio: 'Inscríbete al Step 1 y Step 2 del Diploma Internacional de París en ECMO.',
     programa: 'paris',
     relacionadas: ['que-es-ecmo', 'simulacion-ecmo', 'cuidados-enfermeria-ecmo'],
     faqs: [
@@ -240,11 +240,11 @@ export const CONSULTAS = [
       { pregunta: '¿Enfermería puede certificarse?', respuesta: 'Sí. La certificación individual de ELSO está abierta a especialistas en ECMO (enfermería, terapia respiratoria y otros), médicos y perfusionistas que cumplan los requisitos.' },
       { pregunta: '¿El Diploma de París cuenta para la certificación ELSO?', respuesta: 'El diploma sigue el esquema teórico + simulación. Si cuenta como curso elegible lo confirma ELSO; escríbenos y te decimos qué constancias recibes.' },
     ],
-    fuentes: [ELSO_CERT, ELSO_FAQ, AMSECT],
+    fuentes: [ELSO_CERT, ELSO_FAQ],
     imagen: { src: '/consultas/certificacion-ecmo.webp', alt: 'Generación del Diploma de París en ECMO con sus constancias en el INER', pie: 'Generación del Diploma de París · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'cuidados-enfermeria-ecmo',
@@ -263,7 +263,7 @@ export const CONSULTAS = [
     ficha: [
       { dato: 'Rol', valor: 'Vigilancia continua del paciente y del circuito.' },
       { dato: 'Prioridades', valor: 'Cánulas, anticoagulación, sangrado, perfusión y alarmas.' },
-      { dato: 'Emergencias', valor: 'Aire en el circuito, falla de bomba u oxigenador, decanulación.' },
+      { dato: 'Emergencias', valor: 'Fallo de la bomba o de energía eléctrica, embolia aérea masiva en el circuito, fallo agudo o trombosis del oxigenador de membrana, rotura o desconexión de tubuladuras, falla en el suministro de gas, isquemia de extremidad inferior (en ECMO V-A periférico), síndrome de arlequín, sangrado o trombosis del circuito y/o paciente y decanulación accidental, entre otros.' },
       { dato: 'Formación', valor: 'Teoría específica para enfermería + simulación de crisis + práctica supervisada.' },
     ],
     secciones: [
@@ -275,12 +275,12 @@ export const CONSULTAS = [
           titulo: 'Checklist de turno del paciente en ECMO (orientativo)',
           encabezados: ['Área', 'Qué revisar'],
           filas: [
-            ['Circuito', 'Flujo, revoluciones, presiones, color de las líneas, coágulos y aire.'],
-            ['Cánulas', 'Fijación, sitio de inserción, sangrado, signos de infección.'],
+            ['Circuito', 'Integridad del circuito, flujo, revoluciones, presiones, color de las líneas, coágulos, fibrina y aire.'],
+            ['Cánulas', 'Sitio de inserción, fijación, sangrado, trombosis y signos de infección.'],
             ['Anticoagulación', 'Dosis, laboratorios y tendencias; signos de sangrado o trombosis.'],
             ['Perfusión', 'Pulsos y temperatura de la extremidad canulada (ECMO V-A periférico).'],
             ['Paciente', 'Signos vitales, gasometría, piel, posición y confort.'],
-            ['Seguridad', 'Pinzas a la mano, consola cargada, alarmas activas y plan de emergencia.'],
+            ['Seguridad', 'Pinzas a la mano, consola cargada, alarmas activas y algoritmos de respuesta ante una emergencia.'],
           ],
         },
       },
@@ -288,11 +288,12 @@ export const CONSULTAS = [
         id: 'competencias',
         titulo: '¿Qué competencias necesita enfermería en ECMO?',
         puntos: [
-          'Revisión sistemática del circuito y de las cánulas.',
-          'Interpretar la anticoagulación y sus señales de alarma.',
-          'Responder a emergencias: falla de bomba, desplazamiento de cánula, aire en el circuito.',
+          'Revisión sistemática del circuito.',
+          'Interpretar gasometrías y pruebas de coagulación.',
+          'Interpretar las alarmas de la consola de ECMO.',
+          'Pedir ayuda y responder ante emergencias en ECMO: fallo de la bomba o de energía eléctrica, embolia aérea masiva, trombosis del oxigenador, desconexión de tubuladuras, falla en el suministro de gas o decanulación accidental.',
           'Movilización, posición prono y traslados seguros.',
-          'Comunicación clara con el equipo y con la familia.',
+          'Comunicación clara con el equipo.',
         ],
       },
       {
@@ -301,20 +302,21 @@ export const CONSULTAS = [
         parrafos: ['La combinación más efectiva es teoría específica para enfermería, simulación de emergencias del circuito y práctica supervisada. La formación estandarizada para enfermería todavía es escasa en Latinoamérica; el ECMO Nursing Care Course de HCE está diseñado por y para profesionales de enfermería en cuidados intensivos.'],
       },
     ],
-    vision: 'La mayoría de la oferta en español es médica o multidisciplinaria. HCE creó el ECMO Nursing Care Course pensando en lo que enfermería vive junto a la cama del paciente, turno a turno.',
+    visionTitulo: 'La visión de HCE para enfermería',
+    vision: 'HCE creó el ECMO Nursing Care Course con la visión de que enfermería es quien más tiempo está junto a la cama del paciente, turno a turno.',
     ctaIntermedio: 'Conoce el primer curso de ECMO diseñado por y para enfermería.',
     programa: 'nursing',
     relacionadas: ['que-es-ecmo', 'simulacion-ecmo', 'certificacion-ecmo'],
     faqs: [
-      { pregunta: '¿Hay cursos de ECMO solo para enfermería?', respuesta: 'Pocos. HCE ofrece el ECMO Nursing Care Course, centrado en monitoreo, protocolos, cuidados y destete del paciente en ECMO.' },
-      { pregunta: '¿Enfermería puede ser especialista en ECMO?', respuesta: 'Sí. En muchos centros el especialista en ECMO es de enfermería, y tanto ELSO como AmSECT tienen certificaciones abiertas a enfermería con experiencia.' },
+      { pregunta: '¿Hay cursos de ECMO solo para enfermería?', respuesta: 'Pocos. HCE ofrece el ECMO Nursing Care Course, centrado en monitoreo, protocolos y cuidados de enfermería en ECMO.' },
+      { pregunta: '¿Enfermería puede ser especialista en ECMO?', respuesta: 'Sí, ya que enfermería forma parte crucial del equipo multidisciplinario en ECMO.' },
       { pregunta: '¿Qué debo saber antes de cuidar a mi primer paciente en ECMO?', respuesta: 'Bases de fisiología del circuito, anticoagulación, los protocolos de tu hospital y el manejo de emergencias del circuito. Practicarlas en simulación antes de vivirlas es lo más recomendable.' },
     ],
-    fuentes: [ELSO_CERT, AMSECT, ELSO_GUIAS],
+    fuentes: [ELSO_CERT, ELSO_GUIAS],
     imagen: { src: '/consultas/cuidados-enfermeria-ecmo.webp', alt: 'Equipo de enfermería durante una práctica de ECMO junto a la cama del paciente', pie: 'Práctica de enfermería en ECMO · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'simulacion-ecmo',
@@ -324,16 +326,16 @@ export const CONSULTAS = [
     tono: 'simulacion',
     titulo: 'Simulación clínica en ECMO: por qué entrenar antes del primer paciente',
     tituloCorto: 'Simulación en ECMO',
-    descripcion: 'Por qué la simulación es indispensable para aprender ECMO, qué escenarios practicar y cómo combinar la simulación presencial con un simulador en línea como ECMO SIM.',
-    extracto: 'Qué emergencias practicar y cómo combinar simulación presencial y en línea.',
+    descripcion: 'Por qué la simulación es indispensable para aprender ECMO, qué escenarios practicar y cómo combinar la simulación presencial con un simulador virtual como ECMO SIM.',
+    extracto: 'Qué emergencias practicar y cómo combinar simulación presencial y virtual.',
     palabraClave: 'simulación clínica ECMO',
     buscar: ['simulador ECMO', 'ECMO SIM', 'alta fidelidad', 'emergencias del circuito', 'entrenamiento'],
     lineaHce: 'Las emergencias del circuito son raras: la simulación es la única forma segura de practicarlas.',
-    respuestaRapida: 'Las emergencias de ECMO son poco frecuentes pero graves; la simulación permite practicarlas sin poner en riesgo a un paciente. Por eso las certificaciones piden un curso de simulación además de la teoría. Lo ideal es combinar simulación presencial con consola real y práctica frecuente en un simulador en línea.',
+    respuestaRapida: 'Las emergencias de ECMO son poco frecuentes pero graves; la simulación permite practicarlas sin poner en riesgo al paciente. Por eso las certificaciones piden un curso de simulación además de la teoría. Lo ideal es combinar simulación presencial con consola real y práctica frecuente apoyada con un simulador como ECMO SIM, para reforzar como educación continua.',
     ficha: [
       { dato: 'Para qué sirve', valor: 'Practicar decisiones y emergencias sin riesgo para el paciente.' },
-      { dato: 'Presencial', valor: 'Entrena las manos y el trabajo en equipo con consola real.' },
-      { dato: 'En línea', valor: 'Permite repetir decisiones las veces que haga falta.' },
+      { dato: 'Presencial', valor: 'Domina las habilidades y el trabajo en equipo con un circuito y consola reales.' },
+      { dato: 'Simulador ECMO SIM', valor: 'Permite repetir decisiones las veces que haga falta.' },
       { dato: 'En la certificación', valor: 'ELSO pide un curso de simulación elegible.' },
     ],
     secciones: [
@@ -353,28 +355,29 @@ export const CONSULTAS = [
         },
       },
       {
-        id: 'presencial-y-en-linea',
-        titulo: '¿Simulación presencial o en línea?',
-        parrafos: ['Las dos se complementan. La simulación presencial entrena las manos y el trabajo en equipo; la simulación en línea permite repetir decisiones. ECMO SIM recrea una terapia intensiva en 3D con ventilador y consola ECMO cuyas constantes reaccionan a cada decisión.'],
+        id: 'presencial-y-virtual',
+        titulo: '¿Simulación presencial o virtual?',
+        parrafos: ['Las dos se complementan. La simulación presencial entrena las habilidades y el trabajo en equipo; la simulación virtual permite repetir decisiones. ECMO SIM recrea una terapia intensiva en 3D con un paciente en ECMO cuyas constantes reaccionan a cada decisión.'],
       },
     ],
-    vision: 'HCE integra la simulación en todos sus programas porque el primer contacto con una emergencia del circuito no debería ser con un paciente real.',
-    ctaIntermedio: 'Practica en línea con ECMO SIM.',
+    vision: 'HCE integra la simulación en todos sus programas porque el primer contacto con una emergencia en ECMO no debería ser con un paciente real.',
+    ctaIntermedio: 'Practica con el simulador virtual ECMO SIM.',
     programa: 'sim',
     relacionadas: ['ecmo-vv-vs-va', 'cuidados-enfermeria-ecmo', 'certificacion-ecmo'],
     faqs: [
-      { pregunta: '¿Existe un simulador de ECMO en línea?', respuesta: 'Sí. ECMO SIM es un simulador clínico virtual 100% en línea que HCE trae a Latinoamérica.' },
-      { pregunta: '¿La simulación cuenta para certificarme?', respuesta: 'Las certificaciones piden un curso de simulación elegible. Revisa con ELSO qué cursos cuentan y pide al organizador las constancias con horas.' },
+      { pregunta: '¿Existe un simulador de ECMO virtual?', respuesta: 'Sí. ECMO SIM es un simulador clínico 100% virtual que HCE trae a Latinoamérica.' },
+      { pregunta: '¿La simulación cuenta para certificarme?', respuesta: 'Las certificaciones piden un curso de simulación elegible. Revisa con ELSO qué cursos cuentan.' },
       { pregunta: '¿Los hospitales pueden entrenar a su equipo con simulación?', respuesta: 'Sí. HCE ofrece capacitación para equipos de hospital; escríbenos desde la página Para hospitales.' },
     ],
     fuentes: [ELSO_CURSOS, ELSO_CERT],
     imagen: { src: '/consultas/simulacion-ecmo.webp', alt: 'Práctica de simulación con el circuito de ECMO en el INER', pie: 'Simulación del Step 2 · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'ic-avanzada',
+    oculta: true, // 16 nov 2026: oculta por ahora (decisión de la dirección); no se borra
     codigo: 'IC-01',
     cluster: 'Insuficiencia cardiaca',
     insignia: 'Guía clínica',
@@ -427,7 +430,7 @@ export const CONSULTAS = [
     imagen: { src: '/consultas/ic-avanzada.webp', alt: 'Conferencia del Diploma de París en ECMO en la Ciudad de México', pie: 'Conferencia académica · HCE, CDMX 2024' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'complicaciones-ecmo',
@@ -445,9 +448,9 @@ export const CONSULTAS = [
     respuestaRapida: 'Las complicaciones más frecuentes de ECMO son el sangrado y la trombosis (por la anticoagulación y el contacto de la sangre con el circuito), la hemólisis, las infecciones, las complicaciones en el sitio de canulación —como la isquemia de la extremidad— y las fallas del circuito. Muchas se detectan a tiempo con una vigilancia sistemática del paciente y del circuito.',
     ficha: [
       { dato: 'Más frecuentes', valor: 'Sangrado y trombosis.' },
-      { dato: 'Del circuito', valor: 'Coágulos en el oxigenador o la bomba, aire, falla de componentes.' },
+      { dato: 'Del circuito', valor: 'Falla o trombosis del oxigenador, falla de la bomba, falla de la electricidad, falla del suministro de aire, embolismo aéreo masivo, decanulación, etc.' },
       { dato: 'Del paciente', valor: 'Hemólisis, infección, isquemia de la extremidad canulada, complicaciones neurológicas.' },
-      { dato: 'Cómo se previenen', valor: 'Anticoagulación vigilada, revisión sistemática del circuito y protocolos del equipo.' },
+      { dato: 'Cómo se previenen', valor: 'Revisión sistemática del circuito, protocolos del equipo, entrenamiento continuo del equipo a través de simulación, anticoagulación vigilada y revisión de tendencias de los parámetros del circuito.' },
     ],
     secciones: [
       {
@@ -457,12 +460,12 @@ export const CONSULTAS = [
           titulo: 'Complicaciones frecuentes y señales que se vigilan',
           encabezados: ['Complicación', 'Qué se vigila'],
           filas: [
-            ['Sangrado', 'Sitios de cánulas, heridas, mucosas, drenajes y caída de hemoglobina.'],
+            ['Sangrado', 'Sitio de canulación, mucosas, drenajes, accesos vasculares y caída de hemoglobina.'],
             ['Trombosis', 'Coágulos visibles en el circuito, aumento de la presión a través del oxigenador.'],
-            ['Hemólisis', 'Color de la orina y marcadores de laboratorio, según el protocolo.'],
-            ['Infección', 'Fiebre o cambios en los sitios de inserción y en los cultivos.'],
-            ['Isquemia de la extremidad', 'Pulsos, color y temperatura de la pierna canulada (ECMO V-A periférico).'],
-            ['Falla del circuito', 'Alarmas, cambios de flujo, ruidos de la bomba y desempeño del oxigenador.'],
+            ['Hemólisis', 'Color de la orina o del efluente, marcadores de laboratorio como hemoglobina libre, ruidos en la bomba centrífuga, etc.'],
+            ['Infección', 'Fiebre, cambios en los sitios de inserción y resultado en cultivos.'],
+            ['Isquemia de la extremidad', 'Pulsos, coloración de la extremidad, llenado capilar, temperatura y dolor (ECMO V-A periférico).'],
+            ['Falla del circuito', 'Alarmas, cambios de flujo, cambios en las presiones, ruidos de la bomba y desempeño del oxigenador.'],
           ],
         },
         nota: 'Los valores de referencia y las acciones dependen del protocolo de cada hospital y de las guías vigentes.',
@@ -483,14 +486,14 @@ export const CONSULTAS = [
     programa: 'nursing',
     relacionadas: ['anticoagulacion-ecmo', 'cuidados-enfermeria-ecmo', 'emergencias-circuito-ecmo'],
     faqs: [
-      { pregunta: '¿Cuál es la complicación más común en ECMO?', respuesta: 'El sangrado, seguido de la trombosis; ambas se relacionan con el equilibrio de la anticoagulación y el contacto de la sangre con el circuito.' },
-      { pregunta: '¿Por qué se vigila la pierna en ECMO V-A?', respuesta: 'Porque la cánula arterial en la femoral puede disminuir el flujo hacia esa pierna; por eso se revisan pulsos, color y temperatura y, si hace falta, se coloca una cánula de perfusión distal.' },
+      { pregunta: '¿Cuál es la complicación más común en ECMO?', respuesta: 'El sangrado, seguido de la trombosis; ambas se relacionan con el manejo de la anticoagulación y el contacto de la sangre con el circuito.' },
+      { pregunta: '¿Por qué se vigila la pierna en ECMO V-A?', respuesta: 'Porque la cánula en la arteria femoral puede disminuir el flujo distal hacia la pierna canulada; por eso se revisan pulsos, color y temperatura y, si hace falta, se coloca una cánula de perfusión distal.' },
     ],
     fuentes: [ELSO_GUIAS, SEMICYUC],
     imagen: { src: '/consultas/complicaciones-ecmo.webp', alt: 'Instructor del Diploma de París analiza un caso de ECMO central durante el debriefing', pie: 'Debriefing de un caso clínico · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'circuito-ecmo',
@@ -500,17 +503,17 @@ export const CONSULTAS = [
     tono: 'ecmo',
     titulo: 'Partes del circuito ECMO explicadas: bomba, oxigenador y cánulas',
     tituloCorto: 'Partes del circuito ECMO',
-    descripcion: 'Qué hace cada parte del circuito de ECMO: cánulas, bomba centrífuga, oxigenador de membrana, mezclador de gases, intercambiador de calor y consola, y qué se revisa en cada una.',
-    extracto: 'Cánulas, bomba, oxigenador, gases, temperatura y consola: qué hace cada parte.',
+    descripcion: 'Qué hace cada parte del circuito de ECMO: cánulas, bomba centrífuga, oxigenador de membrana, mezclador de gases, termorregulador y consola, y qué se revisa en cada una.',
+    extracto: 'Cánulas, bomba, oxigenador, mezclador de gases, termorregulador y consola: qué hace cada elemento.',
     palabraClave: 'partes del circuito ECMO',
     buscar: ['circuito', 'oxigenador', 'bomba centrífuga', 'cánulas', 'consola', 'sweep', 'mezclador de gases'],
     lineaHce: 'Conocer cada pieza del circuito es lo que permite reaccionar rápido cuando algo falla.',
-    respuestaRapida: 'El circuito de ECMO tiene cánulas (de drenaje y de retorno), una bomba centrífuga que mueve la sangre, un oxigenador de membrana que añade oxígeno y retira CO₂, un mezclador de gases que regula el gas que entra al oxigenador, un intercambiador de calor que controla la temperatura y una consola que muestra flujo, revoluciones y presiones.',
+    respuestaRapida: 'El circuito de ECMO tiene cánulas (de drenaje y de retorno), una bomba centrífuga que mueve la sangre, un oxigenador de membrana que añade oxígeno y retira CO₂, un mezclador de gases que regula el gas que entra al oxigenador, un termorregulador que controla la temperatura y una consola que muestra flujo, revoluciones y presiones.',
     ficha: [
       { dato: 'Mueve la sangre', valor: 'Bomba centrífuga (revoluciones por minuto → flujo).' },
       { dato: 'Intercambia gases', valor: 'Oxigenador de membrana.' },
-      { dato: 'Regula el gas', valor: 'Mezclador (FiO₂ del circuito) y flujo de gas de barrido.' },
-      { dato: 'Controla temperatura', valor: 'Intercambiador de calor.' },
+      { dato: 'Regula el gas', valor: 'Mezclador de gases (FmO₂ y flujo de gas de barrido).' },
+      { dato: 'Controla temperatura', valor: 'Termorregulador.' },
       { dato: 'Monitorea', valor: 'Consola: flujo, revoluciones y presiones.' },
     ],
     secciones: [
@@ -521,19 +524,14 @@ export const CONSULTAS = [
           titulo: 'Componentes del circuito de ECMO',
           encabezados: ['Componente', 'Función', 'Qué se revisa'],
           filas: [
-            ['Cánula de drenaje', 'Saca la sangre del paciente', 'Fijación, posición, "chatter" o vibración de las líneas'],
-            ['Bomba centrífuga', 'Genera el flujo', 'Revoluciones, flujo y ruidos'],
-            ['Oxigenador', 'Añade O₂ y retira CO₂', 'Color de la sangre antes y después, coágulos, presiones'],
-            ['Mezclador y gas de barrido', 'Regulan el oxígeno y la eliminación de CO₂', 'FiO₂ del circuito y flujo de gas'],
-            ['Intercambiador de calor', 'Controla la temperatura de la sangre', 'Temperatura programada'],
-            ['Cánula de retorno', 'Devuelve la sangre (vena en ECMO V-V, arteria en ECMO V-A)', 'Sitio, sangrado y perfusión'],
+            ['Cánula de drenaje', 'Extrae (drena) la sangre del paciente', 'Fijación, posición, "chattering" o balanceo de las líneas'],
+            ['Bomba centrífuga', 'Genera el flujo', 'Revoluciones, flujo, temperatura y ruidos'],
+            ['Oxigenador', 'Añade O₂ y retira CO₂', 'Presiones, color de la sangre antes y después, y coágulos'],
+            ['Mezclador de gases', 'Regula la mezcla de gases y el flujo de gas de barrido de CO₂', 'FmO₂ y flujo de gas de barrido'],
+            ['Termorregulador', 'Controla la temperatura de la sangre', 'Temperatura programada, temperatura sensada y nivel de agua'],
+            ['Cánula de retorno', 'Devuelve la sangre (vena en ECMO V-V, arteria en ECMO V-A)', 'Sitio de canulación, fijación, sangrado, trombosis y datos de infección'],
           ],
         },
-      },
-      {
-        id: 'flujo-y-gas',
-        titulo: '¿Qué controla el flujo y qué controla el gas?',
-        parrafos: ['De forma general, el flujo de sangre del circuito influye sobre todo en la oxigenación, y el flujo de gas de barrido en la eliminación de CO₂. Los ajustes concretos los decide el equipo según el paciente y el protocolo.'],
       },
     ],
     vision: 'En HCE el circuito se aprende tocándolo: en el Step 2 y en ECMO SIM cada parte se revisa, se ajusta y se practica en emergencias.',
@@ -542,13 +540,13 @@ export const CONSULTAS = [
     relacionadas: ['que-es-ecmo', 'emergencias-circuito-ecmo', 'ecmo-vv-vs-va'],
     faqs: [
       { pregunta: '¿Qué es el gas de barrido (sweep)?', respuesta: 'Es el flujo de gas que pasa por el oxigenador; se ajusta principalmente para controlar la eliminación de CO₂.' },
-      { pregunta: '¿Cada cuánto se cambia el oxigenador?', respuesta: 'No hay un tiempo fijo: se cambia cuando su desempeño cae o aparecen signos de falla o coágulos importantes, según el protocolo del centro.' },
+      { pregunta: '¿Cada cuánto se cambia el oxigenador?', respuesta: 'No hay un tiempo fijo: se cambia cuando su desempeño cae o aparecen signos de falla o trombosis del mismo. Debe existir un protocolo de cambio de oxigenador en el hospital.' },
     ],
     fuentes: [ELSO_GUIAS, CUN],
     imagen: { src: '/consultas/circuito-ecmo.webp', alt: 'Manos revisando la bomba y el circuito de ECMO durante una práctica', pie: 'Revisión del circuito · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'anticoagulacion-ecmo',
@@ -609,7 +607,7 @@ export const CONSULTAS = [
     imagen: { src: '/consultas/anticoagulacion-ecmo.webp', alt: 'Equipo de enfermería junto a la consola y las líneas de ECMO', pie: 'Práctica de enfermería en ECMO · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'canulacion-ecmo',
@@ -669,7 +667,7 @@ export const CONSULTAS = [
     imagen: { src: '/consultas/canulacion-ecmo.webp', alt: 'Práctica de canulación en un maniquí de simulación', pie: 'Práctica de canulación en simulación · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'destete-ecmo',
@@ -729,7 +727,7 @@ export const CONSULTAS = [
     imagen: { src: '/consultas/destete-ecmo.webp', alt: 'Clase sobre manejo de ECMO con casos clínicos proyectados', pie: 'Clase con casos clínicos · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'ecpr',
@@ -786,7 +784,7 @@ export const CONSULTAS = [
     imagen: { src: '/consultas/ecpr.webp', alt: 'Instructor muestra el manejo de cánulas en un maniquí de simulación', pie: 'Simulación de un escenario crítico · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'emergencias-circuito-ecmo',
@@ -848,7 +846,7 @@ export const CONSULTAS = [
     imagen: { src: '/consultas/emergencias-circuito-ecmo.webp', alt: 'Mano sobre la bomba de ECMO durante una simulación de emergencia', pie: 'Simulación de emergencias · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
   },
   {
     slug: 'programa-ecmo-hospital',
@@ -911,9 +909,263 @@ export const CONSULTAS = [
     imagen: { src: '/consultas/programa-ecmo-hospital.webp', alt: 'Equipo de salud en una sesión de entrenamiento de ECMO', pie: 'Entrenamiento de equipos · HCE, INER 2025' },
     publicado: '2026-10-20',
     actualizado: '2026-10-20',
-    revisor: null,
+    revisor: REVISORA,
+  },
+  {
+    slug: 'monitoreo-enfermeria-ecmo',
+    codigo: 'ENF-03',
+    cluster: 'Enfermería en ECMO',
+    insignia: 'Para enfermería',
+    tono: 'enfermeria',
+    titulo: 'Monitoreo del paciente en ECMO: qué vigila enfermería por sistemas',
+    tituloCorto: 'Monitoreo del paciente en ECMO',
+    descripcion: 'Qué monitorea enfermería en el paciente con ECMO, sistema por sistema: neurológico, hemodinámico, respiratorio, renal, piel y circuito, y cuándo avisar al equipo.',
+    extracto: 'Lo que enfermería vigila sistema por sistema y cuándo avisar al equipo.',
+    palabraClave: 'monitoreo de enfermería en ECMO',
+    buscar: ['monitoreo', 'vigilancia', 'valoración', 'signos vitales', 'neurológico', 'enfermería', 'nursing'],
+    lineaHce: 'En ECMO se vigilan dos pacientes a la vez: la persona y el circuito.',
+    respuestaRapida: 'Enfermería monitorea al paciente en ECMO de forma continua y sistemática: estado neurológico, hemodinamia y perfusión, intercambio de gases, función renal y balance de líquidos, piel y sitios de canulación, además del circuito (flujo, revoluciones, presiones y color de las líneas). Lo importante es registrar tendencias y avisar al equipo ante cualquier cambio.',
+    ficha: [
+      { dato: 'Qué se vigila', valor: 'Paciente y circuito, de forma continua y con registro de tendencias.' },
+      { dato: 'Sistemas', valor: 'Neurológico, hemodinámico, respiratorio, renal, piel y sitios de canulación.' },
+      { dato: 'Circuito', valor: 'Integridad del circuito, flujo, revoluciones, presiones, color de las líneas, coágulos, fibrina y aire.' },
+      { dato: 'Cuándo avisar', valor: 'Ante cualquier cambio agudo o una tendencia que empeora, según el protocolo del hospital.' },
+    ],
+    secciones: [
+      {
+        id: 'por-sistemas',
+        titulo: '¿Qué vigila enfermería en cada sistema?',
+        tabla: {
+          titulo: 'Monitoreo de enfermería del paciente en ECMO (orientativo)',
+          encabezados: ['Sistema', 'Qué se vigila'],
+          filas: [
+            ['Neurológico', 'Nivel de conciencia o de sedación, pupilas y cualquier signo neurológico nuevo.'],
+            ['Hemodinámico', 'Presión arterial, frecuencia cardiaca, perfusión periférica y pulsatilidad (en ECMO V-A).'],
+            ['Respiratorio', 'Gasometrías, saturación, parámetros del ventilador y secreciones.'],
+            ['Renal y líquidos', 'Diuresis, balance de líquidos y, si aplica, terapia de reemplazo renal.'],
+            ['Piel y sitios de canulación', 'Sangrado, signos de infección, presión en zonas de apoyo y fijación de las cánulas.'],
+            ['Circuito', 'Flujo, revoluciones, presiones, color de las líneas, coágulos, fibrina y aire.'],
+          ],
+        },
+        nota: 'Las metas de cada parámetro y la frecuencia de registro las define el protocolo de cada hospital.',
+      },
+      {
+        id: 'tendencias',
+        titulo: '¿Por qué importan más las tendencias que un valor aislado?',
+        parrafos: ['Muchas complicaciones de ECMO avisan antes con cambios graduales: un flujo que baja, presiones que suben, una hemoglobina que cae. Registrar y comparar turno a turno permite detectarlas a tiempo y comunicarlas al equipo antes de que se vuelvan una emergencia.'],
+      },
+    ],
+    visionTitulo: 'La visión de HCE para enfermería',
+    vision: 'Enfermería es quien más tiempo pasa junto a la cama del paciente en ECMO. Por eso el ECMO Nursing Care Course enseña a vigilar al paciente y al circuito como una sola unidad.',
+    ctaIntermedio: 'Aprende a monitorear al paciente en ECMO en el ECMO Nursing Care Course.',
+    programa: 'nursing',
+    relacionadas: ['cuidados-enfermeria-ecmo', 'complicaciones-ecmo', 'anticoagulacion-ecmo'],
+    faqs: [
+      { pregunta: '¿Cada cuánto se revisa el circuito de ECMO?', respuesta: 'De forma continua y con una revisión sistemática registrada en cada turno, o con la frecuencia que marque el protocolo del hospital.' },
+      { pregunta: '¿Qué hago si una tendencia empeora?', respuesta: 'Avisar de inmediato al equipo y seguir el protocolo del hospital. Detectar el cambio a tiempo es parte central del rol de enfermería.' },
+    ],
+    fuentes: [ELSO_GUIAS, SEMICYUC],
+    imagen: { src: '/consultas/monitoreo-enfermeria-ecmo.webp', alt: 'Enfermera revisa la consola de ECMO durante el taller práctico del ECMO Nursing Care Course', pie: 'Taller del ECMO Nursing Care Course · HCE, Guayaquil 2025' },
+    publicado: '2026-11-17',
+    actualizado: '2026-11-17',
+    revisor: REVISORA,
+  },
+  {
+    slug: 'sitio-canulacion-ecmo',
+    codigo: 'ENF-04',
+    cluster: 'Enfermería en ECMO',
+    insignia: 'Para enfermería',
+    tono: 'enfermeria',
+    titulo: 'Cuidado del sitio de canulación en ECMO y prevención de infecciones',
+    tituloCorto: 'Cuidado del sitio de canulación',
+    descripcion: 'Cómo cuida enfermería el sitio de inserción de las cánulas de ECMO: fijación, curación, vigilancia de sangrado, trombosis e infección, y prevención de decanulación accidental.',
+    extracto: 'Fijación, curación, señales de alarma y cómo prevenir la decanulación.',
+    palabraClave: 'sitio de canulación ECMO enfermería',
+    buscar: ['cánulas', 'canulación', 'curación', 'apósito', 'infección', 'fijación', 'decanulación', 'enfermería'],
+    lineaHce: 'Una cánula bien fijada y un sitio vigilado previenen dos de las emergencias más graves: el sangrado y la decanulación.',
+    respuestaRapida: 'El cuidado del sitio de canulación en ECMO incluye revisar en cada turno el sitio de inserción, la fijación de las cánulas, el sangrado, los signos de trombosis y los datos de infección; hacer la curación con técnica estéril según el protocolo, y proteger las cánulas en cada movilización para evitar una decanulación accidental.',
+    ficha: [
+      { dato: 'Qué se revisa', valor: 'Sitio de inserción, fijación, sangrado, trombosis y datos de infección.' },
+      { dato: 'Curación', valor: 'Con técnica estéril y la frecuencia que marque el protocolo del hospital.' },
+      { dato: 'Mayor riesgo', valor: 'Decanulación accidental durante movilizaciones o traslados.' },
+      { dato: 'Prevención', valor: 'Fijación segura, revisión sistemática y coordinación del equipo al mover al paciente.' },
+    ],
+    secciones: [
+      {
+        id: 'que-revisar',
+        titulo: '¿Qué se revisa en el sitio de canulación?',
+        tabla: {
+          titulo: 'Revisión del sitio de canulación por turno (orientativo)',
+          encabezados: ['Qué', 'Señales de alarma'],
+          filas: [
+            ['Sitio de inserción', 'Sangrado nuevo o que aumenta, hematoma, cambios en la piel.'],
+            ['Fijación', 'Suturas o dispositivos flojos, desplazamiento de la marca de la cánula.'],
+            ['Infección', 'Enrojecimiento, calor, secreción, fiebre o resultado en cultivos.'],
+            ['Trombosis', 'Coágulos visibles en las cánulas o cambios en la extremidad.'],
+            ['Perfusión (ECMO V-A femoral)', 'Pulsos, coloración, llenado capilar, temperatura y dolor de la extremidad.'],
+          ],
+        },
+        nota: 'El tipo de apósito, la frecuencia de curación y los productos los define el protocolo de cada hospital.',
+      },
+      {
+        id: 'decanulacion',
+        titulo: '¿Cómo se previene la decanulación accidental?',
+        puntos: [
+          'Fijación segura y revisada en cada turno, con la posición de la cánula marcada.',
+          'Asignar a una persona para cuidar las cánulas y el circuito en cada movilización.',
+          'Coordinar los movimientos del equipo con una sola voz de mando.',
+          'Tener a la mano el material y los algoritmos de respuesta ante una emergencia.',
+        ],
+      },
+    ],
+    visionTitulo: 'La visión de HCE para enfermería',
+    vision: 'El cuidado del sitio de canulación es trabajo diario de enfermería y una de las mejores formas de prevenir complicaciones. En el ECMO Nursing Care Course se practica en simulación antes de hacerlo con un paciente.',
+    ctaIntermedio: 'Practica el cuidado de cánulas y la respuesta a emergencias en el ECMO Nursing Care Course.',
+    programa: 'nursing',
+    relacionadas: ['canulacion-ecmo', 'complicaciones-ecmo', 'monitoreo-enfermeria-ecmo'],
+    faqs: [
+      { pregunta: '¿Qué hago si veo sangrado en el sitio de la cánula?', respuesta: 'Avisar de inmediato al equipo y seguir el protocolo del hospital; nunca retirar ni recolocar una cánula por tu cuenta.' },
+      { pregunta: '¿Por qué se marca la posición de la cánula?', respuesta: 'Para detectar rápido si se desplazó durante una movilización o un traslado, antes de que cambie el flujo o se presente una decanulación.' },
+    ],
+    fuentes: [ELSO_GUIAS, SEMICYUC],
+    imagen: { src: '/consultas/sitio-canulacion-ecmo.webp', alt: 'Enfermeras practican el manejo de cánulas en un modelo de simulación', pie: 'Práctica de cánulas · ECMO Nursing Care Course, Guayaquil 2025' },
+    publicado: '2026-11-17',
+    actualizado: '2026-11-17',
+    revisor: REVISORA,
+  },
+  {
+    slug: 'movilizacion-prono-ecmo',
+    codigo: 'ENF-05',
+    cluster: 'Enfermería en ECMO',
+    insignia: 'Para enfermería',
+    tono: 'enfermeria',
+    titulo: 'Movilización y posición prono en el paciente con ECMO: cuidados de enfermería',
+    tituloCorto: 'Movilización y prono en ECMO',
+    descripcion: 'Cómo se moviliza con seguridad al paciente en ECMO, incluida la posición prono: roles del equipo, preparación, cuidado de las cánulas y del circuito, y prevención de lesiones por presión.',
+    extracto: 'Roles del equipo, preparación y cuidado de las cánulas al mover al paciente.',
+    palabraClave: 'posición prono en ECMO',
+    buscar: ['prono', 'decúbito prono', 'movilización', 'cambio de posición', 'lesiones por presión', 'enfermería'],
+    lineaHce: 'Mover a un paciente en ECMO es un trabajo de equipo: cada persona sabe qué cuidar antes de empezar.',
+    respuestaRapida: 'Movilizar a un paciente en ECMO, incluida la posición prono, requiere un equipo coordinado con roles claros: una persona dedicada a las cánulas y al circuito, una que dirige el movimiento y las demás que giran al paciente. Antes se revisan la fijación, la longitud libre de las líneas y el material de emergencia; después se confirman el flujo, las presiones y el sitio de las cánulas, y se protegen las zonas de apoyo.',
+    ficha: [
+      { dato: 'Quién decide', valor: 'El equipo médico, según la indicación clínica y el protocolo del centro.' },
+      { dato: 'Roles', valor: 'Líder del movimiento, responsable de cánulas y circuito, y personal para el giro.' },
+      { dato: 'Antes', valor: 'Revisar fijación, longitud libre de las líneas, flujo y material de emergencia.' },
+      { dato: 'Después', valor: 'Confirmar flujo, presiones, sitio de las cánulas y proteger zonas de apoyo.' },
+    ],
+    secciones: [
+      {
+        id: 'pasos',
+        titulo: '¿Cómo se prepara una movilización o un prono?',
+        tabla: {
+          titulo: 'Momentos clave de la movilización (orientativo)',
+          encabezados: ['Momento', 'Qué hace el equipo'],
+          filas: [
+            ['Preparación', 'Asignar roles, revisar fijación y longitud de las líneas, tener a la mano el material de emergencia.'],
+            ['Durante el giro', 'Una sola voz de mando; la persona de cánulas y circuito vigila que no haya tracción ni acodamientos.'],
+            ['Al terminar', 'Confirmar flujo, revoluciones, presiones y el sitio de las cánulas; revisar la ventilación.'],
+            ['En las horas siguientes', 'Proteger zonas de apoyo, vigilar la piel y registrar tendencias.'],
+          ],
+        },
+        nota: 'La indicación de prono y la técnica las define el equipo médico con base en las guías vigentes y el protocolo del hospital.',
+      },
+      {
+        id: 'lesiones',
+        titulo: '¿Cómo se previenen las lesiones por presión?',
+        parrafos: ['El paciente en ECMO suele estar sedado y con movilidad limitada. Proteger las zonas de apoyo, revisar la piel en cada turno y documentar cualquier cambio es parte del cuidado diario de enfermería, en especial en la posición prono (cara, tórax, rodillas).'],
+      },
+    ],
+    visionTitulo: 'La visión de HCE para enfermería',
+    vision: 'Una movilización segura se ensaya antes de hacerla. En el ECMO Nursing Care Course los roles del equipo se practican en simulación con un circuito real.',
+    ctaIntermedio: 'Entrena movilizaciones seguras en el ECMO Nursing Care Course.',
+    programa: 'nursing',
+    relacionadas: ['sitio-canulacion-ecmo', 'traslado-paciente-ecmo', 'cuidados-enfermeria-ecmo'],
+    faqs: [
+      { pregunta: '¿Se puede poner en prono a un paciente en ECMO?', respuesta: 'Sí, en pacientes seleccionados y en centros con experiencia; la decisión la toma el equipo médico según la indicación y el protocolo.' },
+      { pregunta: '¿Cuántas personas se necesitan?', respuesta: 'Depende del protocolo y del paciente; lo esencial es que haya una persona dedicada solo a las cánulas y al circuito y un líder que coordine el movimiento.' },
+    ],
+    fuentes: [ELSO_GUIAS, SEMICYUC],
+    imagen: { src: '/consultas/movilizacion-prono-ecmo.webp', alt: 'Enfermera junto al circuito de ECMO durante una práctica del curso de enfermería', pie: 'Práctica con circuito · ECMO Nursing Care Course, Guayaquil 2025' },
+    publicado: '2026-11-17',
+    actualizado: '2026-11-17',
+    revisor: REVISORA,
+  },
+  {
+    slug: 'traslado-paciente-ecmo',
+    codigo: 'ENF-06',
+    cluster: 'Enfermería en ECMO',
+    insignia: 'Para enfermería',
+    tono: 'enfermeria',
+    titulo: 'Traslado intrahospitalario del paciente en ECMO: checklist de enfermería',
+    tituloCorto: 'Traslado del paciente en ECMO',
+    descripcion: 'Cómo se prepara el traslado de un paciente en ECMO dentro del hospital (tomografía, quirófano, hemodinamia): checklist de equipo, roles, baterías, oxígeno y qué vigilar durante el trayecto.',
+    extracto: 'Checklist antes de salir, roles del equipo y qué vigilar en el trayecto.',
+    palabraClave: 'traslado de paciente en ECMO',
+    buscar: ['traslado', 'transporte', 'tomografía', 'checklist', 'baterías', 'enfermería'],
+    lineaHce: 'Un traslado en ECMO se planea como un procedimiento: con checklist, roles y plan de respaldo.',
+    respuestaRapida: 'El traslado de un paciente en ECMO dentro del hospital se planea como un procedimiento: checklist del equipo (consola con batería cargada, manivela de emergencia, oxígeno suficiente, pinzas), roles definidos, ruta revisada y destino preparado. Durante el trayecto se vigilan el flujo, las cánulas y al paciente, y al llegar se reconecta todo a la corriente y al oxígeno.',
+    ficha: [
+      { dato: 'Antes de salir', valor: 'Checklist de consola, batería, manivela, oxígeno, pinzas y medicamentos.' },
+      { dato: 'Roles', valor: 'Responsable del circuito, del paciente y de coordinar la ruta.' },
+      { dato: 'Durante', valor: 'Flujo, cánulas sin tracción, signos vitales y alarmas.' },
+      { dato: 'Al llegar', valor: 'Reconectar a la corriente y al oxígeno, y revisar el circuito.' },
+    ],
+    secciones: [
+      {
+        id: 'checklist',
+        titulo: '¿Qué incluye el checklist de traslado?',
+        tabla: {
+          titulo: 'Checklist de traslado intrahospitalario en ECMO (orientativo)',
+          encabezados: ['Elemento', 'Qué confirmar'],
+          filas: [
+            ['Consola y batería', 'Batería cargada y suficiente para el trayecto con margen.'],
+            ['Respaldo de la bomba', 'Manivela o motor de emergencia a la mano.'],
+            ['Gas', 'Tanque de oxígeno lleno y conectado al mezclador de gases.'],
+            ['Material de emergencia', 'Pinzas, material para control de sangrado y algoritmos de respuesta.'],
+            ['Cánulas y líneas', 'Fijación revisada y longitud libre suficiente para el movimiento.'],
+            ['Destino y ruta', 'Área de destino avisada, elevadores y espacios libres.'],
+          ],
+        },
+        nota: 'La lista completa y quién autoriza el traslado los define el protocolo de cada hospital.',
+      },
+      {
+        id: 'durante',
+        titulo: '¿Qué se vigila durante el trayecto?',
+        puntos: [
+          'Flujo y revoluciones de la bomba, y las alarmas de la consola.',
+          'Que las cánulas no tengan tracción en los cambios de cama o camilla.',
+          'Signos vitales y ventilación del paciente.',
+          'Nivel de batería y de oxígeno.',
+        ],
+      },
+    ],
+    visionTitulo: 'La visión de HCE para enfermería',
+    vision: 'Los traslados son de los momentos con más riesgo para el paciente en ECMO. En el ECMO Nursing Care Course se ensayan con checklist y simulación, para que el equipo sepa qué hacer si algo falla en el camino.',
+    ctaIntermedio: 'Practica traslados seguros en el ECMO Nursing Care Course.',
+    programa: 'nursing',
+    relacionadas: ['movilizacion-prono-ecmo', 'emergencias-circuito-ecmo', 'circuito-ecmo'],
+    faqs: [
+      { pregunta: '¿Se puede trasladar a un paciente en ECMO?', respuesta: 'Sí, dentro del hospital y entre hospitales con equipos entrenados. Se planea con checklist, roles y un plan de respaldo.' },
+      { pregunta: '¿Qué pasa si falla la batería o la bomba en el camino?', respuesta: 'Por eso se lleva la manivela o el motor de emergencia y se revisa la batería antes de salir; el equipo debe haber practicado esa respuesta en simulación.' },
+    ],
+    fuentes: [ELSO_GUIAS, ELSO_CURSOS],
+    imagen: { src: '/consultas/traslado-paciente-ecmo.webp', alt: 'Equipo de enfermería alrededor de la consola de ECMO durante un escenario de simulación', pie: 'Simulación en equipo · ECMO Nursing Care Course, Guayaquil 2025' },
+    publicado: '2026-11-17',
+    actualizado: '2026-11-17',
+    revisor: REVISORA,
   },
 ];
+
+// Orden del índice (pedido por la dirección médica, 16 nov 2026): primero los
+// conceptos, luego simulación, enfermería y certificación; el resto conserva el
+// orden en que se escribió. Las consultas con `oculta: true` no se publican.
+const ORDEN = ['que-es-ecmo', 'circuito-ecmo', 'ecmo-vv-vs-va', 'complicaciones-ecmo', 'simulacion-ecmo', 'cuidados-enfermeria-ecmo', 'certificacion-ecmo'];
+const lugar = (c, i) => (ORDEN.includes(c.slug) ? ORDEN.indexOf(c.slug) : ORDEN.length + i);
+export const CONSULTAS = TODAS
+  .map((c, i) => ({ c, i }))
+  .filter(({ c }) => !c.oculta)
+  .sort((a, b) => lugar(a.c, a.i) - lugar(b.c, b.i))
+  .map(({ c }) => c);
 
 export const consultaPorSlug = (slug) => CONSULTAS.find((c) => c.slug === slug) || null;
 
@@ -923,8 +1175,10 @@ export const consultaPorSlug = (slug) => CONSULTAS.find((c) => c.slug === slug) 
 // consulta que la explica a fondo (la página pone el enlace).
 export const FAQ_PROGRAMAS = [
   { tema: 'programas', pregunta: '¿Qué es HCE – Healthcare Training Experience?', respuesta: 'Es una organización de educación médica continua especializada en ECMO, cuidados críticos y simulación clínica para profesionales de la salud de Latinoamérica. Imparte el Paris International Diploma in ECMO, el ECMO Nursing Care Course y entrenamientos con el simulador ECMO SIM.' },
-  { tema: 'programas', pregunta: '¿Cuándo inicia la próxima generación del Diploma de París?', respuesta: 'El 28 de octubre de 2026 en el INER, Ciudad de México. El Step 1 (teórico) es el 28 y 29 de octubre.' },
+  { tema: 'programas', pregunta: '¿Cuándo inicia la próxima generación del Diploma de París?', respuesta: 'La próxima generación será del 8 al 12 de noviembre de 2027. Las inscripciones abren próximamente y la sede se anunciará más adelante.' },
   { tema: 'programas', pregunta: '¿Quién puede inscribirse al Diploma de París en ECMO?', respuesta: 'Médicos especialistas, médicos residentes, enfermería y otros profesionales de la salud. Al inscribirte eliges tu perfil.' },
+  // ECMO Nursing Care Course (3.ª edición): fecha y precio desde src/data/nursing.js.
+  ...FAQ_NURSING_TEXTO.slice(0, 2).map((f, i) => ({ tema: i === 0 ? 'programas' : 'pagos', ...f, consulta: 'cuidados-enfermeria-ecmo' })),
   { tema: 'pagos', pregunta: '¿Cómo me inscribo y cómo pago?', respuesta: 'Desde la página de cada programa. El pago es en línea con tarjeta, en pesos (MXN) o en dólares (USD); al confirmarse recibes tu recibo con folio y acceso a tu portal.' },
   { tema: 'pagos', pregunta: '¿Recibo un documento al terminar?', respuesta: 'Sí. En el portal recibes tu certificado en PDF con folio y código QR, que cualquier hospital puede verificar en healthcareexp.com/verificar.' },
   { tema: 'programas', pregunta: '¿Estos cursos cuentan para la certificación ELSO?', respuesta: 'El Diploma de París sigue el esquema teórico + simulación que piden las certificaciones, pero la elegibilidad la confirma ELSO. Escríbenos y te decimos qué constancias recibes.', consulta: 'certificacion-ecmo' },
@@ -937,7 +1191,7 @@ export const FAQ_ECMO = [
   { pregunta: '¿Qué es ECMO?', respuesta: 'ECMO (oxigenación por membrana extracorpórea) es un soporte vital temporal que reemplaza la función de los pulmones, del corazón o de ambos en pacientes críticos.', consulta: 'que-es-ecmo' },
   { pregunta: '¿Cuál es la diferencia entre ECMO V-V y ECMO V-A?', respuesta: 'ECMO venovenosa (V-V) brinda soporte respiratorio: extrae la sangre por una vena, realiza el intercambio de gases extracorpóreo y la devuelve a una vena, y necesita que el corazón funcione. ECMO venoarterial (V-A) extrae la sangre por una vena y la devuelve a una arteria, brindando soporte circulatorio mecánico.', consulta: 'ecmo-vv-vs-va' },
   { pregunta: '¿ECMO cura la enfermedad?', respuesta: 'No. ECMO gana tiempo para que el corazón y/o los pulmones se recuperen, o para llegar a otra terapia como un trasplante o un dispositivo de largo plazo.' },
-  { pregunta: '¿Qué partes tiene el circuito de ECMO?', respuesta: 'Cánulas de drenaje y de retorno, una bomba centrífuga, un oxigenador de membrana, un mezclador de gases, un intercambiador de calor y una consola que muestra flujo, revoluciones y presiones.', consulta: 'circuito-ecmo' },
+  { pregunta: '¿Qué partes tiene el circuito de ECMO?', respuesta: 'Cánulas de drenaje y de retorno, una bomba centrífuga, un oxigenador de membrana, un mezclador de gases, un termorregulador y una consola que muestra flujo, revoluciones y presiones.', consulta: 'circuito-ecmo' },
   { pregunta: '¿Cuáles son las complicaciones más frecuentes?', respuesta: 'Sangrado y trombosis, infecciones, complicaciones en el sitio de canulación y fallas del circuito.', consulta: 'complicaciones-ecmo' },
   { pregunta: '¿Por qué se anticoagula al paciente en ECMO?', respuesta: 'Porque la sangre en contacto con el circuito tiende a coagularse. Casi siempre se usa heparina y se vigila con pruebas como TTPa, anti-Xa o ACT, según el protocolo del hospital.', consulta: 'anticoagulacion-ecmo' },
   { pregunta: '¿Qué hace la enfermera en un paciente en ECMO?', respuesta: 'Vigila al paciente y al circuito de forma continua: flujos, presiones, color de las líneas, sitio de cánulas, sangrado, anticoagulación, perfusión distal y respuesta a emergencias del circuito.', consulta: 'cuidados-enfermeria-ecmo' },

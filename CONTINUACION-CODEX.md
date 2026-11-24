@@ -743,39 +743,39 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
       Formspree, recibo, aviso a academia. Revisar que todo funcione (lanzan el viernes).
 - [x] programas.js / seo.js / llms.txt / FAQ: Nursing con inicio 22 feb 2027 e inscripciones abiertas.
 
-### P2. Reporte de inscritos por entrenamiento (admin, descargable)
-- [ ] Basado en "MARZO 2025 CONSOLIDADO - Ok (4).xlsx" (Downloads). Por cada inscrito: si compró
+### P2. Reporte de inscritos por entrenamiento (admin, descargable) — HECHO 17 nov: Admin → Pagos y formularios → Reporte de inscritos (src/lib/inscritos.js + ReporteInscritos.jsx)
+- [x] Basado en "MARZO 2025 CONSOLIDADO - Ok (4).xlsx" (Downloads). Por cada inscrito: si compró
       también simulador o nursing, si obtuvo descuento y qué %, si solicitó factura. Descarga Excel.
 
-### P3. Textos de páginas
-- [ ] Tarjetas de instructores: "Imparte: Diplomado de París ECMO" → "Certificación en ECMO".
-- [ ] /programas tabla, París: modalidad "Presencial: Step 1 (teórico) y Step 2 (práctico con simulación
+### P3. Textos de páginas — HECHO 16 nov (verificar pasa; SIN subir)
+- [x] Tarjetas de instructores: "Imparte: Diplomado de París ECMO" → "Certificación en ECMO".
+- [x] /programas tabla, París: modalidad "Presencial: Step 1 (teórico) y Step 2 (práctico con simulación
       clínica de alta fidelidad)"; inicio "Próximamente inscripciones 2027".
-- [ ] /para-hospitales tarjeta "Simulación con ECMO SIM": "Nuestro simulador virtual ECMO SIM permite un
+- [x] /para-hospitales tarjeta "Simulación con ECMO SIM": "Nuestro simulador virtual ECMO SIM permite un
       entrenamiento inmersivo, adaptable a sesiones individuales o dinámicas de equipo. Con una capacidad
       técnica probada, hemos realizado simulaciones masivas y coordinadas con hasta 200 profesionales en
       tiempo real."
-- [ ] En todo el sitio: ECMO SIM ya no "con ventilador y consola ECMO" → "un paciente en ECMO cuyas
+- [x] En todo el sitio: ECMO SIM ya no "con ventilador y consola ECMO" → "un paciente en ECMO cuyas
       constantes reaccionan a cada decisión"; "en línea" → "virtual" para ECMO SIM.
 
-### P4. Consultas (src/data/consultas.js)
-- [ ] Índice: orden → Qué es ECMO, Partes del circuito, ECMO V-V vs V-A, Complicaciones; luego
+### P4. Consultas (src/data/consultas.js) — HECHO 16 nov (verificar pasa; SIN subir)
+- [x] Índice: orden → Qué es ECMO, Partes del circuito, ECMO V-V vs V-A, Complicaciones; luego
       Simulación, Cuidados de enfermería, Certificación; después el resto.
-- [ ] Ocultar por ahora la consulta Insuficiencia cardiaca avanzada (ic-avanzada) (sin borrar).
-- [ ] Tarjeta Simulación: ícono de control de videojuego; "en línea" → "virtual".
-- [ ] **que-es-ecmo**: ficha "Quién la maneja" → "Equipo ECMO"; intro de pacientes: "Se considera ECMO para
+- [x] Ocultar por ahora la consulta Insuficiencia cardiaca avanzada (ic-avanzada) (sin borrar).
+- [x] Tarjeta Simulación: ícono de control de videojuego; "en línea" → "virtual".
+- [x] **que-es-ecmo**: ficha "Quién la maneja" → "Equipo ECMO"; intro de pacientes: "Se considera ECMO para
   pacientes con insuficiencia respiratoria o cardiaca grave que no responden al tratamiento convencional
   optimizado."; coma en "Por eso, la formación del equipo…".
-- [ ] **ecmo-vv-vs-va**: Apoyo = "Total o parcial en ECMO V-V (los pulmones pueden no funcionar en su
+- [x] **ecmo-vv-vs-va**: Apoyo = "Total o parcial en ECMO V-V (los pulmones pueden no funcionar en su
   totalidad y ECMO puede soportar el 100% de la función respiratoria del paciente); parcial en ECMO V-A (el
   corazón nativo debe conservar un % de funcionalidad mínimo para poder conectar un ECMO V-A al paciente)";
   "¿Necesita que el corazón funcione?" V-A = "Sí; soporta su función pero no la sustituye por completo."
   (sin "en parte"); tras "…distinta entre la parte alta y la baja" agregar "(Oxigenación diferencial entre
   el hemicuerpo superior e inferior del paciente)"; CTA → "Inscríbete al Step 1 y Step 2 del Diploma
   Internacional de París en ECMO".
-- [ ] **certificacion-ecmo**: borrar bloque 3 "¿Qué es la certificación CES-A?", la fuente/enlace de AmSECT
+- [x] **certificacion-ecmo**: borrar bloque 3 "¿Qué es la certificación CES-A?", la fuente/enlace de AmSECT
   (es de EUA) y "La visión del equipo académico" (redundante).
-- [ ] **cuidados-enfermeria-ecmo** (y donde aplique):
+- [x] **cuidados-enfermeria-ecmo** (y donde aplique):
   - Emergencias del circuito: "Fallo de la bomba o de energía eléctrica, embolia aérea masiva en el circuito,
     fallo agudo o trombosis del oxigenador de membrana, rotura o desconexión de tubuladuras, falla en el
     suministro de gas, isquemia de extremidad inferior (en ECMO V-A periférico), síndrome de arlequín,
@@ -795,7 +795,7 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
     ECMO" (quitar destete).
   - FAQ "¿Enfermería puede ser especialista en ECMO?": "Sí, ya que enfermería forma parte crucial del equipo
     multidisciplinario en ECMO." (quitar AmSECT / ECMO Specialist – Adult).
-- [ ] **simulacion-ecmo**: respuesta rápida "…practicarlas sin poner en riesgo al paciente…" y "Lo ideal es
+- [x] **simulacion-ecmo**: respuesta rápida "…practicarlas sin poner en riesgo al paciente…" y "Lo ideal es
   combinar simulación presencial con consola real y práctica frecuente apoyado con un simulador como ECMO
   SIM para reforzar como educación continua."; "Entrena las manos y el trabajo…" → "Domina las habilidades
   y el trabajo en equipo con un circuito y consola reales."; "Permite repetir decisiones… en línea" →
@@ -805,7 +805,7 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
   "¿Existe un simulador de ECMO virtual?" → "Sí. ECMO SIM es un simulador clínico 100% virtual que HCE trae
   a Latinoamérica."; FAQ certificación: quitar lo de pedir al organizador, dejar hasta "revisa con ELSO…";
   FAQ hospitales: hipervínculo a /para-hospitales.
-- [ ] **circuito-ecmo**: extracto "Cánulas, bomba, oxigenador, mezclador de gases, termorregulador y consola:
+- [x] **circuito-ecmo**: extracto "Cánulas, bomba, oxigenador, mezclador de gases, termorregulador y consola:
   qué hace cada elemento."; ficha "Mezclador de gases (FmO₂ y flujo de gas de barrido)" y "Termorregulador"
   (no intercambiador de calor); tabla: "Extrae/drena" en lugar de "saca" (en todo el sitio); "chattering"
   o balanceo de las líneas; bomba revisa "Revoluciones, flujo, temperatura y ruidos"; oxigenador revisa
@@ -815,7 +815,7 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
   "Sitio de canulación, fijación, sangrado, trombosis y datos de infección"; borrar la sección "¿Qué
   controla el flujo y qué controla el gas?"; FAQ oxigenador: "…cuando su desempeño cae o aparecen signos de
   falla o trombosis del mismo. Debe existir un protocolo de cambio de oxigenador en el hospital."
-- [ ] **complicaciones-ecmo**: ficha "Del circuito": "Falla o trombosis del oxigenador, falla de la bomba,
+- [x] **complicaciones-ecmo**: ficha "Del circuito": "Falla o trombosis del oxigenador, falla de la bomba,
   falla de la electricidad, falla del suministro de aire, embolismo aéreo masivo, decanulación, etc.";
   "Cómo se previenen": "Revisión sistemática del circuito, protocolos del equipo, entrenamiento continuo del
   equipo a través de simulación, anticoagulación vigilada y revisión de tendencias de los parámetros del
@@ -826,3 +826,35 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
   cambios en las presiones, ruidos de la bomba y desempeño del oxigenador". FAQ más común: "manejo de la
   anticoagulación" (no "equilibrio"); FAQ pierna V-A: "Porque la cánula en la arteria femoral puede
   disminuir el flujo distal hacia la pierna canulada; …".
+
+### Estado al cortar (16 nov) — límite de uso de Claude
+- P1 Nursing publicado (incluye precio Buen Fin: $4,000 MXN / USD 200; interruptor BUEN_FIN en InscripcionesNursing.jsx y create-nursing-checkout.js).
+- P3 y P4 hechos en el working tree, SIN commit ni push (Christian debe decir "sube"). Extra: nombres de programas se enlazan solos en las consultas (conEnlaces en Consultas.jsx); ic-avanzada con oculta:true; París 2027 (8-12 nov, sin sede) en programas.js, seo.js, FAQ y llms.txt.
+- Redirección 302 /consultas/ic-avanzada -> /consultas: HECHA.
+- P2 (reporte de inscritos) HECHO el 17 nov. Plan: src/lib/inscritos.js + componente en Admin -> Pagos y formularios. Fuentes: pagos de get-stripe-payments (agregar perfil y total_mxn de metadata), form_submissions (registro por programa, se cruza por correo) y facturacion_requests (factura: cruzar por correo). Columnas: entrenamiento, fecha, nombre, correo, país, institución, perfil, compró simulador, compró nursing, descuento sí/no, % (contra precio regular), código, pidió factura, monto, moneda. Excel con hoja Resumen + una hoja por entrenamiento (exceljs, como ReporteVentas).
+
+## 19. SEO y contenido de ECMO Nursing (17 nov 2026) — Claude, SIN subir aún
+- src/data/nursing.js: datos únicos de Nursing (inicio 22 feb 2027, precio Buen Fin/regular, FAQ en texto).
+  Lo usan InscripcionesNursing.jsx, FAQSection (FAQ de la página), consultas.js (FAQ general) y seo.js.
+  El cobro sigue en create-nursing-checkout.js (interruptor BUEN_FIN propio) y llms.txt tiene el precio fijo.
+- seo.js /ecmo-nursing-care: título 2027, Course + CourseInstance (blended, 2027-02-22) + Offer + FAQPage;
+  imagen social nueva public/og/nursing-2027.jpg (sin "destete", con fecha).
+- 4 consultas nuevas de enfermería: monitoreo-enfermeria-ecmo, sitio-canulacion-ecmo,
+  movilizacion-prono-ecmo, traslado-paciente-ecmo (fotos del taller de Guayaquil). Total: 17.
+- FAQ de pagos de Nursing sin "parcialidades" (no hay meses sin intereses activos).
+- llms.txt con Nursing completo y las consultas nuevas.
+
+## 20. Pedido del 24 nov 2026 — Claude, SIN subir aún
+- Prueba de cobro de Nursing en producción: create-nursing-checkout crea sesión en MXN y USD; Stripe
+  cobra $4,000 + $3,500 (SIM). Solo acepta tarjeta (payment_method_types ['card']).
+- supabase/mover-comentarios-in-situ.sql: mueve 4 testimonios (Ester Abrego, María Javiera García
+  Inostroza, Mariela Cecilia Castro, Lucas Zelada) a 'Experiencia Docente'. Lo corre Christian.
+- EditorEvaluacion.jsx: selector "Una / Varias respuestas" para cambiar el tipo sin borrar la pregunta.
+- EvaluacionLeccion.jsx: sin pastilla "Revisar" en el mapa; al contestar todo con un clic pasa solo a la
+  pantalla de envío; aviso al salir sin enviar (beforeunload y navegación del aula en Classroom.jsx).
+  Prueba: tests/encuesta-alumno.test.jsx.
+- (24 nov, 2.ª parte) Revisora de todas las consultas: Dra. Jenifer Trejo Guerra (REVISORA en consultas.js);
+  "Revisado por" con enlace a /quienes-somos; JSON-LD Person JENIFER en seo.js (reviewedBy, founder,
+  /quienes-somos). París: sección de sede = "Sede por anunciar · 2027" (8–12 nov 2027), sin INER.
+  ECMO SIM: "100% virtual" y "un paciente en ECMO" en EcmoSim.jsx y asistente. Nursing: una sola
+  sección de FAQ (FAQNursing, la completa); se quitó la repetida de Nursing.jsx.

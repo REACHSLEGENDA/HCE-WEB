@@ -344,7 +344,7 @@ export const FLUJOS = {
 
   // ── Programas ────────────────────────────────────────────────────────────────
   programas: {
-    text: 'HCE ofrece estas experiencias de formación:\n\n**Diploma Paris ECMO** — Certificación internacional presencial. Próxima generación: 8 al 12 de noviembre de 2027; inscripciones próximamente.\n\n**ECMO Sim** — Simulador clínico virtual, 100% online, todo el año.\n\n**ECMO Nursing Care** — Formación para enfermería en UCI. 3.ª edición con inscripciones abiertas: inicia el 22 de febrero de 2027.\n\n**Webinars gratuitos** — Sesiones en vivo con expertos, con constancia de asistencia.\n\n¿Sobre cuál te gustaría saber más?',
+    text: 'HCE ofrece estas experiencias de formación:\n\n**Diploma Paris ECMO** — Certificación internacional presencial. Próxima generación: 8 al 12 de noviembre de 2027; inscripciones próximamente.\n\n**ECMO Sim** — Simulador clínico 100% virtual, disponible todo el año.\n\n**ECMO Nursing Care** — Formación para enfermería en UCI. 3.ª edición con inscripciones abiertas: inicia el 22 de febrero de 2027.\n\n**Webinars gratuitos** — Sesiones en vivo con expertos, con constancia de asistencia.\n\n¿Sobre cuál te gustaría saber más?',
     buttons: [
       { label: 'Diploma Paris ECMO',   next: 'paris' },
       { label: 'ECMO Sim',             next: 'ecmo_sim' },
@@ -404,7 +404,7 @@ export const FLUJOS = {
 
   // ── ECMO Sim ─────────────────────────────────────────────────────────────────
   ecmo_sim: {
-    text: '**ECMO Sim** — Simulador clínico virtual para profesionales de la salud.\n\nRecrea una UCI real en 3D: interactúas con ventiladores mecánicos, consolas ECMO y constantes vitales que reaccionan en tiempo real a cada decisión. Aprende a manejar escenarios críticos sin riesgo para el paciente.\n\n100% online, accede desde tu computadora.\n\n**4 meses — $250 USD**\n**12 meses — $700 USD**\n\nAcceso ilimitado a todos los escenarios durante tu suscripción.',
+    text: '**ECMO Sim** — Simulador clínico virtual para profesionales de la salud.\n\nRecrea una terapia intensiva en 3D con un paciente en ECMO cuyas constantes reaccionan en tiempo real a cada decisión. Aprende a manejar escenarios críticos sin riesgo para el paciente.\n\n100% virtual: accede desde tu computadora.\n\n**4 meses — $250 USD**\n**12 meses — $700 USD**\n\nAcceso ilimitado a todos los escenarios durante tu suscripción.',
     buttons: [
       { label: 'Acceder al simulador',   action: 'ecmo_sim_buy' },
       { label: 'Ver otros programas',    next: 'programas' },

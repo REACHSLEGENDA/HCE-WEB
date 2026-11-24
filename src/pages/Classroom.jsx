@@ -445,7 +445,10 @@ const Classroom = () => {
       showToast(isGeneratingCert ? 'Espera a que termine la generación de tu certificado.' : 'Espera a que termine el envío de tu evaluación.', 'info');
       return false;
     }
-    return !estado?.sinGuardar || window.confirm('No se pudo guardar el borrador de tu evaluación. ¿Salir y perder esas respuestas?');
+    if (estado?.sinGuardar) return window.confirm('No se pudo guardar el borrador de tu evaluación. ¿Salir y perder esas respuestas?');
+    // Contestó algo pero no envió: se avisa que no quedará guardada.
+    if (estado?.sinEnviar) return window.confirm(`Aún no has enviado tu ${estado.tipo || 'evaluación'}. Si sales ahora, no se guardará. ¿Quieres salir de todos modos?`);
+    return true;
   };
   const irAlPortal = (ruta = '/dashboard') => {
     if (permitirNavegacionAula()) navigate(ruta);
