@@ -2,7 +2,7 @@
 -- Entrenamiento In Situ" (id en el código: 'Experiencia Docente'), a petición
 -- de la Dra. Trejo (24 nov 2026):
 --   del Paris International Diploma in ECMO ('Paris Diploma ECMO'):
---     Ester Abrego · María Javiera García Inostroza
+--     Ester Abrego · María Javiera García Inostrosa (así está en su perfil)
 --   del Simulador ECMO SIM ('ECMO SIM'):
 --     Mariela Cecilia Castro · Lucas Zelada
 --
@@ -21,7 +21,7 @@ from public.testimonials t
 join public.profiles p on p.id = t.user_id
 where (t.experience = 'Paris Diploma ECMO' and (
         (unaccent(lower(p.nombre_completo)) like '%ester%' and unaccent(lower(p.nombre_completo)) like '%abrego%')
-     or (unaccent(lower(p.nombre_completo)) like '%javiera%' and unaccent(lower(p.nombre_completo)) like '%inostroza%')))
+     or (unaccent(lower(p.nombre_completo)) like '%javiera%' and unaccent(lower(p.nombre_completo)) similar to '%inostro(s|z)a%')))
    or (t.experience = 'ECMO SIM' and (
         (unaccent(lower(p.nombre_completo)) like '%mariela%' and unaccent(lower(p.nombre_completo)) like '%castro%')
      or (unaccent(lower(p.nombre_completo)) like '%lucas%' and unaccent(lower(p.nombre_completo)) like '%zelada%')))
@@ -34,7 +34,7 @@ from public.profiles p
 where p.id = t.user_id
   and ((t.experience = 'Paris Diploma ECMO' and (
           (unaccent(lower(p.nombre_completo)) like '%ester%' and unaccent(lower(p.nombre_completo)) like '%abrego%')
-       or (unaccent(lower(p.nombre_completo)) like '%javiera%' and unaccent(lower(p.nombre_completo)) like '%inostroza%')))
+       or (unaccent(lower(p.nombre_completo)) like '%javiera%' and unaccent(lower(p.nombre_completo)) similar to '%inostro(s|z)a%')))
     or (t.experience = 'ECMO SIM' and (
           (unaccent(lower(p.nombre_completo)) like '%mariela%' and unaccent(lower(p.nombre_completo)) like '%castro%')
        or (unaccent(lower(p.nombre_completo)) like '%lucas%' and unaccent(lower(p.nombre_completo)) like '%zelada%'))));
