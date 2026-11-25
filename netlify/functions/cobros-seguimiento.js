@@ -15,12 +15,18 @@
 //
 // Solo se procesan cobros con `metadata.programa` (todos los creados desde
 // el 15 de octubre de 2026); Alumni Pass tiene sus propios correos.
+//
+// OXXO y SPEI (Nursing, en pesos) se acreditan después: mientras la ficha o la
+// transferencia están pendientes no hay carrito abandonado ni recibo. Cuando
+// llega el dinero sale el recibo y, si ya llenó su registro, la bienvenida de
+// Nursing (entra a la lista de inscritos de Brevo).
 // Nada se manda dos veces: cada correo se aparta antes en `cobros_avisos`
 // (supabase/correos-mejoras.sql). Sin esa tabla no se envía nada.
 
 import { getStripe } from './_stripe.js';
 import { admin, isConfigured as supabaseListo } from './_supabase.js';
-import { enviarCorreo, isConfigured as brevoListo } from './_brevo.js';
+import { enviarCorreo, isConfigured as brevoListo, LISTS, addToList, removeFromList } from './_brevo.js';
+import { sesionPendiente, metodoDeSesion, NOMBRE_METODO } from './_pagos.js';
 import { plantillaHce } from './_notificaciones.js';
 import { correosAvisoAdmin } from './_admins.js';
 import { promoPorTerminar } from './_promos.js';
@@ -59,7 +65,7 @@ function cuentas() {
 
 async function sesionesRecientes(stripe, desde) {
   const lista = [];
-  for await (const s of stripe.checkout.sessions.list({ created: { gte: Math.floor(desde / 1000) }, limit: 100, expand: ['data.payment_intent'] })) {
+  for await (const s of stripe.checkout.sessions.list({ created: { gte: Math.floor(desde / 1000) }, limit: 100, expand: ['data.payment_intent.payment_method'] })) {
     lista.push(s);
     if (lista.length >= 1000) break;
   }
@@ -73,6 +79,21 @@ async function yaPago(stripes, email, programa) {
     if (data.some((s) => s.status === 'complete' && s.payment_status !== 'unpaid' && s.metadata?.programa === programa)) return true;
   }
   return false;
+}
+
+// Nursing pagado en OXXO o SPEI: la bienvenida no salió al registrarse
+// (nursing-register la detiene mientras el pago está pendiente). Sale ahora,
+// si ya llenó su registro; si no, sale cuando lo llene.
+async function bienvenidaNursingDiferida(db, s, email) {
+  if (s.metadata?.programa !== 'nursing' || metodoDeSesion(s) === 'tarjeta') return;
+  try {
+    const { data } = await db.from('form_submissions').select('id').eq('form_id', 'xpqenabk').ilike('sender_email', email).limit(1);
+    if (!data?.length) return;
+    await removeFromList(email, LISTS.CARRITO_NURSING);
+    await addToList(email, LISTS.INSCRITOS_NURSING);
+  } catch (err) {
+    console.error('Bienvenida Nursing', s.id, err.message);
+  }
 }
 
 // Aparta el envío. false si ya existía (otra ejecución lo mandó).
@@ -102,7 +123,7 @@ function correoRecibo(s) {
     ...(detalle ? [['Detalle', detalle]] : []),
     ['Importe', `${monto} ${String(s.currency).toUpperCase()}`],
     ['Fecha', fechaMx((s.created || Date.now() / 1000) * 1000)],
-    ['Método', 'Tarjeta (Stripe)'],
+    ['Método', NOMBRE_METODO[metodoDeSesion(s)]],
   ];
   const tabla = `<table style="width:100%;border-collapse:collapse;margin:0 0 20px;font-size:14px;">${filas.map(([k, v]) => `<tr><td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#64748b;width:35%;">${esc(k)}</td><td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;">${esc(v)}</td></tr>`).join('')}</table>`;
   const nombre = nombreDe(s);
@@ -170,13 +191,17 @@ export default async () => {
 
   const vistas = new Map();
   for (const stripe of stripes) {
-    for (const s of await sesionesRecientes(stripe, ahora - 72 * HORA)) {
+    // 7 días: una ficha de OXXO o una transferencia puede acreditarse días
+    // después de empezar el pago y aun así lleva su recibo.
+    for (const s of await sesionesRecientes(stripe, ahora - 7 * 24 * HORA)) {
       if (programaDe(s) && !vistas.has(s.id)) vistas.set(s.id, s);
     }
   }
   const sesiones = [...vistas.values()].sort((a, b) => a.created - b.created);
   const pagada = (s) => s.status === 'complete' && s.payment_status !== 'unpaid';
   const pagaron = new Set(sesiones.filter(pagada).map((s) => `${correoDe(s)}:${programaDe(s)}`));
+  // Quien dejó una ficha de OXXO o una transferencia pendiente ya hizo su parte.
+  const porAcreditar = new Set(sesiones.filter(sesionPendiente).map((s) => `${correoDe(s)}:${programaDe(s)}`));
 
   // 1. Recibos.
   for (const s of sesiones.filter((x) => pagada(x) && x.amount_total > 0)) {
@@ -189,6 +214,7 @@ export default async () => {
       await enviarCorreo({ para: [email], ...correoRecibo(s), claveIdempotencia: clave });
       resumen.recibos += 1;
       enviados += 1;
+      await bienvenidaNursingDiferida(db, s, email);
     } catch (err) {
       console.error('Recibo', s.id, err.message);
       await liberar(db, clave); // se reintenta en la siguiente hora
@@ -199,9 +225,9 @@ export default async () => {
   //    programa cada 7 días).
   const pendientes = new Map();
   for (const s of sesiones) {
-    if (pagada(s) || ahora - s.created * 1000 < HORA) continue;
+    if (pagada(s) || sesionPendiente(s) || ahora - s.created * 1000 < HORA || ahora - s.created * 1000 > 72 * HORA) continue;
     const email = correoDe(s);
-    if (!email || pagaron.has(`${email}:${programaDe(s)}`)) continue;
+    if (!email || pagaron.has(`${email}:${programaDe(s)}`) || porAcreditar.has(`${email}:${programaDe(s)}`)) continue;
     pendientes.set(`${email}:${programaDe(s)}`, s); // queda el intento más reciente
   }
   for (const [par, s] of pendientes) {

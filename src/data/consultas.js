@@ -1175,7 +1175,7 @@ export const consultaPorSlug = (slug) => CONSULTAS.find((c) => c.slug === slug) 
 // consulta que la explica a fondo (la página pone el enlace).
 export const FAQ_PROGRAMAS = [
   { tema: 'programas', pregunta: '¿Qué es HCE – Healthcare Training Experience?', respuesta: 'Es una organización de educación médica continua especializada en ECMO, cuidados críticos y simulación clínica para profesionales de la salud de Latinoamérica. Imparte el Paris International Diploma in ECMO, el ECMO Nursing Care Course y entrenamientos con el simulador ECMO SIM.' },
-  { tema: 'programas', pregunta: '¿Cuándo inicia la próxima generación del Diploma de París?', respuesta: 'La próxima generación será del 8 al 12 de noviembre de 2027. Las inscripciones abren próximamente y la sede se anunciará más adelante.' },
+  { tema: 'programas', pregunta: '¿Cuándo inicia la próxima generación del Diploma de París?', respuesta: 'La próxima generación será del 8 al 11 de noviembre de 2027. Las inscripciones abren próximamente y la sede se anunciará más adelante.' },
   { tema: 'programas', pregunta: '¿Quién puede inscribirse al Diploma de París en ECMO?', respuesta: 'Médicos especialistas, médicos residentes, enfermería y otros profesionales de la salud. Al inscribirte eliges tu perfil.' },
   // ECMO Nursing Care Course (3.ª edición): fecha y precio desde src/data/nursing.js.
   ...FAQ_NURSING_TEXTO.slice(0, 2).map((f, i) => ({ tema: i === 0 ? 'programas' : 'pagos', ...f, consulta: 'cuidados-enfermeria-ecmo' })),

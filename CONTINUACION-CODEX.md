@@ -876,3 +876,18 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
 - (misma noche) Campo "Fuentes" (leccion_contenido.fuentes text, misma migración) y preguntas de repaso
   también en lecciones de Página web: TIPOS_CON_REPASO = ['texto', 'web'] en src/lib/lecciones.js.
   En el aula: FuentesLeccion (export de TextoLeccion.jsx) debajo del texto / de la página, y luego RepasoLeccion.
+
+## 22. OXXO y SPEI en Nursing + París 8–11 nov 2027 (24 nov 2026) — Claude, SUBIDO
+- netlify/functions/_pagos.js: conPagosDiferidos / crearSesionConPagosDiferidos (card + oxxo + customer_balance
+  mx_bank_transfer, ficha de 3 días, customer_creation 'always'; si Stripe rechaza, reintenta solo con tarjeta),
+  sesionPendiente / sesionPagada / metodoDeSesion / estadoPago(sid).
+- create-nursing-checkout: en MXN usa crearSesionConPagosDiferidos; success_url lleva sid={CHECKOUT_SESSION_ID}.
+- pago-estado.js (nuevo): la página pregunta si el pago quedó pendiente y muestra aviso + liga a la ficha/datos SPEI.
+- nursing-register: si el pago está pendiente (verificado en Stripe con el sid) guarda atributos pero NO agrega
+  a INSCRITOS_NURSING (bienvenida). cobros-seguimiento la agrega al mandar el recibo cuando se acredita
+  (bienvenidaNursingDiferida, solo si ya llenó su registro en form_submissions xpqenabk).
+- cobros-seguimiento: revisa 7 días (recibos de pagos que tardan), carritos solo de las últimas 72 h, sin carrito
+  para pagos pendientes; el recibo dice el método (tarjeta, OXXO o SPEI).
+- París: "8 al 11 de noviembre de 2027" (endDate 2027-11-11) en ParisNewDesign, asistente, consultas, programas,
+  seo.js y llms.txt; imagen social nueva public/og/paris-2027.jpg.
+- Pruebas: tests/pagos-diferidos.test.js.

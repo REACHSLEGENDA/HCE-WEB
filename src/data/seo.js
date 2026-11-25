@@ -152,8 +152,8 @@ export const PAGINAS = [
   {
     ruta: '/paris-diploma-ecmo',
     titulo: 'Diploma Internacional París en ECMO | Certificación en ECMO – HCE',
-    descripcion: 'Certifícate con los profesores Alain Combes y Matthieu Schmidt (Pitié-Salpêtrière, París). Próxima generación: 8 al 12 de noviembre de 2027. Temario, profesores y fechas.',
-    imagen: OG('paris.jpg'),
+    descripcion: 'Certifícate con los profesores Alain Combes y Matthieu Schmidt (Pitié-Salpêtrière, París). Próxima generación: 8 al 11 de noviembre de 2027. Temario, profesores y fechas.',
+    imagen: OG('paris-2027.jpg'),
     prioridad: 0.9,
     h1: 'Paris International Diploma in ECMO — Diploma Internacional París en ECMO',
     texto: fichaPrograma(programa('paris')),
@@ -162,7 +162,7 @@ export const PAGINAS = [
       curso({
         nombre: 'Paris International Diploma in ECMO', descripcion: programa('paris').resumen, ruta: p.ruta, imagen: p.imagen,
         publico: programa('paris').publico,
-        instancias: [{ '@type': 'CourseInstance', courseMode: 'onsite', startDate: '2027-11-08', endDate: '2027-11-12',
+        instancias: [{ '@type': 'CourseInstance', courseMode: 'onsite', startDate: '2027-11-08', endDate: '2027-11-11',
           instructor: personas().filter((x) => /Combes|Schmidt/.test(x.name)) }],
       }),
       {
@@ -171,7 +171,7 @@ export const PAGINAS = [
         description: programa('paris').resumen,
         image: p.imagen,
         startDate: '2027-11-08',
-        endDate: '2027-11-12',
+        endDate: '2027-11-11',
         eventStatus: 'https://schema.org/EventScheduled',
         eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
         // La sede 2027 todavía no se anuncia (decisión de la dirección).

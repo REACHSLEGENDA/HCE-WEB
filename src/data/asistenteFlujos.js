@@ -313,7 +313,7 @@ export const FLUJOS = {
 
   // ── Experiencias abiertas ────────────────────────────────────────────────────
   disponibles: {
-    text: 'Esto es lo que está abierto ahora mismo:\n\n**ECMO Nursing Care Course** — 3.ª edición, inscripciones abiertas. La fase virtual inicia el **22 de febrero de 2027**.\n\n**ECMO Sim** — simulador virtual, disponible todo el año.\n\n**Webinars gratuitos** — sesiones en vivo con expertos.\n\nEl **Paris International Diploma in ECMO** ya cerró la generación 2026; la próxima es del **8 al 12 de noviembre de 2027** y las inscripciones se abren próximamente.',
+    text: 'Esto es lo que está abierto ahora mismo:\n\n**ECMO Nursing Care Course** — 3.ª edición, inscripciones abiertas. La fase virtual inicia el **22 de febrero de 2027**.\n\n**ECMO Sim** — simulador virtual, disponible todo el año.\n\n**Webinars gratuitos** — sesiones en vivo con expertos.\n\nEl **Paris International Diploma in ECMO** ya cerró la generación 2026; la próxima es del **8 al 11 de noviembre de 2027** y las inscripciones se abren próximamente.',
     buttons: [
       { label: 'ECMO Nursing Care',      next: 'nursing' },
       { label: 'Diploma de París 2027',  next: 'paris' },
@@ -344,7 +344,7 @@ export const FLUJOS = {
 
   // ── Programas ────────────────────────────────────────────────────────────────
   programas: {
-    text: 'HCE ofrece estas experiencias de formación:\n\n**Diploma Paris ECMO** — Certificación internacional presencial. Próxima generación: 8 al 12 de noviembre de 2027; inscripciones próximamente.\n\n**ECMO Sim** — Simulador clínico 100% virtual, disponible todo el año.\n\n**ECMO Nursing Care** — Formación para enfermería en UCI. 3.ª edición con inscripciones abiertas: inicia el 22 de febrero de 2027.\n\n**Webinars gratuitos** — Sesiones en vivo con expertos, con constancia de asistencia.\n\n¿Sobre cuál te gustaría saber más?',
+    text: 'HCE ofrece estas experiencias de formación:\n\n**Diploma Paris ECMO** — Certificación internacional presencial. Próxima generación: 8 al 11 de noviembre de 2027; inscripciones próximamente.\n\n**ECMO Sim** — Simulador clínico 100% virtual, disponible todo el año.\n\n**ECMO Nursing Care** — Formación para enfermería en UCI. 3.ª edición con inscripciones abiertas: inicia el 22 de febrero de 2027.\n\n**Webinars gratuitos** — Sesiones en vivo con expertos, con constancia de asistencia.\n\n¿Sobre cuál te gustaría saber más?',
     buttons: [
       { label: 'Diploma Paris ECMO',   next: 'paris' },
       { label: 'ECMO Sim',             next: 'ecmo_sim' },
@@ -356,7 +356,7 @@ export const FLUJOS = {
 
   // ── Paris ────────────────────────────────────────────────────────────────────
   paris: {
-    text: '**Paris International Diploma in ECMO**\n\nEl programa de formación en ECMO más completo de Latinoamérica, desarrollado en colaboración con el Hospital Pitié-Salpêtrière de París — centro de referencia mundial.\n\nAbarca desde los fundamentos del circuito hasta el manejo clínico avanzado: destete, anticoagulación, ventilación en paciente crítico, manejo de complicaciones y casos clínicos reales.\n\nIncluye el **Step 1 y el Step 2**.\n\nPróxima generación: **8 al 12 de noviembre de 2027**. Las inscripciones se abren próximamente.',
+    text: '**Paris International Diploma in ECMO**\n\nEl programa de formación en ECMO más completo de Latinoamérica, desarrollado en colaboración con el Hospital Pitié-Salpêtrière de París — centro de referencia mundial.\n\nAbarca desde los fundamentos del circuito hasta el manejo clínico avanzado: destete, anticoagulación, ventilación en paciente crítico, manejo de complicaciones y casos clínicos reales.\n\nIncluye el **Step 1 y el Step 2**.\n\nPróxima generación: **8 al 11 de noviembre de 2027**. Las inscripciones se abren próximamente.',
     buttons: [
       { label: 'Ver temario completo',  next: 'temario' },
       { label: 'Quiénes lo imparten',   next: 'instructores' },
@@ -367,7 +367,7 @@ export const FLUJOS = {
 
   // ── Step 1 ───────────────────────────────────────────────────────────────────
   step1: {
-    text: '**Step 1 Teórico**\n\nEs la fase teórica del Paris International Diploma in ECMO. Las inscripciones de la generación 2026 ya cerraron; la próxima generación es del **8 al 12 de noviembre de 2027**.',
+    text: '**Step 1 Teórico**\n\nEs la fase teórica del Paris International Diploma in ECMO. Las inscripciones de la generación 2026 ya cerraron; la próxima generación es del **8 al 11 de noviembre de 2027**.',
     buttons: [
       { label: 'Ver el diploma completo', next: 'paris' },
       { label: 'Hablar con un asesor',   next: 'contacto' },
@@ -395,7 +395,7 @@ export const FLUJOS = {
 
   // ── Inscripción Paris ────────────────────────────────────────────────────────
   inscripcion_paris: {
-    text: 'Las inscripciones de la generación 2026 ya cerraron. La próxima generación es del **8 al 12 de noviembre de 2027** y las inscripciones se abren próximamente.\n\nSi quieres que te avisemos, un asesor te aparta el aviso sin compromiso.',
+    text: 'Las inscripciones de la generación 2026 ya cerraron. La próxima generación es del **8 al 11 de noviembre de 2027** y las inscripciones se abren próximamente.\n\nSi quieres que te avisemos, un asesor te aparta el aviso sin compromiso.',
     buttons: [
       { label: 'Hablar con un asesor',   next: 'contacto' },
       { label: 'Inicio',                 next: 'home_portal' },

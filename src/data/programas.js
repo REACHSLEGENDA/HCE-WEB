@@ -21,7 +21,7 @@ export const PROGRAMAS = [
     modalidad: 'Presencial: Step 1 (teórico) y Step 2 (práctico con simulación clínica de alta fidelidad)',
     inicio: 'Próximamente inscripciones 2027',
     distintivo: 'Profesores Alain Combes y Matthieu Schmidt, del Hospital Pitié-Salpêtrière de París',
-    resumen: 'Formación avanzada en ECMO con el equipo del Hospital Pitié-Salpêtrière de París. Se divide en Step 1 (teórico) y Step 2 (práctico con simulación clínica de alta fidelidad). La próxima generación será del 8 al 12 de noviembre de 2027; las inscripciones abren próximamente.',
+    resumen: 'Formación avanzada en ECMO con el equipo del Hospital Pitié-Salpêtrière de París. Se divide en Step 1 (teórico) y Step 2 (práctico con simulación clínica de alta fidelidad). La próxima generación será del 8 al 11 de noviembre de 2027; las inscripciones abren próximamente.',
     imagen: '/consultas/certificacion-ecmo.webp',
     poster: '/assets/componentes/expparis.webp',
     consultas: ['que-es-ecmo', 'ecmo-vv-vs-va', 'canulacion-ecmo', 'destete-ecmo', 'ecpr', 'certificacion-ecmo'],

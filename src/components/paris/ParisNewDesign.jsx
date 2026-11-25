@@ -156,7 +156,7 @@ function SyllabusSection() {
 
 // Botón dorado de Alumni Pass: visible desde el 17 de octubre de 2026, 10:00 (CDMX).
 const ALUMNI_PASS_DESDE = new Date('2026-10-17T10:00:00-06:00').getTime();
-// Próxima generación: 8 al 12 de noviembre de 2027. La sede todavía no se
+// Próxima generación: 8 al 11 de noviembre de 2027. La sede todavía no se
 // anuncia (decisión de la dirección, 6 nov 2026).
 const PROXIMA_EDICION = new Date('2027-11-08T00:00:00-06:00').getTime();
 
@@ -298,7 +298,7 @@ const ParisNewDesign = () => {
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <Calendar size={14} style={{ color: '#00d2ff' }} />
-                                <span><strong>8 al 12 de noviembre, 2027</strong></span>
+                                <span><strong>8 al 11 de noviembre, 2027</strong></span>
                             </div>
                         </div>
 
@@ -705,7 +705,7 @@ const ParisNewDesign = () => {
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem', color: 'var(--primary)' }}>
                                     <Calendar size={16} style={{ color: '#0047ff' }} />
-                                    <span><strong>Fechas:</strong> 8 al 12 de noviembre de 2027</span>
+                                    <span><strong>Fechas:</strong> 8 al 11 de noviembre de 2027</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem', color: 'var(--primary)' }}>
                                     <Clock size={16} style={{ color: '#0047ff' }} />

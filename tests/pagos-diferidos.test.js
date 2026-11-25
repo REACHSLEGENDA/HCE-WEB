@@ -1,0 +1,35 @@
+// OXXO y SPEI: opciones de Stripe, respaldo con tarjeta y estado de la sesión.
+import { describe, expect, it, vi } from 'vitest';
+import { conPagosDiferidos, crearSesionConPagosDiferidos, metodoDeSesion, sesionPagada, sesionPendiente } from '../netlify/functions/_pagos.js';
+
+describe('Pagos en OXXO y SPEI', () => {
+  it('agrega OXXO y SPEI sin perder los meses sin intereses', () => {
+    const o = conPagosDiferidos({ payment_method_types: ['card'], payment_method_options: { card: { installments: { enabled: true } } } });
+    expect(o.payment_method_types).toEqual(['card', 'oxxo', 'customer_balance']);
+    expect(o.payment_method_options.card.installments.enabled).toBe(true);
+    expect(o.payment_method_options.oxxo.expires_after_days).toBe(3);
+    expect(o.payment_method_options.customer_balance.bank_transfer.type).toBe('mx_bank_transfer');
+    expect(o.customer_creation).toBe('always');
+  });
+
+  it('si Stripe no los tiene activados, cobra solo con tarjeta', async () => {
+    const create = vi.fn()
+      .mockRejectedValueOnce(new Error('The payment method type "oxxo" is invalid'))
+      .mockResolvedValueOnce({ url: 'https://checkout.stripe.com/x' });
+    const s = await crearSesionConPagosDiferidos({ checkout: { sessions: { create } } }, { payment_method_types: ['card'] });
+    expect(s.url).toBe('https://checkout.stripe.com/x');
+    expect(create.mock.calls[1][0].payment_method_types).toEqual(['card']);
+  });
+
+  it('distingue pagado, pendiente y el método', () => {
+    const pendienteOxxo = { status: 'complete', payment_status: 'unpaid', payment_intent: { next_action: { oxxo_display_details: {} } } };
+    expect(sesionPendiente(pendienteOxxo)).toBe(true);
+    expect(sesionPagada(pendienteOxxo)).toBe(false);
+    expect(metodoDeSesion(pendienteOxxo)).toBe('oxxo');
+    const spei = { status: 'complete', payment_status: 'paid', payment_intent: { payment_method: { type: 'customer_balance' } } };
+    expect(sesionPagada(spei)).toBe(true);
+    expect(metodoDeSesion(spei)).toBe('spei');
+    expect(metodoDeSesion({ status: 'complete', payment_status: 'paid', payment_intent: 'pi_123' })).toBe('tarjeta');
+    expect(sesionPendiente({ status: 'open', payment_status: 'unpaid' })).toBe(false);
+  });
+});

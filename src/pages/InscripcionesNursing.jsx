@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin, Users } from 'lucide-react';
+import { Loader2, CheckCircle2, ChevronRight, Stethoscope, Heart, Shield, MapPin, Users, Clock } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useMonedaSugerida } from '../hooks/useMonedaSugerida';
@@ -889,6 +889,21 @@ export function RegistrationForm() {
   });
   const [status, setStatus] = useState('idle');
   const [showCountrySuggestions, setShowCountrySuggestions] = useState(false);
+  // Pago en OXXO o SPEI: Stripe regresa aquí con la ficha o la transferencia
+  // pendientes. Se le dice al alumno y la bienvenida espera al pago.
+  const sid = params.get('sid') || '';
+  const [pago, setPago] = useState(null);
+  useEffect(() => {
+    if (!/^cs_/.test(sid)) return undefined;
+    let vivo = true;
+    fetch('/.netlify/functions/pago-estado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sid }) })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (vivo && d) setPago(d); })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, [sid]);
+  const pendiente = Boolean(pago?.pendiente);
+  const metodoPendiente = pago?.metodo === 'oxxo' ? 'tu ficha de OXXO' : 'tu transferencia SPEI';
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -904,6 +919,7 @@ export function RegistrationForm() {
         moneda:      stored.moneda || '',
         total_mxn:   stored.total_mxn || '',
         tag:         'nursing2026',
+        sid,
       };
 
       await Promise.all([
@@ -958,8 +974,14 @@ export function RegistrationForm() {
         <div className="ins-result-card">
           <CheckCircle2 size={60} className="ins-result-icon ins-result-icon--ok" />
           <h2>¡Registro completado!</h2>
-          <p>Tu inscripción está confirmada. En breve recibirás un correo de bienvenida con todos los detalles del programa.</p>
-          <ConfirmacionInscripcion diasCredenciales={3} />
+          {pendiente ? (
+            <p>Guardamos tus datos. En cuanto se acredite {metodoPendiente} te llegarán por correo tu recibo y la bienvenida con todos los detalles del programa.</p>
+          ) : (
+            <>
+              <p>Tu inscripción está confirmada. En breve recibirás un correo de bienvenida con todos los detalles del programa.</p>
+              <ConfirmacionInscripcion diasCredenciales={3} />
+            </>
+          )}
           <a href="/" className="ins-btn ins-btn--primary">Volver al inicio</a>
         </div>
       </div>
@@ -968,10 +990,23 @@ export function RegistrationForm() {
 
   return (
     <div className="reg-wrap hce-container">
-      <div className="reg-paid-banner">
-        <CheckCircle2 size={20} />
-        <span>¡Inversión procesada con éxito! Completa tu registro para confirmar tu lugar.</span>
-      </div>
+      {pendiente ? (
+        <div className="reg-paid-banner reg-paid-banner--pendiente" role="status">
+          <Clock size={20} />
+          <span>
+            Tu pago está pendiente: tu lugar se confirma cuando se acredite {metodoPendiente}
+            {pago.metodo === 'oxxo' ? ' (la ficha vence en 3 días)' : ''}. Completa tu registro y te avisamos por correo.
+            {pago.instrucciones && (
+              <> <a href={pago.instrucciones} target="_blank" rel="noopener noreferrer">{pago.metodo === 'oxxo' ? 'Ver mi ficha de OXXO' : 'Ver los datos de la transferencia'}</a></>
+            )}
+          </span>
+        </div>
+      ) : (
+        <div className="reg-paid-banner">
+          <CheckCircle2 size={20} />
+          <span>¡Inversión procesada con éxito! Completa tu registro para confirmar tu lugar.</span>
+        </div>
+      )}
 
       <div className="reg-layout">
         <aside className="reg-summary-card">
@@ -980,7 +1015,7 @@ export function RegistrationForm() {
           <div className="reg-summary-row"><span>Extras</span><strong>{stored.extrasLabel || 'Ninguno'}</strong></div>
           <div className="reg-summary-row"><span>Moneda</span><strong>{(stored.moneda || 'mxn').toUpperCase()}</strong></div>
           <div className="reg-summary-row reg-summary-row--total">
-            <span>Inversión realizada</span>
+            <span>{pendiente ? 'Inversión por pagar' : 'Inversión realizada'}</span>
             <strong>${(stored.total_mxn || 0).toLocaleString('es-MX')} MXN</strong>
           </div>
         </aside>

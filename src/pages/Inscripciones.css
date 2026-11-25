@@ -1457,3 +1457,8 @@
   color: #ffb3bd;
   border-color: rgba(227, 24, 55, 0.45);
 }
+
+/* Pago en OXXO o SPEI pendiente de acreditarse (Nursing). */
+.reg-paid-banner--pendiente { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.35); color: #7c4a03; }
+.reg-paid-banner--pendiente svg { color: #b45309; }
+.reg-paid-banner--pendiente a { color: inherit; font-weight: 700; text-decoration: underline; white-space: nowrap; }

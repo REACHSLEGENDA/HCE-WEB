@@ -1,4 +1,5 @@
 import { LISTS, isConfigured, buildAttributes, upsertContact, addToList, removeFromList } from './_brevo.js';
+import { estadoPago } from './_pagos.js';
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -21,6 +22,15 @@ export const handler = async (event) => {
     // renderizar el correo, así que deben existir antes de entrar a la lista.
     await upsertContact(email, buildAttributes(payload));
     await removeFromList(email, LISTS.CARRITO_NURSING);
+
+    // Pago en OXXO o SPEI todavía sin acreditar: los datos quedan guardados y la
+    // bienvenida sale cuando llegue el dinero (cobros-seguimiento lo agrega a la
+    // lista al mandar el recibo). Se comprueba en Stripe, no en lo que diga la página.
+    const pago = payload.sid ? await estadoPago(payload.sid).catch(() => null) : null;
+    if (pago?.pendiente && pago.programa === 'nursing') {
+      return { statusCode: 200, body: JSON.stringify({ ok: true, pendiente: true }) };
+    }
+
     await addToList(email, LISTS.INSCRITOS_NURSING);
 
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };

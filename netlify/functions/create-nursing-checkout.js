@@ -1,6 +1,7 @@
 import { getStripe } from './_stripe.js';
 import { precioConPromo, habilitaMeses } from './_promos.js';
 import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
+import { crearSesionConPagosDiferidos } from './_pagos.js';
 
 const USD_RATE = 17.5; // Debe coincidir con USD_RATE de la página de inscripción: es lo que ve el alumno.
 
@@ -133,7 +134,9 @@ export const handler = async (event) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${origin}/inscripciones-ecmo-nursing?status=success&d=${payData}`,
+      // Stripe pone el id de la sesión: con él la página sabe si el pago quedó
+      // pendiente (OXXO o SPEI) y el registro no da la bienvenida antes de tiempo.
+      success_url: `${origin}/inscripciones-ecmo-nursing?status=success&sid={CHECKOUT_SESSION_ID}&d=${payData}`,
       cancel_url:  `${origin}/inscripciones-ecmo-nursing?status=cancel`,
       locale: 'es-419',
       custom_text: {
@@ -181,7 +184,10 @@ export const handler = async (event) => {
 
     if (email) sessionOptions.customer_email = email;
 
-    const session = await stripe.checkout.sessions.create(sessionOptions);
+    // En pesos también se puede pagar en efectivo en OXXO o por transferencia SPEI.
+    const session = currency === 'mxn'
+      ? await crearSesionConPagosDiferidos(stripe, sessionOptions)
+      : await stripe.checkout.sessions.create(sessionOptions);
 
     // Brevo: registrar carrito abandonado (no bloqueante)
     registrarCarritoAbandonado(email).catch((err) =>
