@@ -81,6 +81,8 @@ const PresencialCard = ({ flag, img, name, country, bio, delay }) => {
 };
 
 import { useSEO } from '../hooks/useSEO';
+import PromoPopup from '../components/PromoPopup';
+import { NURSING as DATOS_NURSING, blackFridayNursing } from '../data/nursing';
 
 const Nursing = () => {
   const navigate = useNavigate();
@@ -206,6 +208,16 @@ const Nursing = () => {
 
   return (
     <div className="nursing-page">
+      {/* Black Friday de Nursing: sale solo mientras está vigente (hasta el 2 dic 2026). */}
+      {blackFridayNursing() && (
+        <PromoPopup
+          id="black-friday-nursing-2026"
+          imagen={DATOS_NURSING.blackFriday.poster}
+          alt="Black Friday: ECMO Nursing Care Course con 10% de descuento y 3 meses sin intereses"
+          boton="Inscribirme con 10% de descuento"
+          enlace={DATOS_NURSING.inscripcion}
+        />
+      )}
       <Navbar />
       
       {/* Hero Banner Section */}

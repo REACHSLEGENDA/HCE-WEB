@@ -255,7 +255,7 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
             <>
               {conCifra && <strong className="eval-resultado-cifra">{Math.round(resultado.calificacion)}%</strong>}
               <span>{resultado.aprobado ? '¡Aprobaste!' : `No alcanzaste el mínimo de ${resultado.minimo}%.`}</span>
-              {conCifra
+              {resultado.correctas != null && resultado.calificables != null
                 ? <small>{resultado.correctas} de {resultado.calificables} respuestas correctas{resultado.simulado ? ' · vista de administrador, no se guardó' : ''}</small>
                 : <small>Tu examen quedó enviado.{resultado.simulado ? ' Vista de administrador, no se guardó.' : ''}</small>}
               {!resultado.aprobado && resultado.intentosRestantes != null && (

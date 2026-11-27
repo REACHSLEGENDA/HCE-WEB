@@ -6,7 +6,7 @@ export const claveBorradorEvaluacion = (userId, leccionId, esAdmin) =>
 // Las reglas de qué ve el alumno al terminar y el orden de las respuestas no
 // cambian lo que contestó: no invalidan el borrador (y así los borradores de
 // antes de evaluaciones-mejoras.sql siguen sirviendo).
-const FUERA_DE_FIRMA = ['aleatorio_opciones', 'mostrar_calificacion', 'mostrar_marcas', 'mostrar_correctas'];
+const FUERA_DE_FIRMA = ['aleatorio_opciones', 'mostrar_calificacion', 'mostrar_aciertos', 'mostrar_marcas', 'mostrar_correctas'];
 const configFirma = (config) => (config && typeof config === 'object'
   ? Object.fromEntries(Object.entries(config).filter(([k]) => !FUERA_DE_FIRMA.includes(k)))
   : config);

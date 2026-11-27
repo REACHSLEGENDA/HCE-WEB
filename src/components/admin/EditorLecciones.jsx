@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ChevronDown, ChevronRight, Edit, Plus, Trash2, Upload, PlayCircle, ListChecks, Users, RefreshCw, Copy, CheckCircle2, AlertTriangle, Loader2, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, Edit, Plus, Trash2, Upload, PlayCircle, ListChecks, Users, RefreshCw, Copy, CheckCircle2, AlertTriangle, Loader2, ChevronsDownUp, ChevronsUpDown, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { esTablaFaltante, llamarClonar } from '../../lib/cursos';
 import { TIPOS_LECCION, cargarContenidos, videoDeLeccion, falta, faltaRepaso, repasoValido, problemaRepaso, TIPOS_CON_REPASO } from '../../lib/lecciones';
@@ -22,6 +22,7 @@ import './AdminLms.css';
 // políticas solo lo permiten a administradores).
 
 const FALTA_MIGRACION = 'Para usar videos de Vimeo u otras plataformas y páginas web, corre en Supabase la migración lms-enlaces.sql.';
+const FALTA_PUBLICAR = 'Para publicar y despublicar lecciones, corre en Supabase la migración lecciones-publicar.sql.';
 const FALTA_REPASO = 'Para guardar fuentes y preguntas de repaso, corre en Supabase la migración leccion-repaso-fuentes.sql.';
 const FALTA_EVALUACIONES ='Para exámenes, encuestas y secciones corre en Supabase la migración lms-evaluaciones.sql.';
 const TIPOS_NUEVOS = ['examen', 'encuesta', 'seccion', 'sesion'];
@@ -112,6 +113,7 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
   const [estadoOrden, setEstadoOrden] = useState('');
   const temporizadorOrden = useRef(null);
   const [copiandoId, setCopiandoId] = useState(null);
+  const [publicandoId, setPublicandoId] = useState(null);
   const [contraidas, setContraidas] = useState(() => leerContraidas(courseId));
   const [arrastrandoPdf, setArrastrandoPdf] = useState(false);
   const preguntando = useRef(false);
@@ -153,7 +155,8 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
     try {
     const { data, error } = await supabase
       .from('curso_lecciones')
-      .select('id, orden, titulo, tipo, descripcion, duracion_min, obligatoria')
+      // `*`: incluye `publicada` cuando ya se corrió lecciones-publicar.sql.
+      .select('*')
       .eq('course_id', courseId)
       .order('orden')
       .order('id');
@@ -193,6 +196,25 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
   useEffect(() => { void cargar(); }, [cargar]);
 
   // Copia una lección (de otro curso o de este) al final del temario.
+  // Publicar / despublicar (como "Despublicar unidad" de TalentLMS): la
+  // despublicada no la ven los alumnos ni cuenta para terminar el curso.
+  const alternarPublicada = async (leccion) => {
+    const publicar = leccion.publicada === false;
+    setPublicandoId(leccion.id);
+    try {
+      const { error } = await supabase.from('curso_lecciones').update({ publicada: publicar }).eq('id', leccion.id);
+      if (error) throw (['42703', 'PGRST204'].includes(error.code) ? new Error(FALTA_PUBLICAR) : error);
+      notificar(publicar
+        ? `"${leccion.titulo}" quedó publicada: los alumnos ya la ven.`
+        : `"${leccion.titulo}" quedó en borrador: los alumnos no la ven hasta que la publiques.`, 'success');
+      await cargar();
+    } catch (err) {
+      notificar(err.message === FALTA_PUBLICAR ? err.message : `No se pudo cambiar: ${err.message}`, 'error');
+    } finally {
+      setPublicandoId(null);
+    }
+  };
+
   const copiarLeccion = async (leccion) => {
     setCopiandoId(leccion.id);
     try {
@@ -653,6 +675,7 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
                           <strong>{l.titulo}</strong>
                           <small>
                             <span>{TIPOS_LECCION[l.tipo]}{l.duracion_min ? ` · ${l.duracion_min} min` : ''}</span>
+                            {l.publicada === false && <span className="lms-pastilla lms-pastilla--ambar" title="Los alumnos no la ven hasta que la publiques"><EyeOff size={11} aria-hidden="true" /> Borrador</span>}
                             {pendiente && <span className="lms-pastilla lms-pastilla--ambar"><AlertTriangle size={11} aria-hidden="true" /> {pendiente}</span>}
                             {l.obligatoria === false
                               ? <span className="lms-pastilla lms-pastilla--opcional">Opcional</span>
@@ -667,6 +690,11 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
                             <button type="button" className="icon-action-btn edit" title="Preguntas" aria-label={`Preguntas de ${l.titulo}`} onClick={() => setEvaluando(l)}><ListChecks size={15} /></button>
                           )}
                           <button type="button" className="icon-action-btn edit" title="Editar" aria-label={`Editar ${l.titulo}`} onClick={() => abrirEditor(l)}><Edit size={15} /></button>
+                          {l.tipo !== 'seccion' && (
+                            <button type="button" className="icon-action-btn" title={l.publicada === false ? 'Publicar: los alumnos la verán' : 'Pasar a borrador: los alumnos dejan de verla'} aria-label={`${l.publicada === false ? 'Publicar' : 'Despublicar'} ${l.titulo}`} disabled={publicandoId !== null} onClick={() => alternarPublicada(l)}>
+                              {publicandoId === l.id ? <Loader2 size={15} className="lms-girando" /> : l.publicada === false ? <EyeOff size={15} /> : <Eye size={15} />}
+                            </button>
+                          )}
                           <button type="button" className="icon-action-btn" title="Duplicar en este curso" aria-label={`Duplicar ${l.titulo}`} disabled={copiandoId !== null} onClick={() => copiarLeccion(l)}>
                             {copiandoId === l.id ? <Loader2 size={15} className="lms-girando" /> : <Copy size={15} />}
                           </button>

@@ -946,3 +946,16 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
   (IntentosAlumno.jsx): cada intento con respuestas y aciertos.
 - public/tutoriales/: video "primer acceso al portal" (horizontal y vertical) + portada para correos.
 - entregables/bolivia/correo-hospital-obrero.html: plantilla Brevo (bienvenida + acceso al campus + video).
+- (27 nov, tarde, 2.ª parte, SIN subir) "Cuántas contestó bien" separado de "Su calificación"
+  (evaluacion_config.mostrar_aciertos, supabase/evaluaciones-aciertos.sql; sin la columna sigue a la calificación).
+- Color de letra en el editor: {rojo|azul|verde|naranja|morado}texto{/color}; COLORES_TEXTO y colorear() en
+  formatoTexto.js; TextoLeccion lo dibuja (TextoLeccion.css con variantes de modo oscuro).
+- Lecciones en borrador (publicar/despublicar como TalentLMS): curso_lecciones.publicada
+  (supabase/lecciones-publicar.sql). Ícono de ojo y pastilla "Borrador" en EditorLecciones; cargarLecciones
+  filtra las despublicadas salvo { incluirNoPublicadas } (admin fuera de vista alumno); certificado-emitir,
+  examen-calificar, avisos-alumnos no las cuentan; evaluacion-enviar las rechaza para alumnos.
+  Pendiente: RLS (hoy un alumno técnico podría leer el contenido de una despublicada vía API).
+- (27 nov, SUBIDO) Black Friday de Nursing AUTOMÁTICO (sin código; el código BLACKFRIDAY se quitó):
+  AUTOMATICAS 'blackfriday26' en _promos.js hasta 2 dic 2026 23:59 (10% MXN/USD + meses sin intereses en pesos;
+  porcentajePromo, habilitaMeses con la automática); NURSING.blackFriday + blackFridayNursing()/precioNursing(ahora)
+  en src/data/nursing.js; PromoPopup.jsx (póster public/promos/black-friday-nursing.webp) en Home y Nursing.

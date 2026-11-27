@@ -118,6 +118,29 @@ export function prefijarLineas(texto, inicio, fin, prefijo, patronQuitar) {
   return { texto: texto.slice(0, desde) + bloque + texto.slice(hasta), inicio: desde, fin: desde + bloque.length };
 }
 
+/** Colores de letra disponibles ({rojo}texto{/rojo}); TextoLeccion los dibuja. */
+export const COLORES_TEXTO = [
+  ['rojo', 'Rojo'],
+  ['azul', 'Azul'],
+  ['verde', 'Verde'],
+  ['naranja', 'Naranja'],
+  ['morado', 'Morado'],
+];
+
+/**
+ * Pone la selección de un color: {rojo}texto{/rojo}. Si ya tenía color, se lo
+ * cambia; con `color` vacío se lo quita.
+ */
+export function colorear(texto, inicio, fin, color) {
+  const marca = /^\{(rojo|azul|verde|naranja|morado)\}([\s\S]*)\{\/(rojo|azul|verde|naranja|morado)\}$/;
+  let elegido = texto.slice(inicio, fin) || (color ? 'texto' : '');
+  const previo = elegido.match(marca);
+  if (previo) elegido = previo[2];
+  const nuevo = color ? `{${color}}${elegido}{/${color}}` : elegido;
+  const abre = color ? color.length + 2 : 0;
+  return { texto: texto.slice(0, inicio) + nuevo + texto.slice(fin), inicio: inicio + abre, fin: inicio + abre + elegido.length };
+}
+
 /** Inserta un enlace [texto](url) en la selección. */
 export function insertarEnlace(texto, inicio, fin, url) {
   const etiqueta = texto.slice(inicio, fin) || 'texto del enlace';

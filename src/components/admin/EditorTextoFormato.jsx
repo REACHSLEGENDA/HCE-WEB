@@ -1,20 +1,22 @@
 // Editor de texto con formato para lecturas, tareas e instrucciones. Escribe el
 // mismo formato que dibuja TextoLeccion (el alumno ve exactamente eso), pero
 // sin que el administrador tenga que saber los símbolos:
-//   - barra con Título, Subtítulo, Negritas, Cursiva, Viñetas, Numerada y Enlace
+//   - barra con Título, Subtítulo, Negritas, Cursiva, Viñetas, Numerada, Enlace
+//     y Color de letra
 //     (también Ctrl+B, Ctrl+I y Ctrl+K);
 //   - al pegar desde Word, Google Docs o una página web se conservan títulos,
 //     negritas, listas numeradas y enlaces;
 //   - pestaña "Vista previa" para ver cómo queda antes de guardar.
 import { useRef, useState } from 'react';
-import { Bold, Eye, Heading1, Heading2, Italic, Link2, List, ListOrdered, PencilLine } from 'lucide-react';
+import { Bold, Eye, Heading1, Heading2, Italic, Link2, List, ListOrdered, Palette, PencilLine } from 'lucide-react';
 import TextoLeccion from '../TextoLeccion';
-import { envolver, htmlAFormato, insertarEnlace, prefijarLineas } from '../../lib/formatoTexto';
+import { COLORES_TEXTO, colorear, envolver, htmlAFormato, insertarEnlace, prefijarLineas } from '../../lib/formatoTexto';
 import './EditorTextoFormato.css';
 
 export default function EditorTextoFormato({ id, value, onChange, rows = 10, placeholder }) {
   const ref = useRef(null);
   const [vista, setVista] = useState(false);
+  const [paleta, setPaleta] = useState(false);
   const texto = value || '';
 
   // Aplica un cambio y deja seleccionado lo que corresponde para seguir escribiendo.
@@ -91,6 +93,28 @@ export default function EditorTextoFormato({ id, value, onChange, rows = 10, pla
             </button>
             );
           })}
+          {/* Color de letra: se elige de una paleta corta para que siempre se lea bien. */}
+          <span className="etf-color">
+            <button type="button" title="Color de letra" aria-label="Color de letra" aria-expanded={paleta} disabled={vista}
+              onMouseDown={(e) => e.preventDefault()} onClick={() => setPaleta((v) => !v)}>
+              <Palette size={16} aria-hidden="true" />
+            </button>
+            {paleta && !vista && (
+              <span className="etf-paleta" role="menu" aria-label="Elige un color">
+                {COLORES_TEXTO.map(([color, nombre]) => (
+                  <button key={color} type="button" role="menuitem" title={nombre} aria-label={`Letra ${nombre.toLowerCase()}`}
+                    className={`etf-muestra tl-color--${color}`} onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setPaleta(false); aplicar(colorear(texto, ...seleccion(), color)); }}>
+                    <span aria-hidden="true">A</span>
+                  </button>
+                ))}
+                <button type="button" role="menuitem" className="etf-quitar-color" onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => { setPaleta(false); aplicar(colorear(texto, ...seleccion(), '')); }}>
+                  Sin color
+                </button>
+              </span>
+            )}
+          </span>
         </div>
         <div className="etf-pestanas" role="tablist" aria-label="Modo">
           <button type="button" role="tab" aria-selected={!vista} className={!vista ? 'activa' : ''} onClick={() => setVista(false)}>

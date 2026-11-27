@@ -12,15 +12,36 @@ export const NURSING = {
   buenFin: false, // terminó el 27 nov 2026
   regular: { mxn: 5000, usd: 250 },
   promo: { mxn: 4000, usd: 200 },
+  // Black Friday automático (sin código): 10% y meses sin intereses en pesos.
+  // Debe coincidir con la promoción 'blackfriday26' de netlify/functions/_promos.js.
+  blackFriday: {
+    desde: '2026-11-27T00:00:00-06:00',
+    hasta: '2026-12-02T23:59:59-06:00',
+    porcentaje: 0.10,
+    precio: { mxn: 4500, usd: 225 },
+    poster: '/promos/black-friday-nursing.webp',
+  },
   simMxn: 3500,
   inscripcion: '/inscripciones-ecmo-nursing',
 };
 
-export const precioNursing = () => (NURSING.buenFin ? NURSING.promo : NURSING.regular);
+/** Black Friday vigente ahora (null fuera de fechas). */
+export const blackFridayNursing = (ahora = new Date()) => {
+  const bf = NURSING.blackFriday;
+  return bf && ahora >= new Date(bf.desde) && ahora <= new Date(bf.hasta) ? bf : null;
+};
+
+export const precioNursing = (ahora = new Date()) => {
+  if (NURSING.buenFin) return NURSING.promo;
+  return blackFridayNursing(ahora)?.precio || NURSING.regular;
+};
 
 const dinero = (n) => n.toLocaleString('es-MX');
 const textoPrecio = () => {
   const p = precioNursing();
+  if (blackFridayNursing()) {
+    return `Con el descuento de Black Friday (hasta el 2 de diciembre) cuesta ${dinero(p.mxn)} MXN o USD ${p.usd}, con 3 meses sin intereses en pesos (precio regular: ${dinero(NURSING.regular.mxn)} MXN o USD ${NURSING.regular.usd}).`;
+  }
   return NURSING.buenFin
     ? `Con el precio Buen Fin cuesta $${dinero(p.mxn)} MXN o USD ${p.usd} (precio regular: $${dinero(NURSING.regular.mxn)} MXN o USD ${NURSING.regular.usd}).`
     : `Cuesta $${dinero(p.mxn)} MXN o USD ${p.usd}.`;

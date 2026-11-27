@@ -61,7 +61,7 @@ async function yaAvisados(db, prefijo) {
 async function avances(db) {
   const [inscripciones, lecciones, progreso, videos, certificados, cursos] = await Promise.all([
     traerTodo(() => db.from('inscripciones').select('user_id, course_id, created_at')),
-    traerTodo(() => db.from('curso_lecciones').select('id, course_id, tipo, obligatoria')),
+    traerTodo(() => db.from('curso_lecciones').select('*')),
     traerTodo(() => db.from('leccion_progreso').select('user_id, course_id, leccion_id, porcentaje, completada, actualizado_en')),
     traerTodo(() => db.from('student_progress').select('user_id, course_id, watch_percent, updated_at')),
     traerTodo(() => db.from('certificates').select('user_id, course_id')),
@@ -70,7 +70,7 @@ async function avances(db) {
   const cursoDe = new Map(cursos.map((c) => [Number(c.id), c]));
   const leccionesDe = new Map();
   for (const l of lecciones) {
-    if (l.tipo === 'seccion') continue;
+    if (l.tipo === 'seccion' || l.publicada === false) continue;
     const id = Number(l.course_id);
     if (!leccionesDe.has(id)) leccionesDe.set(id, []);
     leccionesDe.get(id).push(l);

@@ -117,6 +117,10 @@ export function finalizacionDe(fila = {}) {
   const legado = f.mostrar_respuestas === true;
   return {
     mostrar_calificacion: typeof f.mostrar_calificacion === 'boolean' ? f.mostrar_calificacion : true,
+    // Cuántas contestó bien ("17 de 20"). Antes de evaluaciones-aciertos.sql iba
+    // junto con la calificación.
+    mostrar_aciertos: typeof f.mostrar_aciertos === 'boolean' ? f.mostrar_aciertos
+      : (typeof f.mostrar_calificacion === 'boolean' ? f.mostrar_calificacion : true),
     mostrar_marcas: typeof f.mostrar_marcas === 'boolean' ? f.mostrar_marcas : legado,
     mostrar_correctas: MOSTRAR_CORRECTAS.includes(f.mostrar_correctas) ? f.mostrar_correctas : (legado ? 'siempre' : 'nunca'),
   };
@@ -142,8 +146,8 @@ export function resultadoVisible({ config, esExamen, aprobado, calificacion, cor
   return {
     mostrarCalificacion: f.mostrar_calificacion,
     calificacion: f.mostrar_calificacion ? calificacion : null,
-    correctas: f.mostrar_calificacion ? correctas : null,
-    calificables: f.mostrar_calificacion ? calificables : null,
+    correctas: f.mostrar_aciertos ? correctas : null,
+    calificables: f.mostrar_aciertos ? calificables : null,
     detalle: visible && Object.keys(visible).length ? visible : null,
   };
 }
@@ -172,11 +176,15 @@ export const handler = async (event) => {
 
     const { data: leccion } = await db
       .from('curso_lecciones')
-      .select('id, course_id, tipo, titulo')
+      .select('*')
       .eq('id', Number(leccionId))
       .maybeSingle();
     if (!leccion || !['examen', 'encuesta'].includes(leccion.tipo)) {
       return json(404, { error: 'Esa evaluación ya no existe.' });
+    }
+    // Despublicada: todavía no se abre a los alumnos.
+    if (leccion.publicada === false && !esAdmin) {
+      return json(403, { error: 'Esta evaluación todavía no está disponible.' });
     }
     const esExamen = leccion.tipo === 'examen';
 

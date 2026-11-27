@@ -12,6 +12,8 @@ import Footer from '../components/Footer';
 import { FAQHome } from '../components/FAQSection';
 import Comunicados from '../components/Comunicados';
 import { useSEO } from '../hooks/useSEO';
+import PromoPopup from '../components/PromoPopup';
+import { NURSING, blackFridayNursing } from '../data/nursing';
 
 // La 2ª Carrera con Causa (CENATRA) es el domingo 11 de octubre de 2026: el
 // aviso se quita solo al terminar ese día, hora del centro de México.
@@ -29,6 +31,16 @@ const Home = () => {
 
   return (
     <>
+      {/* Black Friday de Nursing: sale solo mientras está vigente (hasta el 2 dic 2026). */}
+      {blackFridayNursing() && (
+        <PromoPopup
+          id="black-friday-nursing-2026"
+          imagen={NURSING.blackFriday.poster}
+          alt="Black Friday: ECMO Nursing Care Course con 10% de descuento y 3 meses sin intereses"
+          boton="Inscribirme con 10% de descuento"
+          enlace={NURSING.inscripcion}
+        />
+      )}
       <Navbar />
       <Hero />
       <Comunicados tipo="externo" />

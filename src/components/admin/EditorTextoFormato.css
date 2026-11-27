@@ -36,3 +36,14 @@
 .etf-vista .texto-leccion :is(ul, ol) { margin: 0 0 1em; padding-left: 1.4em; }
 .etf-vista .texto-leccion li { margin-bottom: .35em; }
 .etf-vista .texto-leccion a { color: var(--primary-cyan); font-weight: 600; }
+
+/* Color de letra: paleta corta bajo el botón. */
+.etf-color { position: relative; display: inline-flex; }
+.etf-paleta {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  width: max-content; max-width: 260px; padding: 8px; border: 1px solid var(--border-color); border-radius: 10px;
+  background: var(--bg-main); box-shadow: 0 8px 24px rgba(15, 23, 42, .18);
+}
+.etf-botones .etf-paleta button.etf-muestra { width: 34px; height: 34px; border: 1px solid var(--border-color); background: var(--bg-gray); font-weight: 800; font-size: 1rem; }
+.etf-botones .etf-paleta button.etf-quitar-color { width: auto; padding: 0 10px; font-size: .78rem; font-weight: 600; color: var(--text-muted); }
+@media (max-width: 480px) { .etf-paleta { left: auto; right: 0; } }

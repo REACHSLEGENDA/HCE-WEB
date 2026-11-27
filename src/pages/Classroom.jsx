@@ -813,7 +813,7 @@ const Classroom = () => {
           let listaLecciones = null;
           let progreso = {};
           try {
-            listaLecciones = await cargarLecciones(cursoCargado.id);
+            listaLecciones = await cargarLecciones(cursoCargado.id, { incluirNoPublicadas: esAdmin });
             if (listaLecciones?.length) progreso = await cargarProgresoLecciones(user.id, cursoCargado.id);
           } catch (errLecciones) {
             console.warn('No se pudieron cargar las lecciones:', errLecciones.message);
@@ -918,7 +918,7 @@ const Classroom = () => {
     if (id && user?.id) {
       loadClassroomData();
     }
-  }, [id, user?.id, profile?.rol, profile?.aprobado]);
+  }, [id, user?.id, profile?.rol, profile?.aprobado, esAdmin]);
 
   // Classroom Comments/Doubts Logic
   // Nombre, foto y rol de los autores: la función perfiles_publicos los da

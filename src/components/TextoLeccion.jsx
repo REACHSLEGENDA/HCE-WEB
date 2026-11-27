@@ -1,4 +1,5 @@
 import React from 'react';
+import './TextoLeccion.css';
 
 // Muestra la lectura de una lección (o las instrucciones de una tarea) con un
 // formato sencillo, sin interpretar HTML: el texto lo escribe el administrador
@@ -10,13 +11,14 @@ import React from 'react';
 //   - viñeta   /   1. lista numerada
 //   **negritas**, *cursivas* y [texto del enlace](https://…)
 //   Una dirección https://… suelta también se vuelve enlace.
+//   {rojo}texto{/rojo} (también azul, verde, naranja, morado): letra de color.
 //   Una línea en blanco separa párrafos.
 
 const ENLACE_SEGURO = /^https?:\/\//i;
 
 function enLinea(texto, claveBase) {
   const partes = [];
-  const patron = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)\s]+\)|https?:\/\/[^\s<>()]+)/g;
+  const patron = /(\{(?:rojo|azul|verde|naranja|morado)\}[\s\S]*?\{\/(?:rojo|azul|verde|naranja|morado)\}|\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)\s]+\)|https?:\/\/[^\s<>()]+)/g;
   let ultimo = 0;
   let m;
   let i = 0;
@@ -26,7 +28,11 @@ function enLinea(texto, claveBase) {
     const token = m[0];
     const clave = `${claveBase}-${i++}`;
 
-    if (token.startsWith('**')) {
+    const color = token.match(/^\{(rojo|azul|verde|naranja|morado)\}([\s\S]*)\{\/(rojo|azul|verde|naranja|morado)\}$/);
+    if (color) {
+      // Texto de color: {rojo}…{/rojo}. Por dentro puede llevar negritas, etc.
+      partes.push(<span key={clave} className={`tl-color tl-color--${color[1]}`}>{enLinea(color[2], clave)}</span>);
+    } else if (token.startsWith('**')) {
       partes.push(<strong key={clave}>{token.slice(2, -2)}</strong>);
     } else if (/^https?:\/\//i.test(token)) {
       // Dirección suelta: el punto o la coma final no son parte del enlace.

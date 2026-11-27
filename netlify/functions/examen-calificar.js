@@ -77,15 +77,17 @@ export const handler = async (event) => {
       }
 
       // Lecciones obligatorias pendientes: el examen es el cierre del curso.
-      const { data: obligatorias, error: errLecciones } = await db
+      const { data: obligatoriasTodas, error: errLecciones } = await db
         .from('curso_lecciones')
-        .select('id')
+        .select('*')
         .eq('course_id', idCurso)
         .neq('tipo', 'seccion')
         .eq('obligatoria', true);
       if (errLecciones) throw new Error(errLecciones.message);
+      // Las despublicadas no se piden.
+      const obligatorias = (obligatoriasTodas || []).filter((l) => l.publicada !== false);
 
-      if (obligatorias?.length) {
+      if (obligatorias.length) {
         const { data: completas, error: errCompletas } = await db
           .from('leccion_progreso')
           .select('leccion_id')

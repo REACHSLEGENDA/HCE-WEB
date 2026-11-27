@@ -29,6 +29,7 @@ export const CONFIG_BASE = {
   cuenta_calificacion: true,
   aleatorio_opciones: false,
   mostrar_calificacion: true,
+  mostrar_aciertos: true,
   mostrar_marcas: false,
   mostrar_correctas: 'nunca',
 };
@@ -149,6 +150,11 @@ export async function guardarConfigEvaluacion(leccionId, config) {
   };
   const guardar = (fila) => supabase.from('evaluacion_config').upsert([fila], { onConflict: 'leccion_id' });
   let { error } = await guardar({ ...base, ...final });
+  // Sin evaluaciones-aciertos.sql: se guarda todo menos esa columna.
+  if (error && esColumnaFaltante(error) && /mostrar_aciertos/.test(error.message || '')) {
+    const { mostrar_aciertos: _omitida, ...sinAciertos } = final;
+    ({ error } = await guardar({ ...base, ...sinAciertos }));
+  }
   if (error && esColumnaFaltante(error)) {
     ({ error } = await guardar(base));
     if (!error) return { sinMejoras: true };

@@ -411,7 +411,11 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
               <legend>Al terminar el examen, el alumno ve:</legend>
               <label className="lms-check lms-check--tarjeta">
                 <input type="checkbox" checked={config.mostrar_calificacion !== false} onChange={(e) => setConfig({ ...config, mostrar_calificacion: e.target.checked })} />
-                <span>Su calificación<small>El porcentaje y cuántas contestó bien.</small></span>
+                <span>Su calificación<small>El porcentaje, por ejemplo 85%.</small></span>
+              </label>
+              <label className="lms-check lms-check--tarjeta">
+                <input type="checkbox" checked={config.mostrar_aciertos ?? config.mostrar_calificacion !== false} onChange={(e) => setConfig({ ...config, mostrar_aciertos: e.target.checked })} />
+                <span>Cuántas contestó bien<small>Por ejemplo: 17 de 20 respuestas correctas.</small></span>
               </label>
               <label className="lms-check lms-check--tarjeta">
                 <input type="checkbox" checked={!!config.mostrar_marcas} onChange={(e) => setConfig({ ...config, mostrar_marcas: e.target.checked })} />

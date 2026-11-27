@@ -8,7 +8,7 @@ import Footer from '../components/Footer';
 import ConsentimientoLegal from '../components/ConsentimientoLegal';
 import ConfirmacionInscripcion from '../components/ConfirmacionInscripcion';
 import './Inscripciones.css';
-import { NURSING, precioNursing } from '../data/nursing';
+import { NURSING, precioNursing, blackFridayNursing } from '../data/nursing';
 
 function NurseCap({ size = 24, className = "" }) {
   return (
@@ -31,15 +31,14 @@ const USD_RATE = 17.5;
 // 13 nov 2026). El cobro lo decide create-nursing-checkout.js, que tiene su
 // propio interruptor BUEN_FIN: cambiar los dos juntos.
 const BUEN_FIN = NURSING.buenFin;
+// Black Friday automático: se calcula al cargar la página (empieza y termina solo).
+const BLACK_FRIDAY = blackFridayNursing();
+const PROMO_ACTIVA = BUEN_FIN || Boolean(BLACK_FRIDAY);
 const PRECIO_REGULAR = NURSING.regular;
 const PRECIO_CURSO = precioNursing();
 // Inscripción para grupos: oculta mientras dure el precio Buen Fin.
-const MOSTRAR_GRUPOS = !BUEN_FIN;
+const MOSTRAR_GRUPOS = !PROMO_ACTIVA;
 
-// Black Friday (27–30 nov 2026): 10% y 3 meses sin intereses en pesos. El
-// precio real lo decide el servidor (netlify/functions/_promos.js, BLACKFRIDAY).
-const CODIGO_BLACK_FRIDAY = { codigo: 'BLACKFRIDAY', descuento: 0.10, desde: '2026-11-27T00:00:00-06:00', hasta: '2026-11-30T23:59:59-06:00' };
-const blackFridayVigente = (ahora = new Date()) => ahora >= new Date(CODIGO_BLACK_FRIDAY.desde) && ahora <= new Date(CODIGO_BLACK_FRIDAY.hasta);
 
 const EXTRA_CATALOG = {
   ecmo_sim: {
@@ -149,11 +148,6 @@ export default function InscripcionesNursing() {
 
   const applyPromo = () => {
     const code = promoInput.trim().toUpperCase();
-    if (code === CODIGO_BLACK_FRIDAY.codigo && blackFridayVigente()) {
-      setAppliedPromo({ code, discount: CODIGO_BLACK_FRIDAY.descuento, type: 'mixed' });
-      setApiError('');
-      return;
-    }
     // Octubre 2026: sin códigos de descuento. Solo beca y transferencia,
     // que no son descuento: registran sin pasar por la pasarela.
     if (code === 'BECANURSING26' || code === 'TRANSFER2026') {
@@ -278,6 +272,7 @@ export default function InscripcionesNursing() {
         <div className="ins-hero-inner hce-container">
           <span className="ins-hero-badge">3.ª EDICIÓN · INICIO 22 DE FEBRERO 2027</span>
           {BUEN_FIN && <span className="ins-hero-badge ins-hero-badge--buenfin">PRECIO BUEN FIN · 20% DE DESCUENTO</span>}
+          {BLACK_FRIDAY && <span className="ins-hero-badge ins-hero-badge--buenfin">BLACK FRIDAY · 10% MENOS + 3 MESES SIN INTERESES</span>}
           <h1 className="ins-hero-title">Inscripciones</h1>
           <p className="ins-hero-sub">
             Personaliza tu inscripción al programa ECMO Nursing Care Course y asegura tu lugar de manera segura.
@@ -550,13 +545,13 @@ export default function InscripcionesNursing() {
                   <div className="ins-summary-line">
                     <span>{perfil === 'otro' && customOtro ? `Otro: ${customOtro}` : PROFILES[perfil].label}</span>
                     <span>
-                      {BUEN_FIN && !isFree && <s style={{ opacity: 0.55, fontWeight: 500, marginRight: '6px' }}>{fmt(displayRegular, cur)}</s>}
+                      {PROMO_ACTIVA && !isFree && <s style={{ opacity: 0.55, fontWeight: 500, marginRight: '6px' }}>{fmt(displayRegular, cur)}</s>}
                       {fmt(displayBase, cur)}
                     </span>
                   </div>
-                  {BUEN_FIN && !isFree && (
+                  {PROMO_ACTIVA && !isFree && (
                     <div className="ins-summary-promo-nota">
-                      <span>Precio Buen Fin −20%</span>
+                      <span>{BLACK_FRIDAY ? `Black Friday −10%${moneda === 'mxn' ? ' · 3 meses sin intereses con tarjeta' : ''}` : 'Precio Buen Fin −20%'}</span>
                     </div>
                   )}
                   {[...extras].map((id) => {

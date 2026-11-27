@@ -134,10 +134,11 @@ async function revisarRequisitos(db, userId, courseId) {
   // Lecciones (sin contar las secciones, que solo agrupan).
   const { data: lecciones, error: errLecciones } = await db
     .from('curso_lecciones')
-    .select('id, tipo, obligatoria')
+    .select('*')
     .eq('course_id', courseId);
   if (errLecciones && !esEsquemaFaltante(errLecciones)) throw new Error(errLecciones.message);
-  const conContenido = errLecciones ? [] : (lecciones || []).filter((l) => l.tipo !== 'seccion');
+  // Las despublicadas (lecciones-publicar.sql) no cuentan.
+  const conContenido = errLecciones ? [] : (lecciones || []).filter((l) => l.tipo !== 'seccion' && l.publicada !== false);
 
   if (conContenido.length) {
     const { data: completas, error: errProgreso } = await db

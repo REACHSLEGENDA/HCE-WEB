@@ -106,10 +106,14 @@ export function leccionImplicita(curso, video) {
  * Lecciones del curso con su contenido. `null` si la tabla aún no existe.
  * El contenido solo llega si el alumno está inscrito (lo filtra la base).
  */
-export async function cargarLecciones(courseId) {
-  const { data, error } = await supabase
+/** La lección está publicada (las que no tienen la columna, también). */
+export const estaPublicada = (leccion) => leccion?.publicada !== false;
+
+export async function cargarLecciones(courseId, { incluirNoPublicadas = false } = {}) {
+  // `*` para no depender de lecciones-publicar.sql: sin la columna, todas cuentan como publicadas.
+  const { data: todas, error } = await supabase
     .from('curso_lecciones')
-    .select('id, course_id, orden, titulo, tipo, descripcion, duracion_min, obligatoria')
+    .select('*')
     .eq('course_id', Number(courseId))
     .order('orden', { ascending: true })
     .order('id', { ascending: true });
@@ -118,7 +122,9 @@ export async function cargarLecciones(courseId) {
     if (esTablaFaltante(error)) return null;
     throw error;
   }
-  if (!data?.length) return [];
+  // Las despublicadas no las ve el alumno (el administrador sí, marcadas).
+  const data = (todas || []).filter((l) => incluirNoPublicadas || estaPublicada(l));
+  if (!data.length) return [];
 
   const { data: contenidos, error: errContenido } = await cargarContenidos(data.map((l) => l.id));
   if (errContenido && !esTablaFaltante(errContenido)) throw errContenido;

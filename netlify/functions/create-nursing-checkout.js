@@ -1,5 +1,5 @@
 import { getStripe } from './_stripe.js';
-import { precioConPromo, habilitaMeses, porcentajeCodigo } from './_promos.js';
+import { precioConPromo, habilitaMeses, porcentajePromo, promoAutomatica } from './_promos.js';
 import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
 import { crearSesionConPagosDiferidos } from './_pagos.js';
 
@@ -79,8 +79,9 @@ export const handler = async (event) => {
     // El curso tiene precio propio en cada moneda (PRECIO_CURSO); los códigos del
     // catálogo compartido solo pueden bajarlo en pesos.
     const cursoMXN = precioConPromo(PRECIO_CURSO.mxn, promoCode, 'nursing', now);
-    // En dólares solo aplica el porcentaje del código (p. ej. BLACKFRIDAY 10%).
-    const cursoUSD = Math.floor(PRECIO_CURSO.usd * (1 - porcentajeCodigo(promoCode, 'nursing', now)));
+    // En dólares aplica el porcentaje de la promoción vigente (p. ej. Black Friday 10%).
+    const cursoUSD = Math.floor(PRECIO_CURSO.usd * (1 - porcentajePromo(promoCode, 'nursing', now)));
+    const promoAuto = promoAutomatica('nursing', now);
     const cursoUnit = currency === 'usd' ? cursoUSD * 100 : cursoMXN * 100;
 
     // Validate extras server-side
@@ -152,7 +153,7 @@ export const handler = async (event) => {
         perfil: activeProfileLabel,
         extras: validExtras.join(', '),
         email,
-        promo_applied: promoCode || (BUEN_FIN ? 'BUENFIN20' : 'none'),
+        promo_applied: promoCode || promoAuto?.etiqueta || (BUEN_FIN ? 'BUENFIN20' : 'none'),
         total_mxn: totalMXN.toString(),
         moneda: currency,
         pasarela,
@@ -164,7 +165,7 @@ export const handler = async (event) => {
           perfil: activeProfileLabel,
           extras: validExtras.join(', '),
           email,
-          promo_applied: promoCode || (BUEN_FIN ? 'BUENFIN20' : 'none'),
+          promo_applied: promoCode || promoAuto?.etiqueta || (BUEN_FIN ? 'BUENFIN20' : 'none'),
           total_mxn: totalMXN.toString(),
           moneda: currency,
           pasarela,

@@ -1,0 +1,15 @@
+/* Colores de letra del texto con formato ({rojo}…{/rojo}). Tonos con
+   contraste AA sobre fondo claro; en el modo oscuro del aula y del panel se
+   aclaran para seguir legibles. */
+.tl-color { font-weight: 600; }
+.tl-color--rojo { color: #c81e1e; }
+.tl-color--azul { color: #1d4ed8; }
+.tl-color--verde { color: #15803d; }
+.tl-color--naranja { color: #b45309; }
+.tl-color--morado { color: #7e22ce; }
+
+:is(.classroom-layout, .admin-layout, .crm-layout)[data-theme="dark"] .tl-color--rojo { color: #fca5a5; }
+:is(.classroom-layout, .admin-layout, .crm-layout)[data-theme="dark"] .tl-color--azul { color: #93c5fd; }
+:is(.classroom-layout, .admin-layout, .crm-layout)[data-theme="dark"] .tl-color--verde { color: #86efac; }
+:is(.classroom-layout, .admin-layout, .crm-layout)[data-theme="dark"] .tl-color--naranja { color: #fdba74; }
+:is(.classroom-layout, .admin-layout, .crm-layout)[data-theme="dark"] .tl-color--morado { color: #d8b4fe; }

@@ -31,3 +31,6 @@ dist-ssr
 # Agent directories
 .gemini/
 .claude/
+
+# Entregables locales (correos, videos y listas con datos personales): no se suben.
+entregables/

@@ -119,6 +119,10 @@ export function finalizacionDe(fila = {}) {
   const legado = f.mostrar_respuestas === true;
   return {
     mostrar_calificacion: typeof f.mostrar_calificacion === 'boolean' ? f.mostrar_calificacion : true,
+    // Cuántas contestó bien ("17 de 20"). Antes de evaluaciones-aciertos.sql iba
+    // junto con la calificación.
+    mostrar_aciertos: typeof f.mostrar_aciertos === 'boolean' ? f.mostrar_aciertos
+      : (typeof f.mostrar_calificacion === 'boolean' ? f.mostrar_calificacion : true),
     mostrar_marcas: typeof f.mostrar_marcas === 'boolean' ? f.mostrar_marcas : legado,
     mostrar_correctas: MOSTRAR_CORRECTAS.includes(f.mostrar_correctas) ? f.mostrar_correctas : (legado ? 'siempre' : 'nunca'),
     aleatorio_opciones: f.aleatorio_opciones === true,
