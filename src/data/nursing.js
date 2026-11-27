@@ -9,7 +9,7 @@ export const NURSING = {
   inicio: '2027-02-22',
   inicioTexto: '22 de febrero de 2027',
   // Precio Buen Fin (13 nov 2026, sin fecha de fin).
-  buenFin: true,
+  buenFin: false, // terminó el 27 nov 2026
   regular: { mxn: 5000, usd: 250 },
   promo: { mxn: 4000, usd: 200 },
   simMxn: 3500,

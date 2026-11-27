@@ -8,7 +8,7 @@ const USD_RATE = 17.5; // Debe coincidir con USD_RATE de la página de inscripci
 // Precio Buen Fin (13 nov 2026, sin fecha de fin): el curso se cobra $4,000 MXN
 // o USD 200 (20% sobre $5,000 MXN / USD 250). Debe coincidir con la página
 // (src/pages/InscripcionesNursing.jsx). Para quitarlo: BUEN_FIN = false.
-const BUEN_FIN = true;
+const BUEN_FIN = false; // terminó el 27 nov 2026
 const PRECIO_CURSO = BUEN_FIN ? { mxn: 4000, usd: 200 } : { mxn: 5000, usd: 250 };
 
 const LEGAL_TEXT = '*Al contratar nuestros programas, es necesario firmar el acuerdo de términos de servicio y confidencialidad. El acceso a nuestros programas es individual y cualquier infracción a los términos de derechos de autor resultará en la expulsión irrevocable del alumno del nuestros programas sin posibilidad a reembolso de la matrícula, así como del proceso legal por infringir las normas de derechos de autor según la Ley Mexicana.';

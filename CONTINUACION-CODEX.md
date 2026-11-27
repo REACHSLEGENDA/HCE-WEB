@@ -935,3 +935,6 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
   OXXO; SPEI todavía no (activar "Bank transfers" en Stripe, cuenta de pesos). FAQ de Nursing y llms.txt ya dicen OXXO.
 - Resumen de carritos al equipo (cobros-seguimiento): el programa muestra sus extras ("ECMO Nursing Care Course +
   ECMO SIM"). Un carrito de USD 400 de Nursing = curso USD 200 (Buen Fin) + ECMO SIM USD 200; no era error de precio.
+- Fin del precio Buen Fin de Nursing (27 nov 2026): buenFin false en src/data/nursing.js y BUEN_FIN false en
+  create-nursing-checkout.js. Vuelve a $5,000 MXN / USD 250 y reaparece la inscripción para grupos
+  (MOSTRAR_GRUPOS = !BUEN_FIN). llms.txt actualizado.
