@@ -931,3 +931,7 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
 - Videos de Bolivia: video B tenía comillas anidadas en selectores (no compilaba) y el A horizontal encimaba el
   subtítulo con el título en portada y cierre; corregido en los index.html y en build.mjs. MP4 en
   entregables/bolivia/videos/ (video-a-alumnos-celular, video-a-alumnos-computadora, video-b-jen-asignar-curso).
+- SUBIDO en a73ce33 todo lo anterior. Prueba de cobro Nursing (MXN): aparecen Tarjeta, Google Pay, Apple Pay, Link y
+  OXXO; SPEI todavía no (activar "Bank transfers" en Stripe, cuenta de pesos). FAQ de Nursing y llms.txt ya dicen OXXO.
+- Resumen de carritos al equipo (cobros-seguimiento): el programa muestra sus extras ("ECMO Nursing Care Course +
+  ECMO SIM"). Un carrito de USD 400 de Nursing = curso USD 200 (Buen Fin) + ECMO SIM USD 200; no era error de precio.

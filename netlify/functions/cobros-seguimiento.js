@@ -53,6 +53,14 @@ const correoDe = (s) => String(s.customer_details?.email || s.customer_email || 
 const nombreDe = (s) => String(s.customer_details?.name || '').split(/\s+/)[0] || '';
 const folioDe = (s) => `HCE-${String(s.id).slice(-8).toUpperCase()}`;
 const programaDe = (s) => PROGRAMAS[s.metadata?.programa] ? s.metadata.programa : null;
+// En el resumen al equipo, el programa con sus extras (p. ej. "+ ECMO SIM"), para
+// que un importe mayor al del curso no parezca un cobro equivocado.
+const NOMBRES_EXTRA = { ecmo_sim: 'ECMO SIM', ecmo_nursing: 'ECMO Nursing' };
+const conExtras = (s) => {
+  const extras = String(s.metadata?.extras || '').split(',').map((e) => e.trim()).filter((e) => e && e !== 'Ninguno');
+  return [nombrePrograma(s), ...extras.map((e) => NOMBRES_EXTRA[e] || e)].join(' + ');
+};
+
 const nombrePrograma = (s) => (s.metadata?.programa === 'curso' && s.metadata?.curso) || PROGRAMAS[programaDe(s)]?.nombre || 'tu programa';
 
 // Las dos cuentas de Stripe (si solo hay una llave, es la misma cuenta).
@@ -247,7 +255,7 @@ export default async () => {
       await enviarCorreo({ para: [email], ...correoCarrito(s, { fallido }), claveIdempotencia: clave });
       resumen[fallido ? 'fallidos' : 'carritos'] += 1;
       enviados += 1;
-      paraEquipo.push({ email, nombre: s.customer_details?.name || '', programa: nombrePrograma(s), monto: dinero(s.amount_total, s.currency), fallido });
+      paraEquipo.push({ email, nombre: s.customer_details?.name || '', programa: conExtras(s), monto: dinero(s.amount_total, s.currency), fallido });
     } catch (err) {
       console.error('Carrito', s.id, err.message);
       await liberar(db, clave);

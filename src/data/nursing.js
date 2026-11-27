@@ -39,7 +39,7 @@ export const FAQ_NURSING_TEXTO = [
   },
   {
     pregunta: '¿Puedo pagar en dólares desde otro país?',
-    respuesta: 'Sí. Al inscribirte eliges pesos (MXN) o dólares (USD) y pagas en línea con tarjeta de crédito o débito. Si prefieres transferencia, escríbenos por WhatsApp.',
+    respuesta: 'Sí. Al inscribirte eliges pesos (MXN) o dólares (USD) y pagas en línea con tarjeta de crédito o débito. En pesos también puedes pagar en efectivo en OXXO. Si prefieres transferencia, escríbenos por WhatsApp.',
   },
   {
     pregunta: '¿Las clases quedan grabadas?',
