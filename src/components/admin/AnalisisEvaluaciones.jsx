@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronDown, ChevronRight, Download } from 'lucide-react';
 import { cargarEvaluacionAdmin } from '../../lib/evaluaciones';
+import IntentosAlumno from './IntentosAlumno';
 import {
   intentosAnalizados,
   analizarPreguntas,
@@ -224,6 +225,10 @@ export default function AnalisisEvaluaciones({ tituloCurso, lecciones, intentos,
             </li>
           ))}
         </ol>
+      )}
+
+      {preguntas && deLeccion.length > 0 && (
+        <IntentosAlumno intentos={deLeccion} preguntas={preguntas} perfiles={perfiles} esExamen={esExamen} />
       )}
     </div>
   );

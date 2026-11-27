@@ -1,5 +1,5 @@
 import { getStripe } from './_stripe.js';
-import { precioConPromo, habilitaMeses } from './_promos.js';
+import { precioConPromo, habilitaMeses, porcentajeCodigo } from './_promos.js';
 import { LISTS, isConfigured, upsertContact, addToList } from './_brevo.js';
 import { crearSesionConPagosDiferidos } from './_pagos.js';
 
@@ -79,7 +79,9 @@ export const handler = async (event) => {
     // El curso tiene precio propio en cada moneda (PRECIO_CURSO); los códigos del
     // catálogo compartido solo pueden bajarlo en pesos.
     const cursoMXN = precioConPromo(PRECIO_CURSO.mxn, promoCode, 'nursing', now);
-    const cursoUnit = currency === 'usd' ? PRECIO_CURSO.usd * 100 : cursoMXN * 100;
+    // En dólares solo aplica el porcentaje del código (p. ej. BLACKFRIDAY 10%).
+    const cursoUSD = Math.floor(PRECIO_CURSO.usd * (1 - porcentajeCodigo(promoCode, 'nursing', now)));
+    const cursoUnit = currency === 'usd' ? cursoUSD * 100 : cursoMXN * 100;
 
     // Validate extras server-side
     const validExtras = extras.filter(

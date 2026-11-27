@@ -18,6 +18,9 @@ const VIGENCIAS = {
   // Día del Médico: Step 1 a $8,000 (20%) con el código MEDOCT26, del viernes 23 al
   // domingo 25 de octubre de 2026 (hora de la Ciudad de México).
   medoct26: ['2026-10-23T00:00:00-06:00', '2026-10-25T23:59:59-06:00'],
+  // Black Friday: Nursing con 10% y 3 meses sin intereses, del viernes 27 al
+  // lunes 30 de noviembre de 2026 (hora de la Ciudad de México).
+  blackfriday26: ['2026-11-27T00:00:00-06:00', '2026-11-30T23:59:59-06:00'],
 };
 
 // `programas` limita en que paginas aplica cada codigo.
@@ -31,6 +34,10 @@ const CODIGOS = {
   // Día del Médico (23–25 oct 2026): Step 1 de $10,000 a $8,000 (20%). Debe
   // coincidir con CODIGOS_STEP1 de src/pages/InscripcionesStep1.jsx.
   MEDOCT26: { programas: ['step1'], precioFijo: 8000, vigencia: 'medoct26' },
+  // Black Friday (27–30 nov 2026): Nursing 10% en pesos y en dólares, y meses
+  // sin intereses con tarjeta en pesos. Debe coincidir con CODIGO_BLACK_FRIDAY
+  // de src/pages/InscripcionesNursing.jsx.
+  BLACKFRIDAY: { programas: ['nursing'], porcentaje: 0.10, meses: true, vigencia: 'blackfriday26' },
 };
 
 // Descuentos que se aplican sin que el alumno escriba nada. Cada uno con su
@@ -103,6 +110,11 @@ export function precioConPromo(precioMXN, promoCode, programa, ahora = new Date(
   const auto = promoAutomatica(programa, ahora);
   const conAuto = auto ? Math.floor(precioMXN * (1 - auto.porcentaje)) : precioMXN;
   return Math.min(conCodigo, conAuto);
+}
+
+/** Porcentaje de descuento del código (0 si no aplica): para precios en dólares. */
+export function porcentajeCodigo(promoCode, programa, ahora = new Date()) {
+  return promoValida(promoCode, programa, ahora)?.porcentaje || 0;
 }
 
 /** Si el codigo habilita meses sin intereses en la pasarela. */

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useImperativeHandle, useState } from 'react';
-import { ArrowLeft, Check, Edit, Plus, Trash2, X, Loader2, Eye, PencilLine, CheckCircle2, FileSpreadsheet } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Edit, Plus, Trash2, X, Loader2, Eye, PencilLine, CheckCircle2, FileSpreadsheet } from 'lucide-react';
 import {
   TIPOS_PREGUNTA,
   ESCALA_BASE,
@@ -124,11 +124,18 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
     setEditando(null);
     setPreguntaOriginal(null);
   };
-  const abrirPregunta = async (pregunta) => {
+  const abrirPregunta = async (pregunta, original = pregunta) => {
     if (guardando) return;
     if (cambiosPregunta && !(await confirmar('¿Descartar los cambios de la pregunta actual?', 'Cambios sin guardar'))) return;
-    setPreguntaOriginal(pregunta);
+    setPreguntaOriginal(original);
     setEditando(pregunta);
+  };
+  // Duplicar: la copia se abre como pregunta nueva (sin id), lista para
+  // cambiar lo necesario y guardarla. Se compara contra una vacía para que
+  // "Guardar" quede activo aunque no se cambie nada.
+  const duplicarPregunta = (p) => {
+    const copia = { ...copiaPregunta(p), id: null };
+    return abrirPregunta(copia, preguntaVacia(p.tipo));
   };
 
   const aplicar = useCallback((r, mantenerConfig = false) => {
@@ -495,6 +502,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
                             </button>
                             <span className="lms-acciones">
                               <button type="button" className="icon-action-btn edit" title="Editar" aria-label={`Editar pregunta ${i + 1}`} onClick={() => abrirPregunta(copiaPregunta(p))}><Edit size={15} /></button>
+                              <button type="button" className="icon-action-btn" title="Duplicar: abre una copia para editarla y guardarla como pregunta nueva" aria-label={`Duplicar pregunta ${i + 1}`} disabled={guardando} onClick={() => duplicarPregunta(p)}><Copy size={15} /></button>
                               <button type="button" className="icon-action-btn delete" title="Eliminar" aria-label={`Eliminar pregunta ${i + 1}`} onClick={() => eliminar(p)}><Trash2 size={15} /></button>
                             </span>
                           </div>

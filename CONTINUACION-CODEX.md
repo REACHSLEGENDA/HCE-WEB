@@ -938,3 +938,11 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
 - Fin del precio Buen Fin de Nursing (27 nov 2026): buenFin false en src/data/nursing.js y BUEN_FIN false en
   create-nursing-checkout.js. Vuelve a $5,000 MXN / USD 250 y reaparece la inscripción para grupos
   (MOSTRAR_GRUPOS = !BUEN_FIN). llms.txt actualizado.
+
+## 24. 27 nov (tarde) — Claude, SIN subir aún
+- Código BLACKFRIDAY (Nursing, 10% MXN y USD + meses sin intereses en pesos, 27–30 nov 2026): _promos.js
+  (porcentajeCodigo), create-nursing-checkout (USD con %), InscripcionesNursing (CODIGO_BLACK_FRIDAY).
+- Exámenes: botón "Duplicar" por pregunta (abre copia sin id); Análisis -> "Intentos por alumno"
+  (IntentosAlumno.jsx): cada intento con respuestas y aciertos.
+- public/tutoriales/: video "primer acceso al portal" (horizontal y vertical) + portada para correos.
+- entregables/bolivia/correo-hospital-obrero.html: plantilla Brevo (bienvenida + acceso al campus + video).

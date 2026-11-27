@@ -36,6 +36,11 @@ const PRECIO_CURSO = precioNursing();
 // Inscripción para grupos: oculta mientras dure el precio Buen Fin.
 const MOSTRAR_GRUPOS = !BUEN_FIN;
 
+// Black Friday (27–30 nov 2026): 10% y 3 meses sin intereses en pesos. El
+// precio real lo decide el servidor (netlify/functions/_promos.js, BLACKFRIDAY).
+const CODIGO_BLACK_FRIDAY = { codigo: 'BLACKFRIDAY', descuento: 0.10, desde: '2026-11-27T00:00:00-06:00', hasta: '2026-11-30T23:59:59-06:00' };
+const blackFridayVigente = (ahora = new Date()) => ahora >= new Date(CODIGO_BLACK_FRIDAY.desde) && ahora <= new Date(CODIGO_BLACK_FRIDAY.hasta);
+
 const EXTRA_CATALOG = {
   ecmo_sim: {
     label: 'Simulador ECMO SIM',
@@ -144,6 +149,11 @@ export default function InscripcionesNursing() {
 
   const applyPromo = () => {
     const code = promoInput.trim().toUpperCase();
+    if (code === CODIGO_BLACK_FRIDAY.codigo && blackFridayVigente()) {
+      setAppliedPromo({ code, discount: CODIGO_BLACK_FRIDAY.descuento, type: 'mixed' });
+      setApiError('');
+      return;
+    }
     // Octubre 2026: sin códigos de descuento. Solo beca y transferencia,
     // que no son descuento: registran sin pasar por la pasarela.
     if (code === 'BECANURSING26' || code === 'TRANSFER2026') {
@@ -166,7 +176,9 @@ export default function InscripcionesNursing() {
   const totalMXN = baseMXN + extrasMXN;
   // En USD el curso tiene precio propio; los extras se convierten uno por uno,
   // igual que los cobra el servidor.
-  const displayBase = moneda === 'usd' ? (isFree ? 0 : PRECIO_CURSO.usd) : baseMXN;
+  const displayBase = moneda === 'usd'
+    ? (isFree ? 0 : Math.floor(PRECIO_CURSO.usd * (1 - (perfil && appliedPromo ? appliedPromo.discount : 0))))
+    : baseMXN;
   const displayTotal = moneda === 'usd'
     ? displayBase + (isFree ? 0 : [...extras].reduce((s, id) => s + Math.ceil(EXTRA_CATALOG[id].price / USD_RATE), 0))
     : totalMXN;
