@@ -1,9 +1,14 @@
 // Envío de un examen o una encuesta de lección, calificado en el servidor.
 //
-// Las respuestas correctas nunca salen de aquí: el navegador manda lo que
-// contestó el alumno y recibe la calificación (y, si el examen lo permite, qué
-// contestó bien). El intento se guarda completo, con cada respuesta, porque es
-// lo que alimenta el análisis por pregunta.
+// Las respuestas correctas nunca salen de aquí salvo que el examen lo permita:
+// el navegador manda lo que contestó el alumno y recibe lo que la regla "Al
+// terminar el examen, el alumno ve" dice (calificación, si acertó cada una,
+// las respuestas correctas). El intento se guarda completo, con cada
+// respuesta, porque es lo que alimenta el análisis por pregunta.
+//
+// Las funciones de calificación se exportan para probarlas sin servidor. Este
+// archivo solo importa _supabase.js y _notificaciones.js (scripts/verificar-lms
+// lo carga con esas dos dependencias simuladas): no agregar otros imports.
 //
 // Si el examen se aprueba, o la encuesta se envía, la lección queda completada.
 // Solo este servidor puede marcarla (ver lms-evaluaciones.sql, "candado").
@@ -16,13 +21,28 @@ import { notificar } from './_notificaciones.js';
 
 const CONFIG_BASE = { min_aprobacion: 80, intentos_max: null, mostrar_respuestas: false };
 const MAX_TEXTO = 5000;
+const TIPOS_CALIFICABLES = ['opcion', 'multiple', 'emparejar'];
+const MOSTRAR_CORRECTAS = ['nunca', 'siempre', 'al_aprobar'];
+
+// Emparejar guarda { izquierda: [...], derecha: [...] } en opciones.
+const columnas = (opciones) => {
+  const o = opciones && typeof opciones === 'object' && !Array.isArray(opciones) ? opciones : {};
+  return { izquierda: Array.isArray(o.izquierda) ? o.izquierda : [], derecha: Array.isArray(o.derecha) ? o.derecha : [] };
+};
 
 // Deja solo respuestas con la forma que corresponde a cada tipo de pregunta.
-function limpiarRespuesta(pregunta, valor) {
+export function limpiarRespuesta(pregunta, valor) {
   if (valor == null || valor === '') return null;
   const opciones = Array.isArray(pregunta.opciones) ? pregunta.opciones.length : 0;
   const indiceValido = (n) => Number.isInteger(n) && n >= 0 && n < opciones;
 
+  if (pregunta.tipo === 'emparejar') {
+    // Un índice de la derecha por cada elemento de la izquierda, todos elegidos.
+    const { izquierda, derecha } = columnas(pregunta.opciones);
+    if (!Array.isArray(valor) || !izquierda.length || valor.length !== izquierda.length) return null;
+    const lista = valor.map((n) => (n == null || n === '' ? NaN : Number(n)));
+    return lista.every((n) => Number.isInteger(n) && n >= 0 && n < derecha.length) ? lista : null;
+  }
   if (pregunta.tipo === 'opcion') {
     const n = Number(valor);
     return indiceValido(n) ? n : null;
@@ -40,14 +60,92 @@ function limpiarRespuesta(pregunta, valor) {
   return texto || null;
 }
 
-function esCorrecta(pregunta, respuesta, correctas) {
+export function esCorrecta(pregunta, respuesta, correctas) {
   if (respuesta == null) return false;
   if (pregunta.tipo === 'opcion') return correctas.includes(respuesta);
   if (pregunta.tipo === 'multiple') {
     const esperadas = [...correctas].sort((a, b) => a - b);
     return esperadas.length === respuesta.length && esperadas.every((c, i) => c === respuesta[i]);
   }
+  // Emparejar: todo o nada, igual que "varias correctas".
+  if (pregunta.tipo === 'emparejar') {
+    return Array.isArray(respuesta) && respuesta.length === correctas.length && correctas.every((c, i) => c === respuesta[i]);
+  }
   return false;
+}
+
+/** Si la pregunta cuenta para la calificación (tiene clave completa). */
+export function esCalificable(pregunta, correctas) {
+  if (!TIPOS_CALIFICABLES.includes(pregunta.tipo) || !correctas?.length) return false;
+  if (pregunta.tipo === 'emparejar') {
+    const { izquierda, derecha } = columnas(pregunta.opciones);
+    return correctas.length === izquierda.length && correctas.every((c) => Number.isInteger(c) && c >= 0 && c < derecha.length);
+  }
+  return true;
+}
+
+/**
+ * Califica las respuestas limpias. Solo cuentan las preguntas con respuesta
+ * correcta definida. `clavePorPregunta`: Map de id -> índices correctos.
+ */
+export function calificar(preguntas, limpias, clavePorPregunta) {
+  let puntosPosibles = 0;
+  let puntosObtenidos = 0;
+  let correctasCuenta = 0;
+  let calificables = 0;
+  const detalle = {};
+  for (const p of preguntas) {
+    const correctas = clavePorPregunta.get(p.id) || [];
+    if (!esCalificable(p, correctas)) continue;
+    const bien = esCorrecta(p, limpias[p.id], correctas);
+    const puntos = Math.max(0, Number(p.puntos) || 1);
+    calificables += 1;
+    puntosPosibles += puntos;
+    if (bien) { puntosObtenidos += puntos; correctasCuenta += 1; }
+    detalle[p.id] = { correcta: bien, correctas };
+  }
+  return { puntosPosibles, puntosObtenidos, correctasCuenta, calificables, detalle };
+}
+
+/**
+ * Qué ve el alumno al terminar (igual que src/lib/evaluacionesLogica.js).
+ * Antes de evaluaciones-mejoras.sql: mostrar_respuestas = true equivale a
+ * marcas = sí y correctas = siempre.
+ */
+export function finalizacionDe(fila = {}) {
+  const f = fila || {};
+  const legado = f.mostrar_respuestas === true;
+  return {
+    mostrar_calificacion: typeof f.mostrar_calificacion === 'boolean' ? f.mostrar_calificacion : true,
+    mostrar_marcas: typeof f.mostrar_marcas === 'boolean' ? f.mostrar_marcas : legado,
+    mostrar_correctas: MOSTRAR_CORRECTAS.includes(f.mostrar_correctas) ? f.mostrar_correctas : (legado ? 'siempre' : 'nunca'),
+  };
+}
+
+/**
+ * Lo que se devuelve al alumno según la configuración. Las claves solo salen
+ * si "Las respuestas correctas" es Siempre, o Solo si aprueba y aprobó.
+ * Nunca mientras le queden intentos: le regalaría el siguiente (como antes).
+ */
+export function resultadoVisible({ config, esExamen, aprobado, calificacion, correctas, calificables, detalle, puedeReintentar = false }) {
+  if (!esExamen) return { mostrarCalificacion: false, calificacion: null, correctas: null, calificables: null, detalle: null };
+  const f = finalizacionDe(config);
+  const verCorrectas = !puedeReintentar
+    && (f.mostrar_correctas === 'siempre' || (f.mostrar_correctas === 'al_aprobar' && aprobado === true));
+  const verMarcas = f.mostrar_marcas;
+  const visible = verMarcas || verCorrectas
+    ? Object.fromEntries(Object.entries(detalle || {}).map(([id, d]) => [id, {
+      ...(verMarcas ? { correcta: d.correcta } : {}),
+      ...(verCorrectas ? { correctas: d.correctas } : {}),
+    }]))
+    : null;
+  return {
+    mostrarCalificacion: f.mostrar_calificacion,
+    calificacion: f.mostrar_calificacion ? calificacion : null,
+    correctas: f.mostrar_calificacion ? correctas : null,
+    calificables: f.mostrar_calificacion ? calificables : null,
+    detalle: visible && Object.keys(visible).length ? visible : null,
+  };
 }
 
 export const handler = async (event) => {
@@ -155,21 +253,7 @@ export const handler = async (event) => {
     }
 
     // Calificación: solo cuentan las preguntas con respuesta correcta definida.
-    let puntosPosibles = 0;
-    let puntosObtenidos = 0;
-    let correctasCuenta = 0;
-    let calificables = 0;
-    const detalle = {};
-    for (const p of preguntas) {
-      const correctas = clavePorPregunta.get(p.id) || [];
-      if (!['opcion', 'multiple'].includes(p.tipo) || !correctas.length) continue;
-      const bien = esCorrecta(p, limpias[p.id], correctas);
-      const puntos = Math.max(0, Number(p.puntos) || 1);
-      calificables += 1;
-      puntosPosibles += puntos;
-      if (bien) { puntosObtenidos += puntos; correctasCuenta += 1; }
-      detalle[p.id] = { correcta: bien, correctas };
-    }
+    const { puntosPosibles, puntosObtenidos, correctasCuenta, calificables, detalle } = calificar(preguntas, limpias, clavePorPregunta);
 
     const calificacion = esExamen
       ? (puntosPosibles ? Math.round((puntosObtenidos / puntosPosibles) * 10000) / 100 : 100)
@@ -224,24 +308,23 @@ export const handler = async (event) => {
       ? Math.max(0, config.intentos_max - numero)
       : null;
 
-    // Con reintentos pendientes, revelar la opción correcta regalaría el
-    // siguiente intento: solo se dice qué contestó bien o mal.
+    // Lo que ve el alumno lo decide la regla "Al terminar el examen" (el
+    // administrador que lo prueba ve lo mismo que vería el alumno).
     const puedeReintentar = esExamen && !aprobado && (restantes == null || restantes > 0);
-    const detalleVisible = config.mostrar_respuestas && esExamen
-      ? Object.fromEntries(Object.entries(detalle).map(([id, d]) => [id, puedeReintentar ? { correcta: d.correcta } : d]))
-      : null;
+    const visible = resultadoVisible({ config, esExamen, aprobado, calificacion, correctas: correctasCuenta, calificables, detalle, puedeReintentar });
 
     return json(200, {
       ok: true,
       tipo: leccion.tipo,
-      calificacion,
+      calificacion: visible.calificacion,
+      mostrarCalificacion: visible.mostrarCalificacion,
       aprobado,
       minimo,
-      correctas: correctasCuenta,
-      calificables,
+      correctas: visible.correctas,
+      calificables: visible.calificables,
       intento: numero,
       intentosRestantes: restantes,
-      detalle: detalleVisible,
+      detalle: visible.detalle,
       simulado: esAdmin,
     });
   } catch (err) {

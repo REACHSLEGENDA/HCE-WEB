@@ -380,6 +380,7 @@ function InscripcionMasiva({ cursos, notificar }) {
       const r = await llamarInscripcion('admin-inscribir-correos', { correos, courseId: Number(curso) });
       setResultado(r);
       notificar(`${r.inscritos} ${r.inscritos === 1 ? 'alumno inscrito' : 'alumnos inscritos'}.`, 'success');
+      if (r.borrador) notificar('El curso está en Borrador: los alumnos no lo verán hasta que lo actives (botón "Activar curso" en el editor del curso).', 'warning');
       if (!r.sinCuenta?.length) setTexto('');
     } catch (err) {
       notificar(err.message, 'error');

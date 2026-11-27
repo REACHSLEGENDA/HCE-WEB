@@ -3,8 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useMarca, estiloMarca } from '../context/MarcaContext';
 import {
-  LogIn,
-  UserPlus,
   Mail,
   Lock,
   User,
@@ -12,6 +10,7 @@ import {
   CheckCircle,
   AlertCircle,
   ArrowRight,
+  ArrowLeft,
   Eye,
   EyeOff,
   Globe,
@@ -21,34 +20,11 @@ import {
   Building,
   Briefcase
 } from 'lucide-react';
+import { PAISES, normalizarPais, paisPorIso, paisPorLada } from '../lib/paises';
 import './Login.css';
 
-const COUNTRIES = [
-  { code: '+52',   iso: 'mx', label: 'MX' },
-  { code: '+1',    iso: 'us', label: 'US' },
-  { code: '+57',   iso: 'co', label: 'CO' },
-  { code: '+54',   iso: 'ar', label: 'AR' },
-  { code: '+56',   iso: 'cl', label: 'CL' },
-  { code: '+51',   iso: 'pe', label: 'PE' },
-  { code: '+593',  iso: 'ec', label: 'EC' },
-  { code: '+502',  iso: 'gt', label: 'GT' },
-  { code: '+504',  iso: 'hn', label: 'HN' },
-  { code: '+505',  iso: 'ni', label: 'NI' },
-  { code: '+506',  iso: 'cr', label: 'CR' },
-  { code: '+503',  iso: 'sv', label: 'SV' },
-  { code: '+58',   iso: 've', label: 'VE' },
-  { code: '+591',  iso: 'bo', label: 'BO' },
-  { code: '+595',  iso: 'py', label: 'PY' },
-  { code: '+598',  iso: 'uy', label: 'UY' },
-  { code: '+507',  iso: 'pa', label: 'PA' },
-  { code: '+1787', iso: 'pr', label: 'PR' },
-  { code: '+1809', iso: 'do', label: 'DO' },
-  { code: '+53',   iso: 'cu', label: 'CU' },
-  { code: '+509',  iso: 'ht', label: 'HT' },
-  { code: '+55',   iso: 'br', label: 'BR' },
-  { code: '+34',   iso: 'es', label: 'ES' },
-  { code: '+33',   iso: 'fr', label: 'FR' },
-];
+// Ladas: la lista vive en lib/paises.js (también da el nombre con que se guarda el país).
+const COUNTRIES = PAISES.map((p) => ({ code: p.lada, iso: p.iso.toLowerCase(), label: p.iso }));
 
 function PhoneSelect({ value, onChange }) {
   return <select className="phone-select" aria-label="Código de país del teléfono" value={value} onChange={(ev) => onChange(ev.target.value)}>
@@ -56,7 +32,20 @@ function PhoneSelect({ value, onChange }) {
   </select>;
 }
 
+// Mismo tema que eligió el alumno dentro del portal (Dashboard lo guarda en
+// 'studentTheme'). 'system' sigue al sistema con prefers-color-scheme; sin
+// preferencia, claro, como el portal. Solo cambia la apariencia.
+const temaGuardado = () => {
+  try {
+    const t = localStorage.getItem('studentTheme');
+    if (t === 'dark') return 'dark';
+    if (t === 'system') return undefined;
+  } catch { /* sin almacenamiento */ }
+  return 'light';
+};
+
 const Login = () => {
+  const [tema] = useState(temaGuardado);
   const { login, signUp, resetPassword, user, profile, loading: authLoading } = useAuth();
   // Entrada por la dirección o el enlace de una división (su logo y su registro).
   const { marca, slugRegistro } = useMarca();
@@ -76,6 +65,32 @@ const Login = () => {
   const [lada, setLada] = useState('+52');
   const [telefono, setTelefono] = useState('');
   const [pais, setPais] = useState('');
+  // Preselecciona la lada y el país con el país de la visita (geo.js). Solo es
+  // el valor inicial: si el alumno ya los tocó, no se cambian.
+  const tocoLada = useRef(false);
+  const tocoPais = useRef(false);
+  useEffect(() => {
+    let cancelado = false;
+    const aplicar = (iso) => {
+      const encontrado = paisPorIso(iso);
+      if (cancelado || !encontrado) return;
+      if (!tocoLada.current) setLada(encontrado.lada);
+      if (!tocoPais.current) setPais(encontrado.nombre);
+    };
+    let guardado = null;
+    try { guardado = sessionStorage.getItem('hce_pais_visita'); } catch { /* sin almacenamiento */ }
+    if (guardado) { aplicar(guardado); return () => { cancelado = true; }; }
+    fetch('/.netlify/functions/geo')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data?.country) return;
+        try { sessionStorage.setItem('hce_pais_visita', data.country); } catch { /* sin almacenamiento */ }
+        aplicar(data.country);
+      })
+      .catch(() => { /* sin geolocalización se queda México */ });
+    return () => { cancelado = true; };
+  }, []);
+  const digitosLada = paisPorLada(lada)?.digitos;
   const [estado, setEstado] = useState('');
   const [grado, setGrado] = useState('');
   const [especialidad, setEspecialidad] = useState('');
@@ -166,7 +181,7 @@ const Login = () => {
         nombres,
         apellidos,
         fullPhone,
-        pais,
+        normalizarPais(pais),
         estado,
         grado,
         especialidad,
@@ -219,32 +234,23 @@ const Login = () => {
   };
 
   return (
-    <div className="login-page" style={estiloMarca(marca, ['--a-accent', '--a-button'])}>
-      <header className="auth-topbar">
-        {marca ? (
-          <span className="auth-marca">{marca.logo_url ? <img src={marca.logo_url} alt={marca.nombre} height="48" /> : <strong>{marca.nombre}</strong>}</span>
-        ) : (
-          <><Link to="/" aria-label="HCE, ir al inicio"><img src="/assets/componentes/ghghg-scaled.png" alt="HCE Healthcare Training Experience" width="184" height="48" /></Link><Link to="/" className="auth-toplink">Volver al sitio <ArrowRight size={16} /></Link></>
-        )}
-      </header>
-      <main className="login-container">
-        <section className="auth-intro" aria-label="Escuela HCE">
-          <span className="auth-eyebrow">{marca ? marca.nombre.toUpperCase() : 'ESCUELA HCE'}</span>
-          <h1>Tu siguiente<br />paso empieza aquí.</h1>
-          <p>{marca?.bienvenida || 'Un espacio para seguir aprendiendo, conectar con tu formación y avanzar en la práctica clínica.'}</p>
-          <div className="auth-benefits"><span>01 / Tus cursos</span><span>02 / Tu progreso</span><span>03 / Tus certificados</span></div>
-          <p className="auth-intro-note">{marca ? <>Portal de {marca.nombre}<br /><strong>Con tecnología de HCE Healthcare Training Experience.</strong></> : <>Healthcare Training Experience<br /><strong>Educación médica continua.</strong></>}</p>
-        </section>
+    <div className={`login-page auth-entrada${marca ? ' auth-entrada--marca' : ''}`} data-theme={tema} style={estiloMarca(marca, ['--a-accent', '--a-button'])}>
+      {!marca && (
+        <nav className="auth-volver" aria-label="Sitio de HCE">
+          <Link to="/" className="auth-toplink"><ArrowLeft size={16} aria-hidden="true" /> Volver al sitio</Link>
+        </nav>
+      )}
+      <main className={`auth-main${activeTab === 'signup' ? ' auth-main--ancho' : ''}`}>
+        <header className="auth-cabecera">
+          {marca ? (
+            <span className="auth-marca">{marca.logo_url ? <img src={marca.logo_url} alt={marca.nombre} height="64" /> : <strong>{marca.nombre}</strong>}</span>
+          ) : (
+            <Link to="/" className="auth-logo" aria-label="HCE, ir al inicio"><img src="/assets/componentes/firma-hce.png" alt="HCE Healthcare Training Experience" width="500" height="317" /></Link>
+          )}
+          <h1>Bienvenido al Portal de {marca ? marca.nombre : 'HCE'}</h1>
+          <p>{marca?.bienvenida || 'Entra para continuar con tus cursos, clases y certificados.'}</p>
+        </header>
         <div className={`login-card ${activeTab === 'signup' ? 'large-card' : ''}`}>
-          {/* Logo / Badge */}
-          <div className="login-header">
-            <span className="section-badge">
-              Tu portal de aprendizaje
-            </span>
-            <h2>{activeTab === 'signup' ? 'Crea tu cuenta.' : activeTab === 'recovery' ? 'Volvamos a entrar.' : 'Qué gusto verte.'}</h2>
-            <p>Accede a tus cursos, sigue tu progreso y continúa donde te quedaste.</p>
-          </div>
-
           {/* Navigation Tabs */}
           {activeTab !== 'recovery' && (
             <div className="login-tabs">
@@ -255,7 +261,6 @@ const Login = () => {
                 aria-pressed={activeTab === 'signin'}
                 onClick={() => { setActiveTab('signin'); clearMessages(); }}
               >
-                <LogIn size={16} />
                 Iniciar sesión
               </button>
               <button
@@ -265,7 +270,6 @@ const Login = () => {
                 aria-pressed={activeTab === 'signup'}
                 onClick={() => { setActiveTab('signup'); clearMessages(); }}
               >
-                <UserPlus size={16} />
                 Crear cuenta
               </button>
             </div>
@@ -292,13 +296,13 @@ const Login = () => {
             <form onSubmit={handleSignIn} className="auth-form">
               <fieldset className="auth-controls" disabled={isFormSubmitting}>
               <div className="input-group">
-                <label htmlFor="login-email">Correo Electrónico</label>
+                <label htmlFor="login-email">Correo electrónico</label>
                 <div className="input-wrapper">
                   <Mail className="input-icon" size={18} />
                   <input
                     type="email"
                     placeholder="correo@ejemplo.com"
-                    id="login-email" name="email" value={email}
+                    id="login-email" name="email" value={email} autoComplete="email"
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
@@ -377,13 +381,13 @@ const Login = () => {
               </div>
 
               <div className="input-group span-2">
-                <label htmlFor="login-email">Correo Electrónico *</label>
+                <label htmlFor="login-email">Correo electrónico *</label>
                 <div className="input-wrapper">
                   <Mail className="input-icon" size={18} />
                   <input
                     type="email"
                     placeholder="correo@ejemplo.com"
-                    id="login-email" name="email" value={email}
+                    id="login-email" name="email" value={email} autoComplete="email"
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
@@ -391,14 +395,14 @@ const Login = () => {
               </div>
 
               <div className="input-group span-2">
-                <label htmlFor="login-telefono">Teléfono de Contacto *</label>
+                <label htmlFor="login-telefono">Teléfono de contacto *</label>
                 <div className="tel-group-wrapper">
-                  <PhoneSelect value={lada} onChange={setLada} />
+                  <PhoneSelect value={lada} onChange={(valor) => { tocoLada.current = true; setLada(valor); }} />
                   <div className="input-wrapper" style={{ flex: 1 }}>
                     <Phone className="input-icon" size={18} />
                     <input
                       type="tel"
-                      placeholder="10 dígitos"
+                      placeholder={digitosLada ? `${digitosLada} dígitos` : 'Número sin lada'}
                       id="login-telefono" name="telefono" value={telefono}
                       onChange={(e) => setTelefono(e.target.value)}
                       required
@@ -413,11 +417,15 @@ const Login = () => {
                   <Globe className="input-icon" size={18} />
                   <input
                     type="text"
-                    placeholder="México"
-                    id="login-pais" name="pais" value={pais}
-                    onChange={(e) => setPais(e.target.value)}
+                    placeholder="Tu país"
+                    id="login-pais" name="pais" value={pais} list="lista-paises" autoComplete="country-name"
+                    onChange={(e) => { tocoPais.current = true; setPais(e.target.value); }}
+                    onBlur={() => setPais(normalizarPais(pais))}
                     required
                   />
+                  <datalist id="lista-paises">
+                    {PAISES.map((p) => <option key={p.iso} value={p.nombre} />)}
+                  </datalist>
                 </div>
               </div>
 
@@ -526,7 +534,7 @@ const Login = () => {
               </div>
 
               <div className="input-group">
-                <label htmlFor="login-confirmPassword">Confirmar Contraseña *</label>
+                <label htmlFor="login-confirmPassword">Confirmar contraseña *</label>
                 <div className="input-wrapper">
                   <Lock className="input-icon" size={18} />
                   <input
@@ -550,7 +558,7 @@ const Login = () => {
               </div>
 
               <button type="submit" className="btn btn-primary w-full span-2" disabled={isFormSubmitting}>
-                {isFormSubmitting ? 'Creando tu cuenta…' : 'Crear Cuenta'} <ArrowRight size={16} />
+                {isFormSubmitting ? 'Creando tu cuenta…' : 'Crear cuenta'} <ArrowRight size={16} />
               </button>
             </fieldset>
             </form>
@@ -560,19 +568,19 @@ const Login = () => {
           {activeTab === 'recovery' && (
             <form onSubmit={handleRecovery} className="auth-form">
               <fieldset className="auth-controls" disabled={isFormSubmitting}>
-              <h3 className="recovery-title">Recuperar contraseña</h3>
+              <h2 className="recovery-title">Recuperar contraseña</h2>
               <p className="recovery-desc">
                 Ingresa tu correo electrónico registrado y te enviaremos un enlace seguro para restablecer tu contraseña.
               </p>
 
               <div className="input-group">
-                <label htmlFor="login-email">Correo Electrónico</label>
+                <label htmlFor="login-email">Correo electrónico</label>
                 <div className="input-wrapper">
                   <Mail className="input-icon" size={18} />
                   <input
                     type="email"
                     placeholder="correo@ejemplo.com"
-                    id="login-email" name="email" value={email}
+                    id="login-email" name="email" value={email} autoComplete="email"
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
@@ -588,14 +596,14 @@ const Login = () => {
                 className="back-to-login"
                 onClick={() => { setActiveTab('signin'); clearMessages(); }}
               >
-                Volver a Iniciar sesión
+                Volver a iniciar sesión
               </button>
             </fieldset>
             </form>
           )}
         </div>
       </main>
-      <footer className="auth-footer"><span>HCE · Healthcare Training Experience</span><Link to="/aviso-de-privacidad">Aviso de privacidad</Link></footer>
+      <footer className="auth-footer"><span>{marca ? `Portal de ${marca.nombre} · Con tecnología de HCE` : "HCE · Healthcare Training Experience"}</span><Link to="/aviso-de-privacidad">Aviso de privacidad</Link></footer>
     </div>
   );
 };

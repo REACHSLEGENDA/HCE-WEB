@@ -23,7 +23,7 @@ export async function textoAcceso(userId, courseId) {
     if (acceso.porGrupo) {
       return 'Tu lugar quedó apartado. Te asignaremos a tu grupo y el curso se abrirá en su fecha de inicio; te avisaremos por correo.';
     }
-    return 'Ya puedes empezar cuando quieras.';
+    return 'El contenido ya está disponible en tu portal para que puedas comenzar tu formación y avanzar a tu propio ritmo.';
   } catch (err) {
     console.error('No se pudo revisar el acceso para el aviso:', err.message);
     return 'Encontrarás el curso en tu portal.';

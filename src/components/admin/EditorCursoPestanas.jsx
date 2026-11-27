@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { ArrowLeft, ExternalLink, Save, CheckCircle, AlertCircle, Lock } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Save, CheckCircle, AlertCircle, Lock, Rocket } from 'lucide-react';
 import { PESTANAS_CURSO } from './editorCurso';
 
 /**
@@ -15,6 +15,7 @@ export default function EditorCursoPestanas({
   onPestana,
   pestanasConError = [],
   onCerrar,
+  onActivar,
   lateral,
   children,
 }) {
@@ -56,6 +57,13 @@ export default function EditorCursoPestanas({
           {activo ? 'Activo' : 'Borrador'}
         </span>
         <div className="ec-acciones">
+          {/* Un borrador no lo ven los alumnos, ni aunque estén inscritos:
+              el botón queda a la vista para no buscarlo en la revisión. */}
+          {guardado && !activo && onActivar && (
+            <button type="button" className="btn-crm-action solid ec-activar" onClick={onActivar} title="Los alumnos lo verán en el catálogo y en Mis cursos">
+              <Rocket size={15} /> <span>Activar curso</span>
+            </button>
+          )}
           {guardado && (
             <a className="btn-crm-action outlined" href={`/classroom/${courseId}`} target="_blank" rel="noopener noreferrer">
               <ExternalLink size={15} /> <span>Ver aula</span>

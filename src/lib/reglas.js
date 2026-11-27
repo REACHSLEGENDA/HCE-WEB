@@ -16,7 +16,18 @@ export const REGLAS_BASE = {
   // 'grupo': el curso se abre cuando el alumno está en un grupo y llega la
   // fecha de inicio de ese grupo (supabase/acceso-por-grupo.sql).
   modo_acceso: 'inmediato',
+  // 'secuencial': cada lección se abre al terminar las obligatorias anteriores
+  // (supabase/curso-avance.sql). 'libre': en el orden que quiera el alumno.
+  orden_avance: 'libre',
 };
+
+export const ORDENES_AVANCE = {
+  libre: 'Libre: el alumno avanza en el orden que quiera',
+  secuencial: 'En orden: cada lección se abre al terminar la anterior',
+};
+
+/** Texto corto del orden de avance para resúmenes y chips. */
+export const textoOrdenAvance = (orden) => (orden === 'secuencial' ? 'Lecciones en orden' : 'Avance libre');
 
 export const MODOS_ACCESO = {
   inmediato: 'Inmediato: al inscribirse o pagar entra al curso',
@@ -80,15 +91,23 @@ export async function guardarReglasCurso(courseId, reglas) {
     regla_finalizacion: reglas.regla_finalizacion || 'examen_final',
     porcentaje_finalizacion: porcentaje,
     modo_acceso: reglas.modo_acceso === 'grupo' ? 'grupo' : 'inmediato',
+    orden_avance: reglas.orden_avance === 'secuencial' ? 'secuencial' : 'libre',
     actualizado_en: new Date().toISOString(),
   };
+  // Columnas que llegan con migraciones posteriores. Si todavía no existen, el
+  // valor por defecto se guarda sin ellas; otro valor necesita la migración.
+  const opcionales = [
+    { columna: 'modo_acceso', base: 'inmediato', aviso: 'Para el acceso por grupo falta correr en Supabase la migración acceso-por-grupo.sql.' },
+    { columna: 'orden_avance', base: 'libre', aviso: 'Para el avance en orden falta correr en Supabase la migración curso-avance.sql.' },
+  ];
   let { error } = await supabase.from('curso_reglas').upsert([fila], { onConflict: 'course_id' });
-  // Antes de acceso-por-grupo.sql la columna no existe: el modo inmediato se
-  // guarda sin ella; el modo por grupo necesita la migración.
-  if (error && /modo_acceso/.test(error.message || '')) {
-    if (fila.modo_acceso === 'grupo') throw new Error('Para el acceso por grupo falta correr en Supabase la migración acceso-por-grupo.sql.');
-    const { modo_acceso: _omitido, ...sinModo } = fila;
-    ({ error } = await supabase.from('curso_reglas').upsert([sinModo], { onConflict: 'course_id' }));
+  for (let intento = 0; error && intento < opcionales.length; intento += 1) {
+    const faltante = opcionales.find((o) => o.columna in fila && new RegExp(o.columna).test(error.message || ''));
+    // 42703 / PGRST204: la columna no existe (el mensaje la nombra).
+    if (!faltante) break;
+    if (fila[faltante.columna] !== faltante.base) throw new Error(faltante.aviso);
+    delete fila[faltante.columna];
+    ({ error } = await supabase.from('curso_reglas').upsert([fila], { onConflict: 'course_id' }));
   }
   if (error) throw error;
 }

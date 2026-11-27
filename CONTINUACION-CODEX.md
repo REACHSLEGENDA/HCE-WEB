@@ -891,3 +891,43 @@ sin créditos, Codex sigue esta lista. Casi todo el texto clínico vive en src/d
 - París: "8 al 11 de noviembre de 2027" (endDate 2027-11-11) en ParisNewDesign, asistente, consultas, programas,
   seo.js y llms.txt; imagen social nueva public/og/paris-2027.jpg.
 - Pruebas: tests/pagos-diferidos.test.js.
+
+## 23. Pedidos de Jen del 27 nov 2026 — Claude (con subagentes), SIN subir aún
+- Curso en Borrador = invisible para alumnos aunque estén inscritos. Botón "Activar curso" en el encabezado del
+  editor (EditorCursoPestanas, prop onActivar desde VistaCursos); ChecklistPublicar ya no bloquea si faltan
+  puntos (solo avisa). curso-inscripcion devuelve `borrador` y el admin ve aviso al inscribir en un borrador.
+- Inscripción por lista de correos: hasta 10 avisa al momento (AVISO_INMEDIATO_MAX); más, en la tarea de cada hora.
+- Correo inscrito_curso con texto de Jen (supabase/correo-inscripcion.sql), botón "Comenzar mi curso"
+  (botonPara(destinatario, enlace, evento)); llenarPlantilla quita "¡Hola, !" sin nombre; textoAcceso inmediato
+  = "El contenido ya está disponible en tu portal…".
+- Reset de contraseña sin ** : supabase/plantillas-correo/restablecer-contrasena.html (se pega en Supabase Auth).
+- Comunidad: categoría 'Insuficiencia Cardiaca' con `archivada: true` (no se muestra).
+- Login rediseñado (Login.jsx/.css): una columna, "Bienvenido al Portal de HCE", sin panel de marketing; lógica intacta.
+- Orden de las lecciones (curso_reglas.orden_avance 'libre'|'secuencial', supabase/curso-avance.sql):
+  ReglasCurso tarjeta "Avance"; leccionesBloqueadas() en lecciones.js; candados en Classroom (solo cliente).
+- Exámenes (supabase/evaluaciones-mejoras.sql): tipo 'emparejar' (opciones {izquierda, derecha revuelta},
+  clave correctas[i] = índice derecha), aleatorio_opciones, mostrar_calificacion / mostrar_marcas /
+  mostrar_correctas ('nunca'|'siempre' = "Al terminar sus intentos"|'al_aprobar'). Las correctas NUNCA salen
+  mientras el alumno pueda reintentar (resultadoVisible(..., puedeReintentar)). Lógica cliente en
+  src/lib/evaluacionesLogica.js; servidor duplica en evaluacion-enviar.js (verificar-lms solo permite 2 imports).
+- Importar preguntas: src/lib/importarPreguntas.js + ImportarPreguntas.jsx (plantilla HCE .xlsx/.csv, formatos
+  tipo TalentLMS, AIKEN); botón "Importar desde Excel" en EditorEvaluacion -> agregarPreguntas(lista).
+  TalentLMS no exporta preguntas, solo el reporte del test: probar con un archivo real de Jen.
+- entregables/bolivia/: correo Brevo de primer acceso (html/txt), guía para Jen, guiones y videos tutoriales.
+
+## 24. Continuación de la sección 23 (27 nov 2026, mañana) — Claude, SIN subir aún
+- Plantilla Supabase Auth "Confirm signup": supabase/plantillas-correo/confirmar-cuenta.html (mismo diseño que la
+  de contraseña). El portal no usa Magic Link. SMTP propio en Supabase: Christian confirmó que ya está.
+- "Ocultar calificación" también en Dashboard > Mis calificaciones: lee evaluacion_config (select '*', así no
+  falla si aún no se corre evaluaciones-mejoras.sql) y muestra "—" en vez del % (el estado Aprobado sí sale).
+- Países: src/lib/paises.js (PAISES con lada/dígitos, normalizarPais, paisPorIso, paisPorLada).
+  Login: lada y país preseleccionados con geo.js (solo si el alumno no los tocó), placeholder de dígitos según la
+  lada, datalist de países y normalizarPais al guardar. AdminDashboard: filtro de País agrupa con normalizarPais
+  (los datos viejos no se tocan) y el alta manual normaliza. Pruebas: tests/paises.test.js.
+- Alumnos (admin): etiqueta "Correo sin confirmar" en Estado y "(sin confirmar)" en el detalle. cuenta-admin
+  acción 'correos-sin-confirmar' (auth.admin.listUsers, sin email_confirmed_at); se carga al abrir la pestaña.
+- ReglasCurso, ayuda de "En orden": aclara que una sesión en vivo obligatoria detiene el avance hasta registrar
+  asistencia.
+- Videos de Bolivia: video B tenía comillas anidadas en selectores (no compilaba) y el A horizontal encimaba el
+  subtítulo con el título en portada y cierre; corregido en los index.html y en build.mjs. MP4 en
+  entregables/bolivia/videos/ (video-a-alumnos-celular, video-a-alumnos-computadora, video-b-jen-asignar-curso).

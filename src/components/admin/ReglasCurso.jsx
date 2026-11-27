@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronDown, DoorOpen, Eye, CalendarClock, Award, Loader2 } from 'lucide-react';
-import { cargarReglasCurso, guardarReglasCurso, REGLAS_FINALIZACION, MODOS_ACCESO } from '../../lib/reglas';
+import { ChevronDown, DoorOpen, Eye, CalendarClock, Award, Loader2, ListOrdered } from 'lucide-react';
+import { cargarReglasCurso, guardarReglasCurso, REGLAS_FINALIZACION, MODOS_ACCESO, ORDENES_AVANCE, textoOrdenAvance } from '../../lib/reglas';
 import { traerTodo } from '../../lib/traerTodo';
 import './AdminLms.css';
 
@@ -11,6 +11,7 @@ import './AdminLms.css';
 // Campos de cada tarjeta: para marcar la que tiene cambios.
 const CAMPOS = {
   acceso: ['modo_acceso'],
+  avance: ['orden_avance'],
   disponibilidad: ['oculto_catalogo', 'cupo', 'requiere_solicitud'],
   limites: ['dias_acceso', 'conservar_acceso', 'prerrequisitos'],
   finalizacion: ['regla_finalizacion', 'porcentaje_finalizacion'],
@@ -171,6 +172,7 @@ export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, co
     : TERMINA[reglas.regla_finalizacion] || REGLAS_FINALIZACION[reglas.regla_finalizacion] || '';
   const resumenes = {
     acceso: porGrupo ? 'Acceso por grupo (generación)' : 'Acceso inmediato',
+    avance: textoOrdenAvance(reglas.orden_avance),
     disponibilidad: [
       reglas.oculto_catalogo ? 'Oculto del catálogo' : 'Visible en catálogo',
       conCupo ? `Cupo ${reglas.cupo}` : 'Sin cupo máximo',
@@ -187,6 +189,7 @@ export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, co
     conCupo ? `Cupo ${reglas.cupo}` : null,
     porGrupo ? 'Acceso por grupo' : 'Acceso inmediato',
     conSolicitud ? 'Con solicitud' : null,
+    textoOrdenAvance(reglas.orden_avance),
     conDias ? `${reglas.dias_acceso} días de acceso` : null,
     numPrerrequisitos ? textoPrerrequisitos : null,
     terminaEn,
@@ -234,6 +237,24 @@ export default function ReglasCurso({ courseId, cursos, tipoCurso, notificar, co
         </div>
         {porGrupo && (
           <small className="lms-ayuda">Asigna el curso a un grupo y su fecha de inicio en <strong>Grupos</strong>. Quien inscribas tú a mano entra directo.</small>
+        )}
+      </TarjetaRegla>
+
+      <TarjetaRegla
+        id="avance" icono={ListOrdered} titulo="Avance" resumen={resumenes.avance}
+        abierta={abiertas.has('avance')} modificada={modificada('avance')} onAlternar={() => alternar('avance')}
+        explicacion="En qué orden puede abrir el alumno las lecciones del curso."
+      >
+        <div className="reglas-modos" role="radiogroup" aria-label="Orden de las lecciones">
+          {Object.entries(ORDENES_AVANCE).map(([id, texto]) => (
+            <label key={id} className={`reglas-modo${(reglas.orden_avance || 'libre') === id ? ' activo' : ''}`}>
+              <input type="radio" name={`avance-${courseId}`} checked={(reglas.orden_avance || 'libre') === id} onChange={() => setReglas({ ...reglas, orden_avance: id })} />
+              <span>{texto}</span>
+            </label>
+          ))}
+        </div>
+        {reglas.orden_avance === 'secuencial' && (
+          <small className="lms-ayuda">Las secciones no cuentan y las lecciones opcionales no detienen el avance. El examen final sigue abriéndose al completar las lecciones. Ojo: una sesión en vivo obligatoria detiene el avance hasta que registres la asistencia; si no quieres que espere, márcala como opcional.</small>
         )}
       </TarjetaRegla>
 

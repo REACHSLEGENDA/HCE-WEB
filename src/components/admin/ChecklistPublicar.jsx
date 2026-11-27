@@ -175,7 +175,9 @@ export default function ChecklistPublicar({ courseId, form, activo, sucio, recar
   if (estado.cargando) motivoBloqueo = 'Revisando el curso…';
   else if (estado.error) motivoBloqueo = 'Reintenta la revisión del curso antes de activar.';
   else if (sucio) motivoBloqueo = 'Guarda los cambios antes de activar.';
-  else if (!esencialesListos) motivoBloqueo = 'Completa los puntos marcados con ○ (los esenciales).';
+  // Faltar un punto no bloquea: se avisa y la administradora decide (p. ej. un
+  // curso que se evalúa con exámenes dentro de las lecciones, sin examen final).
+  const pendientes = esencialesListos ? '' : 'Faltan puntos marcados con ○; puedes activarlo de todos modos.';
 
   return (
     <section className={`cp-tarjeta${esencialesListos ? ' listo' : ''}`} aria-labelledby="cp-titulo">
@@ -225,7 +227,7 @@ export default function ChecklistPublicar({ courseId, form, activo, sucio, recar
               >
                 <Rocket size={15} /> <span>{activando ? 'Activando…' : 'Activar curso'}</span>
               </button>
-              {motivoBloqueo && <small>{motivoBloqueo}</small>}
+              {(motivoBloqueo || pendientes) && <small>{motivoBloqueo || pendientes}</small>}
             </div>
           )}
         </div>

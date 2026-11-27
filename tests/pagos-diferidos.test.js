@@ -12,13 +12,21 @@ describe('Pagos en OXXO y SPEI', () => {
     expect(o.customer_creation).toBe('always');
   });
 
-  it('si Stripe no los tiene activados, cobra solo con tarjeta', async () => {
-    const create = vi.fn()
-      .mockRejectedValueOnce(new Error('The payment method type "oxxo" is invalid'))
-      .mockResolvedValueOnce({ url: 'https://checkout.stripe.com/x' });
-    const s = await crearSesionConPagosDiferidos({ checkout: { sessions: { create } } }, { payment_method_types: ['card'] });
-    expect(s.url).toBe('https://checkout.stripe.com/x');
-    expect(create.mock.calls[1][0].payment_method_types).toEqual(['card']);
+  it('si Stripe rechaza uno, ofrece el otro; si rechaza los dos, solo tarjeta', async () => {
+    const soloOxxo = vi.fn()
+      .mockRejectedValueOnce(new Error('customer_balance is invalid'))
+      .mockResolvedValueOnce({ url: 'https://checkout.stripe.com/oxxo' });
+    const a = await crearSesionConPagosDiferidos({ checkout: { sessions: { create: soloOxxo } } }, { payment_method_types: ['card'] });
+    expect(a.url).toBe('https://checkout.stripe.com/oxxo');
+    expect(soloOxxo.mock.calls[1][0].payment_method_types).toEqual(['card', 'oxxo']);
+    expect(soloOxxo.mock.calls[1][0].customer_creation).toBeUndefined();
+
+    const ninguno = vi.fn()
+      .mockRejectedValueOnce(new Error('x')).mockRejectedValueOnce(new Error('x')).mockRejectedValueOnce(new Error('x'))
+      .mockResolvedValueOnce({ url: 'https://checkout.stripe.com/card' });
+    const b = await crearSesionConPagosDiferidos({ checkout: { sessions: { create: ninguno } } }, { payment_method_types: ['card'] });
+    expect(b.url).toBe('https://checkout.stripe.com/card');
+    expect(ninguno.mock.calls[3][0].payment_method_types).toEqual(['card']);
   });
 
   it('distingue pagado, pendiente y el método', () => {

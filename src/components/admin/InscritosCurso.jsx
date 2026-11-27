@@ -121,8 +121,9 @@ export default function InscritosCurso({ courseId, cursos = SIN_CURSOS, perfiles
   const inscribirUno = async (p) => {
     setOcupado(`alta-${p.id}`);
     try {
-      await llamarInscripcion('admin-inscribir', { userId: p.id, courseId: Number(courseId) });
+      const r = await llamarInscripcion('admin-inscribir', { userId: p.id, courseId: Number(courseId) });
       notificar(`${p.nombre_completo || p.email} quedó inscrito.`, 'success');
+      if (r?.borrador) notificar('El curso está en Borrador: los alumnos no lo verán hasta que lo actives (botón "Activar curso" en el editor del curso).', 'warning');
       setBuscaAlumno('');
       await cargar();
     } catch (err) {
@@ -148,6 +149,7 @@ export default function InscritosCurso({ courseId, cursos = SIN_CURSOS, perfiles
         (r.sinCuenta?.length ? ` · ${r.sinCuenta.length} sin cuenta` : '') + '.',
         r.sinCuenta?.length ? 'warning' : 'success'
       );
+      if (r.borrador) notificar('El curso está en Borrador: los alumnos no lo verán hasta que lo actives (botón "Activar curso" en el editor del curso).', 'warning');
       setSinCuenta(r.sinCuenta || []);
       // Se quedan en el cuadro solo los que no tienen cuenta, para invitarlos.
       setCorreos((r.sinCuenta || []).join('\n'));

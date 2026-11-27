@@ -75,7 +75,9 @@ const formatDateSafe = (dateStr) => {
 // categoría que se abre al entrar. `logo`: logotipo del curso en la tarjeta.
 const FORUM_CATEGORIES = [
   { id: 'Paris Diploma ECMO', label: 'Paris International Diploma in ECMO', icon: Award, logo: '/assets/componentes/curso-paris.webp', desc: 'Diploma internacional de París en ECMO' },
-  { id: 'Insuficiencia Cardiaca', label: 'Manejo de Avanzada en Insuficiencia Cardíaca', icon: Heart, desc: 'Soporte e insuficiencia cardíaca avanzada' },
+  // Archivada (27 nov 2026, a petición de la Dra. Trejo): no se muestra, pero
+  // sus testimonios se conservan. Para volver a mostrarla, quita `archivada`.
+  { id: 'Insuficiencia Cardiaca', label: 'Manejo de Avanzada en Insuficiencia Cardíaca', icon: Heart, desc: 'Soporte e insuficiencia cardíaca avanzada', archivada: true },
   { id: 'ECMO Nursing Care', label: 'ECMO Nursing Care', icon: NurseCap, logo: '/assets/componentes/curso-nursing.webp', desc: 'Cuidado crítico de enfermería en ECMO' },
   { id: 'ECMO SIM', label: 'Simulador ECMO SIM', icon: Gamepad2, logo: '/assets/componentes/curso-sim.webp', desc: 'Entrenamiento interactivo y simulador clínico' },
   // Categoría fusionada: muestra los testimonios guardados con cualquiera de los
@@ -406,7 +408,7 @@ const Comunidad = () => {
 
             {/* Categorías del foro */}
             <div className="forum-categories-grid">
-              {FORUM_CATEGORIES.map(cat => {
+              {FORUM_CATEGORIES.filter(cat => !cat.archivada).map(cat => {
                 const IconComp = cat.icon;
                 const isActive = forumCategory === cat.id;
                 return (

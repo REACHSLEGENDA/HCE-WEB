@@ -2,15 +2,26 @@ import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from
 import { CheckCircle, XCircle, RotateCcw, ClipboardCheck, Clock, ChevronLeft, ChevronRight, ListChecks } from 'lucide-react';
 import TextoLeccion from './TextoLeccion';
 import { cargarEvaluacion, cargarMisIntentos, enviarEvaluacion, barajar, ESCALA_BASE } from '../lib/evaluaciones';
+import { ordenarOpciones, indicesVisibles, columnasEmparejar } from '../lib/evaluacionesLogica';
 import './EvaluacionLeccion.css';
 import { claveBorradorEvaluacion, firmaEvaluacion, leerBorradorEvaluacion, guardarBorradorEvaluacion, borrarBorradorEvaluacion, validarBorradorEvaluacion } from '../lib/borradorEvaluacion';
 
 // Examen o encuesta dentro de una lección del aula. Califica el servidor; aquí
 // solo se muestran las preguntas y se envía lo que el alumno contestó.
+//
+// Con "Respuestas en orden aleatorio" las opciones se muestran en otro orden
+// en cada intento, pero las respuestas se guardan y se envían con el índice
+// ORIGINAL de cada opción: la calificación no cambia.
 
 const fecha = (iso) => new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
 const duracion = (seg) => (seg == null ? '' : seg < 60 ? `${seg} s` : `${Math.floor(seg / 60)} min ${seg % 60 ? `${seg % 60} s` : ''}`);
-const contestada = (p, valor) => (p.tipo === 'multiple' ? Array.isArray(valor) && valor.length > 0 : valor != null && String(valor).trim() !== '');
+const letra = (i) => String.fromCharCode(65 + i);
+const contestada = (p, valor) => {
+  if (p.tipo === 'multiple') return Array.isArray(valor) && valor.length > 0;
+  // Emparejar: cuenta como contestada cuando ya eligió pareja para todos.
+  if (p.tipo === 'emparejar') return Array.isArray(valor) && valor.length > 0 && valor.every((x) => x != null);
+  return valor != null && String(valor).trim() !== '';
+};
 
 export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar, onCompletada, ref }) {
   const claveBorrador = claveBorradorEvaluacion(userId, leccion.id, esAdmin);
@@ -23,6 +34,7 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
   const [intentos, setIntentos] = useState([]);
   const [fase, setFase] = useState('inicio');
   const [orden, setOrden] = useState([]);
+  const [ordenOpciones, setOrdenOpciones] = useState({});
   const [respuestas, setRespuestas] = useState({});
   const [iniciadoEn, setIniciadoEn] = useState(null);
   const [faltan, setFaltan] = useState([]);
@@ -55,6 +67,8 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
   const sinIntentos = esExamen && config?.intentos_max && intentos.length >= config.intentos_max && !aprobado;
   const puedeEmpezar = esAdmin || (!aprobado && !enviada && !sinIntentos);
   const mejor = intentos.reduce((m, i) => (i.calificacion != null && Number(i.calificacion) > m ? Number(i.calificacion) : m), -1);
+  // "Al terminar el examen, el alumno ve: Calificación" también rige el historial.
+  const verCalificacion = config?.mostrar_calificacion !== false;
 
   const preguntas = useMemo(() => {
     if (!datos) return [];
@@ -86,7 +100,7 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
   const guardarBorrador = (cambios = {}) => {
     const ok = guardarBorradorEvaluacion(claveBorrador, {
       version: 1, firma: firmaEvaluacion(datos, leccion.tipo), intentosPrevios: intentos.length,
-      respuestas, orden, iniciadoEn, actual, revisando, ...cambios,
+      respuestas, orden, ordenOpciones, iniciadoEn, actual, revisando, ...cambios,
     });
     setBorradorGuardado(ok);
     setErrorBorrador(!ok);
@@ -117,6 +131,9 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
     const previo = usarBorrador ? borrador : null;
     const nuevasRespuestas = previo?.respuestas || {};
     const nuevoOrden = previo?.orden || (config.aleatorio ? barajar(datos.preguntas).map((p) => p.id) : []);
+    // Orden de las respuestas de cada pregunta: se fija al empezar el intento
+    // y se conserva al reanudar el borrador.
+    const nuevoOrdenOpciones = previo?.ordenOpciones || (config.aleatorio_opciones ? ordenarOpciones(datos.preguntas) : {});
     // Al reanudar, el tiempo cuenta desde ahora: las horas que el borrador
     // estuvo guardado no son tiempo de examen.
     const inicio = new Date().toISOString();
@@ -124,12 +141,13 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
     setFaltan([]);
     setResultado(null);
     setOrden(nuevoOrden);
+    setOrdenOpciones(nuevoOrdenOpciones);
     setIniciadoEn(inicio);
     setActual(previo?.actual || 0);
     setRevisando(previo?.revisando || false);
     setConfirmarSalir(false);
     setFase('respondiendo');
-    guardarBorrador({ respuestas: nuevasRespuestas, orden: nuevoOrden, iniciadoEn: inicio, actual: previo?.actual || 0, revisando: previo?.revisando || false });
+    guardarBorrador({ respuestas: nuevasRespuestas, orden: nuevoOrden, ordenOpciones: nuevoOrdenOpciones, iniciadoEn: inicio, actual: previo?.actual || 0, revisando: previo?.revisando || false });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -155,6 +173,15 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
   const alternarMultiple = (p, indice) => {
     const actual = Array.isArray(respuestas[p.id]) ? respuestas[p.id] : [];
     responder(p, actual.includes(indice) ? actual.filter((x) => x !== indice) : [...actual, indice]);
+  };
+
+  // Emparejar: posicion = elemento de la izquierda; indice = opción original
+  // de la derecha (o null para quitarla).
+  const emparejar = (p, posicion, indice) => {
+    const total = columnasEmparejar(p.opciones).izquierda.length;
+    const previo = Array.isArray(respuestas[p.id]) && respuestas[p.id].length === total ? respuestas[p.id] : Array(total).fill(null);
+    const siguiente = previo.map((x, i) => (i === posicion ? indice : x));
+    responder(p, siguiente.every((x) => x == null) ? null : siguiente);
   };
 
   const enviar = async (e) => {
@@ -211,15 +238,26 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
   // ---- Resultado ------------------------------------------------------------
   if (fase === 'resultado' && resultado) {
     const reintentar = esExamen && !resultado.aprobado && (resultado.intentosRestantes == null || resultado.intentosRestantes > 0);
+    // El servidor solo manda lo que el examen permite ver.
+    const conCifra = resultado.mostrarCalificacion !== false && resultado.calificacion != null;
+    const textoCorrecta = (p, correctas) => {
+      if (p.tipo === 'emparejar') {
+        const { izquierda, derecha } = columnasEmparejar(p.opciones);
+        return izquierda.map((izq, i) => `${izq}: ${derecha[correctas[i]] ?? ''}`);
+      }
+      return [correctas.map((c) => p.opciones?.[c]).filter((t) => t != null).join(' · ')];
+    };
     return (
       <div className="eval-alumno">
         <div className={`eval-resultado ${!esExamen || resultado.aprobado ? 'ok' : 'mal'}`}>
           {!esExamen ? <CheckCircle size={40} /> : resultado.aprobado ? <CheckCircle size={40} /> : <XCircle size={40} />}
           {esExamen ? (
             <>
-              <strong className="eval-resultado-cifra">{Math.round(resultado.calificacion)}%</strong>
+              {conCifra && <strong className="eval-resultado-cifra">{Math.round(resultado.calificacion)}%</strong>}
               <span>{resultado.aprobado ? '¡Aprobaste!' : `No alcanzaste el mínimo de ${resultado.minimo}%.`}</span>
-              <small>{resultado.correctas} de {resultado.calificables} respuestas correctas{resultado.simulado ? ' · vista de administrador, no se guardó' : ''}</small>
+              {conCifra
+                ? <small>{resultado.correctas} de {resultado.calificables} respuestas correctas{resultado.simulado ? ' · vista de administrador, no se guardó' : ''}</small>
+                : <small>Tu examen quedó enviado.{resultado.simulado ? ' Vista de administrador, no se guardó.' : ''}</small>}
               {!resultado.aprobado && resultado.intentosRestantes != null && (
                 <small>{resultado.intentosRestantes === 0 ? 'Ya no te quedan intentos.' : `Te ${resultado.intentosRestantes === 1 ? 'queda 1 intento' : `quedan ${resultado.intentosRestantes} intentos`}.`}</small>
               )}
@@ -236,13 +274,26 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
           <ol className="eval-revision">
             {preguntas.filter((p) => resultado.detalle[p.id]).map((p) => {
               const d = resultado.detalle[p.id];
+              const conMarca = typeof d.correcta === 'boolean';
+              // Con marcas, la respuesta correcta se muestra solo en las que falló.
+              const verCorrecta = Array.isArray(d.correctas) && (!conMarca || !d.correcta);
+              const lineas = verCorrecta ? textoCorrecta(p, d.correctas) : [];
               return (
-                <li key={p.id} className={d.correcta ? 'bien' : 'mal'}>
-                  <span className="eval-revision-icono">{d.correcta ? <CheckCircle size={16} /> : <XCircle size={16} />}</span>
+                <li key={p.id} className={conMarca ? (d.correcta ? 'bien' : 'mal') : 'neutra'}>
+                  {conMarca && (
+                    <span className="eval-revision-icono" aria-hidden="true">
+                      {d.correcta ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                    </span>
+                  )}
                   <div>
                     <p>{p.texto}</p>
-                    {!d.correcta && d.correctas && (
-                      <small>Correcta: {d.correctas.map((c) => p.opciones[c]).join(' · ')}</small>
+                    {conMarca && <span className="eval-revision-marca">{d.correcta ? 'Correcta' : 'Incorrecta'}</span>}
+                    {lineas.length === 1 && <small>Respuesta correcta: {lineas[0]}</small>}
+                    {lineas.length > 1 && (
+                      <>
+                        <small>Respuesta correcta:</small>
+                        <ul className="eval-revision-pares">{lineas.map((l, i) => <li key={i}>{l}</li>)}</ul>
+                      </>
                     )}
                   </div>
                 </li>
@@ -281,8 +332,50 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
               <span>{pregunta.texto}{pregunta.obligatoria ? '' : <em> (opcional)</em>}</span>
             </legend>
             {pregunta.tipo === 'multiple' && <small className="eval-indicacion">Puedes elegir varias.</small>}
+            {pregunta.tipo === 'emparejar' && <small className="eval-indicacion">A cada elemento de la izquierda elígele su pareja.</small>}
 
-            {pregunta.tipo === 'abierta' ? (
+            {pregunta.tipo === 'emparejar' ? (() => {
+              const { izquierda, derecha } = columnasEmparejar(pregunta.opciones);
+              // Letra según el lugar en que se muestra; el valor es el índice original.
+              const visibles = indicesVisibles(pregunta, ordenOpciones);
+              const letraDe = new Map(visibles.map((original, pos) => [original, letra(pos)]));
+              const elegidas = Array.isArray(valor) ? valor : [];
+              return (
+                <div className="eval-emparejar">
+                  <ul className="eval-emparejar-opciones" aria-label="Opciones para emparejar">
+                    {visibles.map((original, pos) => (
+                      <li key={original}>
+                        <span className="eval-opcion-letra" aria-hidden="true">{letra(pos)}</span>
+                        <span>{derecha[original]}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <ol className="eval-emparejar-filas">
+                    {izquierda.map((texto, k) => {
+                      const id = `emp-${pregunta.id}-${k}`;
+                      const elegida = elegidas[k];
+                      return (
+                        <li key={k} className={elegida != null ? 'elegida' : ''}>
+                          <label htmlFor={id} className="eval-emparejar-izquierda">{texto}</label>
+                          <select
+                            id={id}
+                            value={elegida == null ? '' : String(elegida)}
+                            onChange={(e) => emparejar(pregunta, k, e.target.value === '' ? null : Number(e.target.value))}
+                          >
+                            <option value="">Elige su pareja</option>
+                            {visibles.map((original) => (
+                              <option key={original} value={original}>
+                                {letraDe.get(original)}. {derecha[original]}
+                              </option>
+                            ))}
+                          </select>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              );
+            })() : pregunta.tipo === 'abierta' ? (
               <textarea rows="5" value={valor || ''} onChange={(e) => responder(pregunta, e.target.value)} placeholder="Escribe tu respuesta" maxLength={5000} aria-label={`Respuesta a la pregunta ${i + 1}`} />
             ) : pregunta.tipo === 'escala' ? (
               <div className="eval-escala">
@@ -296,7 +389,10 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
               </div>
             ) : (
               <div className="eval-opciones-alumno">
-                {etiquetas.map((opcion, j) => {
+                {/* j es el índice ORIGINAL de la opción (lo que se envía);
+                    pos, el lugar en que se muestra. */}
+                {indicesVisibles(pregunta, ordenOpciones).map((j, pos) => {
+                  const opcion = etiquetas[j];
                   const elegida = pregunta.tipo === 'multiple' ? Array.isArray(valor) && valor.includes(j) : valor === j;
                   return (
                     <label key={j} className={elegida ? 'elegida' : ''}>
@@ -306,7 +402,7 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
                         checked={elegida}
                         onChange={() => (pregunta.tipo === 'multiple' ? alternarMultiple(pregunta, j) : responder(pregunta, j))}
                       />
-                      <span className="eval-opcion-letra" aria-hidden="true">{String.fromCharCode(65 + j)}</span>
+                      <span className="eval-opcion-letra" aria-hidden="true">{letra(pos)}</span>
                       <span>{opcion}</span>
                     </label>
                   );
@@ -453,7 +549,7 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
       </ul>
 
       {aprobado && (
-        <p className="eval-estado ok"><CheckCircle size={18} /> Aprobaste este examen con {Math.round(mejor)}%.</p>
+        <p className="eval-estado ok"><CheckCircle size={18} /> {verCalificacion && mejor >= 0 ? `Aprobaste este examen con ${Math.round(mejor)}%.` : 'Aprobaste este examen.'}</p>
       )}
       {enviada && (
         <p className="eval-estado ok"><CheckCircle size={18} /> Ya enviaste esta encuesta. ¡Gracias!</p>
@@ -464,13 +560,16 @@ export default function EvaluacionLeccion({ leccion, userId, esAdmin, notificar,
 
       {esExamen && intentos.length > 0 && (
         <table className="eval-intentos">
-          <thead><tr><th>Intento</th><th>Fecha</th><th>Calificación</th><th>Tiempo</th></tr></thead>
+          <thead><tr><th>Intento</th><th>Fecha</th><th>{verCalificacion ? 'Calificación' : 'Resultado'}</th><th>Tiempo</th></tr></thead>
           <tbody>
             {intentos.map((it) => (
               <tr key={it.id}>
                 <td>{it.numero}</td>
                 <td>{fecha(it.enviado_en)}</td>
-                <td className={it.aprobado ? 'ok' : 'mal'}>{it.calificacion != null ? `${Math.round(it.calificacion)}%` : '—'}</td>
+                <td className={it.aprobado ? 'ok' : 'mal'}>
+                  {!verCalificacion ? (it.aprobado ? 'Aprobado' : 'No aprobado')
+                    : it.calificacion != null ? `${Math.round(it.calificacion)}%` : '—'}
+                </td>
                 <td>{duracion(it.duracion_seg)}</td>
               </tr>
             ))}

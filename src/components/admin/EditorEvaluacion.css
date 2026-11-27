@@ -1,0 +1,94 @@
+/* Editor de examen o encuesta: reglas en grupos y preguntas de emparejar.
+   El resto de los estilos del editor vive en AdminLms.css. */
+
+/* ---- Reglas ---------------------------------------------------------------- */
+.eval-reglas-panel {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-gray);
+}
+.eval-reglas-titulo { margin: 0; color: var(--text-dark); font-size: 0.95rem; font-weight: 700; }
+.eval-reglas-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.eval-reglas-grupo {
+  display: flex; flex-direction: column; gap: 10px; min-width: 0; margin: 0;
+  padding: 12px 14px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-main);
+}
+.eval-reglas-grupo--ancho { grid-column: 1 / -1; }
+.eval-reglas-grupo legend { padding: 0 6px; color: var(--text-dark); font-size: 0.84rem; font-weight: 700; }
+.eval-reglas-grupo .lms-check--tarjeta { background: var(--bg-main); }
+.eval-reglas-grupo .lms-check--tarjeta span { font-weight: 600; }
+.eval-reglas-grupo .lms-check--tarjeta small { font-weight: 400; }
+
+.eval-reglas-campo { display: flex; flex-direction: column; gap: 4px; max-width: 220px; }
+.eval-reglas-campo > span:first-child { color: var(--text-muted); font-size: 0.78rem; font-weight: 600; }
+.eval-reglas-campo small { color: var(--text-muted); font-size: 0.76rem; }
+.eval-reglas-campo input {
+  width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px;
+  background: var(--bg-gray); color: var(--text-dark); font: inherit; font-size: 0.9rem;
+}
+.eval-reglas-sufijo { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-weight: 700; }
+.eval-reglas-sufijo input { max-width: 110px; }
+
+.eval-reglas-correctas { display: flex; flex-direction: column; gap: 6px; padding-top: 2px; }
+.eval-reglas-subtitulo { color: var(--text-dark); font-size: 0.84rem; font-weight: 600; }
+.eval-segmentos {
+  display: inline-flex; flex-wrap: wrap; align-self: flex-start; gap: 2px; padding: 3px;
+  border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-gray);
+}
+.eval-segmentos label {
+  position: relative; display: inline-flex; align-items: center; min-height: 36px; padding: 6px 14px;
+  border-radius: 7px; color: var(--text-muted); font-size: 0.84rem; font-weight: 600; cursor: pointer;
+}
+.eval-segmentos label.activo { background: var(--bg-main); color: var(--text-dark); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); }
+.eval-segmentos input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.eval-segmentos label:focus-within { outline: 2px solid var(--primary-cyan); outline-offset: 1px; }
+
+.eval-reglas-aviso {
+  margin: 0; padding: 10px 12px; border-left: 3px solid var(--accent-orange); border-radius: 6px;
+  background: var(--bg-main); color: var(--text-dark); font-size: 0.82rem; line-height: 1.45;
+}
+.eval-reglas-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.eval-reglas-pendiente { color: var(--accent-orange); font-size: 0.8rem; font-weight: 600; }
+.eval-reglas-pie .btn-crm-action { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; }
+.eval-reglas-pie .btn-crm-action:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---- Emparejar --------------------------------------------------------------- */
+.eval-pares { display: flex; flex-direction: column; gap: 8px; }
+.eval-pares-ayuda { display: block; margin: 2px 0 6px; color: var(--text-muted); font-size: 0.78rem; line-height: 1.45; }
+.eval-pares-encabezado,
+.eval-par-fila { display: grid; grid-template-columns: 18px minmax(0, 0.8fr) minmax(0, 1.6fr) 32px; align-items: start; gap: 8px; }
+.eval-pares-encabezado span { color: var(--text-muted); font-size: 0.74rem; font-weight: 700; }
+.eval-par-fila .eval-numero { padding-top: 9px; }
+.eval-par-fila input[type="text"],
+.eval-par-fila textarea {
+  width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px;
+  background: var(--bg-gray); color: var(--text-dark); font: inherit; font-size: 0.88rem;
+}
+.eval-par-fila textarea { resize: vertical; min-height: 40px; }
+.eval-pares > .btn-crm-action { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; }
+
+.eval-pares-vista li { align-items: flex-start; }
+.eval-par-izquierda { flex-shrink: 0; max-width: 40%; font-weight: 700; }
+.eval-par-flecha { flex-shrink: 0; color: var(--text-muted); }
+
+@media (max-width: 560px) {
+  .eval-reglas-panel { padding: 12px; }
+  .eval-reglas-grupos { grid-template-columns: minmax(0, 1fr); }
+  .eval-reglas-campo { max-width: none; }
+  .eval-segmentos { align-self: stretch; }
+  .eval-segmentos label { flex: 1 1 auto; justify-content: center; min-height: 44px; }
+  .eval-reglas-pie .btn-crm-action { flex: 1; min-height: 44px; justify-content: center; }
+  /* Cada par en dos renglones: número + izquierda, y debajo la derecha. */
+  .eval-pares-encabezado { display: none; }
+  .eval-par-fila { grid-template-columns: 18px minmax(0, 1fr) 36px; }
+  .eval-par-fila textarea { grid-column: 2 / 3; grid-row: 2; }
+  .eval-par-fila > :last-child { grid-column: 3; grid-row: 1; }
+  .eval-pares-vista li { flex-wrap: wrap; }
+  .eval-par-izquierda { max-width: none; }
+}
+
+/* Vista previa del alumno: emparejar (VistaAlumnoEvaluacion). */
+.eval-previa-pares { display: grid; gap: 8px; }
+.eval-previa-par { display: grid; grid-template-columns: minmax(80px, 1fr) 2fr; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 8px; }
+.eval-previa-par > span { font-weight: 600; color: var(--text-dark); overflow-wrap: anywhere; }
+.eval-previa-par select { width: 100%; min-width: 0; }
+@media (max-width: 480px) { .eval-previa-par { grid-template-columns: 1fr; } }

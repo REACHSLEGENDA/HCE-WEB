@@ -45,7 +45,7 @@ export const handler = async (event) => {
     await enviarCorreo({
       para: [administrador.email],
       asunto: `[Prueba] ${llenarPlantilla(n.asunto, EJEMPLO)}`,
-      html: aHtml(llenarPlantilla(n.cuerpo, EJEMPLO), botonPara(n.destinatario, EJEMPLO.enlace)),
+      html: aHtml(llenarPlantilla(n.cuerpo, EJEMPLO), botonPara(n.destinatario, EJEMPLO.enlace, n.evento)),
     });
     return json(200, { ok: true, email: administrador.email });
   } catch (err) {

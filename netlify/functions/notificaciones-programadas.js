@@ -1,8 +1,9 @@
 // Tarea programada de las notificaciones que no nacen de una acción en el
-// servidor: se revisa cada hora qué pasó y se avisa (una sola vez por hecho,
-// gracias a notificaciones_enviadas).
+// servidor: se revisa cada 10 minutos qué pasó y se avisa (una sola vez por
+// hecho, gracias a notificaciones_enviadas). Antes era cada hora y los correos
+// (p. ej. inscripción por lista) llegaban hasta una hora tarde.
 //
-//   sesion_recordatorio  sesiones en vivo que empiezan en 30 a 90 minutos
+//   sesion_recordatorio  sesiones en vivo que empiezan en 45 a 75 minutos
 //   sesion_recordatorio_dia  sesiones que empiezan en unas 24 horas
 //   comentario_respondido    respuestas a preguntas del aula (últimas 2 horas)
 //   tarea_revisada       tareas aprobadas o devueltas en las últimas 2 horas
@@ -37,8 +38,10 @@ export default async () => {
     const { data: sesiones } = await db
       .from('sesiones_clase')
       .select('leccion_id, inicia_en, duracion_min')
-      .gte('inicia_en', new Date(ahora + 30 * MIN).toISOString())
-      .lte('inicia_en', new Date(ahora + 90 * MIN).toISOString());
+      // Con la revisión cada 10 minutos, la ventana de 45 a 75 minutos da tres
+      // oportunidades y el aviso sale cerca de "1 hora antes".
+      .gte('inicia_en', new Date(ahora + 45 * MIN).toISOString())
+      .lte('inicia_en', new Date(ahora + 75 * MIN).toISOString());
     for (const s of sesiones || []) {
       const { data: leccion } = await db.from('curso_lecciones').select('titulo, course_id').eq('id', s.leccion_id).maybeSingle();
       const { data: registros } = await db.from('sesion_registros').select('user_id').eq('leccion_id', s.leccion_id);
@@ -237,5 +240,5 @@ export default async () => {
   return new Response(JSON.stringify(resumen), { status: 200, headers: { 'Content-Type': 'application/json' } });
 };
 
-// Cada hora, al minuto 5.
-export const config = { schedule: '5 * * * *' };
+// Cada 10 minutos.
+export const config = { schedule: '*/10 * * * *' };

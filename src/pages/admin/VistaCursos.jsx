@@ -86,6 +86,7 @@ export default function VistaCursos({ contexto }) {
                   onPestana={cambiarPestanaCurso}
                   pestanasConError={pestanasConErrorCurso}
                   onCerrar={handleCloseCourseForm}
+                  onActivar={() => handleToggleCourseStatus(cursoEditadoGuardado?.id ?? idCursoEditado)}
                   lateral={idCursoEditado ? (
                     <ChecklistPublicar
                       key={idCursoEditado}

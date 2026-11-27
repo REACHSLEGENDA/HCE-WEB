@@ -1,42 +1,88 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, Check, Edit, Plus, Trash2, X, Loader2, Eye, PencilLine, CheckCircle2 } from 'lucide-react';
+import React, { useCallback, useEffect, useImperativeHandle, useState } from 'react';
+import { ArrowLeft, Check, Edit, Plus, Trash2, X, Loader2, Eye, PencilLine, CheckCircle2, FileSpreadsheet } from 'lucide-react';
 import {
   TIPOS_PREGUNTA,
   ESCALA_BASE,
+  FALTA_MEJORAS,
   cargarEvaluacionAdmin,
   guardarConfigEvaluacion,
   guardarPregunta,
   borrarPregunta,
   reordenarPreguntas,
 } from '../../lib/evaluaciones';
+import { MIN_PARES, MAX_PARES, TIPOS_CON_CLAVE, validarPares } from '../../lib/evaluacionesLogica';
 import PanelLateral from './PanelLateral';
 import VistaAlumnoEvaluacion from './VistaAlumnoEvaluacion';
+import ImportarPreguntas from './ImportarPreguntas';
 import { ListaOrdenable, ElementoOrdenable, AsaArrastre } from './Ordenable';
 import './AdminLms.css';
+import './EditorEvaluacion.css';
 
 // Preguntas y reglas de un examen o una encuesta de lección.
 
 const TIPOS_POR_EVALUACION = {
-  examen: ['opcion', 'multiple', 'abierta'],
+  examen: ['opcion', 'multiple', 'abierta', 'emparejar'],
   encuesta: ['opcion', 'multiple', 'escala', 'abierta'],
 };
+
+const MAX_OPCIONES = 10;
+
+const MOSTRAR_CORRECTAS = [
+  ['nunca', 'Nunca'],
+  ['siempre', 'Al terminar sus intentos'],
+  ['al_aprobar', 'Solo si aprueba'],
+];
+
+const parVacio = () => ({ izquierda: '', derecha: '' });
 
 const preguntaVacia = (tipo) => ({
   id: null,
   tipo,
   texto: '',
-  opciones: tipo === 'escala' ? [...ESCALA_BASE] : tipo === 'abierta' ? [] : ['', ''],
+  opciones: tipo === 'escala' ? [...ESCALA_BASE] : ['abierta', 'emparejar'].includes(tipo) ? [] : ['', ''],
   correctas: [],
+  ...(tipo === 'emparejar' ? { pares: [parVacio(), parVacio()] } : {}),
   puntos: 1,
   obligatoria: true,
 });
+
+// Copia para editar sin tocar la lista cargada.
+const copiaPregunta = (p) => ({
+  ...p,
+  opciones: Array.isArray(p.opciones) ? [...p.opciones] : [],
+  correctas: [...(p.correctas || [])],
+  ...(p.tipo === 'emparejar' ? { pares: (p.pares || []).map((x) => ({ ...x })) } : {}),
+});
+
+/** Texto del problema de una pregunta antes de guardarla; '' si está bien. */
+// Con `sinClave`, una pregunta de examen puede quedar sin respuesta correcta
+// (al importar): la lista la marca y se elige con un toque en la opción.
+function errorDePregunta(p, esExamen, { sinClave = false } = {}) {
+  if (!String(p.texto || '').trim()) return 'Escribe la pregunta.';
+  if (['opcion', 'multiple'].includes(p.tipo)) {
+    const opciones = Array.isArray(p.opciones) ? p.opciones : [];
+    const llenas = opciones.filter((o) => String(o ?? '').trim());
+    if (llenas.length < 2) return 'Pon al menos dos opciones.';
+    if (llenas.length !== opciones.length) return 'Hay opciones vacías: llénalas o quítalas.';
+    if (opciones.length > MAX_OPCIONES) return `Son ${MAX_OPCIONES} opciones como máximo.`;
+    const correctas = p.correctas || [];
+    if (esExamen && !correctas.length && !sinClave) return 'Marca la respuesta correcta.';
+    if (correctas.some((c) => !Number.isInteger(c) || c < 0 || c >= opciones.length)) return 'La respuesta correcta no corresponde a ninguna opción.';
+    if (p.tipo === 'opcion' && correctas.length > 1) return 'En opción única solo puede haber una respuesta correcta.';
+  }
+  if (p.tipo === 'emparejar') {
+    if (!esExamen) return 'Las preguntas de emparejar solo se usan en exámenes.';
+    return validarPares(p.pares);
+  }
+  return '';
+}
 
 const CLAVE_VISTA = 'hce:evaluacion-vista';
 function leerVista() {
   try { return localStorage.getItem(CLAVE_VISTA) === 'previa' ? 'previa' : 'editar'; } catch { return 'editar'; }
 }
 
-export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerrar, onCambios }) {
+export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerrar, onCambios, ref }) {
   const esExamen = leccion.tipo === 'examen';
   const [datos, setDatos] = useState(null);
   const [config, setConfig] = useState(null);
@@ -49,6 +95,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
   const [marcando, setMarcando] = useState(null);
   const [vista, setVista] = useState(leerVista);
   const [errorCarga, setErrorCarga] = useState('');
+  const [importando, setImportando] = useState(false);
   const [reintento, setReintento] = useState(0);
   const cambiosConfig = !!datos && JSON.stringify(config) !== JSON.stringify(datos.config);
   const cambiosPregunta = !!editando && JSON.stringify(editando) !== JSON.stringify(preguntaOriginal);
@@ -107,9 +154,15 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
   const guardarConfig = async () => {
     setGuardandoConfig(true);
     try {
-      await guardarConfigEvaluacion(leccion.id, config);
-      setDatos((actual) => ({ ...actual, config: { ...config } }));
-      notificar('Reglas guardadas.', 'success');
+      const r = await guardarConfigEvaluacion(leccion.id, config);
+      if (r?.sinMejoras) {
+        // Se guardó solo lo de antes: se recarga para mostrar lo que quedó.
+        notificar(`Se guardaron el mínimo, los intentos y el orden de las preguntas. Para "Respuestas en orden aleatorio" y lo que ve el alumno al terminar: ${FALTA_MEJORAS}`, 'error');
+        await cargar(false);
+      } else {
+        setDatos((actual) => ({ ...actual, config: { ...config }, mejoras: true }));
+        notificar('Reglas guardadas.', 'success');
+      }
     } catch (err) {
       notificar(`No se pudieron guardar las reglas: ${err.message}`, 'error');
     } finally {
@@ -121,13 +174,8 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
     e.preventDefault();
     if (guardando) return;
     const p = editando;
-    if (!p.texto.trim()) { notificar('Escribe la pregunta.', 'error'); return; }
-    if (['opcion', 'multiple'].includes(p.tipo)) {
-      const llenas = p.opciones.filter((o) => o.trim());
-      if (llenas.length < 2) { notificar('Pon al menos dos opciones.', 'error'); return; }
-      if (llenas.length !== p.opciones.length) { notificar('Hay opciones vacías: llénalas o quítalas.', 'error'); return; }
-      if (esExamen && !p.correctas.length) { notificar('Marca la respuesta correcta.', 'error'); return; }
-    }
+    const problema = errorDePregunta(p, esExamen);
+    if (problema) { notificar(problema, 'error'); return; }
     setGuardando(true);
     try {
       const orden = p.id ? p.orden : (datos.preguntas.reduce((m, x) => Math.max(m, x.orden ?? 0), 0) + 1);
@@ -145,6 +193,71 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
       setGuardando(false);
     }
   };
+
+  // IMPORTAR: ImportarPreguntas.jsx (Excel/CSV) se conecta con esta función
+  // como onImportar. Recibe una lista de { tipo: 'opcion'|'multiple'|'abierta'
+  // |'emparejar' (y 'escala' en encuestas), texto, opciones: string[],
+  // correctas: number[], pares?: [{ izquierda, derecha }], puntos?,
+  // obligatoria? } y las guarda igual que "Guardar pregunta", al final de la
+  // lista y en el orden recibido. Lo único distinto: una pregunta de examen
+  // puede llegar sin respuesta correcta (se guarda y la lista avisa).
+  // Primero revisa todas: si alguna tiene un problema no guarda ninguna y lanza
+  // un error con `errores: [{ fila, error }]` (fila empieza en 1). Si falla a
+  // la mitad, las anteriores ya quedaron guardadas (`agregadas` en el error).
+  // Si todo sale bien devuelve { agregadas }.
+  const agregarPreguntas = async (lista) => {
+    const fallar = (mensaje, extra = {}) => Object.assign(new Error(mensaje), { agregadas: 0, errores: [], ...extra });
+    if (!datos || guardando) throw fallar('Espera a que termine de cargar o de guardar e intenta de nuevo.');
+    const permitidos = TIPOS_POR_EVALUACION[leccion.tipo];
+    const preparadas = (Array.isArray(lista) ? lista : []).map((item) => {
+      const tipo = item?.tipo;
+      return {
+        id: null,
+        tipo,
+        texto: String(item?.texto ?? '').trim(),
+        opciones: ['opcion', 'multiple'].includes(tipo) ? (item.opciones || []).map((o) => String(o ?? '').trim())
+          : tipo === 'escala' ? (item.opciones?.length ? item.opciones.map(String) : [...ESCALA_BASE]) : [],
+        correctas: esExamen && ['opcion', 'multiple'].includes(tipo) ? (item.correctas || []).map(Number) : [],
+        ...(tipo === 'emparejar' ? { pares: (item.pares || []).map((par) => ({ izquierda: String(par?.izquierda ?? ''), derecha: String(par?.derecha ?? '') })) } : {}),
+        puntos: Math.max(1, Number(item?.puntos) || 1),
+        obligatoria: item?.obligatoria !== false,
+      };
+    });
+    if (!preparadas.length) throw fallar('No hay preguntas para agregar.');
+    const errores = preparadas
+      .map((p, i) => ({
+        fila: i + 1,
+        error: permitidos.includes(p.tipo) ? errorDePregunta(p, esExamen, { sinClave: true }) : `El tipo "${p.tipo}" no se puede usar aquí.`,
+      }))
+      .filter((x) => x.error);
+    if (errores.length) {
+      const detalle = errores.slice(0, 3).map((x) => `pregunta ${x.fila}: ${x.error}`).join(' ');
+      throw fallar(`No se agregó ninguna. Revisa ${errores.length === 1 ? 'la pregunta' : `${errores.length} preguntas`} (${detalle}${errores.length > 3 ? ' …' : ''}).`, { errores });
+    }
+
+    setGuardando(true);
+    let agregadas = 0;
+    try {
+      if (!datos.preguntas.length) await guardarConfigEvaluacion(leccion.id, config);
+      let orden = datos.preguntas.reduce((m, x) => Math.max(m, x.orden ?? 0), 0);
+      for (const p of preparadas) {
+        orden += 1;
+        await guardarPregunta(leccion.id, { ...p, orden });
+        agregadas += 1;
+      }
+      notificar(`Se ${agregadas === 1 ? 'agregó 1 pregunta' : `agregaron ${agregadas} preguntas`}.`, 'success');
+      return { agregadas };
+    } catch (err) {
+      const hechas = agregadas ? `Se ${agregadas === 1 ? 'agregó 1 pregunta' : `agregaron ${agregadas} preguntas`}, pero la` : 'No se pudo guardar la';
+      throw fallar(`${hechas} pregunta ${agregadas + 1}: ${err.message}`, { agregadas, errores: [{ fila: agregadas + 1, error: err.message }] });
+    } finally {
+      await cargar(datos.preguntas.length > 0 && cambiosConfig);
+      setGuardando(false);
+    }
+  };
+
+  // También queda disponible por ref: refEditor.current.agregarPreguntas(lista).
+  useImperativeHandle(ref, () => ({ agregarPreguntas }));
 
   const eliminar = async (p) => {
     const ok = await confirmar('¿Eliminar esta pregunta? Las respuestas que ya dieron los alumnos a ella dejan de verse en el análisis.', 'Eliminar pregunta');
@@ -215,6 +328,13 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
     });
   };
 
+  const cambiarPar = (indice, lado, texto) => setEditando({
+    ...editando,
+    pares: editando.pares.map((par, i) => (i === indice ? { ...par, [lado]: texto } : par)),
+  });
+  const quitarPar = (indice) => setEditando({ ...editando, pares: editando.pares.filter((_, i) => i !== indice) });
+  const agregarPar = () => setEditando({ ...editando, pares: [...editando.pares, parVacio()] });
+
   if (faltaMigracion) {
     return (
       <div className="lms-aviso">
@@ -243,34 +363,85 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
         {cambios && <span className="panel-lateral-cambios" role="status">Cambios sin guardar</span>}
       </div>
 
-      <div className="eval-reglas">
-        {esExamen && (
-          <>
-            <label className="crm-input-group eval-campo-corto">
-              <span>Mínimo para aprobar (%)</span>
-              <input type="number" min="0" max="100" value={config.min_aprobacion} onChange={(e) => setConfig({ ...config, min_aprobacion: e.target.value })} />
+      {/* Reglas en grupos: para aprobar, orden y qué ve el alumno al terminar.
+          Se guardan juntas con "Guardar reglas". */}
+      <section className="eval-reglas-panel" aria-labelledby="eval-reglas-titulo">
+        <h5 id="eval-reglas-titulo" className="eval-reglas-titulo">{esExamen ? 'Reglas del examen' : 'Reglas de la encuesta'}</h5>
+
+        <div className="eval-reglas-grupos">
+          {esExamen && (
+            <fieldset className="eval-reglas-grupo">
+              <legend>Para aprobar</legend>
+              <label className="eval-reglas-campo">
+                <span>Mínimo para aprobar</span>
+                <span className="eval-reglas-sufijo">
+                  <input type="number" min="0" max="100" inputMode="numeric" value={config.min_aprobacion} onChange={(e) => setConfig({ ...config, min_aprobacion: e.target.value })} />
+                  <span aria-hidden="true">%</span>
+                </span>
+              </label>
+              <label className="eval-reglas-campo">
+                <span>Intentos permitidos</span>
+                <input type="number" min="1" inputMode="numeric" placeholder="Sin límite" value={config.intentos_max ?? ''} onChange={(e) => setConfig({ ...config, intentos_max: e.target.value || null })} />
+                <small>Déjalo vacío para no poner límite.</small>
+              </label>
+            </fieldset>
+          )}
+
+          <fieldset className="eval-reglas-grupo">
+            <legend>Orden</legend>
+            <label className="lms-check lms-check--tarjeta">
+              <input type="checkbox" checked={!!config.aleatorio} onChange={(e) => setConfig({ ...config, aleatorio: e.target.checked })} />
+              <span>Preguntas en orden aleatorio<small>Cada alumno ve las preguntas en otro orden.</small></span>
             </label>
-            <label className="crm-input-group eval-campo-corto">
-              <span>Intentos permitidos</span>
-              <input type="number" min="1" placeholder="Sin límite" value={config.intentos_max ?? ''} onChange={(e) => setConfig({ ...config, intentos_max: e.target.value || null })} />
+            <label className="lms-check lms-check--tarjeta">
+              <input type="checkbox" checked={!!config.aleatorio_opciones} onChange={(e) => setConfig({ ...config, aleatorio_opciones: e.target.checked })} />
+              <span>Respuestas en orden aleatorio<small>Las opciones de cada pregunta cambian de lugar en cada intento.</small></span>
             </label>
-            <label className="lms-check">
-              <input type="checkbox" checked={config.mostrar_respuestas} onChange={(e) => setConfig({ ...config, mostrar_respuestas: e.target.checked })} />
-              Al terminar, mostrar qué contestó bien
-            </label>
-          </>
+          </fieldset>
+
+          {esExamen && (
+            <fieldset className="eval-reglas-grupo eval-reglas-grupo--ancho">
+              <legend>Al terminar el examen, el alumno ve:</legend>
+              <label className="lms-check lms-check--tarjeta">
+                <input type="checkbox" checked={config.mostrar_calificacion !== false} onChange={(e) => setConfig({ ...config, mostrar_calificacion: e.target.checked })} />
+                <span>Su calificación<small>El porcentaje y cuántas contestó bien.</small></span>
+              </label>
+              <label className="lms-check lms-check--tarjeta">
+                <input type="checkbox" checked={!!config.mostrar_marcas} onChange={(e) => setConfig({ ...config, mostrar_marcas: e.target.checked })} />
+                <span>Si cada respuesta fue correcta o incorrecta<small>Una marca en cada pregunta.</small></span>
+              </label>
+              <div className="eval-reglas-correctas" role="radiogroup" aria-labelledby="eval-correctas-etiqueta">
+                <span id="eval-correctas-etiqueta" className="eval-reglas-subtitulo">Las respuestas correctas</span>
+                <div className="eval-segmentos">
+                  {MOSTRAR_CORRECTAS.map(([valor, etiqueta]) => (
+                    <label key={valor} className={config.mostrar_correctas === valor ? 'activo' : ''}>
+                      <input type="radio" name={`mostrar-correctas-${leccion.id}`} value={valor} checked={config.mostrar_correctas === valor} onChange={() => setConfig({ ...config, mostrar_correctas: valor })} />
+                      {etiqueta}
+                    </label>
+                  ))}
+                </div>
+                <small className="lms-ayuda">Mientras le queden intentos nunca se le muestran: así no se le regala el siguiente intento.</small>
+              </div>
+            </fieldset>
+          )}
+        </div>
+
+        {datos.mejoras === false && (
+          <p className="eval-reglas-aviso" role="note">
+            &quot;Respuestas en orden aleatorio&quot;{esExamen ? ', lo que ve el alumno al terminar y las preguntas de emparejar' : ''} necesitan
+            la migración <code>evaluaciones-mejoras.sql</code> en Supabase. Mientras tanto se guardan solo las demás reglas.
+          </p>
         )}
-        <label className="lms-check">
-          <input type="checkbox" checked={config.aleatorio} onChange={(e) => setConfig({ ...config, aleatorio: e.target.checked })} />
-          Preguntas en orden aleatorio
-        </label>
-        <span className="eval-reglas-guardar">
-          {!cambiosConfig && !guardandoConfig && <span className="eval-reglas-ok"><CheckCircle2 size={13} /> Al día</span>}
-          <button type="button" className="btn-crm-action solid" disabled={guardandoConfig || guardando} onClick={guardarConfig}>
+
+        <div className="eval-reglas-pie">
+          {cambiosConfig
+            ? <span className="eval-reglas-pendiente" role="status">Hay cambios sin guardar en las reglas.</span>
+            : !guardandoConfig && <span className="eval-reglas-ok" role="status"><CheckCircle2 size={13} /> Reglas guardadas</span>}
+          <button type="button" className="btn-crm-action solid" disabled={guardandoConfig || guardando || !cambiosConfig} onClick={guardarConfig}>
             {guardandoConfig ? <><Loader2 size={14} className="lms-girando" /> Guardando…</> : 'Guardar reglas'}
           </button>
-        </span>
-      </div>
+        </div>
+      </section>
 
       <div className="eval-vistas" role="tablist" aria-label="Modo">
         <button type="button" role="tab" aria-selected={vista === 'editar'} className={vista === 'editar' ? 'activo' : ''} onClick={() => cambiarVista('editar')}>
@@ -306,6 +477,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
               <ol className="eval-lista">
                 {datos.preguntas.map((p, i) => {
                   const conClave = esExamen && ['opcion', 'multiple'].includes(p.tipo);
+                  const conPuntos = esExamen && TIPOS_CON_CLAVE.includes(p.tipo);
                   return (
                     <ElementoOrdenable key={p.id} id={p.id} deshabilitado={moviendo} className={`eval-pregunta${conClave && !p.correctas.length ? ' eval-pregunta--sin-clave' : ''}`}>
                       {(asa) => (
@@ -313,20 +485,30 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
                           <div className="eval-pregunta-cabecera">
                             <AsaArrastre asa={asa} etiqueta={`Pregunta ${i + 1}`} deshabilitado={moviendo} />
                             <span className="lms-orden">{i + 1}</span>
-                            <button type="button" className="eval-pregunta-texto lms-fila-abrir" onClick={() => abrirPregunta({ ...p, opciones: [...(p.opciones || [])], correctas: [...(p.correctas || [])] })}>
+                            <button type="button" className="eval-pregunta-texto lms-fila-abrir" onClick={() => abrirPregunta(copiaPregunta(p))}>
                               <strong>{p.texto}</strong>
                               <small>
-                                <span className="lms-pastilla">{TIPOS_PREGUNTA[p.tipo]}</span>
-                                {conClave && <span className="lms-pastilla">{p.puntos} {Number(p.puntos) === 1 ? 'punto' : 'puntos'}</span>}
+                                <span className="lms-pastilla">{TIPOS_PREGUNTA[p.tipo] || p.tipo}</span>
+                                {conPuntos && <span className="lms-pastilla">{p.puntos} {Number(p.puntos) === 1 ? 'punto' : 'puntos'}</span>}
                                 {!p.obligatoria && <span className="lms-pastilla lms-pastilla--opcional">Opcional</span>}
                               </small>
                             </button>
                             <span className="lms-acciones">
-                              <button type="button" className="icon-action-btn edit" title="Editar" aria-label={`Editar pregunta ${i + 1}`} onClick={() => abrirPregunta({ ...p, opciones: [...(p.opciones || [])], correctas: [...(p.correctas || [])] })}><Edit size={15} /></button>
+                              <button type="button" className="icon-action-btn edit" title="Editar" aria-label={`Editar pregunta ${i + 1}`} onClick={() => abrirPregunta(copiaPregunta(p))}><Edit size={15} /></button>
                               <button type="button" className="icon-action-btn delete" title="Eliminar" aria-label={`Eliminar pregunta ${i + 1}`} onClick={() => eliminar(p)}><Trash2 size={15} /></button>
                             </span>
                           </div>
-                          {p.tipo !== 'abierta' && (conClave ? (
+                          {p.tipo === 'emparejar' ? (
+                            <ul className="eval-opciones-vista eval-pares-vista" aria-label={`Pares correctos de la pregunta ${i + 1}`}>
+                              {(p.pares || []).map((par, j) => (
+                                <li key={j}>
+                                  <span className="eval-par-izquierda">{par.izquierda}</span>
+                                  <span className="eval-par-flecha" aria-hidden="true">→</span>
+                                  <span>{par.derecha}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : p.tipo !== 'abierta' && (conClave ? (
                             <div className="eval-opciones-marcar" role={p.tipo === 'opcion' ? 'radiogroup' : 'group'} aria-label={`Respuesta correcta de la pregunta ${i + 1}`}>
                               {(p.opciones || []).map((o, j) => {
                                 const correcta = p.correctas.includes(j);
@@ -367,12 +549,22 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
           <div className="lms-agregar eval-agregar">
             <span>Agregar pregunta:</span>
             {TIPOS_POR_EVALUACION[leccion.tipo].map((tipo) => (
-              <button key={tipo} type="button" className="btn-crm-action outlined" onClick={() => abrirPregunta(preguntaVacia(tipo))}>
+              <button key={tipo} type="button" className="btn-crm-action outlined" disabled={guardando} onClick={() => abrirPregunta(preguntaVacia(tipo))}>
                 <Plus size={14} /> {TIPOS_PREGUNTA[tipo]}
               </button>
             ))}
+            {/* Importar desde Excel o CSV (plantilla HCE o exportación de otra
+                plataforma): agregarPreguntas lanza un error si algo falla y el
+                panel lo muestra. */}
+            <button type="button" className="btn-crm-action outlined" disabled={guardando} onClick={() => setImportando(true)}>
+              <FileSpreadsheet size={14} /> Importar desde Excel
+            </button>
           </div>
         </div>
+      )}
+
+      {importando && (
+        <ImportarPreguntas esExamen={esExamen} onImportar={agregarPreguntas} onCerrar={() => setImportando(false)} />
       )}
 
       {editando && (
@@ -397,7 +589,15 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
             <div className="crm-input-group">
               <label htmlFor="pregunta-texto">Pregunta *</label>
               {/* El foco empieza en la pregunta. */}
-              <textarea id="pregunta-texto" autoFocus rows="3" className="lms-textarea" value={editando.texto} onChange={(e) => setEditando({ ...editando, texto: e.target.value })} placeholder="¿De qué depende la normalidad de una variable?" />
+              <textarea
+                id="pregunta-texto"
+                autoFocus
+                rows="3"
+                className="lms-textarea"
+                value={editando.texto}
+                onChange={(e) => setEditando({ ...editando, texto: e.target.value })}
+                placeholder={editando.tipo === 'emparejar' ? 'Ordena correctamente los hitos históricos de ECMO' : '¿De qué depende la normalidad de una variable?'}
+              />
             </div>
 
             {/* Una o varias respuestas: se cambia sin borrar la pregunta. Al pasar
@@ -422,7 +622,50 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
               </div>
             )}
 
-            {editando.tipo !== 'abierta' && (
+            {editando.tipo === 'emparejar' && (
+              <div className="crm-input-group">
+                <span className="reglas-etiqueta" id="pares-etiqueta">Pares · escribe cada elemento junto a su pareja correcta</span>
+                <small className="eval-pares-ayuda">Al alumno se le muestra la columna derecha revuelta y elige la pareja de cada elemento de la izquierda.</small>
+                <div className="eval-pares" role="group" aria-labelledby="pares-etiqueta">
+                  <div className="eval-pares-encabezado" aria-hidden="true">
+                    <span />
+                    <span>Izquierda</span>
+                    <span>Derecha (su pareja)</span>
+                    <span />
+                  </div>
+                  {editando.pares.map((par, j) => (
+                    <div key={j} className="eval-par-fila">
+                      <span className="eval-numero">{j + 1}</span>
+                      <input
+                        type="text"
+                        value={par.izquierda}
+                        aria-label={`Par ${j + 1}, izquierda`}
+                        placeholder={j === 0 ? 'Ej. 1971' : `Elemento ${j + 1}`}
+                        onChange={(e) => cambiarPar(j, 'izquierda', e.target.value)}
+                      />
+                      <textarea
+                        rows="2"
+                        value={par.derecha}
+                        aria-label={`Par ${j + 1}, derecha`}
+                        placeholder={j === 0 ? 'Ej. Lo que pasó en 1971' : `Pareja del elemento ${j + 1}`}
+                        onChange={(e) => cambiarPar(j, 'derecha', e.target.value)}
+                      />
+                      {editando.pares.length > MIN_PARES ? (
+                        <button type="button" className="icon-action-btn delete" title="Quitar par" aria-label={`Quitar par ${j + 1}`} onClick={() => quitarPar(j)}><X size={14} /></button>
+                      ) : <span />}
+                    </div>
+                  ))}
+                  {editando.pares.length < MAX_PARES && (
+                    <button type="button" className="btn-crm-action outlined mini" onClick={agregarPar}>
+                      <Plus size={13} /> Agregar par
+                    </button>
+                  )}
+                </div>
+                <small className="eval-pares-ayuda">De {MIN_PARES} a {MAX_PARES} pares. Vale sus puntos solo si todos los pares quedan bien.</small>
+              </div>
+            )}
+
+            {!['abierta', 'emparejar'].includes(editando.tipo) && (
               <div className="crm-input-group">
                 <span className="reglas-etiqueta">
                   {editando.tipo === 'escala' ? 'Etiquetas de la escala (1 a 5)'
@@ -462,7 +705,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
                       </div>
                     );
                   })}
-                  {editando.tipo !== 'escala' && editando.opciones.length < 10 && (
+                  {editando.tipo !== 'escala' && editando.opciones.length < MAX_OPCIONES && (
                     <button type="button" className="btn-crm-action outlined mini" onClick={() => setEditando({ ...editando, opciones: [...editando.opciones, ''] })}>
                       <Plus size={13} /> Agregar opción
                     </button>
@@ -475,7 +718,7 @@ export default function EditorEvaluacion({ leccion, notificar, confirmar, onCerr
             )}
 
             <div className="eval-fila-final">
-              {esExamen && ['opcion', 'multiple'].includes(editando.tipo) && (
+              {esExamen && TIPOS_CON_CLAVE.includes(editando.tipo) && (
                 <label className="crm-input-group eval-campo-corto">
                   <span>Puntos</span>
                   <input type="number" min="1" value={editando.puntos} onChange={(e) => setEditando({ ...editando, puntos: e.target.value })} />

@@ -12,32 +12,36 @@ import { getStripe } from './_stripe.js';
 // Solo existen en pesos (cuenta nacional).
 export const DIAS_FICHA_OXXO = 3;
 
-/** Opciones de Stripe Checkout para ofrecer OXXO y SPEI además de tarjeta. */
-export function conPagosDiferidos(opciones) {
+/** Opciones de Stripe Checkout para ofrecer OXXO y/o SPEI además de tarjeta. */
+export function conPagosDiferidos(opciones, metodos = ['oxxo', 'customer_balance']) {
+  const extra = {};
+  if (metodos.includes('oxxo')) extra.oxxo = { expires_after_days: DIAS_FICHA_OXXO };
+  if (metodos.includes('customer_balance')) {
+    extra.customer_balance = { funding_type: 'bank_transfer', bank_transfer: { type: 'mx_bank_transfer' } };
+  }
   return {
     ...opciones,
-    payment_method_types: ['card', 'oxxo', 'customer_balance'],
-    payment_method_options: {
-      ...(opciones.payment_method_options || {}),
-      oxxo: { expires_after_days: DIAS_FICHA_OXXO },
-      customer_balance: { funding_type: 'bank_transfer', bank_transfer: { type: 'mx_bank_transfer' } },
-    },
+    payment_method_types: ['card', ...metodos],
+    payment_method_options: { ...(opciones.payment_method_options || {}), ...extra },
     // SPEI necesita un cliente en Stripe para asignarle su CLABE.
-    customer_creation: 'always',
+    ...(metodos.includes('customer_balance') ? { customer_creation: 'always' } : {}),
   };
 }
 
 /**
- * Crea la sesión con OXXO y SPEI; si la cuenta de Stripe todavía no los tiene
- * activados, la crea solo con tarjeta para que el cobro nunca se caiga.
+ * Crea la sesión con OXXO y SPEI. Si la cuenta de Stripe no tiene activado
+ * alguno, prueba con el otro solo y al final solo con tarjeta: el cobro nunca
+ * se cae. El aviso en los registros dice cuál rechazó Stripe.
  */
 export async function crearSesionConPagosDiferidos(stripe, opciones) {
-  try {
-    return await stripe.checkout.sessions.create(conPagosDiferidos(opciones));
-  } catch (err) {
-    console.warn('OXXO/SPEI no disponibles en Stripe, se cobra solo con tarjeta:', err.message);
-    return stripe.checkout.sessions.create(opciones);
+  for (const metodos of [['oxxo', 'customer_balance'], ['oxxo'], ['customer_balance']]) {
+    try {
+      return await stripe.checkout.sessions.create(conPagosDiferidos(opciones, metodos));
+    } catch (err) {
+      console.warn(`Stripe no aceptó ${metodos.join(' + ')}:`, err.message);
+    }
   }
+  return stripe.checkout.sessions.create(opciones);
 }
 
 export const sesionPendiente = (s) => s?.status === 'complete' && s?.payment_status === 'unpaid';

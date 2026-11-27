@@ -102,6 +102,7 @@ import { traerTodo } from '../lib/traerTodo';
 import { tasaFinalizacion } from '../lib/informes';
 import { llamarCertificado } from '../lib/certificados';
 import { useNotification } from '../context/NotificationContext';
+import { normalizarPais } from '../lib/paises';
 
 import { ABANDONMENT_INACTIVE_DAYS, LISTA_WEBINARS_BREVO, esMiniaturaYoutube, textoVigencia, escaparHtml, descargarCsv, extraerZoomId, FORM_LABELS } from './admin/utilidades';
 
@@ -400,6 +401,14 @@ const AdminDashboard = () => {
   const [studentSearch, setStudentSearch] = useState('');
   const [studentSpecialtyFilter, setStudentSpecialtyFilter] = useState('');
   const [studentCountryFilter, setStudentCountryFilter] = useState('');
+  // Cuentas que no han confirmado su correo (auth.users, vía cuenta-admin). null = sin cargar.
+  const [correosSinConfirmar, setCorreosSinConfirmar] = useState(null);
+  useEffect(() => {
+    if (activeTab !== 'students' || correosSinConfirmar) return;
+    llamarCuenta('correos-sin-confirmar')
+      .then((r) => setCorreosSinConfirmar(new Set(r.sinConfirmar || [])))
+      .catch(() => setCorreosSinConfirmar(new Set()));
+  }, [activeTab, correosSinConfirmar]);
 
   // Refs to avoid stale closures in interval hooks
   const profilesRef = useRef([]);
@@ -2128,9 +2137,10 @@ const AdminDashboard = () => {
 
     setInscribiendoAlumno(true);
     try {
-      await llamarInscripcion('admin-inscribir', { userId: selectedStudent.id, courseId: course.id });
+      const r = await llamarInscripcion('admin-inscribir', { userId: selectedStudent.id, courseId: course.id });
       await fetchInscripcionesAlumno(selectedStudent.id);
       showToast(`${selectedStudent.nombre_completo || selectedStudent.email} quedó inscrito en "${course.title}".`, 'success');
+      if (r?.borrador) showToast('El curso está en Borrador: los alumnos no lo verán hasta que lo actives (botón "Activar curso" en el editor del curso).', 'warning');
       setEnrollCourseId('');
     } catch (err) {
       showToast(err.message, 'error');
@@ -2205,7 +2215,7 @@ const AdminDashboard = () => {
         password: newStudentForm.password,
         nombre_completo: nombreCompleto,
         telefono: newStudentForm.telefono,
-        pais: newStudentForm.pais,
+        pais: normalizarPais(newStudentForm.pais),
         estado: newStudentForm.estado,
         grado: newStudentForm.grado,
         especialidad: newStudentForm.especialidad,
@@ -2758,7 +2768,7 @@ const AdminDashboard = () => {
       const matchSpecialty = !studentSpecialtyFilter || specialtyVal.toLowerCase() === studentSpecialtyFilter.toLowerCase();
       
       const countryVal = p.pais || p.user_metadata?.pais || '';
-      const matchCountry = !studentCountryFilter || countryVal.toLowerCase() === studentCountryFilter.toLowerCase();
+      const matchCountry = !studentCountryFilter || normalizarPais(countryVal) === studentCountryFilter;
       
       const matchDivision = !studentDivisionFilter
         || (studentDivisionFilter === 'sin' ? !p.division_id : String(p.division_id) === studentDivisionFilter);
@@ -2766,7 +2776,7 @@ const AdminDashboard = () => {
       return matchSearch && matchSpecialty && matchCountry && matchDivision;
     });
   const especialidades = useMemo(() => [...new Set(profiles.filter((p) => p.rol === 'estudiante').map((p) => p.especialidad || p.user_metadata?.especialidad).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')), [profiles]);
-  const paises = useMemo(() => [...new Set(profiles.filter((p) => p.rol === 'estudiante').map((p) => p.pais || p.user_metadata?.pais).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')), [profiles]);
+  const paises = useMemo(() => [...new Set(profiles.filter((p) => p.rol === 'estudiante').map((p) => normalizarPais(p.pais || p.user_metadata?.pais)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')), [profiles]);
   const perfilesPorId = useMemo(() => new Map(profiles.map((p) => [p.id, p])), [profiles]);
   const actividadPorAlumno = useMemo(() => new Map(studentActivities.map((a) => [a.user_id, a])), [studentActivities]);
   const progresoPorCurso = useMemo(() => new Map(studentProgressList.map((p) => [`${p.user_id}_${p.course_id}`, p])), [studentProgressList]);
@@ -3051,7 +3061,7 @@ const AdminDashboard = () => {
             />
           )}
 
-          {activeTab === 'students' && <VistaAlumnos contexto={{ CuentasPorActivar, Download, Filter, Lock, Plus, Search, SolicitudesInscripcion, Trash2, Unlock, X, actionLoading, certificates, courses, cuentasPendientes, descargarCsv, divisionesLista, downloadCertificateFile, enrollCourseId, especialidades, fetchProfiles, filteredStudents, formatDate, handleCloseAddStudentModal, handleCreateStudent, handleManualEnroll, handleQuitarInscripcion, handleToggleBlockStudent, inscribiendoAlumno, inscripcionesAlumno, loadingProfiles, newStudentForm, paises, profiles, selectedStudent, setEnrollCourseId, setNewStudentForm, setReporteAlumno, setSelectedStudent, setShowAddStudentModal, setStudentCountryFilter, setStudentDivisionFilter, setStudentSearch, setStudentSpecialtyFilter, showAddStudentModal, showConfirm, showToast, studentCountryFilter, studentDivisionFilter, studentSearch, studentSpecialtyFilter }} />}
+          {activeTab === 'students' && <VistaAlumnos contexto={{ CuentasPorActivar, correosSinConfirmar, Download, Filter, Lock, Plus, Search, SolicitudesInscripcion, Trash2, Unlock, X, actionLoading, certificates, courses, cuentasPendientes, descargarCsv, divisionesLista, downloadCertificateFile, enrollCourseId, especialidades, fetchProfiles, filteredStudents, formatDate, handleCloseAddStudentModal, handleCreateStudent, handleManualEnroll, handleQuitarInscripcion, handleToggleBlockStudent, inscribiendoAlumno, inscripcionesAlumno, loadingProfiles, newStudentForm, paises, profiles, selectedStudent, setEnrollCourseId, setNewStudentForm, setReporteAlumno, setSelectedStudent, setShowAddStudentModal, setStudentCountryFilter, setStudentDivisionFilter, setStudentSearch, setStudentSpecialtyFilter, showAddStudentModal, showConfirm, showToast, studentCountryFilter, studentDivisionFilter, studentSearch, studentSpecialtyFilter }} />}
 
           {/* VIEW: CERTIFICADOS */}
           {activeTab === 'certificates' && <VistaCertificados contexto={{ certificates, downloadCertificateFile, loadingCertificates }} />}

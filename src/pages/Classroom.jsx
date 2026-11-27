@@ -33,6 +33,7 @@ import {
   formatoTamano,
   formatoArchivo,
   leccionesConContenido,
+  leccionesBloqueadas,
   TIPOS_DEL_SERVIDOR,
 } from '../lib/lecciones';
 import EvaluacionLeccion from '../components/EvaluacionLeccion';
@@ -415,6 +416,14 @@ const Classroom = () => {
   // Con más de una lección hay temario, navegación Anterior/Siguiente y atajos.
   const conNavegacion = navegables.length > 1;
   const leccionesHechas = navegables.filter((l) => (l.implicita ? watchPercent >= UMBRAL_VIDEO : progresoLec[l.id]?.completada)).length;
+  // Curso "en orden": las lecciones que aún no se pueden abrir. El
+  // administrador (fuera de la vista de alumno) las abre todas.
+  const bloqueadas = esAdmin ? new Set() : leccionesBloqueadas(lecciones, progresoLec, reglasCurso.orden_avance, watchPercent);
+  const siguienteBloqueada = !!siguienteLeccion && bloqueadas.has(siguienteLeccion.id);
+  const bloqueadaActual = !!leccionActualId && bloqueadas.has(leccionActualId);
+  const avisoSiguienteBloqueada = leccionActual && !bloqueadaActual && !(leccionActual.implicita ? watchPercent >= UMBRAL_VIDEO : progresoLec[leccionActual.id]?.completada)
+    ? 'Termina esta lección para pasar a la siguiente.'
+    : 'Termina las lecciones anteriores para abrir la siguiente.';
 
   // ---- Interfaz del aula: temario en cajón (celular), modo enfoque y avisos --
   const [temarioAbierto, setTemarioAbierto] = useState(false);
@@ -461,6 +470,10 @@ const Classroom = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const irALeccion = (leccionId) => {
+    if (bloqueadas.has(leccionId)) {
+      showToast('Esta lección se abre al terminar la anterior.', 'info');
+      return;
+    }
     if (!permitirNavegacionAula()) return;
     setShowExam(false);
     setLeccionActualId(leccionId);
@@ -505,13 +518,26 @@ const Classroom = () => {
       const destino = e.key === 'ArrowRight' ? siguienteLeccion : anteriorLeccion;
       if (!destino) return;
       e.preventDefault();
+      if (e.key === 'ArrowRight' && siguienteBloqueada) {
+        showToast(avisoSiguienteBloqueada, 'info');
+        return;
+      }
       setLeccionActualId(destino.id);
       setAvisoAula(null);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     window.addEventListener('keydown', alTeclear);
     return () => window.removeEventListener('keydown', alTeclear);
-  }, [course, showExam, siguienteLeccion, anteriorLeccion]);
+  }, [course, showExam, siguienteLeccion, anteriorLeccion, siguienteBloqueada, avisoSiguienteBloqueada, showToast]);
+
+  // Curso en orden: si la lección abierta quedó bloqueada (por ejemplo, el
+  // administrador pasó a la vista de alumno), se va a la primera pendiente.
+  useEffect(() => {
+    if (!bloqueadaActual) return;
+    const destino = navegables.find((l) => !bloqueadas.has(l.id) && !progresoLec[l.id]?.completada) || navegables[0];
+    if (destino) setLeccionActualId(destino.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bloqueadaActual]);
 
   // El cajón de lecciones se cierra con Escape.
   useEffect(() => {
@@ -822,7 +848,12 @@ const Classroom = () => {
             u.searchParams.delete('leccion');
             window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);
           }
-          const elegida = pedida ? conContenido.find((l) => String(l.id) === pedida) : null;
+          // En un curso "en orden" no se entra a una lección bloqueada: se
+          // abre la primera pendiente.
+          const cerradas = profile?.rol === 'admin' && !leerVistaAlumno()
+            ? new Set()
+            : leccionesBloqueadas(lista, progreso, reglas.orden_avance);
+          const elegida = pedida ? conContenido.find((l) => String(l.id) === pedida && !cerradas.has(l.id)) : null;
           setLeccionActualId((elegida || pendiente || conContenido[0] || lista[0]).id);
 
           setCourse({ ...cursoCargado, youtube_video_id: video });
@@ -1707,19 +1738,22 @@ const Classroom = () => {
     const hecha = progresoLec[l.id]?.completada;
     const actual = !showExam && l.id === leccionActualId;
     const porcentaje = !hecha && l.tipo === 'video' ? progresoLec[l.id]?.porcentaje || 0 : 0;
+    const bloqueada = bloqueadas.has(l.id);
     return (
       <li key={l.id}>
         <button
           type="button"
-          className={`temario-item${actual ? ' temario-item--actual' : ''}${hecha ? ' temario-item--hecha' : ''}`}
+          className={`temario-item${actual ? ' temario-item--actual' : ''}${hecha ? ' temario-item--hecha' : ''}${bloqueada ? ' temario-item--bloqueada' : ''}`}
           aria-current={actual ? 'step' : undefined}
+          disabled={bloqueada}
           onClick={() => irALeccion(l.id)}
         >
           <span className="temario-icono">
-            {hecha ? <CheckCircle size={16} aria-label="Completada" /> : <Icono size={16} aria-hidden="true" />}
+            {hecha ? <CheckCircle size={16} aria-label="Completada" /> : bloqueada ? <Lock size={16} aria-label="Bloqueada" /> : <Icono size={16} aria-hidden="true" />}
           </span>
           <span className="temario-texto">
             <span className="temario-titulo">{numeroDe(l.id)}. {l.titulo}</span>
+            {bloqueada && <span className="temario-meta temario-meta--bloqueada">Termina la lección anterior para abrirla</span>}
             <span className="temario-meta">
               {actual ? <strong className="temario-aqui">Estás aquí · </strong> : null}
               {TIPOS_LECCION[l.tipo]}
@@ -1859,20 +1893,20 @@ const Classroom = () => {
         </div>
       );
     }
-    const pendiente = siguienteLeccion
-      || navegables.find((l) => l.obligatoria !== false && !progresoLec[l.id]?.completada && l.id !== avisoAula.leccionId)
+    const pendiente = (siguienteBloqueada ? null : siguienteLeccion)
+      || navegables.find((l) => l.obligatoria !== false && !progresoLec[l.id]?.completada && l.id !== avisoAula.leccionId && !bloqueadas.has(l.id))
       || null;
     return (
       <div className="aula-aviso" role="status" aria-live="polite">
         <CheckCircle size={26} className="aula-aviso-icono" aria-hidden="true" />
         <div className="aula-aviso-texto">
           <strong>¡Lección completada!</strong>
-          {pendiente && <span>{siguienteLeccion ? 'Sigue' : 'Te falta'}: {pendiente.titulo}</span>}
+          {pendiente && <span>{pendiente === siguienteLeccion ? 'Sigue' : 'Te falta'}: {pendiente.titulo}</span>}
         </div>
         <div className="aula-aviso-acciones">
           {pendiente && (
             <button type="button" className="back-btn leccion-btn-principal" onClick={() => irALeccion(pendiente.id)}>
-              {siguienteLeccion ? 'Siguiente lección' : 'Ir a la lección'} <ChevronRight size={15} />
+              {pendiente === siguienteLeccion ? 'Siguiente lección' : 'Ir a la lección'} <ChevronRight size={15} />
             </button>
           )}
           <button type="button" className="aula-aviso-cerrar" onClick={() => setAvisoAula(null)} aria-label="Cerrar aviso"><X size={16} /></button>
@@ -2380,7 +2414,21 @@ const Classroom = () => {
                         <strong>{anteriorLeccion ? anteriorLeccion.titulo : 'Es la primera lección'}</strong>
                       </span>
                     </button>
-                    {siguienteLeccion ? (
+                    {siguienteLeccion && siguienteBloqueada ? (
+                      <button
+                        type="button"
+                        className="aula-nav-btn aula-nav-btn--siguiente aula-nav-btn--bloqueada"
+                        aria-disabled="true"
+                        title={avisoSiguienteBloqueada}
+                        onClick={() => showToast(avisoSiguienteBloqueada, 'info')}
+                      >
+                        <span className="aula-nav-texto">
+                          <small>Siguiente lección · bloqueada</small>
+                          <strong>{siguienteLeccion.titulo}</strong>
+                        </span>
+                        <Lock size={18} aria-hidden="true" />
+                      </button>
+                    ) : siguienteLeccion ? (
                       <button
                         type="button"
                         className="aula-nav-btn aula-nav-btn--siguiente"

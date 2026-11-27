@@ -26,11 +26,23 @@ export function esRespuestaCorrecta(pregunta, respuesta) {
   if (!correctas.length || respuesta == null) return null;
   if (pregunta.tipo === 'opcion') return correctas.includes(Number(respuesta));
   if (pregunta.tipo === 'multiple') return Array.isArray(respuesta) && igualesOrdenados(respuesta.map(Number), correctas);
+  // Emparejar: correctas[i] es la pareja de la izquierda i; vale si todas están bien.
+  if (pregunta.tipo === 'emparejar') {
+    return Array.isArray(respuesta) && correctas.every((c, i) => respuesta[i] != null && Number(respuesta[i]) === c);
+  }
   return null;
 }
 
+// Emparejar: un renglón por par ("izquierda → derecha correcta").
+const paresDe = (p) => {
+  const izq = p.columnas?.izquierda || [];
+  const der = p.columnas?.derecha || p.opciones || [];
+  return izq.map((texto, i) => `${texto} → ${der[Number((p.correctas || [])[i])] ?? '?'}`);
+};
+
 export function etiquetasDe(pregunta) {
   if (pregunta.tipo === 'escala') return pregunta.opciones?.length ? pregunta.opciones : ESCALA_BASE;
+  if (pregunta.tipo === 'emparejar') return paresDe(pregunta);
   return pregunta.opciones || [];
 }
 
@@ -46,7 +58,7 @@ export function analizarPreguntas({ preguntas, intentos, perfiles = [] }) {
     const abiertas = [];
     let contestada = 0;
     let correctas = 0;
-    const calificable = ['opcion', 'multiple'].includes(p.tipo) && (p.correctas || []).length > 0;
+    const calificable = ['opcion', 'multiple', 'emparejar'].includes(p.tipo) && (p.correctas || []).length > 0;
 
     for (const intento of intentos) {
       const r = intento.respuestas?.[p.id];
@@ -56,8 +68,13 @@ export function analizarPreguntas({ preguntas, intentos, perfiles = [] }) {
         abiertas.push({ userId: intento.user_id, nombre: nombre.get(intento.user_id) || 'Alumno', texto: String(r), fecha: intento.enviado_en });
         continue;
       }
-      const elegidas = p.tipo === 'multiple' ? (Array.isArray(r) ? r : [r]) : [p.tipo === 'escala' ? Number(r) - 1 : Number(r)];
-      elegidas.forEach((e) => { if (e >= 0 && e < conteo.length) conteo[e] += 1; });
+      if (p.tipo === 'emparejar') {
+        // Cuántos acertaron cada par.
+        (p.correctas || []).forEach((c, i) => { if (Array.isArray(r) && r[i] != null && Number(r[i]) === Number(c)) conteo[i] += 1; });
+      } else {
+        const elegidas = p.tipo === 'multiple' ? (Array.isArray(r) ? r : [r]) : [p.tipo === 'escala' ? Number(r) - 1 : Number(r)];
+        elegidas.forEach((e) => { if (e >= 0 && e < conteo.length) conteo[e] += 1; });
+      }
       if (calificable && esRespuestaCorrecta(p, r)) correctas += 1;
     }
 
@@ -78,7 +95,8 @@ export function analizarPreguntas({ preguntas, intentos, perfiles = [] }) {
       opciones: etiquetas.map((texto, i) => ({
         indice: i,
         texto,
-        correcta: (p.correctas || []).map(Number).includes(i),
+        // En emparejar cada renglón es un par correcto; "veces" = quienes lo acertaron.
+        correcta: p.tipo === 'emparejar' ? true : (p.correctas || []).map(Number).includes(i),
         veces: conteo[i],
         porcentaje: contestada ? (conteo[i] / contestada) * 100 : 0,
       })),
@@ -111,6 +129,12 @@ export function textoRespuesta(pregunta, respuesta) {
   const etiquetas = etiquetasDe(pregunta);
   if (pregunta.tipo === 'abierta') return String(respuesta);
   if (pregunta.tipo === 'escala') return `${respuesta}. ${etiquetas[Number(respuesta) - 1] || ''}`.trim();
+  if (pregunta.tipo === 'emparejar') {
+    const izq = pregunta.columnas?.izquierda || [];
+    const der = pregunta.columnas?.derecha || pregunta.opciones || [];
+    return (Array.isArray(respuesta) ? respuesta : [])
+      .map((j, i) => (j == null ? '' : `${izq[i] ?? i + 1} → ${der[Number(j)] ?? ''}`)).filter(Boolean).join(' · ');
+  }
   const lista = Array.isArray(respuesta) ? respuesta : [respuesta];
   return lista.map((i) => etiquetas[Number(i)] ?? '').filter(Boolean).join(' · ');
 }

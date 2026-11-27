@@ -110,6 +110,9 @@ async function traerTodo(armarConsulta) {
 
 // Corre las altas de 10 en 10 en paralelo: una por una, una lista grande
 // pasaba el límite de 10 segundos de Netlify.
+// Listas de hasta este tamaño reciben su correo de inscripción al momento.
+const AVISO_INMEDIATO_MAX = 10;
+
 async function enLotes(lista, fn, tamano = 10) {
   const resultados = [];
   for (let i = 0; i < lista.length; i += tamano) {
@@ -159,15 +162,20 @@ export const handler = async (event) => {
         const perfiles = await traerTodo(() => db.from('profiles').select('id, email').order('id'));
         const porCorreo = new Map(perfiles.map((p) => [String(p.email || '').toLowerCase(), p.id]));
 
-        // Sin correo por cada alta: en una lista grande serían cientos de
-        // envíos y la función no alcanzaría a terminar.
+        // Una lista corta avisa al momento. En una grande serían cientos de
+        // envíos y la función no alcanzaría a terminar: esos los manda la
+        // tarea de cada 10 minutos (notificaciones-programadas).
         const encontrados = buscados.filter((c) => porCorreo.has(c));
+        const avisar = encontrados.length <= AVISO_INMEDIATO_MAX;
         await enLotes(encontrados, (correo) =>
-          inscribir(db, { userId: porCorreo.get(correo), courseId: curso.id, origen: 'admin', avisar: false }));
+          inscribir(db, { userId: porCorreo.get(correo), courseId: curso.id, origen: 'admin', avisar }), avisar ? 3 : 10);
         return json(200, {
           ok: true,
           inscritos: encontrados.length,
           sinCuenta: buscados.filter((c) => !porCorreo.has(c)),
+          avisoInmediato: avisar,
+          // Un borrador no lo ven los alumnos aunque estén inscritos.
+          borrador: curso.activo === false,
         });
       }
 
@@ -247,7 +255,7 @@ export const handler = async (event) => {
 
       await inscribir(db, { userId, courseId: curso.id, origen: 'admin' });
       await registrarAccionAdmin({ adminId: administrador.id, accion: 'inscripcion_admin', objetivoUserId: userId, courseId: curso.id });
-      return json(200, { ok: true });
+      return json(200, { ok: true, borrador: curso.activo === false });
     }
 
     // ---- Acciones del alumno ------------------------------------------------

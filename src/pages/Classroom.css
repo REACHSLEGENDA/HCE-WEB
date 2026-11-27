@@ -1309,6 +1309,8 @@
 .temario-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .temario-titulo { font-size: 0.88rem; font-weight: 600; line-height: 1.35; color: var(--aula-texto, #0f172a); }
 .temario-meta { font-size: 0.75rem; color: var(--aula-muted, #94a3b8); }
+/* Curso en orden: la lección se abre al terminar la anterior. */
+.temario-meta--bloqueada { color: var(--aula-secundario, #334155); font-weight: 600; }
 
 @media (prefers-reduced-motion: reduce) {
   .temario-barra span { transition: none; }
@@ -1535,6 +1537,9 @@ button.temario-seccion[aria-expanded="false"] .temario-seccion-flecha { transfor
 .aula-nav-btn:disabled { opacity: 0.5; cursor: default; }
 .aula-nav-btn svg { flex-shrink: 0; color: var(--aula-acento, #0e7490); }
 .aula-nav-btn--siguiente { justify-content: flex-end; border-color: #00bcd4; background: rgba(0, 188, 212, 0.06); text-align: right; }
+.aula-nav-btn--bloqueada { border-style: dashed; border-color: var(--aula-borde, #cbd5e1); background: var(--aula-suave, #f1f5f9); cursor: not-allowed; }
+.aula-nav-btn--bloqueada:hover:not(:disabled) { border-color: var(--aula-borde, #cbd5e1); box-shadow: none; }
+.aula-nav-btn--bloqueada svg { color: var(--aula-muted, #64748b); }
 .aula-nav-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .aula-nav-texto small { color: var(--aula-muted, #64748b); font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 .aula-nav-texto strong { overflow: hidden; font-size: 0.92rem; text-overflow: ellipsis; white-space: nowrap; }

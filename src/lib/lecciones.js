@@ -173,6 +173,25 @@ export function leccionesCompletas(lecciones, progreso, porcentajeImplicito = 0)
     .every((l) => (l.implicita ? porcentajeImplicito >= UMBRAL_VIDEO : progreso[l.id]?.completada));
 }
 
+/**
+ * Lecciones que el alumno todavía no puede abrir: Set de ids. Solo aplica con
+ * el orden 'secuencial' (regla orden_avance, supabase/curso-avance.sql): una
+ * lección se abre al terminar las lecciones obligatorias anteriores. Las
+ * secciones son solo títulos y no cuentan; una lección opcional puede quedar
+ * bloqueada, pero no bloquea a las que siguen. Con 'libre' no bloquea nada.
+ */
+export function leccionesBloqueadas(lecciones, progreso, ordenAvance, porcentajeImplicito = 0) {
+  const bloqueadas = new Set();
+  if (ordenAvance !== 'secuencial') return bloqueadas;
+  let faltaAlgo = false;
+  leccionesConContenido(lecciones || []).forEach((l) => {
+    if (faltaAlgo) bloqueadas.add(l.id);
+    const hecha = l.implicita ? porcentajeImplicito >= UMBRAL_VIDEO : !!progreso?.[l.id]?.completada;
+    if (l.obligatoria !== false && !hecha) faltaAlgo = true;
+  });
+  return bloqueadas;
+}
+
 // Enlace temporal (una hora) a un archivo privado. Solo lo obtiene quien tiene
 // permiso según las políticas del bucket.
 export async function enlaceTemporal(bucket, ruta) {

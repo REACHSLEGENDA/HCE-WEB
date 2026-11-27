@@ -31,7 +31,10 @@ const escapar = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;
 
 /** Reemplaza {variable} por su valor. Las que no existen se dejan vacías. */
 export function llenarPlantilla(texto, variables) {
-  return String(texto || '').replace(/\{(\w+)\}/g, (_, clave) => (variables[clave] ?? ''));
+  return String(texto || '')
+    .replace(/\{(\w+)\}/g, (_, clave) => (variables[clave] ?? ''))
+    // Sin nombre: "¡Hola, !" o "Hola :" quedan en "¡Hola!" y "Hola:".
+    .replace(/(Hola),?\s+([!:])/g, '$1$2');
 }
 
 /**
@@ -100,9 +103,11 @@ export function aHtml(texto, { boton, enlace } = {}) {
 }
 
 /** El botón de cada correo: al aula, al portal o al panel de admin. */
-export function botonPara(destinatario, enlace) {
+export function botonPara(destinatario, enlace, evento = '') {
   if (destinatario === 'admins') return { boton: 'Abrir el panel', enlace: `${PORTAL}/admin` };
-  return { boton: /\/classroom\//.test(enlace) ? 'Ir a mi curso' : 'Entrar al portal', enlace };
+  // Al inscribirse o abrirse el curso, apenas empieza.
+  const alCurso = ['inscrito_curso', 'curso_abierto', 'cuenta_activada'].includes(evento) ? 'Comenzar mi curso' : 'Ir a mi curso';
+  return { boton: /\/classroom\//.test(enlace) ? alCurso : 'Entrar al portal', enlace };
 }
 
 async function destinatarios(db, notificacion, userId) {
@@ -298,7 +303,7 @@ export async function notificar(db, evento, { userId = null, courseId = null, cl
           await enviarCorreo({
             para: [persona.email],
             asunto: llenarPlantilla(n.asunto, valores),
-            html: aHtml(llenarPlantilla(cuerpo, valores), botonPara(n.destinatario, valores.enlace)),
+            html: aHtml(llenarPlantilla(cuerpo, valores), botonPara(n.destinatario, valores.enlace, evento)),
           });
           enviadas += 1;
         } catch (err) {

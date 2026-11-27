@@ -1,4 +1,4 @@
-// Seguimiento de pagos (cada hora). Revisa directamente en Stripe, en las dos
+// Seguimiento de pagos (cada 15 minutos: el recibo llega poco después de pagar). Revisa directamente en Stripe, en las dos
 // cuentas (pesos y dólares), así que NO depende del webhook ni de ninguna
 // automatización de Brevo: los correos salen por el envío transaccional.
 //
@@ -299,5 +299,5 @@ export default async () => {
   return new Response(JSON.stringify(resumen), { status: 200, headers: { 'Content-Type': 'application/json' } });
 };
 
-// Cada hora, al minuto 15.
-export const config = { schedule: '15 * * * *' };
+// Cada 15 minutos.
+export const config = { schedule: '*/15 * * * *' };

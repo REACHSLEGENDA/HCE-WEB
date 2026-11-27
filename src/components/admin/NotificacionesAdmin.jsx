@@ -46,7 +46,7 @@ const VARIABLES = {
 
 const PLANTILLAS = {
   cuenta_activada: ['¡Tu cuenta en HCE ya está activa!', 'Hola {nombre}:\n\nTu cuenta ya tiene acceso. {acceso}\n\nYa puedes entrar a tu portal y empezar.'],
-  inscrito_curso: ['Ya estás inscrito en {curso}', 'Hola {nombre}:\n\nQuedaste inscrito en {curso}. {acceso}'],
+  inscrito_curso: ['¡Tu inscripción a {curso} fue exitosa!', '¡Hola, {nombre}!\n\n¡Tu inscripción al {curso} ha sido exitosa!\n\n{acceso}\n\nNos entusiasma acompañarte en esta nueva experiencia de aprendizaje y contribuir a tu desarrollo profesional.\n\n¡Te damos la bienvenida a la comunidad de Healthcare Training Experience!\n\nAprende. Entrena. Transforma.\nEquipo HCE'],
   sesion_registro: ['Registro confirmado: {sesion}', 'Hola {nombre}:\n\nQuedaste registrado a {sesion}, el {fecha}.\n\nPara entrar, abre la lección en tu aula: el botón "Unirse" se activa 15 minutos antes.\n{enlace}'],
   sesion_recordatorio: ['En 1 hora empieza {sesion}', 'Hola {nombre}:\n\nTe recordamos que {sesion} empieza el {fecha}.\n\nEntra desde tu aula con el botón "Unirse":\n{enlace}'],
   examen_aprobado: ['¡Aprobaste {examen}!', 'Hola {nombre}:\n\n¡Felicidades! Aprobaste {examen} de {curso} con {calificacion}.\n\nSigue con tu curso: {enlace}'],

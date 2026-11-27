@@ -53,7 +53,34 @@ export default function VistaAlumnoEvaluacion({ esExamen, config, preguntas }) {
                   <span>{p.texto}{p.obligatoria ? '' : <em> (opcional)</em>}</span>
                 </legend>
                 {p.tipo === 'multiple' && <small className="eval-previa-indicacion">Puedes elegir varias.</small>}
-                {p.tipo === 'abierta' ? (
+                {p.tipo === 'emparejar' ? (
+                  // Igual que el alumno: un menú por cada elemento de la izquierda.
+                  <div className="eval-previa-pares">
+                    <small className="eval-previa-indicacion">Elige la pareja de cada uno.</small>
+                    {(p.columnas?.izquierda || []).map((izq, k) => {
+                      const elegidas = Array.isArray(valor) ? valor : [];
+                      return (
+                        <label key={k} className="eval-previa-par">
+                          <span>{izq}</span>
+                          <select
+                            className="lms-input"
+                            value={elegidas[k] ?? ''}
+                            onChange={(e) => {
+                              const nuevas = [...elegidas];
+                              nuevas[k] = e.target.value === '' ? undefined : Number(e.target.value);
+                              responder(p.id, nuevas);
+                            }}
+                          >
+                            <option value="">Elige…</option>
+                            {(p.columnas?.derecha || []).map((der, j) => (
+                              <option key={j} value={j}>{String.fromCharCode(65 + j)}. {der}</option>
+                            ))}
+                          </select>
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : p.tipo === 'abierta' ? (
                   <textarea rows="3" className="lms-textarea" value={valor || ''} onChange={(e) => responder(p.id, e.target.value)} placeholder="Escribe tu respuesta" />
                 ) : p.tipo === 'escala' ? (
                   <div className="eval-previa-escala">

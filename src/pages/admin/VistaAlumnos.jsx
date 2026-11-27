@@ -34,6 +34,7 @@ export default function VistaAlumnos({ contexto }) {
     loadingProfiles,
     newStudentForm,
     paises,
+    correosSinConfirmar,
     profiles,
     selectedStudent,
     setEnrollCourseId,
@@ -247,6 +248,7 @@ export default function VistaAlumnos({ contexto }) {
                           <span className={`status-pill ${student.activo === false ? 'inactivo' : student.aprobado === false ? 'pendiente' : 'disponible'}`}>
                             {student.activo === false ? (student.aprobado === false ? 'Rechazado' : 'Bloqueado') : student.aprobado === false ? 'Por activar' : 'Activo'}
                           </span>
+                          {correosSinConfirmar?.has(student.id) && <small className="alumno-sin-confirmar" title="Aún no abre el enlace del correo de confirmación">Correo sin confirmar</small>}
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: '8px' }}>
@@ -302,7 +304,7 @@ export default function VistaAlumnos({ contexto }) {
                         <div className="metadata-grid-detail">
                           <div className="detail-item-row">
                             <strong>Correo:</strong>
-                            <span>{selectedStudent.email}</span>
+                            <span>{selectedStudent.email}{correosSinConfirmar?.has(selectedStudent.id) && ' (sin confirmar)'}</span>
                           </div>
                           <div className="detail-item-row">
                             <strong>Teléfono:</strong>

@@ -2554,3 +2554,6 @@ p.cp-pie.ok { font-size: 0.8rem; font-weight: 600; color: #059669; }
 .admin-layout .theme-selector-row { flex-wrap: wrap; }
 .admin-layout .theme-option-btn { justify-content: center; min-height: 44px; flex: 1 1 100px; }
 .admin-layout .welcome-banner-card { background: linear-gradient(115deg,#00bcd42e,#005fe614 45%,transparent 70%,#ff8a0024),var(--bg-main) !important; border: 1px solid var(--border-color); box-shadow: none; }
+
+/* Alumnos: cuenta que aún no confirma su correo (cuenta-admin correos-sin-confirmar). */
+.alumno-sin-confirmar { display: block; margin-top: 4px; font-size: 11px; font-weight: 600; color: #b45309; white-space: nowrap; }

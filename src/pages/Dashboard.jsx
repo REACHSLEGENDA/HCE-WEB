@@ -851,14 +851,25 @@ const Dashboard = () => {
     Promise.all([
       traerTodo('evaluacion_intentos', 'course_id, leccion_id, calificacion, aprobado, numero, curso_lecciones(titulo, tipo)', q => q.eq('user_id', user.id)),
       traerTodo('tarea_entregas', 'course_id, leccion_id, estado, comentario, creada_en, curso_lecciones(titulo)', q => q.eq('user_id', user.id)),
-    ]).then(([evaluaciones, tareas]) => {
+    ]).then(async ([evaluaciones, tareas]) => {
+      // Exámenes donde el instructor ocultó la calificación (regla "Al terminar
+      // el examen, el alumno ve"). Si la consulta falla, se muestran todas.
+      const idsLecciones = [...new Set(evaluaciones.map(f => f.leccion_id))];
+      let ocultas = new Set();
+      if (idsLecciones.length) {
+        try {
+          const configs = await traerTodo('evaluacion_config', '*', q => q.in('leccion_id', idsLecciones));
+          ocultas = new Set(configs.filter(c => c.mostrar_calificacion === false).map(c => c.leccion_id));
+        } catch { /* sin configuración: se muestran las calificaciones */ }
+      }
       if (!vigente) return;
       const porLeccion = new Map();
       evaluaciones.forEach((fila) => {
         const previo = porLeccion.get(fila.leccion_id);
         const notas = [previo?.mejor, fila.calificacion].filter(n => n != null).map(Number);
         porLeccion.set(fila.leccion_id, { ...fila, intentos: (previo?.intentos || 0) + 1,
-          mejor: notas.length ? Math.max(...notas) : null, aprobado: !!(previo?.aprobado || fila.aprobado) });
+          mejor: notas.length ? Math.max(...notas) : null, aprobado: !!(previo?.aprobado || fila.aprobado),
+          oculta: ocultas.has(fila.leccion_id) });
       });
       const ultimasTareas = new Map();
       tareas.forEach((fila) => {
@@ -1546,7 +1557,7 @@ const Dashboard = () => {
                     <table className="admin-table"><thead><tr><th>Actividad</th><th>Mejor calificación</th><th>Intentos</th><th>Estado</th></tr></thead>
                       <tbody>{evaluaciones.map(e => <tr key={'e-' + e.leccion_id}>
                         <td>{e.curso_lecciones?.titulo || (e.calificacion == null ? 'Encuesta' : 'Examen')}</td>
-                        <td>{e.mejor == null ? 'Sin calificación (encuesta)' : e.mejor + '%'}</td><td>{e.intentos}</td>
+                        <td>{e.mejor == null ? 'Sin calificación (encuesta)' : e.oculta ? '—' : e.mejor + '%'}</td><td>{e.intentos}</td>
                         <td>{e.mejor == null ? 'Enviada' : e.aprobado ? 'Aprobado' : 'Por aprobar'}</td>
                       </tr>)}{tareas.map(t => <tr key={'t-' + t.leccion_id}>
                         <td>{t.curso_lecciones?.titulo || 'Tarea'}{t.comentario && <p>{t.comentario}</p>}</td><td>—</td><td>—</td>

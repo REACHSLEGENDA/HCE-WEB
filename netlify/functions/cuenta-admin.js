@@ -11,6 +11,7 @@
 //   rechazar  { userId }   la solicitud queda cerrada; no puede entrar
 //   bloquear  { userId }   suspende una cuenta activa
 //   activar   { userId }   quita la suspensión
+//   correos-sin-confirmar {}  ids de cuentas que no han confirmado su correo
 //   division-sincronizar { divisionId }  inscribe a todos sus alumnos en sus
 //             cursos (si la división tiene inscripción automática)
 //   division  { userIds, divisionId }  mete (o saca, con divisionId null) a
@@ -92,6 +93,21 @@ export const handler = async (event) => {
       if (!divisionId) return json(400, { error: 'Falta la división.' });
       const { inscritos } = await inscribirEnDivision(admin(), divisionId);
       return json(200, { ok: true, inscritos });
+    }
+
+    if (accion === 'correos-sin-confirmar') {
+      // Cuentas que aún no abren el enlace de confirmación (auth.users.email_confirmed_at).
+      // Solo se ve con service role; el panel lo usa para avisar en Alumnos.
+      const db = admin();
+      const sinConfirmar = [];
+      for (let pagina = 1; pagina <= 50; pagina += 1) {
+        const { data, error } = await db.auth.admin.listUsers({ page: pagina, perPage: 1000 });
+        if (error) throw new Error(error.message);
+        const usuarios = data?.users || [];
+        usuarios.forEach((u) => { if (!u.email_confirmed_at) sinConfirmar.push(u.id); });
+        if (usuarios.length < 1000) break;
+      }
+      return json(200, { ok: true, sinConfirmar });
     }
 
     if (!userId) return json(400, { error: 'Falta la cuenta.' });

@@ -172,5 +172,37 @@
   .eval-paso .eval-pregunta-alumno { animation: none; }
 }
 
+/* Emparejar: arriba las opciones con letra; abajo, cada elemento de la
+   izquierda con un selector. Sin arrastrar: funciona igual con dedo y teclado. */
+.eval-emparejar { display: flex; flex-direction: column; gap: 14px; }
+.eval-emparejar-opciones { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--aula-suave, #f8fafc); list-style: none; }
+.eval-emparejar-opciones li { display: flex; align-items: flex-start; gap: 10px; color: var(--aula-texto, #1e293b); font-size: 0.9rem; line-height: 1.4; overflow-wrap: anywhere; }
+.eval-emparejar-filas { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.eval-emparejar-filas li {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: center; gap: 10px;
+  padding: 10px 12px; border: 1px solid var(--aula-borde, #e2e8f0); border-radius: 10px;
+}
+.eval-emparejar-filas li.elegida { border-color: #00bcd4; background: var(--aula-seleccion, #e0f7fa); }
+.eval-emparejar-izquierda { color: var(--aula-texto, #0f172a); font-size: 0.92rem; font-weight: 700; overflow-wrap: anywhere; }
+.eval-emparejar-filas select {
+  width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px;
+  border: 1px solid var(--aula-borde, #cbd5e1); border-radius: 8px; background: var(--aula-superficie, #fff);
+  color: var(--aula-texto, #0f172a); font: inherit; font-size: 0.9rem; text-overflow: ellipsis;
+}
+.eval-emparejar-filas select:focus { outline: none; border-color: #00bcd4; box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.2); }
+@media (max-width: 520px) {
+  .eval-emparejar-filas li { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+}
+
+/* Resultado: marca de correcta / incorrecta y pares correctos. */
+.eval-revision li.neutra { background: var(--aula-suave, #f8fafc); }
+.eval-revision-marca { display: block; margin: 2px 0; color: var(--aula-muted, #64748b); font-size: 0.76rem; font-weight: 700; }
+.eval-revision li.bien .eval-revision-marca { color: var(--aula-positivo, #2e7d32); }
+.eval-revision li.mal .eval-revision-marca { color: var(--aula-negativo, #c62828); }
+.eval-revision li > div { min-width: 0; overflow-wrap: anywhere; }
+.eval-revision small { display: block; }
+.eval-revision-pares { display: flex; flex-direction: column; gap: 2px; margin: 4px 0 0; padding-left: 18px; color: var(--aula-positivo, #2e7d32); font-size: 0.8rem; }
+.eval-revision .eval-revision-pares li { display: list-item; padding: 0; border-radius: 0; background: none; }
+
 /* Recordatorio en la pantalla de envío: solo cuenta al dar clic en Enviar. */
 .eval-aviso-envio { margin: -4px 0 12px; color: var(--text-muted, #64748b); font-size: 0.88rem; }

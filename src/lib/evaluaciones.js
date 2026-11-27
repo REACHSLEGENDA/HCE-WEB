@@ -6,8 +6,20 @@
 
 import { supabase } from './supabase';
 import { esTablaFaltante } from './cursos';
+import { TIPOS_PREGUNTA as TIPOS_BASE } from './evaluacionesBase';
+import {
+  barajar as barajarLista,
+  columnasEmparejar,
+  paresDesdeGuardado,
+  prepararEmparejar,
+  finalizacionDe,
+  tieneMejoras,
+  esColumnaFaltante,
+} from './evaluacionesLogica';
 
-export { TIPOS_PREGUNTA, ESCALA_BASE } from './evaluacionesBase';
+export { ESCALA_BASE } from './evaluacionesBase';
+
+export const TIPOS_PREGUNTA = { ...TIPOS_BASE, emparejar: 'Emparejar' };
 
 export const CONFIG_BASE = {
   min_aprobacion: 80,
@@ -15,7 +27,14 @@ export const CONFIG_BASE = {
   mostrar_respuestas: false,
   aleatorio: false,
   cuenta_calificacion: true,
+  aleatorio_opciones: false,
+  mostrar_calificacion: true,
+  mostrar_marcas: false,
+  mostrar_correctas: 'nunca',
 };
+
+/** Mensaje cuando se intenta usar algo nuevo sin correr la migración. */
+export const FALTA_MEJORAS = 'Falta correr en Supabase la migración evaluaciones-mejoras.sql.';
 
 async function token() {
   const { data: { session } } = await supabase.auth.getSession();
@@ -49,7 +68,13 @@ export async function cargarEvaluacion(leccionId) {
     if (esTablaFaltante(error)) return null;
     throw error;
   }
-  return { config: { ...CONFIG_BASE, ...(config.data || {}) }, preguntas: preguntas.data || [] };
+  const fila = config.data || {};
+  return {
+    config: { ...CONFIG_BASE, ...fila, ...finalizacionDe(fila) },
+    preguntas: preguntas.data || [],
+    // false: falta evaluaciones-mejoras.sql; null: aún no hay reglas guardadas.
+    mejoras: tieneMejoras(config.data),
+  };
 }
 
 export async function cargarMisIntentos(userId, leccionId) {
@@ -73,14 +98,7 @@ export const reiniciarIntentos = (userId, leccionId) =>
   llamar('evaluacion-admin', { accion: 'reiniciar', userId, leccionId });
 
 /** Mezcla una copia (para preguntas en orden aleatorio). */
-export function barajar(lista) {
-  const copia = [...lista];
-  for (let i = copia.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copia[i], copia[j]] = [copia[j], copia[i]];
-  }
-  return copia;
-}
+export const barajar = (lista) => barajarLista(lista);
 
 // ---- Administrador -------------------------------------------------------------
 
@@ -96,50 +114,82 @@ export async function cargarEvaluacionAdmin(leccionId) {
   const porPregunta = new Map((claves || []).map((c) => [c.pregunta_id, c.correctas || []]));
   return {
     config: base.config,
-    preguntas: base.preguntas.map((p) => ({ ...p, correctas: porPregunta.get(p.id) || [] })),
+    mejoras: base.mejoras,
+    preguntas: base.preguntas.map((p) => {
+      const correctas = porPregunta.get(p.id) || [];
+      if (p.tipo !== 'emparejar') return { ...p, correctas };
+      // Emparejar: `opciones` queda como lista (la columna derecha) para que
+      // las pantallas que esperan una lista (análisis, vista previa) no fallen;
+      // las dos columnas y los pares van aparte.
+      const columnas = columnasEmparejar(p.opciones);
+      return { ...p, opciones: columnas.derecha, columnas, pares: paresDesdeGuardado(columnas, correctas), correctas };
+    }),
   };
 }
 
+/**
+ * Guarda las reglas. Sin evaluaciones-mejoras.sql guarda solo las de antes y
+ * devuelve { sinMejoras: true }.
+ */
 export async function guardarConfigEvaluacion(leccionId, config) {
   const minimo = Number(config.min_aprobacion ?? 80);
   if (!Number.isFinite(minimo) || minimo < 0 || minimo > 100 || config.min_aprobacion === '') throw new Error('El mínimo para aprobar debe estar entre 0 y 100.');
   const intentos = config.intentos_max === '' || config.intentos_max == null ? null : Number(config.intentos_max);
   if (intentos != null && (!Number.isInteger(intentos) || intentos < 1)) throw new Error('Los intentos permitidos deben ser un entero mayor a cero.');
-  const { error } = await supabase.from('evaluacion_config').upsert([{
+  const final = finalizacionDe(config);
+  const base = {
     leccion_id: leccionId,
     min_aprobacion: minimo,
     intentos_max: intentos,
-    mostrar_respuestas: !!config.mostrar_respuestas,
+    // Se sigue llenando para el código y los reportes que aún la leen.
+    mostrar_respuestas: final.mostrar_marcas || final.mostrar_correctas !== 'nunca',
     aleatorio: !!config.aleatorio,
     cuenta_calificacion: config.cuenta_calificacion !== false,
     actualizado_en: new Date().toISOString(),
-  }], { onConflict: 'leccion_id' });
+  };
+  const guardar = (fila) => supabase.from('evaluacion_config').upsert([fila], { onConflict: 'leccion_id' });
+  let { error } = await guardar({ ...base, ...final });
+  if (error && esColumnaFaltante(error)) {
+    ({ error } = await guardar(base));
+    if (!error) return { sinMejoras: true };
+  }
   if (error) throw error;
+  return { sinMejoras: false };
 }
 
 /** Crea o actualiza una pregunta y su respuesta correcta. Devuelve su id. */
 export async function guardarPregunta(leccionId, pregunta) {
+  // Emparejar: la columna derecha se guarda revuelta y la clave aparte.
+  const emparejar = pregunta.tipo === 'emparejar'
+    ? prepararEmparejar(pregunta.pares || [], pregunta.columnas?.derecha)
+    : null;
   const datos = {
     leccion_id: leccionId,
     orden: pregunta.orden ?? 0,
     tipo: pregunta.tipo,
     texto: pregunta.texto.trim(),
-    opciones: pregunta.tipo === 'abierta' ? [] : pregunta.opciones.map((o) => String(o).trim()),
+    opciones: emparejar ? emparejar.opciones : pregunta.tipo === 'abierta' ? [] : pregunta.opciones.map((o) => String(o).trim()),
     puntos: Math.max(1, Number(pregunta.puntos) || 1),
     obligatoria: pregunta.obligatoria !== false,
   };
 
+  // 23514: el tipo 'emparejar' todavía no está permitido en la base.
+  const sinTipo = (error) => {
+    if (emparejar && error?.code === '23514') return new Error('Para usar preguntas de emparejar falta correr en Supabase la migración evaluaciones-mejoras.sql.');
+    return error;
+  };
   let id = pregunta.id;
   if (id) {
     const { error } = await supabase.from('evaluacion_preguntas').update(datos).eq('id', id);
-    if (error) throw error;
+    if (error) throw sinTipo(error);
   } else {
     const { data, error } = await supabase.from('evaluacion_preguntas').insert([datos]).select('id').single();
-    if (error) throw error;
+    if (error) throw sinTipo(error);
     id = data.id;
   }
 
-  const correctas = ['opcion', 'multiple'].includes(pregunta.tipo) ? (pregunta.correctas || []).map(Number) : [];
+  const correctas = emparejar ? emparejar.correctas
+    : ['opcion', 'multiple'].includes(pregunta.tipo) ? (pregunta.correctas || []).map(Number) : [];
   const { error: errClave } = await supabase.from('evaluacion_claves').upsert([{ pregunta_id: id, correctas }], { onConflict: 'pregunta_id' });
   if (errClave) { errClave.preguntaId = id; errClave.preguntaOrden = datos.orden; throw errClave; }
   return id;
