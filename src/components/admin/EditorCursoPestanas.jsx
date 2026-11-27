@@ -65,7 +65,7 @@ export default function EditorCursoPestanas({
             </button>
           )}
           {guardado && (
-            <a className="btn-crm-action outlined" href={`/classroom/${courseId}`} target="_blank" rel="noopener noreferrer">
+            <a className="btn-crm-action outlined" href={`/classroom/${courseId}`} target={`aula-${courseId}`} title="Abre el aula en su pestaña (si ya está abierta, la actualiza)">
               <ExternalLink size={15} /> <span>Ver aula</span>
             </a>
           )}

@@ -705,7 +705,7 @@ export default function VistaCursos({ contexto }) {
                                         <TrendingUp size={16} />
                                       </button>
                                     )}
-                                    <a className="icon-action-btn" href={`/classroom/${course.id}`} target="_blank" rel="noopener noreferrer" title="Ver aula" aria-label={`Ver aula de ${course.title}`}><ExternalLink size={16} /></a>
+                                    <a className="icon-action-btn" href={`/classroom/${course.id}`} target={`aula-${course.id}`} title="Ver aula" aria-label={`Ver aula de ${course.title}`}><ExternalLink size={16} /></a>
                                     {!isNaN(Number(course.id)) && (
                                       <button className="icon-action-btn" onClick={() => handleClonarCourse(course)} title="Clonar curso" aria-label={`Clonar ${course.title}`}>
                                         <Copy size={16} />

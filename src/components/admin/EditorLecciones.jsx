@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ChevronDown, ChevronRight, Edit, Plus, Trash2, Upload, PlayCircle, ListChecks, Users, RefreshCw, Copy, CheckCircle2, AlertTriangle, Loader2, ChevronsDownUp, ChevronsUpDown, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, Edit, Plus, Trash2, Upload, PlayCircle, ListChecks, Users, RefreshCw, Copy, CheckCircle2, AlertTriangle, Loader2, ChevronsDownUp, ChevronsUpDown, Eye, EyeOff, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { esTablaFaltante, llamarClonar } from '../../lib/cursos';
 import { TIPOS_LECCION, cargarContenidos, videoDeLeccion, falta, faltaRepaso, repasoValido, problemaRepaso, TIPOS_CON_REPASO } from '../../lib/lecciones';
@@ -924,8 +924,14 @@ export default function EditorLecciones({ courseId, cursos = [], onCambio, notif
                 <Upload size={14} /> {editando.archivoNuevo ? 'Cambiar archivo' : editando.archivo_path ? 'Reemplazar PDF' : 'Elegir PDF'}
                 <input type="file" accept="application/pdf" onChange={(e) => elegirPdf(e.target.files?.[0] || null)} />
               </label>
-              <span>{editando.archivoNuevo?.name || (editando.archivo_path ? editando.archivo_path.split('/').pop() : 'o arrástralo aquí')}</span>
+              <span>{editando.archivoNuevo?.name || (editando.archivo_path ? editando.archivo_path.split('/').pop().replace(/^\d+_/, '') : 'o arrástralo aquí')}</span>
               {(editando.archivoNuevo || editando.archivo_path) && <CheckCircle2 size={15} className="lms-ok" aria-label="Archivo listo" />}
+              {(editando.archivoNuevo || editando.archivo_path) && (
+                <button type="button" className="icon-action-btn delete" title="Quitar este PDF" aria-label="Quitar este PDF"
+                  onClick={() => setEditando({ ...editando, archivoNuevo: null, archivo_path: '' })}>
+                  <X size={15} />
+                </button>
+              )}
             </div>
             <small>Se guarda privado: solo lo pueden abrir los alumnos inscritos, con un enlace que caduca en una hora.</small>
           </div>
